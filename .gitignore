@@ -1,0 +1,22 @@
+# --- Environment-specific config (applied separately per environment) ---
+wp-config.php
+
+# --- WordPress runtime / generated files ---
+wp-content/debug.log
+wp-content/upgrade/
+wp-content/upgrade-temp-backup/
+wp-content/cache/
+wp-content/backup-db/
+wp-content/advanced-cache.php
+wp-content/object-cache.php
+wp-content/wp-cache-config.php
+.htaccess
+
+# --- OS / editor junk ---
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+*.swp
+.idea/
+.vscode/
