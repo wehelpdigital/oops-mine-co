@@ -1,0 +1,17 @@
+---
+# cPanel Git Version Control deployment (Git Version Control → Manage → Pull or Deploy).
+#
+# DEPLOYPATH is the live site's document root. If the repository itself was
+# cloned into that folder, the checkout IS the site and nothing is copied.
+# Otherwise the tracked files are copied over the top (cp never deletes, so
+# wp-config.php, .htaccess and wp-content/uploads/ on the server are untouched
+# — they are git-ignored and never part of the repo).
+deployment:
+  tasks:
+    - export DEPLOYPATH="$HOME/oopsmineco.com"
+    - export REPOPATH="$(pwd -P)"
+    - '[ -d "$DEPLOYPATH" ] || { echo "ERROR: DEPLOYPATH $DEPLOYPATH does not exist"; exit 1; }'
+    - 'if [ "$(cd "$DEPLOYPATH" && pwd -P)" = "$REPOPATH" ]; then echo "Repository is the document root - nothing to copy."; else /bin/cp -R * "$DEPLOYPATH/" && echo "Copied to $DEPLOYPATH"; fi'
+    # Never let Apache serve the .git directory (source/credential disclosure).
+    - '[ -d "$DEPLOYPATH/.git" ] && printf "Require all denied\n" > "$DEPLOYPATH/.git/.htaccess" || true'
+    - echo "Deploy finished."

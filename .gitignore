@@ -22,3 +22,10 @@ desktop.ini
 *.swp
 .idea/
 .vscode/
+
+# --- Files cPanel / the host writes into the document root (keep server tree clean) ---
+error_log
+.well-known/
+.user.ini
+php.ini
+cgi-bin/
