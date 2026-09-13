@@ -1,0 +1,175 @@
+
+.ip-loading-progress {
+    margin-bottom:      20px;
+    display:            none;
+    -webkit-transition: opacity ease 0.3s;
+    transition:         opacity ease 0.3s;
+}
+
+.ip-loading-progress.importing {
+
+}
+
+.ip-loading-bar {
+    height:        25px;
+    border:        1px solid #eee;
+    background:    #ddd;
+    position:      relative;
+    border-radius: 3px;
+}
+
+.ip-loading-info {
+    line-height: 25px;
+    font-weight: bold;
+    margin:      0 10px;
+    color:       #fff;
+    position:    absolute;
+    height:      20px;
+    top:         0;
+    left:        0;
+}
+
+.ip-loading-state {
+    border-radius:      3px;
+    height:             25px;
+    width:              0;
+    background:         #0085ba;
+    background-size:    auto 100%;
+    -webkit-transition: width linear 1s;
+    -moz-transition:    width linear 1s;
+    -ms-transition:     width linear 1s;
+    -o-transition:      width linear 1s;
+    transition:         width linear 1s;
+}
+
+.ip-import-continue {
+    margin: -5px 0 20px 0;
+}
+
+.paused .ip-loading-state {
+    background: #cccccc;
+}
+
+.ip-data-option .icheckbox {
+    margin-right: 5px;
+}
+
+.ip-import-output {
+    color:      #999999;
+    font-size:  11px;
+    margin-top: 10px;
+}
+
+.ip-import-notes {
+    font-style: italic;
+    color:      #999999;
+}
+
+.ip-import-block .screenshot {
+    width:                 150px;
+    margin-right:          10px;
+    vertical-align:        middle;
+    -webkit-border-radius: 4px;
+    -moz-border-radius:    4px;
+    border-radius:         4px;
+    box-shadow:            2px 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ip-import-block .subheader {
+    font-size: 120%;
+    display:   inline-block;
+    margin:    15px 0 0 0;
+}
+
+.ip-import-error {
+    max-height: 200px;
+    overflow-y: scroll;
+    color:      red;
+}
+
+.ip-demos {
+    margin:        0;
+    padding:       0;
+    list-style:    none;
+    display:       flex;
+    flex-wrap:     wrap;
+    margin-bottom: -15px;
+}
+
+.ip-demo {
+    flex:          0 0 auto;
+    margin-right:  15px;
+    width:         160px;
+    margin-bottom: 25px;
+    position:      relative;
+}
+
+.ip-demo-preview {
+    display:            block;
+    position:           absolute;
+    left:               50%;
+    top:                50%;
+    margin-left:        -60px;
+    margin-top:         -35px;
+    width:              120px;
+    height:             30px;
+    background:         #3D4C67;
+    box-shadow:         0px 7px 14px rgba(0, 0, 0, 0.25);
+    border-radius:      2px;
+    text-align:         center;
+    font-weight:        600;
+    font-size:          13px;
+    color:              #fff;
+    text-decoration:    none;
+    line-height:        30px;
+    opacity:            0;
+    visibility:         hidden;
+    pointer-events:     none;
+    -webkit-transition: visibility 0.3s linear, opacity 0.3s linear;
+    transition:         visibility 0.3s linear, opacity 0.3s linear;
+}
+
+.ip-demo-preview:visited, .ip-demo-preview:focus {
+    color: #fff;
+}
+
+.ip-demo:hover .ip-demo-preview {
+    opacity:        1;
+    visibility:     visible;
+    pointer-events: auto;
+}
+
+.ip-demo-preview:hover {
+    background: #243655;
+    box-shadow: 0 7px 14px rgba(0, 0, 0, 0.25);
+    color:      #fff;
+}
+
+.ip-screenshot {
+    width:         100%;
+    height:        auto;
+    margin-bottom: 5px;
+}
+
+.ip-no-image {
+    display:    inline-block;
+    width:      160px;
+    height:     193px;
+    background: #eee;
+}
+
+.ip-no-image,
+.ip-screenshot {
+    -webkit-border-radius: 4px;
+    -moz-border-radius:    4px;
+    border-radius:         4px;
+    overflow:              hidden;
+    box-shadow:            0 0 15px 0 rgba(0, 0, 0, 0.09);
+}
+
+.ip-invisible {
+    opacity:    0;
+    visibility: hidden;
+    position:   absolute;
+    z-index:    -1;
+}

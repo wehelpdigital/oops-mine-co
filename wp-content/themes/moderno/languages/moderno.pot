@@ -1,0 +1,3182 @@
+# Copyright (C) 2026 parkofideas.com
+# This file is distributed under the GNU General Public License v2.0 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Moderno 1.47\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/theme/moderno\n"
+"POT-Creation-Date: 2026-06-26 08:52:02+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2026-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+
+#: 404.php:16
+msgid "Oops! That page can’t be found"
+msgstr ""
+
+#: 404.php:17
+msgid "The page you are trying to reach is not available. Maybe try a search?"
+msgstr ""
+
+#: comments.php:20
+msgid "1 Comment"
+msgid_plural "%1$s Comments"
+msgstr[0] ""
+msgstr[1] ""
+
+#: comments.php:42
+msgid "Older Comments"
+msgstr ""
+
+#: comments.php:44
+msgid "Newer Comments"
+msgstr ""
+
+#: comments.php:50
+msgid "Post a Comment"
+msgstr ""
+
+#: functions.php:126
+msgid "Primary (Desktop)"
+msgstr ""
+
+#: functions.php:127
+msgid "Primary (Mobile)"
+msgstr ""
+
+#: functions.php:249
+msgid "Moderno Core"
+msgstr ""
+
+#: functions.php:257
+msgid "Font Icons Loader"
+msgstr ""
+
+#: functions.php:265
+msgid "WooCommerce"
+msgstr ""
+
+#: functions.php:271
+msgid "Meta Box"
+msgstr ""
+
+#: functions.php:277
+msgid "Elementor"
+msgstr ""
+
+#: functions.php:283
+msgid "Contact Form 7"
+msgstr ""
+
+#: functions.php:289
+msgid "Variation Swatches for WooCommerce"
+msgstr ""
+
+#: functions.php:485
+msgid "Post List"
+msgstr ""
+
+#: functions.php:496
+msgid "Product List"
+msgstr ""
+
+#: functions.php:505
+msgid "Product List (Desktop)"
+msgstr ""
+
+#: functions.php:513
+msgid "Product List (Mobile)"
+msgstr ""
+
+#: functions.php:1287
+msgid "View all results"
+msgstr ""
+
+#: functions.php:1291
+msgid "No results found"
+msgstr ""
+
+#: functions.php:1307
+msgid "View all posts in %s"
+msgstr ""
+
+#: functions.php:1318
+msgid "Prev page"
+msgstr ""
+
+#: functions.php:1324
+msgid "Next page"
+msgstr ""
+
+#: functions.php:1449
+msgctxt "1: date, 2: time"
+msgid "%1$s at %2$s"
+msgstr ""
+
+#: functions.php:1455
+msgid "Your comment is awaiting moderation."
+msgstr ""
+
+#: functions.php:1465
+msgid "Reply"
+msgstr ""
+
+#: functions.php:1471
+msgid "Edit"
+msgstr ""
+
+#: functions.php:1527
+msgctxt "label"
+msgid "Search for:"
+msgstr ""
+
+#: functions.php:1528
+msgctxt "placeholder"
+msgid "Search &hellip;"
+msgstr ""
+
+#: functions.php:1530 functions.php:1549 functions.php:2824
+#: includes/customize/ip_customize_settings.php:223
+#: includes/customize/ip_customize_settings.php:455
+#: includes/customize/ip_customize_settings.php:495
+#: templates/header-button-search.php:1
+msgid "Search"
+msgstr ""
+
+#: functions.php:1547 functions.php:1566
+msgid "Start typing..."
+msgstr ""
+
+#: functions.php:1548 functions.php:1567
+msgid "Clear"
+msgstr ""
+
+#: functions.php:1581
+msgid "Account"
+msgstr ""
+
+#: functions.php:1581 includes/customize/ip_customize_settings.php:98
+#: includes/customize/ip_customize_settings.php:121
+#: templates/header-login.php:3
+msgid "Login"
+msgstr ""
+
+#: functions.php:1581 templates/header-login.php:3
+msgid "My Account"
+msgstr ""
+
+#: functions.php:1614
+msgid "View More"
+msgstr ""
+
+#: functions.php:1632
+msgid "Slide"
+msgstr ""
+
+#: functions.php:1633
+msgid "Prev"
+msgstr ""
+
+#: functions.php:1634
+msgid "Next"
+msgstr ""
+
+#: functions.php:1640 includes/woocommerce/woocommerce.php:1245
+#: woocommerce/global/product-buttons.php:12
+msgid "Add to Wishlist"
+msgstr ""
+
+#: functions.php:1641 includes/woocommerce/woocommerce.php:1245
+#: woocommerce/global/product-buttons.php:12
+msgid "Remove from Wishlist"
+msgstr ""
+
+#: functions.php:2195 includes/customize/ip_customize_settings.php:89
+#: includes/customize/ip_customize_settings.php:864
+#: includes/customize/ip_customize_settings.php:873
+#: includes/customize/ip_customize_settings.php:911
+msgid "Logo"
+msgstr ""
+
+#: functions.php:2215 functions.php:2337
+msgid "If nothing is selected, the %s default settings %s will be used"
+msgstr ""
+
+#: functions.php:2218
+msgid "Header layout"
+msgstr ""
+
+#: functions.php:2223 functions.php:2236 functions.php:2321
+#: includes/customize/ip_customize_settings.php:797
+#: includes/customize/ip_customize_settings.php:811
+#: includes/customize/ip_customize_settings.php:825
+#: includes/customize/ip_customize_settings.php:839
+#: includes/customize/ip_customize_settings.php:853
+#: includes/customize/ip_customize_settings.php:1403
+#: includes/customize/ip_customize_settings.php:2924
+#: includes/customize/ip_customize_settings.php:3027
+#: includes/megamenu/mega_menu.php:79
+msgid "Default"
+msgstr ""
+
+#: functions.php:2224 includes/customize/ip_customize_settings.php:785
+#: includes/customize/ip_customize_settings.php:798
+#: includes/customize/ip_customize_settings.php:812
+#: includes/customize/ip_customize_settings.php:826
+#: includes/customize/ip_customize_settings.php:840
+#: includes/customize/ip_customize_settings.php:854
+msgid "With title and breadcrumbs"
+msgstr ""
+
+#: functions.php:2225 includes/customize/ip_customize_settings.php:786
+#: includes/customize/ip_customize_settings.php:799
+#: includes/customize/ip_customize_settings.php:813
+#: includes/customize/ip_customize_settings.php:827
+#: includes/customize/ip_customize_settings.php:841
+#: includes/customize/ip_customize_settings.php:855
+msgid "Without breadcrumbs"
+msgstr ""
+
+#: functions.php:2226 includes/customize/ip_customize_settings.php:787
+#: includes/customize/ip_customize_settings.php:800
+#: includes/customize/ip_customize_settings.php:814
+#: includes/customize/ip_customize_settings.php:828
+#: includes/customize/ip_customize_settings.php:842
+#: includes/customize/ip_customize_settings.php:856
+msgid "Without title"
+msgstr ""
+
+#: functions.php:2227 includes/customize/ip_customize_settings.php:788
+#: includes/customize/ip_customize_settings.php:801
+#: includes/customize/ip_customize_settings.php:815
+#: includes/customize/ip_customize_settings.php:829
+#: includes/customize/ip_customize_settings.php:843
+#: includes/customize/ip_customize_settings.php:857
+msgid "Hide"
+msgstr ""
+
+#: functions.php:2231
+msgid "Title align"
+msgstr ""
+
+#: functions.php:2237 includes/customize/ip_customize_settings.php:1753
+msgid "Center"
+msgstr ""
+
+#: functions.php:2238
+msgid "Left (boxed)"
+msgstr ""
+
+#: functions.php:2239
+msgid "Left (fullwidth)"
+msgstr ""
+
+#: functions.php:2245 includes/customize/ip_customize_settings.php:765
+msgid "Page Header"
+msgstr ""
+
+#: functions.php:2259 includes/customize/ip_customize_settings.php:3886
+msgid "Header"
+msgstr ""
+
+#: functions.php:2266 includes/customize/ip_customize_settings.php:2579
+msgid "HTML block (top)"
+msgstr ""
+
+#: functions.php:2267 functions.php:2280
+#: includes/customize/ip_customize_settings.php:3559
+#: includes/megamenu/mega_menu.php:188
+#: includes/woocommerce/woocommerce.php:1576
+#: includes/woocommerce/woocommerce.php:1616
+#: includes/woocommerce/woocommerce.php:2884
+#: includes/woocommerce/woocommerce.php:2971
+msgid "Manage html blocks"
+msgstr ""
+
+#: functions.php:2272 functions.php:2285
+msgid "Select a HTML block"
+msgstr ""
+
+#: functions.php:2279 includes/customize/ip_customize_settings.php:2589
+msgid "HTML block (bottom)"
+msgstr ""
+
+#: functions.php:2292 includes/customize/ip_customize_settings.php:2599
+msgid "Show HTML blocks only on the first page"
+msgstr ""
+
+#: functions.php:2300 includes/customize/ip_customize_settings.php:2609
+msgid "Show top block above the shop content"
+msgstr ""
+
+#: functions.php:2340 includes/customize/ip_customize_settings.php:2152
+#: includes/megamenu/mega_menu.php:81
+msgid "HTML block"
+msgstr ""
+
+#: functions.php:2349
+msgid "Page Footer"
+msgstr ""
+
+#: functions.php:2357 includes/customize/ip_customize_settings.php:1178
+msgid "Footer"
+msgstr ""
+
+#: functions.php:2369
+msgid "Home"
+msgstr ""
+
+#: functions.php:2478
+msgid "Post preview"
+msgstr ""
+
+#: functions.php:2518 functions.php:2636 templates/page-header.php:111
+msgid "Posts"
+msgstr ""
+
+#: functions.php:2719 includes/customize/ip_customize_settings.php:3881
+msgid "Blog"
+msgstr ""
+
+#: functions.php:2775
+msgid "Tag"
+msgstr ""
+
+#: functions.php:2798 templates/post-author.php:19
+msgid "Author"
+msgstr ""
+
+#: functions.php:2937 templates/page-header.php:60
+msgid "Page not found"
+msgstr ""
+
+#: functions.php:3593
+msgid "Facebook"
+msgstr ""
+
+#: functions.php:3594
+msgid "Instagram"
+msgstr ""
+
+#: functions.php:3595
+msgid "VK"
+msgstr ""
+
+#: functions.php:3596
+msgid "OK"
+msgstr ""
+
+#: functions.php:3597
+msgid "Telegram"
+msgstr ""
+
+#: functions.php:3598
+msgid "Whatsapp"
+msgstr ""
+
+#: functions.php:3599
+msgid "Line"
+msgstr ""
+
+#: functions.php:3600
+msgid "WeChat"
+msgstr ""
+
+#: functions.php:3601
+msgid "Viber"
+msgstr ""
+
+#: functions.php:3602
+msgid "Discord"
+msgstr ""
+
+#: functions.php:3603
+msgid "X (Twitter)"
+msgstr ""
+
+#: functions.php:3604
+msgid "Threads"
+msgstr ""
+
+#: functions.php:3605
+msgid "YouTube"
+msgstr ""
+
+#: functions.php:3606
+msgid "Vimeo"
+msgstr ""
+
+#: functions.php:3607
+msgid "Snapchat"
+msgstr ""
+
+#: functions.php:3608
+msgid "TikTok"
+msgstr ""
+
+#: functions.php:3609
+msgid "LinkedIn"
+msgstr ""
+
+#: functions.php:3610
+msgid "Flickr"
+msgstr ""
+
+#: functions.php:3611
+msgid "Pinterest"
+msgstr ""
+
+#: functions.php:3612
+msgid "Tumblr"
+msgstr ""
+
+#: functions.php:3613
+msgid "Github"
+msgstr ""
+
+#: functions.php:3648
+msgid "The theme cache has been successfully cleared"
+msgstr ""
+
+#: functions.php:3716 functions.php:3724
+msgid "Filter"
+msgstr ""
+
+#: functions.php:4058 includes/customize/ip_customize_settings.php:226
+#: includes/customize/ip_customize_settings.php:458
+#: includes/customize/ip_customize_settings.php:498
+msgid "Custom"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:65
+#: includes/customize/ip_customize_settings.php:1532
+msgid "General"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:69
+msgid "Header blocks"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:84
+msgid "Header blocks (Desktop)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:85
+#: includes/customize/ip_customize_settings.php:111
+#: includes/customize/ip_customize_settings.php:2105
+#: includes/customize/ip_customize_settings.php:2116
+msgid ""
+"Enable or disable blocks, and then drag and drop blocks below to set up "
+"their order"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:90
+msgid "Mega Menu"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:91
+msgid "Buttons"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:92
+#: includes/customize/ip_customize_settings.php:115
+msgid "Social Media"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:93
+#: includes/customize/ip_customize_settings.php:116
+#: includes/customize/ip_customize_settings.php:132
+msgid "Phone"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:94
+#: includes/customize/ip_customize_settings.php:117
+#: includes/customize/ip_customize_settings.php:141
+msgid "Email"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:95
+#: includes/customize/ip_customize_settings.php:118
+#: includes/customize/ip_customize_settings.php:150
+msgid "Address"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:96
+#: includes/customize/ip_customize_settings.php:119
+msgid "Working Hours"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:97
+#: includes/customize/ip_customize_settings.php:120
+msgid "Language switcher"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:99
+#: includes/customize/ip_customize_settings.php:122
+#: includes/customize/ip_customize_settings.php:178
+msgid "Other"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:110
+msgid "Header blocks (Mobile)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:159
+msgid "Working hours"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:168
+msgid "Lang"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:169
+msgid ""
+"You can use shortcodes, for example, the WPML language selection shortcode"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:179
+msgid "You can use some HTML tags and various shortcodes"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:189
+msgid "Show block icons"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:196
+msgid "Remove the link from the logo on the front page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:203
+msgid "Styling the WPML language selector"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:204
+msgid ""
+"Use the shortcode [wpml_language_selector_widget] to insert the selector"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:211
+msgid "Desktop Header Settings"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:217
+#: includes/customize/ip_customize_settings.php:449
+msgid "Header buttons"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:218
+#: includes/customize/ip_customize_settings.php:450
+#: includes/customize/ip_customize_settings.php:490
+msgid ""
+"Enable or disable button, and then drag and drop blocks below to set up "
+"their order"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:222
+#: includes/customize/ip_customize_settings.php:454
+#: includes/customize/ip_customize_settings.php:494
+msgid "Auth"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:224
+#: includes/customize/ip_customize_settings.php:456
+#: includes/customize/ip_customize_settings.php:496
+#: includes/customize/ip_customize_settings.php:2837
+#: includes/woocommerce/woocommerce-wishlist.php:40
+#: templates/header-button-wishlist.php:3
+msgid "Wishlist"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:225
+#: includes/customize/ip_customize_settings.php:457
+#: includes/customize/ip_customize_settings.php:497
+#: includes/customize/ip_customize_settings.php:1394
+#: templates/header-button-cart.php:6
+msgid "Cart"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:236
+#: includes/customize/ip_customize_settings.php:471
+#: includes/customize/ip_customize_settings.php:508
+msgid "Custom button setting"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:244
+msgid "Wishlist button is not shown because Wishlist Page is not set "
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:244
+#: includes/customize/ip_customize_settings.php:2563
+#: includes/woocommerce/woocommerce.php:2892
+msgid "here"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:259
+#: includes/customize/ip_customize_settings.php:2433
+#: includes/customize/ip_customize_settings.php:2517
+msgid "Background color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:268
+#: includes/customize/ip_customize_settings.php:1118
+#: includes/customize/ip_customize_settings.php:2423
+#: includes/customize/ip_customize_settings.php:2501
+msgid "Text color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:277
+#: includes/customize/ip_customize_settings.php:1125
+msgid "Accent color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:286
+msgid "First line color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:295
+msgid "Second line color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:304
+msgid "Main menu depth"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:308
+msgid "1 level"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:309
+msgid "2 level"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:310
+msgid "3 level"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:311
+msgid "Unlimited"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:316
+msgid "Main menu popup text color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:324
+msgid "Main menu popup background color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:332
+msgid "Main menu popup accent color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:333
+msgid "Main accent color if empty"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:341
+msgid "Main menu popup layout"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:345
+#: includes/customize/ip_customize_settings.php:1741
+#: includes/customize/ip_customize_settings.php:2135
+#: includes/megamenu/mega_menu.php:104
+msgid "Fullwidth"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:346
+#: includes/customize/ip_customize_settings.php:2134
+msgid "Compact"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:352
+msgid "Font size of top-level menu items (px)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:365
+msgid "Space between top-level menu items (px)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:378
+msgid "Sticky menu (desktop)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:384
+msgid "Hide Logo in sticky menu (desktop)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:393
+msgid "Logo width in sticky menu (Desktop)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:410
+msgid "Text instead of logo (Desktop)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:421
+msgid "Mobile Header Settings"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:427
+msgid "Mobile header type"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:440
+msgid "Centered logo"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:479
+msgid "Bottom buttons location"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:484
+msgid "Menu bottom"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:485
+msgid "Screen bottom"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:489
+msgid "Bottom buttons"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:517
+msgid "Header background color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:525
+msgid "Header text color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:533
+msgid "Header accent color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:541
+msgid "Header height (Mobile)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:554
+msgid "Sticky menu (Mobile)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:561
+msgid "Sticky header height (Mobile)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:576
+msgid "Hide Logo in sticky menu (Mobile)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:586
+msgid "Custom Header Button"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:592
+#: includes/customize/ip_customize_settings.php:705
+#: includes/customize/ip_customize_settings.php:2484
+msgid "You can upload font with custom icons %s here %s"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:601
+#: includes/megamenu/mega_menu.php:199
+msgid "Icon"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:607
+#: includes/customize/ip_customize_settings.php:5258
+#: includes/woocommerce/woocommerce.php:2730
+#: includes/woocommerce/woocommerce.php:2868
+#: includes/woocommerce/woocommerce.php:2954
+msgid "Title"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:614
+msgid "Link"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:621
+msgid "Open in new window"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:630
+msgid "Add nofollow"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:639
+msgid "Transparent header Settings"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:645
+msgid "Transparent header on the front page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:652
+msgid "Transparent header text color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:664
+msgid "Transparent header accent color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:675
+msgid "Transparent header logo"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:676
+msgid "Leave empty for using main Logo"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:686
+msgid "Transparent header logo (mobile)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:697
+msgid "Custom Header Icons"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:713
+msgid "Search icon"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:721
+msgid "Auth icon"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:729
+msgid "Wishlist icon"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:737
+msgid "Cart icon"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:745
+msgid "Hamburger icon"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:768
+msgid "Title font size (px)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:780
+msgid "Default header layout"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:792
+msgid "Page header layout"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:806
+msgid "Blog and Post header layout"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:820
+msgid "Woocommerce pages header layout"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:834
+msgid "Product list/grid header layout"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:848
+msgid "Product page header layout"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:867
+msgid "Desktop Logo Settings"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:880
+msgid "Truncate logo placeholder"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:889
+msgid "Logo max width (Desktop)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:905
+msgid "Mobile Logo Settings"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:912
+msgid "Leave empty for using desktop Logo"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:923
+msgid "Logo max width (Mobile)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:940
+msgid "Header height you can change %s here %s"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:953
+msgid "Live Search"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:956
+msgid "Search type"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:960
+msgid "Products only"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:961
+msgid "Whole site"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:966
+msgid "Live search (ajax)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:972
+msgid "Number of products in the live search"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:988
+msgid "Advert Bar"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:991
+msgid "HTML block to display in the Advert Bar"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1003
+msgid "Social Media Links"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1004
+msgid ""
+"Add the full url of your social media page e.g http://twitter.com/yoursite"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1011
+msgid "Blog Posts"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1016
+msgid "Blog Layout"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1022
+msgid "Grid (without sidebar)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1023
+msgid "List (with sidebar)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1027
+msgid "Remove post title from breadcrumb"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1033
+msgid "White background in a grid/list"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1039
+#: includes/customize/ip_customize_settings.php:1071
+msgid "Hide Category"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1045
+#: includes/customize/ip_customize_settings.php:1077
+msgid "Hide Date"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1051
+msgid "Hide Excerpt"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1059
+msgid "Blog Page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1064
+msgid "Sidebar in Post"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1083
+msgid "Hide Share Buttons"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1089
+msgid "Hide Tags"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1095
+msgid "Hide Comments Info"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1101
+msgid "Hide Author Info"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1107
+msgid "Hide Post Navigation (Prev / Next)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1132
+msgid "Buttons color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1139
+msgid "Buttons hover color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1140
+msgid "for filled buttons"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1147
+msgid "Border color (dark)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1154
+msgid "Border color (light)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1161
+msgid "Modal window overlay color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1168
+msgid "Hide background on inner pages"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1182
+msgid "HTML block to display in the footer"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1188
+msgid "Copyright"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1203
+msgid "Fonts"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1208
+msgid "Content Font (Google Font)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1210
+msgid "Default font: Manrope"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1216
+msgid "Fonts subset (if available)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1218
+msgid "Default: Latin Extended"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1224
+msgid "Capitalize Headers"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1230
+msgid "Custom Fonts"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1238
+msgid ""
+"Reload the page to see the added custom fonts at the top of the font list "
+"above"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1238
+#: includes/customize/ip_customize_settings.php:3825
+msgid "Reload"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1258
+msgid "Misc"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1261
+msgid "Show breadcrumbs in page header"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1267
+msgid "Sticky sidebar"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1273
+msgid "Disable default column gaps in Elementor"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1279
+msgid "Disable block editor"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1285
+msgid "Limit fullwidth content to 1920px"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1291
+msgid "User Scalable (Mobile)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1297
+msgid "Custom icon for 404 page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1302
+msgid "Custom icon for empty cart page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1307
+msgid "Custom icon for empty wishlist page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1312
+msgid "Share buttons on the product and post pages"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1313
+msgid ""
+"Enable or disable button, and then drag and drop tabs below to set up their "
+"order"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1322
+msgid "Scroll To Top Button"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1327
+msgid "Show Button"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1333
+msgid "Button color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1334
+msgid "Default color if empty"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1346
+msgid "Performance"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1347
+msgid ""
+"Use these options to put your theme to a high speed as well as save your "
+"server resources!"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1350
+msgid "Use minified CSS"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1351
+msgid "Load all theme css files combined and minified into a single file"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1357
+msgid "Use minified JS"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1358
+msgid "Load all theme js files combined and minified into a single file"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1364
+msgid "Load jQuery in footer"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1370
+msgid "Lazy load images"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1376
+msgid "Use parameter display=swap for Google Fonts"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1382
+msgid "Delay JavaScript execution"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1383
+msgid ""
+"Improves performance by delaying the execution of JavaScript until user "
+"interaction (e.g. scroll, click). "
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1398
+msgid "Pop-up Cart layout (Desktop)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1404
+msgid "Sidebar"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1405
+msgid "Disable"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1410
+msgid "Open the pop-up cart after adding the product (Desktop)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1420
+msgid "Open the pop-up cart after adding the product (Mobile)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1427
+msgid "Clicking outside the sidebar closes the cart"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1434
+msgid "Auto update cart when quantity changed on the cart page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1440
+#: includes/customize/ip_customize_settings.php:1453
+msgid "Expand Coupon Code block"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1466
+msgid ""
+"Use %s Advert Bar %s  instead of Store Notice to place ads created in "
+"Elementor above or below the header."
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1472
+msgid "Store notice placement"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1478
+msgid "At the top of the page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1479
+msgid "At the bottom of the screen (fixed)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1486
+msgid "Hide button"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1496
+msgid "Store notice custom button text"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1497
+msgid "Default if empty"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1508
+msgid "Store notice text color "
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1518
+msgid "Store notice background color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1538
+msgid "Disable purchase"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1539
+msgid ""
+"Completely disables the ability to order products, turning the site into a "
+"showcase of goods."
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1546
+msgid "Thumbnails aspect ratio"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1547
+msgid ""
+"This parameter affects the display of all product thumbnails in the theme."
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1552
+msgid "Cropped 1:1"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1553
+msgid "As in the product grid"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1558
+msgid "Hide prices"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1559
+msgid "Hide prices in the grid and on the product page."
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1566
+msgid "Search by SKU"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1573
+msgid "Search by Category name"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1580
+msgid "Search by Tag name"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1587
+msgid "%s Search by Brand name %s"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1596
+msgid "Hide Uncategorized (default) category"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1597
+#: includes/customize/ip_customize_settings.php:1605
+msgid "Products will be available only by direct link"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1604
+msgid "Hide category with products"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1612
+msgid "Registration page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1613
+msgid ""
+"Select a page with a custom registration form, if you use it instead of the "
+"standard registration form."
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1620
+msgid "Coming soon page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1621
+msgid ""
+"Select the page that will be displayed when “Coming soon” is enabled in the "
+"WooCommerce settings."
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1628
+msgid "Pop-up message timeout (seconds)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1629
+msgid ""
+"If you enter zero, messages will not be closed automatically, but can be "
+"closed by clicking on the close button.."
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1643
+msgid "Product Grid"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1649
+msgid "Products per page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1660
+msgid "Paging"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1665
+msgid "Pagination"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1666
+#: includes/customize/ip_customize_settings.php:1675
+msgid "Load More"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1667
+msgid "Infinity"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1673
+msgid "Load More button text"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1684
+msgid "Show sidebar"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1685
+msgid ""
+"If this option is disabled, the sidebar is displayed as a pop-up filter."
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1692
+msgid "Sticky filter button"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1702
+msgid "Single sidebar for mobile and desktop versions"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1710
+msgid "Clicking outside the popup filter closes it"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1717
+msgid "Collapse filter sidebar widgets"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1724
+#: includes/customize/ip_customize_settings.php:2919
+#: includes/customize/ip_customize_settings.php:3022
+msgid "Grid layout (Desktop)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1729
+#: includes/customize/ip_customize_settings.php:2925
+#: includes/customize/ip_customize_settings.php:3028
+msgid "3 per row"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1730
+#: includes/customize/ip_customize_settings.php:2926
+#: includes/customize/ip_customize_settings.php:3029
+msgid "4 per row"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1731
+#: includes/customize/ip_customize_settings.php:2927
+#: includes/customize/ip_customize_settings.php:3030
+msgid "5 per row"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1736
+msgid "Grid width (Desktop)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1742
+msgid "Boxed"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1747
+msgid "Text alignment"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1752
+msgid "Left"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1758
+msgid "Grid layout (Mobile)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1763
+msgid "1 per row"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1764
+msgid "2 per row"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1769
+msgid "Show \"Add to wishlist\" button"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1776
+msgid "Show \"Quick view\" button"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1783
+msgid ""
+"Hide \"Quick view\" and \"Add to wishlist\" buttons in the product grid on a "
+"mobile device"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1793
+msgid "Show categories"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1800
+msgid "Show \"Add to cart\" button"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1807
+msgid "Show product short description"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1814
+msgid "Short description with a link"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1824
+msgid "Show star rating in the product list"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1831
+msgid "Star rating layout"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1836
+msgid "Short (1 star)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1837
+msgid "Full (5 stars)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1845
+msgid "White background for a product"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1852
+msgid "Show color variations"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1862
+msgid "Hide color variations if only one color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1873
+msgid "Color attribute"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1874
+msgid "Select the attribute of the product with the type `Color` or `Image`"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1885
+msgid "Color variations size"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1902
+msgid "Size attribute"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1903
+msgid ""
+"You can select an attribute to display the available sizes in the product."
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1919
+msgid "Position of the category description"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1924
+msgid "Above the product grid"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1925
+msgid "Below the product grid"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1930
+msgid "Title Font Size (px)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1943
+#: includes/customize/ip_customize_settings.php:2314
+msgid "Price Font Size (px)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1956
+#: includes/customize/ip_customize_settings.php:2334
+msgid "Product Image"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1962
+#: includes/customize/ip_customize_settings.php:2340
+msgid "Image fit"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1975
+#: includes/customize/ip_customize_settings.php:2353
+msgid "Image aspect ratio (height / width)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1986
+msgid "Image background color on hover"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:1993
+msgid "Switch image on hover (Desktop)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2000
+msgid "Switch image on tap (Tablet & Mobile)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2010
+msgid "Images zoom on touch or mouseover in Quick view"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2020
+msgid "Hide zoom on mobile (quick view)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2052
+msgid "Product Page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2057
+msgid "Product Page Layout"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2062
+msgid "Layout 1"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2063
+msgid "Layout 2"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2064
+msgid "Layout 3"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2065
+msgid "Layout 4"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2070
+msgid "Single image in the first row"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2080
+msgid "One image per line in the carousel on mobile"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2090
+msgid "Show category carousel"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2097
+msgid "Remove product name from breadcrumb"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2104
+msgid "Product page blocks"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2115
+msgid "Quickview page blocks"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2129
+msgid "Product Tabs Layout"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2136
+msgid "Expanded"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2144
+msgid "Product Tabs (Default)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2145
+msgid ""
+"Enable or disable tab, and then drag and drop tabs below to set up their "
+"order"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2160
+msgid "Custom header of the \"Description\" tab"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2170
+msgid "Custom header of the \"Additional information\" tab"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2180
+msgid "Layout for Additional Information tab"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2185
+msgid "Inline"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2186
+msgid "Table"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2194
+msgid "Expand tabs on mobile"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2205
+msgid "Expand first tab"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2212
+msgid "Show share buttons"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2219
+msgid "Hide price range in the variable product"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2226
+msgid "Hide stock quantity"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2233
+msgid "Hide SKU"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2240
+msgid "Sticky Add To Cart (Mobile)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2247
+#: includes/woocommerce/woocommerce.php:2170
+msgid "Buy now"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2257
+msgid "Ajax Add to Cart"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2258
+msgid ""
+"This option will enable the Ajax add to cart functionality on a product "
+"page. WooCommerce doesn`t have this option built-in, so theme implementation "
+"might not be compatible with a certain plugin you`re using, so it would be "
+"best to keep it disabled."
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2268
+msgid "Position of the product video in thumbnails"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2281
+msgid "HTML block to display at the bottom of the product page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2288
+msgid "Title Font Size (Desktop)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2301
+msgid "Title Font Size (Mobile)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2327
+msgid "Star rating color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2364
+msgid "Image block background color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2371
+msgid "Images modal gallery"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2378
+msgid "Inline video"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2379
+msgid ""
+"Video playback on the product page. Supported formats: mp4, m4v, webm, ogv, "
+"flv. Autoplay, looped, muted, without controls."
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2386
+msgid "Images zoom on touch or mouseover on product page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2393
+msgid "Hide zoom on mobile (product page)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2403
+#: includes/customize/ip_customize_settings.php:5270
+msgid "Custom HTML"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2412
+#: includes/customize/ip_customize_settings.php:4981
+msgid "Content"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2443
+#: includes/customize/ip_customize_settings.php:2525
+msgid "Show border"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2453
+#: includes/customize/ip_customize_settings.php:2533
+msgid "Border color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2464
+msgid "Two-column lists"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2474
+msgid "Features"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2475
+msgid "Displayed on the product page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2493
+msgid "Icon color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2509
+msgid "Description color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2550
+msgid "Shop Page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2563
+msgid "Shop Page is not configured "
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2623
+msgid "Brands"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2628
+msgid "Brand attribute"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2636
+msgid "Show Brand in grid"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2646
+msgid "Show Brand on product page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2656
+msgid "Hide Brand in \"Additional information\" tab of the product page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2666
+msgid "Brand Layout (Product Page)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2671
+msgid "Brand name only"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2672
+msgid "Brand logo"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2673
+msgid "Brand in meta area"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2682
+msgid "Show Brand on cart page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2692
+msgid "Show brand carousel in the header of the brand page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2702
+msgid "Search by Brand name"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2712
+msgid "Brands page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2713
+msgid "Page with a list of brands. Used in breadcrumbs"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2723
+msgid "Disable WooCommerce native brands"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2724
+msgid "The theme uses a built-in brand system that uses product attributes."
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2735
+msgid "Badges"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2739
+#: includes/customize/ip_customize_settings.php:2753
+msgid "Out of stock"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2744
+msgid "Out of stock badge color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2750
+msgid "Out of stock text"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2751
+#: includes/customize/ip_customize_settings.php:2769
+#: includes/customize/ip_customize_settings.php:2787
+#: includes/customize/ip_customize_settings.php:2815
+msgid "Disabled if empty"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2757
+#: includes/customize/ip_customize_settings.php:2771
+msgid "Featured"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2762
+msgid "Featured badge color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2768
+msgid "Featured badge text"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2775
+#: includes/customize/ip_customize_settings.php:2789
+msgid "Sale"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2780
+msgid "Sale badge color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2786
+msgid "Sale badge text"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2793
+msgid "Show"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2797
+msgid "Percentage"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2798
+#: includes/customize/ip_customize_settings.php:4977
+msgid "Text"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2803
+#: includes/customize/ip_customize_settings.php:2817
+msgid "New"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2808
+msgid "New badge color"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2814
+msgid "New badge text"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2821
+msgid "Product newness"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2822
+msgid "Display the New badge for how many days? Set 0 for disable `NEW` badge."
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2842
+msgid "Wishlist page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2843
+msgid "Deselect to disable wishlist"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2850
+msgid "Wishlist share buttons"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2864
+msgid "Related products, Up-Sells, Cross-Sells, Recently viewed"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2869
+msgid "Related products, Up-Sells, Cross-Sells"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2875
+msgid "Show related products"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2882
+msgid "Number of related products"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2895
+msgid "Related products custom header"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2905
+msgid "Up-Sells custom header"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2912
+msgid "Cross-Sells custom header"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2932
+#: includes/customize/ip_customize_settings.php:3038
+msgid "Hide product short description"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2942
+#: woocommerce/single-product/recently.php:9
+msgid "Recently viewed products"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2948
+msgid "Enable recently viewed products"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2955
+msgid "Number of products"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2968
+msgid "Show on Product page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2978
+msgid "Show on Shop page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2988
+msgid "Show on Cart page"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:2998
+msgid "Custom header"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:3008
+#: includes/woocommerce/woocommerce.php:2976
+msgid "Position"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:3013
+msgid "Above other sections"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:3014
+msgid "Below other sections"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:3053
+msgid "Categories Carousel"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:3057
+msgid "You can enable the carousel on the Shop page %s here %s"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:3063
+msgid "You can enable the carousel on the Category page %s here %s"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:3069
+msgid "Icon size (Desktop)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:3081
+msgid "Icon size (Tablet)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:3093
+msgid "Icon size (Mobile)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:3105
+msgid "Font size"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:3117
+msgid "Width of the page title area"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:3428
+#: includes/customize/ip_customize_settings.php:3451
+#: includes/customize/ip_customize_settings.php:3493
+#: includes/customize/ip_customize_settings.php:3547
+#: includes/woocommerce/woocommerce.php:1558
+#: includes/woocommerce/woocommerce.php:1589
+msgid "Select"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:3475
+msgid "Select Icon"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:3825
+msgid "Please reload the page to see the settings of the new blocks"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:3830
+msgid "Add new block"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:3832
+msgid "- select block -"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:3836
+#: includes/customize/ip_customize_settings.php:3858
+msgid "Add"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:3840
+msgid "Add new"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:3842
+msgid "- select -"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:4063
+msgid "General Colors"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:4396
+msgid "Custom Font:"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:4412
+msgid "System Font:"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:4516
+msgid "All"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:4522
+msgid "Extended"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:4602
+msgid "Main"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:4603
+msgid "Featured Products"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:4604
+msgid "Sale Products"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:4605
+msgid "Best-Selling Products"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:4606
+msgid "Recent Products"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:4607
+msgid "Categories"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:4985
+msgid "Light Text"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5007
+msgid "Light Border"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5016
+msgid "Dark Border"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5112
+msgid "- place -"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5113
+msgid "Top left"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5114
+msgid "Top center"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5115
+msgid "Top right"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5116
+msgid "Bottom left"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5117
+msgid "Bottom center"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5118
+msgid "Bottom right"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5155
+msgid "%s url"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5164
+msgid "Custom icon"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5173
+msgid "Custom url"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5247
+#: includes/theme-about/theme-about.php:92
+msgid "Something went wrong..."
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5256
+msgid "Breadcrumbs"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5257
+#: includes/theme-about/theme-about.php:726
+msgid "Brand"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5259
+msgid "Rating"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5260
+msgid "SKU (separate from Meta)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5261
+#: woocommerce/wishlist.php:35
+msgid "Price"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5262
+msgid "Stock progress bar"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5263
+msgid "Excerpt"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5264
+msgid "Add to cart"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5265
+msgid "Add to wishlist and Share buttons"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5266
+msgid "Meta"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5267
+msgid "Other 1 (third-party blocks)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5268
+msgid "Other 2 (third-party blocks)"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5269
+msgid "Features List"
+msgstr ""
+
+#: includes/customize/ip_customize_settings.php:5447
+msgid "Fonts for"
+msgstr ""
+
+#: includes/customize/ip_customize_style.php:153
+msgid "Frequently Bought Together"
+msgstr ""
+
+#: includes/megamenu/mega_menu.php:74
+msgid "Submenu Content"
+msgstr ""
+
+#: includes/megamenu/mega_menu.php:83
+msgid "Product subcategories"
+msgstr ""
+
+#: includes/megamenu/mega_menu.php:85
+msgid "Product attribute terms"
+msgstr ""
+
+#: includes/megamenu/mega_menu.php:92
+msgid "Submenu Columns"
+msgstr ""
+
+#: includes/megamenu/mega_menu.php:96
+msgid "1 column"
+msgstr ""
+
+#: includes/megamenu/mega_menu.php:98
+msgid "2 columns"
+msgstr ""
+
+#: includes/megamenu/mega_menu.php:100
+msgid "3 columns"
+msgstr ""
+
+#: includes/megamenu/mega_menu.php:102
+msgid "4 columns"
+msgstr ""
+
+#: includes/megamenu/mega_menu.php:115
+msgid "Expand third level"
+msgstr ""
+
+#: includes/megamenu/mega_menu.php:121
+#: includes/woocommerce/woocommerce.php:2874
+#: includes/woocommerce/woocommerce.php:2960
+msgid "HTML Block"
+msgstr ""
+
+#: includes/megamenu/mega_menu.php:122
+msgid "Parent Category"
+msgstr ""
+
+#: includes/megamenu/mega_menu.php:123
+msgid "Attribute"
+msgstr ""
+
+#: includes/megamenu/mega_menu.php:142 includes/megamenu/mega_menu.php:291
+msgid "Shop"
+msgstr ""
+
+#: includes/megamenu/mega_menu.php:168 includes/megamenu/mega_menu.php:397
+msgid "Select HTML block"
+msgstr ""
+
+#: includes/megamenu/mega_menu.php:171
+msgid "Select category"
+msgstr ""
+
+#: includes/megamenu/mega_menu.php:174 includes/megamenu/mega_menu.php:399
+msgid "Select attribute"
+msgstr ""
+
+#: includes/megamenu/mega_menu.php:217
+msgid "Add badge"
+msgstr ""
+
+#: includes/megamenu/mega_menu.php:223
+msgid "Badge text"
+msgstr ""
+
+#: includes/megamenu/mega_menu.php:233
+msgid "Badge color"
+msgstr ""
+
+#: includes/megamenu/mega_menu.php:396
+msgid "Select icon"
+msgstr ""
+
+#: includes/megamenu/mega_menu.php:398
+msgid "Select parent category"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:70
+#: includes/theme-about/theme-about.php:71
+msgid "%s Theme"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:202
+msgid "Install %s"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:202
+msgid "Update %s"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:202
+msgid "Activate %s"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:226
+#: includes/theme-about/theme-about.php:237
+msgid "Install and activate"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:226
+#: includes/theme-about/theme-about.php:237
+msgid "Update and activate"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:226
+#: includes/theme-about/theme-about.php:237
+msgid "Activate"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:260
+msgid "Theme Text Domain:"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:263
+#: includes/theme-about/theme-about.php:276
+msgid "Non-standard"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:264
+msgid ""
+"For the theme to work, the \"Text Domain\" parameter in the style.css file "
+"must be <strong>%s</strong>"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:270
+msgid "Install Location:"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:274
+msgid "Standard"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:277
+msgid ""
+"Using %s Theme from non-standard install location or having a different "
+"directory name could lead to issues in receiving and installing updates. "
+"Please make sure that theme folder name is <strong>%s</strong>, without "
+"spaces."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:283
+msgid "File System Accessible:"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:289
+#: includes/theme-about/theme-about.php:305
+#: includes/theme-about/theme-about.php:320
+#: includes/theme-about/theme-about.php:492
+#: includes/theme-about/theme-about.php:508
+msgid "Yes"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:292
+#: includes/theme-about/theme-about.php:308
+#: includes/theme-about/theme-about.php:323
+#: includes/theme-about/theme-about.php:495
+#: includes/theme-about/theme-about.php:511
+msgid "No"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:293
+msgid ""
+"Theme has no direct access to the file system. Therefore plugins and pre-"
+"made websites installation is not possible to work properly.<br>Please try "
+"to insert the following code: <code>define( \"FS_METHOD\", \"direct\" );</"
+"code><br>before <code>/* That's all, stop editing! Happy blogging. */</code> "
+"in <code>wp-config.php</code>."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:300
+msgid "Uploads Folder Writable:"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:309
+msgid ""
+"Uploads folder must be writable to allow WordPress function properly.<br>See "
+"<a href=\"https://codex.wordpress.org/Changing_File_Permissions\" "
+"target=\"_blank\">changing file permissions</a> or contact your hosting "
+"provider."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:316
+msgid "ZipArchive Support:"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:324
+msgid ""
+"ZipArchive is required for plugins installation and pre-made websites import."
+"<br>Please contact your hosting provider."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:331
+msgid "PHP Version:"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:338
+msgid ""
+"Current version is sufficient. However <strong>v.7.4.0</strong> or greater "
+"is recommended to improve the performance."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:343
+msgid "Current version is sufficient."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:350
+msgid "PHP Max Input Vars:"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:357
+msgid ""
+"Minimum value is <strong>1000</strong>. <strong>2000</strong> is "
+"recommended. <strong>3000</strong> or more may be required if lots of "
+"plugins are in use and/or you have a large amount of menu items."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:363
+msgid ""
+"Current limit is sufficient for most tasks. <strong>2000</strong> is "
+"recommended. <strong>3000</strong> or more may be required if lots of "
+"plugins are in use and/or you have a large amount of menu items."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:368
+msgid ""
+"Current limit is sufficient. However, up to <strong>3000</strong> or more "
+"may be required if lots of plugins are in use and/or you have a large amount "
+"of menu items."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:373
+msgid "Current limit is sufficient."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:380
+msgid "WP Memory Limit:"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:386
+msgid ""
+"<br><small>See <a href=\"%1$s\" target=\"_blank\">increasing memory "
+"allocated to PHP</a> or contact your hosting provider.</small>"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:392
+msgid ""
+"Minimum value is <strong>64 MB</strong>. <strong>128 MB</strong> is "
+"recommended. <strong>256 MB</strong> or more may be required if lots of "
+"plugins are in use and/or you want to install the Demo."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:400
+msgid ""
+"Current memory limit is sufficient for most tasks. However, recommended "
+"value is <strong>128 MB</strong>. <strong>256 MB</strong> or more may be "
+"required if lots of plugins are in use and/or you want to install the Demo."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:408
+msgid ""
+"Current memory limit is sufficient. However, <strong>256 MB</strong> or more "
+"may be required if lots of plugins are in use and/or you want to install the "
+"Demo."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:415
+msgid "Current memory limit is sufficient."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:423
+msgid "PHP Time Limit:"
+msgstr ""
+
+#. translators: %1$s - wp codex article url.
+#: includes/theme-about/theme-about.php:429
+msgid ""
+"<br><small>See <a href=\"%1$s\" target=\"_blank\">increasing max PHP "
+"execution time</a> or contact your hosting provider.</small>"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:435
+msgid ""
+"Minimum value is <strong>30</strong>. <strong>60</strong> is recommended."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:443
+msgid ""
+"Current time limit is sufficient, however <strong>60</strong> is recommended."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:451
+msgid "Current time limit should be sufficient."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:458
+msgctxt "Time limit status."
+msgid "unlimited"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:459
+msgid "Current time limit is sufficient."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:469
+msgid "Zlib Output Compression:"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:476
+msgid "On"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:477
+msgid ""
+"zlib.output_compression is problematic and throws errors most of the time in "
+"WordPress. Make sure to disable it."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:480
+msgid "Off"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:488
+msgid "XML support:"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:496
+msgid ""
+"XML or SIMPLEXML extensions must be installed in PHP. This will allow you to "
+"import demo content"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:504
+msgid "CURL support:"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:512
+msgid ""
+"CURL extensions must be installed in PHP. This will allow you to import demo "
+"content"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:557
+msgid "Welcome to %1$s v.%2$s"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:567
+msgid "See Changelog"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:569
+msgid "Check for updates"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:573
+msgid ""
+"First things first, let’s register your copy of %s Theme to enable theme "
+"updates, importing demos, installing and updating premium plugins."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:591
+msgid ""
+"The required theme plugins will be installed or updated and activated:"
+"<br><b>%1$s</b>"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:601
+#: includes/theme-about/theme-about.php:634
+#: includes/theme-about/theme-about.php:651
+#: includes/theme-about/theme-about.php:1217
+msgid "Continue"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:606
+msgid "All required plugins have been successfully installed."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:617
+msgid "%s Core Plugin"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:618
+msgid "You need to update plugin <strong>%s Core</strong> to version %s"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:620
+msgid "Update"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:622
+msgid "Core plugin has been successfully updated."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:629
+msgid "Required Plugins"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:630
+msgid "Install and activate or update required plugins"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:637
+msgid "All required plugins are installed."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:646
+msgid "Additional Plugins"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:647
+msgid ""
+"You can install additional plugins to extend the functionality of the theme"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:654
+msgid "All additional plugins are installed."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:661
+msgid "Setup Child Theme"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:662
+msgid ""
+"Child theme is used when you want to <a href=\"%s\" target=\"_blank\">modify "
+"the theme</a> without losing the ability to update the theme."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:663
+msgid ""
+"Install and activate Child theme, and finally copy settings from the parent "
+"theme"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:665
+msgid "Install Child Theme"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:669
+#: includes/theme-about/theme-about.php:679
+msgid "Import Demo"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:670
+msgid "Use our Demo Content Importer to make your website similar to our demos"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:671
+msgid "Please install necessary additional plugins before importing"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:677
+msgid "Fix the issues shown in the System Status section"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:681
+msgid "Available only to registered theme"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:685
+msgid "Theme Customization"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:686
+msgid ""
+"Explore the <a href=\"%s\" target=\"_blank\">documentation</a> and then "
+"start customizing the theme"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:688
+msgid "Customize"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:691
+msgid "Get Support"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:692
+msgid ""
+"We offer outstanding support through our ticket system. To get submit a "
+"ticket first you need to register an account and verify your purchase."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:694
+msgid "Submit a Ticket"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:696
+msgid "Clear theme cache"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:706
+msgid "Migrating WooCommerce brands to theme brands"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:714
+msgid "System Status"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:715
+msgid "Please make sure that all system requirements are met (green color)."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:794
+#: includes/theme-about/theme-about.php:801
+msgid "Taxonomy not found: "
+msgstr ""
+
+#: includes/theme-about/theme-about.php:853
+msgid "Brand %s → migrated for %d products."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:857
+msgid "Configure brand display here "
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1131
+msgid "Forbidden to install child themes"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1159
+#: includes/theme-about/theme-about.php:1444
+#: includes/theme-about/theme-about.php:1470
+#: includes/theme-about/theme-about.php:1493
+msgid "Invalid security nonce! Reload page and try again."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1171
+msgid "The child theme has been successfully set up"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1174
+#: includes/theme-about/theme-about.php:1452
+#: includes/theme-about/theme-about.php:1481
+#: includes/theme-about/theme-about.php:1512
+msgid "Something went wrong. Please try again!"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1202
+msgid "Your Purchase Code"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1206
+msgid "e.g. cb0e057f-a05d-4758-b314-024db98eff85"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1214
+msgid ""
+"Login to your Envato Account and access <a href=\"%s\" "
+"target=\"_blank\">%s's Support Tab</a> where you can find all your %s Theme "
+"purchase codes."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1220
+msgid "Skip Registration"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1222
+msgid ""
+"<strong>Are you sure?</strong> Skipping registration will result in certain "
+"features to be disabled( such as importing demos, installing premium plugins "
+"or even theme updates)."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1228
+msgid "Register"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1243
+msgid "Are you sure?"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1243
+msgid "Deregister"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1278
+msgid ""
+"Response from API server seems to be empty. Please try again, or make sure "
+"your server is not blocking the API calls towards %s."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1285
+msgid "%s (HTTP Error)"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1310
+msgid ""
+"Please enter the correct purchase code format, eg: "
+"00000000-0000-0000-0000-000000000000"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1379
+msgid "Remote server did not respond"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1386
+msgid "Remote server returned error response %1$d %2$s"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1394
+msgid "Remote file is incorrect size"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1400
+msgid "Zero size file downloaded"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1454
+msgid ""
+"There is no access to the remote host! Please contact your hosting provider "
+"to unblock access from your server to the host %s"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1459
+msgid "Please enter purchase code"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1510
+msgid "The theme is up to date"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1661
+msgid "Getting download link..."
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1672
+#: includes/theme-about/theme-about.php:1687
+msgid "Download link could not be retrieved"
+msgstr ""
+
+#: includes/theme-about/theme-about.php:1690
+msgid "Downloading package..."
+msgstr ""
+
+#: includes/woocommerce/woocommerce-wishlist.php:125
+#: includes/woocommerce/woocommerce-wishlist.php:129
+msgid "Cheatin&#8217; huh?"
+msgstr ""
+
+#: includes/woocommerce/woocommerce.php:402
+msgid "Hidden"
+msgstr ""
+
+#: includes/woocommerce/woocommerce.php:412
+#: includes/woocommerce/woocommerce.php:416
+msgid "Unhide"
+msgstr ""
+
+#: includes/woocommerce/woocommerce.php:424
+msgid "Custom badge"
+msgstr ""
+
+#: includes/woocommerce/woocommerce.php:430
+msgid "Tab with HTML-block"
+msgstr ""
+
+#: includes/woocommerce/woocommerce.php:436
+msgid "Section with HTML-block"
+msgstr ""
+
+#: includes/woocommerce/woocommerce.php:805
+msgid "In stock"
+msgstr ""
+
+#: includes/woocommerce/woocommerce.php:1255 templates/content.php:132
+msgid "Share"
+msgstr ""
+
+#: includes/woocommerce/woocommerce.php:1567
+#: includes/woocommerce/woocommerce.php:1599
+msgid "Hint title"
+msgstr ""
+
+#: includes/woocommerce/woocommerce.php:1569
+#: includes/woocommerce/woocommerce.php:1604
+msgid ""
+"Fill in these two fields if you need a popup hint for the attribute. For "
+"example, \"Size guide\"."
+msgstr ""
+
+#: includes/woocommerce/woocommerce.php:1573
+#: includes/woocommerce/woocommerce.php:1610
+msgid "Hint content (HTML block)"
+msgstr ""
+
+#: includes/woocommerce/woocommerce.php:2229
+#: woocommerce/global/product-buttons.php:18
+#: woocommerce/global/product-buttons.php:20
+msgid "Quick view"
+msgstr ""
+
+#: includes/woocommerce/woocommerce.php:2520
+msgid "Stock progress bar in products grid"
+msgstr ""
+
+#: includes/woocommerce/woocommerce.php:2528
+msgid "Stock progress bar on product page"
+msgstr ""
+
+#: includes/woocommerce/woocommerce.php:2590
+msgid "Sold"
+msgstr ""
+
+#: includes/woocommerce/woocommerce.php:2594
+msgid "Available"
+msgstr ""
+
+#: includes/woocommerce/woocommerce.php:2736
+msgid "Text Color"
+msgstr ""
+
+#: includes/woocommerce/woocommerce.php:2744
+msgid "Background Color"
+msgstr ""
+
+#: includes/woocommerce/woocommerce.php:2892
+msgid ""
+"To display the tab, all fields above must be filled in. Also make sure that "
+"the \"HTML block\" tab is active "
+msgstr ""
+
+#: includes/woocommerce/woocommerce.php:2980
+msgid "Before products (Related, Up-sell, ...)"
+msgstr ""
+
+#: includes/woocommerce/woocommerce.php:2982
+msgid "After products (Related, Up-sell, ...)"
+msgstr ""
+
+#: index.php:21
+msgid ""
+"We could not find any results for your search. You can give it another try "
+"through the search form below:"
+msgstr ""
+
+#: templates/content-list.php:146 templates/content-list.php:148
+msgid "Read More"
+msgstr ""
+
+#: templates/content-list.php:148
+msgid "Details"
+msgstr ""
+
+#: templates/content.php:19
+msgid "by"
+msgstr ""
+
+#: templates/content.php:40
+msgid "Comments:"
+msgstr ""
+
+#: templates/content.php:109
+msgid "Continue Reading"
+msgstr ""
+
+#: templates/content.php:125
+msgid "Tags"
+msgstr ""
+
+#: templates/header-mobile-menu-button.php:1
+msgid "Menu"
+msgstr ""
+
+#: templates/header-search.php:5
+msgid "What are you looking for?"
+msgstr ""
+
+#: templates/page-header.php:47 templates/page-header.php:74
+msgid "Search:"
+msgstr ""
+
+#: templates/page-header.php:76
+msgid "No search results for:"
+msgstr ""
+
+#: templates/page-header.php:101
+msgid "Archives"
+msgstr ""
+
+#: templates/pswp.php:12
+msgid "Close (Esc)"
+msgstr ""
+
+#: templates/pswp.php:27
+msgid "Previous (arrow left)"
+msgstr ""
+
+#: templates/pswp.php:31
+msgid "Next (arrow right)"
+msgstr ""
+
+#: woocommerce/cart/cart-empty.php:29
+msgid "Your cart is currently empty"
+msgstr ""
+
+#: woocommerce/checkout/form-coupon.php:46
+msgid "Apply"
+msgstr ""
+
+#: woocommerce/checkout/payment.php:25
+msgid "Payment Method"
+msgstr ""
+
+#: woocommerce/global/quantity-input.php:64
+msgid "Decrease quantity"
+msgstr ""
+
+#: woocommerce/global/quantity-input.php:65
+msgid "Increase quantity"
+msgstr ""
+
+#: woocommerce/myaccount/form-login.php:72
+msgid "Not a Member?"
+msgstr ""
+
+#: woocommerce/myaccount/form-login.php:150
+msgid "You a Member?"
+msgstr ""
+
+#: woocommerce/myaccount/my-account.php:30
+msgid "Hello"
+msgstr ""
+
+#: woocommerce/wishlist.php:32
+msgid "Product"
+msgstr ""
+
+#: woocommerce/wishlist.php:38
+msgid "Stock Status"
+msgstr ""
+
+#: woocommerce/wishlist.php:58
+msgid "Remove"
+msgstr ""
+
+#: woocommerce/wishlist.php:111
+msgid "Your wishlist is currently empty"
+msgstr ""
+
+#: woocommerce/wishlist.php:112
+msgid "Click the %s icons to add products"
+msgstr ""
+
+#. Theme Name of the plugin/theme
+msgid "Moderno"
+msgstr ""
+
+#. Theme URI of the plugin/theme
+msgid "https://parkofideas.com/moderno/"
+msgstr ""
+
+#. Description of the plugin/theme
+msgid "Fashion & Furniture Store WooCommerce Theme"
+msgstr ""
+
+#. Author of the plugin/theme
+msgid "parkofideas.com"
+msgstr ""
+
+#. Author URI of the plugin/theme
+msgid "https://parkofideas.com"
+msgstr ""

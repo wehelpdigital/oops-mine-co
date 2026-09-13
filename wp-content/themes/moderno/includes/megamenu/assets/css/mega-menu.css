@@ -1,0 +1,85 @@
+.ip-field-custom {
+	position: relative;
+	color:    #666;
+	margin:   2px 0 5px;
+}
+
+.ip-field-custom--left,
+.ip-field-custom--right {
+	float: left;
+	width: calc(50% - 10px);
+}
+
+.ip-field-custom--left {
+	padding-right: 10px;
+}
+
+.ip-field-custom--right {
+	padding-left: 10px;
+}
+
+.ip-field-custom:not(.ip-field-custom--active) {
+	display: none;
+}
+
+.ip-field-custom.ip-field-custom--active {
+	display: block;
+}
+
+.ip-field-custom.ip-field-custom--html_block,
+.ip-field-custom.ip-field-custom--product_category,
+.ip-field-custom.ip-field-custom--product_attr {
+	display: none;
+}
+
+.ip-field-custom.ip-field-custom--active.active {
+	display: block !important;
+}
+
+
+.ip-field-custom__wrap {
+	display:     flex;
+	align-items: center;
+}
+
+.ip-field-custom__icon {
+	display: block !important;
+}
+
+.ip-field-custom__container {
+	flex: 1 1 auto;
+}
+
+.ip-field-custom .spinner {
+	float: none;
+}
+
+.ip-field-custom__loader--box {
+	display:          block;
+	box-shadow:       0 0 0 transparent;
+	border-radius:    4px;
+	border:           1px solid #7e8993;
+	background-color: #fff;
+	color:            #32373c;
+	padding:          8px;
+	min-height:       12px;
+	min-width:        12px;
+	margin-right:     10px;
+	text-align:       center;
+	font-size:        14px;
+	line-height:      1;
+	text-decoration:  none;
+}
+
+.ip-field-custom__badge_text,
+.ip-field-custom__badge_color {
+	width: 100%;
+}
+
+.ip-field-custom--hidden {
+	display: none !important;
+}
+
+.ip-field-custom__content-select {
+	min-width: 0;
+}

@@ -1,0 +1,191 @@
+<wpml-config>
+	<custom-types>
+		<custom-type translate="1">html_block</custom-type>
+	</custom-types>
+	<admin-texts>
+		<key name="theme_mods_moderno">
+			<key name="header_phone"/>
+			<key name="header_email"/>
+			<key name="header_address"/>
+			<key name="header_hours"/>
+			<key name="header_lang"/>
+			<key name="header_other"/>
+			<key name="sticky_logo_desktop_hide_text"/>
+			<key name="footer_copyright"/>
+			<key name="store_notice_button_text"/>
+			<key name="product_grid_load_more_text"/>
+			<key name="description_tab_header"/>
+			<key name="additional_information_tab_header"/>
+			<key name="product_page_custom_html"/>
+			<key name="outofstock_badge_text"/>
+			<key name="featured_badge_text"/>
+			<key name="sale_badge_text"/>
+			<key name="new_badge_text"/>
+			<key name="related_product_header"/>
+			<key name="upsells_product_header"/>
+			<key name="cross_sells_product_header"/>
+			<key name="recently_product_header"/>
+		</key>
+	</admin-texts>
+	<elementor-widgets>
+		<widget name="ideapark-button">
+			<fields>
+				<field type="Button: Text" editor_type="LINE">text</field>
+				<field type="Button: Link" editor_type="LINK">link>url</field>
+			</fields>
+		</widget>
+		<widget name="ideapark-social">
+			<fields>
+				<field type="Social: Facebook Url" editor_type="LINK">soc-facebook>url</field>
+				<field type="Social: Instagram Url" editor_type="LINK">soc-instagram>url</field>
+				<field type="Social: VK Url" editor_type="LINK">soc-vk>url</field>
+				<field type="Social: OK Url" editor_type="LINK">soc-ok>url</field>
+				<field type="Social: Telegram Url" editor_type="LINK">soc-telegram>url</field>
+				<field type="Social: Whatsapp Url" editor_type="LINK">soc-whatsapp>url</field>
+				<field type="Social: Line Url" editor_type="LINK">soc-line>url</field>
+				<field type="Social: Wechat Url" editor_type="LINK">soc-wechat>url</field>
+				<field type="Social: Viber Url" editor_type="LINK">soc-viber>url</field>
+				<field type="Social: Discord Url" editor_type="LINK">soc-discord>url</field>
+				<field type="Social: Twitter Url" editor_type="LINK">soc-twitter>url</field>
+				<field type="Social: Youtube Url" editor_type="LINK">soc-youtube>url</field>
+				<field type="Social: Vimeo Url" editor_type="LINK">soc-vimeo>url</field>
+				<field type="Social: Snapchat Url" editor_type="LINK">soc-snapchat>url</field>
+				<field type="Social: Tiktok Url" editor_type="LINK">soc-tiktok>url</field>
+				<field type="Social: Linkedin Url" editor_type="LINK">soc-linkedin>url</field>
+				<field type="Social: Flickr Url" editor_type="LINK">soc-flickr>url</field>
+				<field type="Social: Pinterest Url" editor_type="LINK">soc-pinterest>url</field>
+				<field type="Social: Tumblr Url" editor_type="LINK">soc-tumblr>url</field>
+				<field type="Social: Github Url" editor_type="LINK">soc-github>url</field>
+				<field type="Social: Custom Url 1" editor_type="LINK">custom-soc-url-1>url</field>
+				<field type="Social: Custom Url 2" editor_type="LINK">custom-soc-url-2>url</field>
+			</fields>
+		</widget>
+		<widget name="ideapark-slider">
+			<fields>
+				<field>slider_list</field>
+			</fields>
+			<fields-in-item items_of="slider_list">
+				<field type="Slider: Title" editor_type="LINE">title</field>
+				<field type="Slider: Subtitle" editor_type="AREA">subtitle</field>
+				<field type="Slider: Button Text" editor_type="LINE">button_text</field>
+				<field type="Slider: Button Url" editor_type="LINK">button_link>url</field>
+			</fields-in-item>
+		</widget>
+		<widget name="ideapark-reviews">
+			<fields>
+				<field>review_list</field>
+			</fields>
+			<fields-in-item items_of="review_list">
+				<field type="Reviews: Reviewer Name" editor_type="LINE">reviewer_name</field>
+				<field type="Reviews: Review Body" editor_type="AREA">reviewer_text</field>
+			</fields-in-item>
+		</widget>
+		<widget name="ideapark-instagram">
+			<fields>
+				<field type="Instagram: Account Title" editor_type="LINE">title</field>
+				<field type="Instagram: Account Link" editor_type="LINK">link>url</field>
+			</fields>
+		</widget>
+		<widget name="ideapark-tabs">
+			<fields>
+				<field>tabs</field>
+			</fields>
+			<fields-in-item items_of="tabs">
+				<field type="Tabs: Title" editor_type="LINE">title</field>
+			</fields-in-item>
+		</widget>
+		<widget name="ideapark-product-tabs">
+			<fields>
+				<field>tabs</field>
+			</fields>
+			<fields-in-item items_of="tabs">
+				<field type="Product Tabs: Title" editor_type="LINE">title</field>
+				<field type="Product Tabs: Shortcode" editor_type="AREA">shortcode</field>
+				<field type="Product Tabs: Button Text" editor_type="LINE">button_text</field>
+				<field type="Product Tabs: Button Link" editor_type="LINK">button_link>url</field>
+			</fields-in-item>
+		</widget>
+		<widget name="ideapark-banners">
+			<fields>
+				<field>banner_list</field>
+			</fields>
+			<fields-in-item items_of="banner_list">
+				<field type="Banners: Text Above The Title" editor_type="LINE">text_above</field>
+				<field type="Banners: Title" editor_type="LINE">header</field>
+				<field type="Banners: Text Below The Title" editor_type="LINE">text_below</field>
+				<field type="Banners: Link" editor_type="LINK">link>url</field>
+			</fields-in-item>
+		</widget>
+		<widget name="ideapark-image-list-3">
+			<fields>
+				<field>icon_list</field>
+			</fields>
+			<fields-in-item items_of="icon_list">
+				<field type="Categories: Title" editor_type="LINE">title_text</field>
+				<field type="Categories: Link" editor_type="LINK">link>url</field>
+			</fields-in-item>
+		</widget>
+		<widget name="ideapark-image-list-2">
+			<fields>
+				<field>icon_list</field>
+			</fields>
+			<fields-in-item items_of="icon_list">
+				<field type="Logo List: Link" editor_type="LINK">link>url</field>
+			</fields-in-item>
+		</widget>
+		<widget name="ideapark-video">
+			<fields>
+				<field type="Video Button: Link" editor_type="LINK">video_url</field>
+			</fields>
+		</widget>
+		<widget name="ideapark-mega-menu">
+			<fields>
+				<field type="Mega Menu Block: Title" editor_type="LINE">title</field>
+				<field type="Mega Menu Block: Link" editor_type="LINK">link>url</field>
+			</fields>
+		</widget>
+		<widget name="ideapark-icon-list-1">
+			<fields>
+				<field>icon_list</field>
+			</fields>
+			<fields-in-item items_of="icon_list">
+				<field type="Advantages: Title" editor_type="LINE">title</field>
+				<field type="Advantages: Link" editor_type="LINK">link>url</field>
+			</fields-in-item>
+		</widget>
+		<widget name="ideapark-circle-text">
+			<fields>
+				<field type="Circle Text: Title" editor_type="LINE">title</field>
+				<field type="Circle Text: Link" editor_type="LINK">link>url</field>
+			</fields>
+		</widget>
+		<widget name="ideapark-running-line">
+			<fields>
+				<field>item_list</field>
+			</fields>
+			<fields-in-item items_of="item_list">
+				<field type="Infinite Marquee: Title" editor_type="LINE">title</field>
+				<field type="Infinite Marquee: Link" editor_type="LINK">link>url</field>
+			</fields-in-item>
+		</widget>
+		<widget name="ideapark-accordion">
+			<fields>
+				<field>accordion</field>
+			</fields>
+			<fields-in-item items_of="accordion">
+				<field type="Accordion: Title" editor_type="LINE">title</field>
+				<field type="Accordion: Content" editor_type="VISUAL">content</field>
+			</fields-in-item>
+		</widget>
+		<widget name="ideapark-hotspot-carousel">
+			<fields>
+				<field>image_list</field>
+			</fields>
+			<fields-in-item items_of="image_list">
+				<field type="Hotspot Gallery: Header" editor_type="LINE">title_text</field>
+				<field type="Hotspot Gallery: Subheader" editor_type="AREA">subheader</field>
+				<field type="Hotspot Gallery: Link" editor_type="LINK">link>url</field>
+			</fields-in-item>
+		</widget>
+	</elementor-widgets>
+</wpml-config>

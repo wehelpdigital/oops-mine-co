@@ -1,0 +1,108 @@
+# Copyright (C) 2026 Font Icons Loader
+# This file is distributed under the same license as the Font Icons Loader package.
+msgid ""
+msgstr ""
+"Project-Id-Version: Font Icons Loader 1.10\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/ideapark-fonts\n"
+"POT-Creation-Date: 2026-06-26 08:52:02+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2026-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+
+#. #-#-#-#-#  ideapark-fonts.pot (Font Icons Loader 1.10)  #-#-#-#-#
+#. Plugin Name of the plugin/theme
+#: ideapark-fonts.php:208 ideapark-fonts.php:555
+msgid "Font Icons Loader"
+msgstr ""
+
+#: ideapark-fonts.php:286
+msgid "Font %s was successfully removed"
+msgstr ""
+
+#: ideapark-fonts.php:297
+msgid "File is not Zip-archive."
+msgstr ""
+
+#: ideapark-fonts.php:315
+msgid "Unzip file error."
+msgstr ""
+
+#: ideapark-fonts.php:402
+msgid "Can`t recognize WOFF or SVG font file"
+msgstr ""
+
+#: ideapark-fonts.php:413
+msgid "Font %s is already installed, remove it before uploading."
+msgstr ""
+
+#: ideapark-fonts.php:432
+msgid "Can`t copy font file"
+msgstr ""
+
+#: ideapark-fonts.php:515
+msgid "Font was successfully uploaded"
+msgstr ""
+
+#: ideapark-fonts.php:536
+msgid ""
+"File is empty. Please upload something more substantial. This error could "
+"also be caused by uploads being disabled in your php.ini or by post_max_size "
+"being defined as smaller than upload_max_filesize in php.ini."
+msgstr ""
+
+#: ideapark-fonts.php:568 ideapark-fonts.php:580
+msgid "Dismiss this notice."
+msgstr ""
+
+#: ideapark-fonts.php:587
+msgid "Upload a Zip with font files"
+msgstr ""
+
+#: ideapark-fonts.php:588
+msgid ""
+"You can generate font with SVG-icons using online font generator %s or "
+"similar"
+msgstr ""
+
+#: ideapark-fonts.php:596
+msgid "Installed fonts"
+msgstr ""
+
+#: ideapark-fonts.php:599
+msgid "Expand all"
+msgstr ""
+
+#: ideapark-fonts.php:602
+msgid "Collapse all"
+msgstr ""
+
+#: ideapark-fonts.php:619
+msgid "icons: %s"
+msgstr ""
+
+#: ideapark-fonts.php:649
+msgid "HTML"
+msgstr ""
+
+#: ideapark-fonts.php:653
+msgid "Shortcode"
+msgstr ""
+
+#: ideapark-fonts.php:943 ideapark-fonts.php:949
+msgid "Cheatin&#8217; huh?"
+msgstr ""
+
+#. Description of the plugin/theme
+msgid "Loader for font icons set."
+msgstr ""
+
+#. Author of the plugin/theme
+msgid "parkofideas.com"
+msgstr ""
+
+#. Author URI of the plugin/theme
+msgid "http://parkofideas.com"
+msgstr ""

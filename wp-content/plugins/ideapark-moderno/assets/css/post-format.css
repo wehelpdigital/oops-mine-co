@@ -1,0 +1,5 @@
+#youtube-video-url:not(.active),
+#image-gallery:not(.active),
+#author-of-the-quote:not(.active) {
+	display: none;
+}

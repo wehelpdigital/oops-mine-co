@@ -1,0 +1,213 @@
+.ideapark-fonts__page {
+	position: relative;
+}
+
+.ideapark-fonts__upload-form .submit {
+	margin-top: 0;
+}
+
+.ideapark-fonts__item-header {
+	background:  #fff;
+	border-left: 4px solid #fff;
+	box-shadow:  0 1px 1px 0 rgba(0, 0, 0, 0.1);
+	margin:      5px 0 15px;
+	padding:     1px 40px;
+	text-align:  center;
+	font-size:   16px;
+	font-weight: bold;
+	position:    relative;
+	line-height: 40px;
+}
+
+.ideapark-fonts__header-wrap {
+	display:         flex;
+	justify-content: space-between;
+	align-items:     baseline;
+}
+
+.ideapark-fonts__expand-all,
+.ideapark-fonts__collapse-all {
+	text-decoration: underline;
+	color:           #0073aa;
+	cursor:          pointer;
+	border:          none;
+	outline:         none;
+	background:      none;
+	padding:         0;
+}
+
+.ideapark-fonts__item-count {
+	font-weight: normal;
+	color:       #999;
+}
+
+.ideapark-fonts__item-remove,
+.ideapark-fonts__item-view,
+.ideapark-fonts__popup-close {
+	position:        absolute;
+	text-decoration: none;
+	display:         block;
+	width:           40px;
+	height:          40px;
+	text-align:      center;
+	line-height:     40px;
+	top:             0;
+	background:      none;
+	border:          0;
+	outline:         0;
+	cursor:          pointer;
+}
+
+.ideapark-fonts__item-remove {
+	left: 0;
+}
+
+.ideapark-fonts__item-remove:hover {
+	color: red;
+}
+
+.ideapark-fonts__item-view {
+	right: 0;
+}
+
+.ideapark-fonts__wrap {
+	display: none;
+}
+
+.ideapark-fonts__icon-list {
+	display:   flex;
+	flex-wrap: wrap;
+	margin:    0 -10px;
+}
+
+.ideapark-fonts__icon {
+	flex:                  0 0 70px;
+	text-align:            center;
+	margin:                10px;
+	border:                solid 1px rgba(0, 0, 0, 0.1);
+	-webkit-border-radius: 3px;
+	-moz-border-radius:    3px;
+	border-radius:         3px;
+	padding:               8px 5px;
+	position:              relative;
+	cursor:                pointer;
+}
+
+.ideapark-fonts__icon-wrap {
+	overflow: hidden;
+}
+
+.ideapark-fonts__icon:hover {
+	background: #fff;
+}
+
+.ideapark-fonts__icon-img {
+	height:         50px;
+	vertical-align: middle;
+	font-size:      50px;
+	line-height:    50px;
+	text-align:     center;
+}
+
+.ideapark-fonts__icon-title {
+	display:     block;
+	font-size:   9px;
+	color:       #999;
+	text-align:  center;
+	line-height: 1.2;
+	margin-top:  5px;
+}
+
+.ideapark-fonts__popup {
+	content:          '';
+	display:          flex;
+	justify-content:  center;
+	align-items:      center;
+	position:         fixed;
+	left:             0;
+	right:            0;
+	top:              0;
+	bottom:           0;
+	opacity:          0;
+	visibility:       hidden;
+	background-color: rgba(241, 241, 241, 0.8);
+	transition:       opacity 0.3s ease-in, visibility 0.3s ease-in;
+	z-index:          1;
+}
+
+.ideapark-fonts__popup--active {
+	opacity:    1;
+	visibility: visible;
+}
+
+.ideapark-fonts__popup-container {
+	text-align:            center;
+	border:                solid 1px rgba(0, 0, 0, 0.1);
+	-webkit-border-radius: 3px;
+	-moz-border-radius:    3px;
+	border-radius:         3px;
+	padding:               25px;
+	position:              relative;
+	background:            #FFF;
+	min-width:             200px;
+	min-height:            200px;
+}
+
+.ideapark-fonts__popup-close {
+	right:   0;
+	z-index: 1;
+}
+
+.ideapark-fonts__popup-img {
+	height:         100px;
+	vertical-align: middle;
+	font-size:      100px;
+	line-height:    100px;
+	text-align:     center;
+}
+
+.ideapark-fonts__popup-title {
+	margin-top:    25px;
+	font-weight:   bold;
+	margin-bottom: 5px;
+}
+
+.ideapark-fonts__popup-code {
+	padding:               3px 10px;
+	border:                solid 1px rgba(0, 0, 0, 0.1);
+	-webkit-border-radius: 3px;
+	-moz-border-radius:    3px;
+	border-radius:         3px;
+	-webkit-touch-callout: all; /* iOS Safari */
+	-webkit-user-select:   all; /* Safari */
+	-khtml-user-select:    all; /* Konqueror HTML */
+	-moz-user-select:      all; /* Firefox */
+	-ms-user-select:       all; /* Internet Explorer/Edge */
+	user-select:           all; /* Chrome and Opera */
+
+}
+
+.ideapark-fonts__icon-link {
+	color:           currentColor;
+	text-decoration: none;
+	font-weight:     inherit;
+	outline: none;
+}
+
+.ideapark-fonts__icon-link:hover,
+.ideapark-fonts__icon-link:active,
+.ideapark-fonts__icon-link:focus {
+	color: currentColor;
+	outline: none;
+	box-shadow: none;
+}
+
+@media (min-width: 783px) {
+	body.folded .ideapark-fonts__popup {
+		left: 36px;
+	}
+
+	body:not(.folded) .ideapark-fonts__popup {
+		left: 160px;
+	}
+}

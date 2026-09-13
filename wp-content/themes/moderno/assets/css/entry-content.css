@@ -1,0 +1,1225 @@
+/*- Reset tags -*/
+
+html {
+	line-height:              1.15;
+	-webkit-text-size-adjust: 100%;
+}
+
+body {
+	margin: 0;
+}
+
+main {
+	display: block;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-size:   inherit;
+	margin:      0;
+	padding:     0;
+	font-weight: inherit;
+}
+
+hr {
+	box-sizing: content-box;
+	height:     0;
+	overflow:   visible;
+}
+
+pre {
+	font-family: monospace, monospace;
+	font-size:   1em;
+}
+
+a {
+	color:            currentColor;
+	background-color: transparent;
+}
+
+abbr[title] {
+	border-bottom:           none;
+	text-decoration:         underline;
+	-webkit-text-decoration: underline dotted;
+	text-decoration:         underline dotted;
+}
+
+
+b,
+strong {
+	font-weight: bolder;
+}
+
+code,
+kbd,
+samp {
+	font-family: monospace, monospace;
+	font-size:   1em;
+}
+
+small {
+	font-size: 80%;
+}
+
+sub,
+sup {
+	font-size:      75%;
+	line-height:    0;
+	position:       relative;
+	vertical-align: baseline;
+}
+
+sub {
+	bottom: -0.25em;
+}
+
+sup {
+	top: -0.5em;
+}
+
+img {
+	border-style: none;
+	max-width:    100%;
+	height:       auto;
+}
+
+button,
+input,
+optgroup,
+select,
+textarea,
+.h-input {
+	font-family: inherit;
+	font-size:   100%;
+	line-height: inherit;
+	font-weight: inherit;
+	color:       inherit;
+	margin:      0;
+}
+
+button,
+input {
+	overflow: visible;
+}
+
+button,
+select {
+	text-transform: none;
+}
+
+button:focus,
+input[type=submit]:focus {
+	outline: none;
+}
+
+:is(button, [type="button"], [type="reset"], [type="submit"])::-moz-focus-inner {
+	border-style: none;
+	padding:      0;
+}
+
+:is(button, [type="button"], [type="reset"], [type="submit"]):-moz-focusring {
+	outline: 1px dotted ButtonText;
+}
+
+fieldset {
+	padding: 0.35em 0.75em 0.625em;
+}
+
+legend {
+	box-sizing:  border-box;
+	color:       inherit;
+	display:     table;
+	max-width:   100%;
+	padding:     0;
+	white-space: normal;
+}
+
+progress {
+	vertical-align: baseline;
+}
+
+textarea {
+	overflow: auto;
+}
+
+[type="checkbox"],
+[type="radio"] {
+	box-sizing: border-box;
+	padding:    0;
+}
+
+[type="number"]::-webkit-inner-spin-button,
+[type="number"]::-webkit-outer-spin-button {
+	height: auto;
+}
+
+[type="search"] {
+	-webkit-appearance: textfield;
+	outline-offset:     -2px;
+}
+
+[type="search"]::-webkit-search-decoration {
+	-webkit-appearance: none;
+}
+
+::-webkit-file-upload-button {
+	-webkit-appearance: button;
+	font:               inherit;
+}
+
+details {
+	display: block;
+}
+
+summary {
+	display: list-item;
+}
+
+template {
+	display: none;
+}
+
+[hidden] {
+	display: none;
+}
+
+svg {
+	width:  initial;
+	height: initial;
+	fill:   currentColor;
+}
+
+ins {
+	text-decoration: none;
+}
+
+/*- Default tag's and entry content styles -*/
+
+body {
+	color:                     var(--text-color);
+	font-family:               var(--font-text);
+	background-color:          var(--background-color);
+	font-weight:               normal;
+	font-size:                 14px;
+	line-height:               calc(25 / 14);
+	letter-spacing:            0.0135em;
+	-ms-font-feature-settings: normal;
+	-ms-word-wrap:             break-word;
+	word-wrap:                 break-word;
+}
+
+a {
+	cursor:          pointer;
+	text-decoration: none;
+}
+
+a,
+li:after,
+li:before,
+input[type=submit],
+button {
+	transition: var(--hover-transition);
+}
+
+a:hover {
+	text-decoration: none;
+	outline:         none;
+}
+
+*,
+*:after,
+*:before {
+	box-sizing:                  border-box;
+	-webkit-font-smoothing:      antialiased;
+	-moz-osx-font-smoothing:     grayscale;
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+input[type="button"]:disabled,
+input[type="submit"]:disabled,
+input[type="reset"]:disabled,
+input[type="file"]:disabled::-webkit-file-upload-button,
+button:disabled,
+select:disabled,
+optgroup:disabled,
+option:disabled,
+select[disabled] > option {
+	opacity: 0.3;
+	cursor:  not-allowed !important;
+}
+
+button,
+input[type=submit],
+input[type=search],
+input[type=text],
+input[type=email],
+input[type=password],
+input[type=tel],
+input[type=url],
+textarea {
+	box-shadow:         none;
+	-webkit-appearance: none;
+	-moz-appearance:    none;
+	-o-appearance:      none;
+	appearance:         none;
+}
+
+input[type="search"]::-webkit-search-cancel-button {
+	-webkit-appearance: none;
+	height:             16px;
+	width:              16px;
+	margin-left:        .4em;
+	background-image:   var(--reset-image);
+	cursor:             pointer;
+}
+
+::-moz-selection {
+	color:      var(--text-color);
+	background: var(--accent-color);
+}
+
+::selection {
+	color:      var(--text-color);
+	background: var(--accent-color);
+}
+
+
+::-moz-placeholder {
+	font-style:    normal !important;
+	text-overflow: ellipsis;
+	color:         var(--text-color-light);
+}
+
+::placeholder {
+	font-style:    normal !important;
+	text-overflow: ellipsis;
+	color:         var(--text-color-light);
+}
+
+.disabled,
+:disabled {
+	cursor: not-allowed !important;
+}
+
+.h-input,
+input[type=search],
+input[type=text],
+input[type=password],
+input[type=email],
+input[type=tel],
+input[type=number],
+input[type=url],
+input[type=date],
+textarea:not(.editor-post-title__input),
+.wpcf7-form .c-custom-selectInner,
+select {
+	font-style:       normal;
+	font-weight:      500;
+	font-size:        13px;
+	line-height:      18px;
+	letter-spacing:   0.03em;
+	color:            var(--text-color);
+	border:           solid 1px var(--border-color-light);
+	padding:          10px 15px;
+	background-color: var(--background-color);
+	height:           auto !important;
+	min-width:        0;
+	border-radius:    0;
+}
+
+select {
+	-webkit-appearance:  none;
+	-moz-appearance:     none;
+	appearance:          none;
+	background-repeat:   no-repeat;
+	background-image:    var(--select-image);
+	background-position: right 15px top 50%;
+}
+
+.h-rtl select {
+	background-position: left 20px top 50%;
+}
+
+.h-rtl .h-input,
+.h-rtl input:not([type=submit]),
+.h-rtl textarea,
+.h-rtl .wpcf7-form .c-custom-selectInner,
+.h-rtl select {
+	text-align: right !important;
+}
+
+:is(input[type="search"], input[type="text"], input[type="password"], input[type="email"], input[type="tel"], input[type="number"], input[type="url"], input[type="date"], textarea, select):focus {
+	border-color: var(--text-color-light) !important;
+	outline:      none;
+}
+
+input:-webkit-autofill,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+	-webkit-box-shadow:      0 0 0 1000px var(--background-color) inset;
+	-webkit-text-fill-color: var(--text-color);
+	outline:                 1px;
+}
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+	-webkit-appearance: none;
+	margin:             0;
+}
+
+
+input[type=radio],
+input[type=checkbox] {
+	position:           relative !important;
+	z-index:            1;
+
+	margin:             -0.15rem 12px 0 0;
+	-webkit-appearance: none;
+	-moz-appearance:    none;
+	appearance:         none;
+	clear:              none;
+	cursor:             pointer;
+	outline:            0;
+	padding:            0 !important;
+	text-align:         center;
+	vertical-align:     middle;
+	display:            inline-flex !important;
+	align-items:        center;
+	justify-content:    center;
+	font-family:        var(--font-icons);
+	font-size:          10px;
+	line-height:        1;
+	color:              var(--text-color);
+	border:             solid 1px var(--border-color-dark);
+}
+
+input[type=checkbox] {
+	width:  18px !important;
+	height: 18px !important;
+}
+
+input[type=radio] {
+	width:  14px !important;
+	height: 14px !important;
+}
+
+.h-rtl input[type=radio],
+.h-rtl input[type=checkbox] {
+	margin-right: 0;
+	margin-left:  12px;
+}
+
+input[type=radio]:focus,
+input[type=checkbox]:focus {
+	border-color: var(--border-color-dark) !important;
+	outline:      none;
+}
+
+input[type=radio] {
+	border-radius: 50%;
+}
+
+input[type=checkbox] {
+	border-radius: 0;
+}
+
+input[type=checkbox]:checked:after {
+	content:     var(--icon-check);
+	font-style:  normal;
+	font-family: var(--font-icons);
+}
+
+/*#ship-to-different-address i {
+	top: 1px !important;
+}*/
+
+input[type=radio]:checked:after {
+	content:          '';
+	display:          block;
+	position:         absolute;
+	left:             3px;
+	right:            3px;
+	top:              3px;
+	bottom:           3px;
+	background-color: var(--text-color);
+	border-radius:    50%;
+}
+
+.screen-reader-text {
+	position:    absolute;
+	width:       1px;
+	height:      1px;
+	padding:     0;
+	margin:      -1px;
+	overflow:    hidden;
+	clip:        rect(0, 0, 0, 0);
+	clip-path:   inset(50%);
+	white-space: nowrap;
+	border:      0;
+}
+
+.entry-content, .elementor-widget-text-editor {
+	position:       relative;
+	text-align:     start;
+	font-size:      14px;
+	line-height:    calc(25 / 14);
+	font-weight:    normal;
+	letter-spacing: 0.0135em;
+	color:          var(--text-color-body);
+}
+
+:is(.entry-content, div[class*="-text-editor"]) > *:first-child,
+:is(.entry-content, div[class*="-text-editor"]) .term-description > *:first-child,
+div[class*="-text-editor"] .elementor-widget-container > *:first-child,
+div[class*="-text-editor"] .elementor-widget-container > style:first-child + * {
+	margin-top: 0 !important;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) > *:last-child,
+:is(.entry-content, div[class*="-text-editor"]) .term-description > *:last-child,
+div[class*="-text-editor"] .elementor-widget-container > *:last-child {
+	margin-bottom: 0 !important;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) iframe {
+	max-width: 100%;
+	width:     100%;
+}
+
+.entry-content *.alignfull iframe,
+.entry-content > *.alignwide iframe,
+.entry-content.entry-content--fullwidth iframe {
+	max-width: 100%;
+	width:     100%;
+}
+
+hr,
+.entry-content hr {
+	display:       block;
+	clear:         both;
+	margin:        20px auto !important;
+	border:        none;
+	border-bottom: solid 1px currentColor;
+	width:         95px;
+}
+
+hr.left,
+.entry-content hr.left {
+	text-align: left;
+}
+
+hr.is-style-wide,
+.entry-content hr.is-style-wide {
+	width: 100% !important;
+}
+
+hr.is-style-dots,
+.entry-content hr.is-style-dots {
+	width:            100% !important;
+	background-image: none !important;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) p {
+	margin-bottom: 1em;
+	margin-top:    1em;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .wp-block-group.has-background {
+	padding:       2rem;
+	margin-top:    0;
+	margin-bottom: 0;
+}
+
+@media (width >= 768px) {
+	:is(.entry-content, div[class*="-text-editor"]) .wp-block-group.has-background {
+		padding:       4rem;
+		margin-top:    0;
+		margin-bottom: 0;
+	}
+}
+
+:is(.entry-content, div[class*="-text-editor"]) ul:not([class]) {
+	list-style: none;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) ol:not([class]) {
+	list-style: decimal;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) :is(ul:not([class]), ol:not([class])) {
+	padding: 0 0 0 16px;
+	margin:  0 0 1.5em 0;
+}
+
+.h-rtl :is(.entry-content, div[class*="-text-editor"]) :is(ul:not([class]), ol:not([class])) {
+	padding: 0 16px 0 0;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) :is(ul, ol):not([class]) li {
+	margin-bottom: 5px;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) :is(ul, ol):not([class]) :is(ul, ol) {
+	margin-top:    5px;
+	margin-bottom: 0;
+	margin-left:   0;
+	margin-right:  0;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) :is(ul, ol).children {
+	margin-bottom: 0;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) :is(ul, ol).is-grid {
+	margin-right: -25px;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) :is(ul, ol).is-grid > li {
+	padding-right: 25px;
+}
+
+
+:is(.entry-content, div[class*="-text-editor"]) ul:not([class]) > li {
+	position: relative;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) ul:not([class]) > li:before {
+	position:       absolute;
+	color:          var(--accent-color);
+	content:        var(--icon-li);
+	display:        inline-block;
+	font-family:    var(--font-icons);
+	font-style:     normal;
+	font-weight:    normal;
+	font-variant:   normal;
+	text-transform: none;
+	line-height:    1px !important;
+	speak:          none;
+	top:            0.9rem;
+	left:           -16px;
+	font-size:      25%;
+}
+
+.h-rtl :is(.entry-content, div[class*="-text-editor"]) ul:not([class]) > li:before {
+	left:  unset;
+	right: -20px;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) dt {
+	font-weight: bold;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) dd {
+	margin: 0 1.5em 1.5em;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) :is(b,strong) {
+	font-weight: 600;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) :is(dfn,cite) {
+	font-style: italic;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) cite {
+	font-size:   14px;
+	font-weight: normal;
+}
+
+.wp-block-quote.is-large cite {
+	font-size: 16px;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) address {
+	margin: 0 0 1.5em;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) pre {
+	font-family:      "Courier 10 Pitch", Courier, monospace;
+	line-height:      1.6;
+	margin-bottom:    1.6em;
+	padding:          1.6em;
+	overflow:         auto;
+	max-width:        100%;
+	background-color: var(--background-color);
+}
+
+:is(.entry-content, div[class*="-text-editor"]) :is(code, kbd, tt, var) {
+	font-family: Monaco, Consolas, "Andale Mono", "DejaVu Sans Mono", monospace;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) :is(abbr, acronym) {
+	border-bottom: 1px dotted #666;
+	cursor:        help;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) mark {
+	background:      #fff9c0;
+	text-decoration: none;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) :is(sup, sub) {
+	font-size:      75%;
+	height:         0;
+	line-height:    0;
+	position:       relative;
+	vertical-align: baseline;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) sup {
+	bottom: 1ex;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) sub {
+	top: .5ex;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) small {
+	font-size: 75%;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) big {
+	font-size: 125%;
+}
+
+.comment-content {
+	position: relative;
+	overflow: hidden;
+}
+
+:is(.entry-content, div[class*="-text-editor"], .comment-content) table {
+	border-color:   var(--border-color-light);
+	border-right:   1px solid var(--border-color-light);
+	border-bottom:  1px solid var(--border-color-light);
+	margin:         0;
+	text-align:     left;
+	width:          100%;
+	border-spacing: 0;
+}
+
+:is(.entry-content, .comment-content, div[class*="-text-editor"]) :is(tr th, thead th) {
+	border-color: var(--border-color-light);
+	border-left:  1px solid var(--border-color-light);
+	border-top:   1px solid var(--border-color-light);
+	border-right: none;
+	font-weight:  600;
+	padding:      0.5em 1.25em;
+	color:        var(--text-color);
+}
+
+:is(.entry-content, .comment-content, div[class*="-text-editor"]) thead {
+	border-bottom: 3px solid var(--border-color-light);
+}
+
+:is(.entry-content, .comment-content, div[class*="-text-editor"]) tfoot {
+	border-top: 3px solid var(--border-color-light);
+}
+
+:is(.entry-content, .comment-content, div[class*="-text-editor"]) .is-style-stripes {
+	border: none;
+}
+
+:is(.entry-content, .comment-content, div[class*="-text-editor"]) tr td {
+	border-color: var(--border-color-light);
+	border-left:  1px solid var(--border-color-light);
+	border-top:   1px solid var(--border-color-light);
+	padding:      0.5em 1.25em;
+}
+
+:is(.entry-content, .comment-content, div[class*="-text-editor"]) tr.odd td {
+	background-color: var(--background-color);
+}
+
+:is(.entry-content, div[class*="-text-editor"]) textarea {
+	width: 100%;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) a:not([class]) {
+	color:                   var(--text-color);
+	text-decoration:         underline;
+	text-underline-position: under;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .has-large-font-size a:not([class]) {
+	text-underline-position: auto;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .wp-block-button {
+	margin-bottom: 20px;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .has-x-large-font-size {
+	font-size: 30px;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .has-large-font-size {
+	font-size: 24px;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .has-medium-font-size {
+	font-size: 20px;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .has-small-font-size {
+	font-size: 16px;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .is-layout-flex {
+	display:   flex;
+	flex-wrap: wrap;
+	gap:       5px;
+}
+
+.entry-content button:not(.h-cb):not([aria-controls]):not([aria-expanded]):not([data-micromodal-close]),
+:is(.entry-content, div[class*="-text-editor"]) input[type=submit]:not(.h-cb),
+:is(.entry-content, div[class*="-text-editor"]) .wp-block-button__link {
+	display:            inline-block;
+	outline:            none;
+	font-weight:        600;
+	font-size:          12px;
+	line-height:        1;
+	letter-spacing:     0.06em;
+	text-align:         center;
+	direction:          rtl;
+	text-transform:     uppercase;
+	padding:            13px 25px;
+	color:              var(--text-color);
+	border:             solid 1px var(--text-color);
+	text-decoration:    none !important;
+	background-color:   var(--background-color);
+	-webkit-appearance: none;
+	-moz-appearance:    none;
+	appearance:         none;
+	cursor:             pointer;
+	flex:               1 1 auto;
+}
+
+.wp-block-button .wp-block-button__link.is-style-outline,
+.wp-block-button.is-style-outline > .wp-block-button__link {
+	padding: 12px 25px !important;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .wp-block-button:not(.is-style-squared) .wp-block-button__link {
+	border-radius: 25px;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .wp-block-button.is-style-squared .wp-block-button__link {
+	border-radius: 0;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .is-style-outline .wp-block-button__link {
+	color:            var(--text-color);
+	background-color: var(--white-color);
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .post-tags :is(a, a:hover) {
+	text-decoration: none;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) :is(h1, h2, h3, h4, h5, h6) {
+	margin:          40px 0 20px 0;
+	font-style:      normal;
+	font-weight:     500;
+	color:           var(--text-color);
+	hyphens:         auto;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) h1 {
+	font-size:      40px;
+	line-height:    calc(45 / 40);
+	letter-spacing: -0.005em;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) h2 {
+	font-size:      34px;
+	line-height:    calc(38 / 34);
+	letter-spacing: 0.005em;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) h3 {
+	font-size:      30px;
+	line-height:    calc(37 / 30);
+	letter-spacing: 0.012em;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) h4 {
+	font-size:      27px;
+	line-height:    calc(31 / 27);
+	letter-spacing: 0.018em;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) h5 {
+	font-size:      25px;
+	line-height:    calc(29 / 25);
+	letter-spacing: 0.02em;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) h6 {
+	font-size:      22px;
+	line-height:    calc(26 / 22);
+	letter-spacing: 0.022em;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) :is(blockquote, .wp-block-quote, .wp-block-column blockquote, .wp-block-column .wp-block-quote) {
+	color:           var(--text-color-body);
+	font-weight:     400;
+	font-size:       16px;
+	line-height:     calc(28 / 16);
+	letter-spacing:  0.0125em;
+	margin:          20px 0 20px 0 !important;
+	padding:         0 0 0 25px !important;
+	border:          none !important;
+	border-left:     solid 1px var(--border-color-dark) !important;
+	text-transform:  none;
+	position:        relative;
+	text-align:      left;
+	box-shadow:      none !important;
+	hyphens:         auto;
+}
+
+.h-rtl :is(.entry-content, div[class*="-text-editor"]) :is(blockquote, .wp-block-quote, .wp-block-column blockquote, .wp-block-column .wp-block-quote) {
+	text-align:   right;
+	padding:      0 25px 0 0 !important;
+	border-left:  none !important;
+	border-right: solid 1px var(--text-color) !important;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) :is(.wp-block-quote.is-style-large, .wp-block-quote.is-large) p {
+	font-size:   inherit;
+	font-style:  normal;
+	line-height: inherit;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) blockquote cite {
+	margin-top:  0 !important;
+	font-size:   14px !important;
+	font-weight: 300 !important;
+	font-style:  normal !important;
+	color:       var(--text-color-light);
+}
+
+:is(.entry-content, div[class*="-text-editor"]) blockquote cite br {
+	display: none;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) blockquote cite:before {
+	content: '--- ';
+}
+
+:is(.entry-content, div[class*="-text-editor"]) blockquote p:last-child {
+	margin-bottom: 0;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) blockquote p:first-child {
+	margin-top: 0;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .wp-caption {
+	max-width: 100%;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) img {
+	display:   inline-block;
+	max-width: 100% !important;
+	height:    auto;
+}
+
+
+:is(.entry-content, div[class*="-text-editor"]) .wp-block-embed__wrapper {
+	position: relative;
+	width:    100%;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) figure:not(.gallery-item):not(.wp-block-gallery):not(.wp-block-table),
+:is(.entry-content, div[class*="-text-editor"]) .wp-caption,
+:is(.entry-content, div[class*="-text-editor"]) .wp-caption-overlay .wp-caption {
+	border:         0;
+	margin:         0 0 25px 0;
+	padding:        0;
+	overflow:       hidden;
+	position:       relative;
+	max-width:      100%;
+	display:        flex;
+	flex-direction: column;
+	align-items:    center;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) :is(figure.wp-block-gallery, figure.wp-block-table) {
+	border:    0;
+	margin:    0 0 25px 0;
+	padding:   0;
+	overflow:  hidden;
+	position:  relative;
+	max-width: 100%;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .blocks-gallery-grid {
+	margin-bottom: -1em;
+}
+
+
+:is(.entry-content, div[class*="-text-editor"]) :is(.blocks-gallery-grid, .wp-block-gallery) :is(.blocks-gallery-image, .blocks-gallery-item) figure {
+	margin: 0 !important;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .wp-block-image figcaption,
+:is(.entry-content, div[class*="-text-editor"]) figure figcaption:not(.gallery-caption) {
+	flex:        0 0 auto;
+	width:       100%;
+	text-align:  center;
+	padding:     10px 10px 25px 10px;
+	margin:      0;
+	font-size:   14px;
+	line-height: 1.2;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .gallery {
+	display:         flex;
+	flex-wrap:       wrap;
+	justify-content: center;
+	margin:          -25px -15px;
+	padding-bottom:  65px;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .gallery-columns-1 .gallery-item {
+	flex: 0 0 100%;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .gallery-columns-2 .gallery-item {
+	flex: 0 0 50%;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .gallery-columns-3 .gallery-item {
+	flex: 0 0 calc(100% / 3);
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .gallery-columns-4 .gallery-item {
+	flex: 0 0 25%;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .gallery-columns-5 .gallery-item {
+	flex: 0 0 20%;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .gallery-columns-6 .gallery-item {
+	flex: 0 0 calc(100% / 6);
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .gallery-columns-7 .gallery-item {
+	flex: 0 0 calc(100% / 7);
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .gallery-columns-8 .gallery-item {
+	flex: 0 0 calc(100% / 8);
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .gallery-columns-9 .gallery-item {
+	flex: 0 0 calc(100% / 9);
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .gallery-item {
+	margin:     0;
+	padding:    25px 15px;
+	text-align: center;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .gallery-item img {
+	max-width: 100%;
+	height:    auto;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .gallery-caption {
+	padding-top:     10px;
+	font-size:       12px;
+	line-height:     1.2;
+	display:         block;
+	max-width:       300px;
+	margin-left:     auto;
+	margin-right:    auto;
+	hyphens:         auto;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) a img {
+	text-decoration: none;
+	border-bottom:   none;
+}
+
+.wp-block-cover {
+	margin-bottom: 20px;
+}
+
+.wp-block-archives {
+	margin-bottom: 20px;
+}
+
+.wp-block-cover__inner-container {
+	font-weight: normal;
+}
+
+.wp-calendar-table caption {
+	font-weight:   500;
+	margin-bottom: 10px;
+}
+
+.wp-calendar-table {
+	margin-bottom: 10px !important;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) :is(.wp-block-cover-image, .wp-block-cover) :is(.wp-block-cover-image-text, .wp-block-cover-text, h2) {
+	color: #fff;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .wp-block-search input {
+	flex: 1 1;
+}
+
+:is(.entry-content, div[class*="-text-editor"]) .wp-block-search button {
+	flex: 0 0 auto !important;
+}
+
+
+@media (width >= 600px) {
+	:is(.entry-content, div[class*="-text-editor"]) .wp-block-columns {
+		flex-wrap: nowrap;
+	}
+}
+
+.alignleft {
+	float:  left;
+	margin: 0 20px 20px 0 !important;
+}
+
+.alignright {
+	float:  right;
+	margin: 0 0 20px 20px !important;;
+}
+
+@media (width >= 768px) {
+	:is(.entry-content, div[class*="-text-editor"]) :is(.wp-block-gallery.alignleft, .wp-block-gallery.alignright, .blocks-gallery-grid.alignleft, .blocks-gallery-grid.alignright) {
+		max-width: 50%;
+	}
+}
+
+.aligncenter {
+	clear:      both;
+	text-align: center;
+	margin:     0 auto 20px auto !important;;
+}
+
+img.aligncenter {
+	display: block !important;
+}
+
+.wp-caption {
+	font-size: 90%;
+}
+
+.wp-caption.aligncenter,
+.wp-caption.alignleft,
+.wp-caption.alignright,
+.wp-caption.alignnone {
+	margin-bottom: 15px;
+}
+
+.wp-caption-text {
+	text-align: center;
+	font-size:  90%;
+}
+
+.gallery-caption {
+	font-size: 12px;
+	font-size: 1.2rem;
+}
+
+.bypostauthor .author-name:before {
+	content:          '';
+	display:          block;
+	position:         absolute;
+	left:             -10px;
+	right:            -10px;
+	top:              -3px;
+	bottom:           -3px;
+	z-index:          -1;
+	border-radius:    3px;
+	background-color: var(--background-color);
+}
+
+.editor-block-list__block,
+.editor-post-title__block,
+.editor-default-block-appender {
+	max-width: 750px !important;
+}
+
+/*-- Entry content  (Desktop) --*/
+@media (width >= 1190px) {
+	:is(.entry-content, div[class*="-text-editor"]) button:not(.h-cb):not([aria-controls]):not([aria-expanded]):not([data-micromodal-close]):hover,
+	:is(.entry-content, div[class*="-text-editor"]) input[type=submit]:not(.h-cb):hover,
+	:is(.entry-content, div[class*="-text-editor"]) .wp-block-button__link:hover {
+		background-color: var(--text-color);
+		color:            var(--background-color);
+	}
+
+	:is(.entry-content, div[class*="-text-editor"]) .is-style-outline .wp-block-button__link:hover {
+		background-color: var(--text-color) !important;
+		color:            var(--white-color) !important;;
+	}
+
+	:is(.entry-content, div[class*="-text-editor"]) a:not([class]):hover {
+		color: var(--accent-color);
+	}
+}
+
+/*- Entry content (Mobile) -*/
+@media (width < 1190px) {
+
+	:is(.entry-content, div[class*="-text-editor"]) .wp-block-pullquote.is-style-solid-color blockquote p {
+		font-size: 20px;
+	}
+
+	:is(.entry-content, div[class*="-text-editor"]) .has-drop-cap:not(:focus)::first-letter {
+		font-size: 4.4em;
+	}
+}
+
+@media (width < 769px) {
+
+	:is(.entry-content, div[class*="-text-editor"]) h1 {
+		font-size:      30px;
+		letter-spacing: 0.012em;
+
+	}
+
+	:is(.entry-content, div[class*="-text-editor"]) h2 {
+		font-size:      27px;
+		letter-spacing: 0.018em;
+	}
+
+	:is(.entry-content, div[class*="-text-editor"]) h3 {
+		font-size:      25px;
+		letter-spacing: 0.02em;
+	}
+
+	:is(.entry-content, div[class*="-text-editor"]) h4 {
+		font-size:      22px;
+		letter-spacing: 0.022em;
+	}
+
+	:is(.entry-content, div[class*="-text-editor"]) h5 {
+		font-size:      20px;
+		letter-spacing: 0.024em;
+	}
+
+	:is(.entry-content, div[class*="-text-editor"]) h6 {
+		font-size:      18px;
+		letter-spacing: 0.026em;
+	}
+
+	:is(.entry-content, div[class*="-text-editor"]) :is(blockquote, .wp-block-quote, .wp-block-column blockquote, .wp-block-column .wp-block-quote) {
+		padding-right: 0 !important;
+		font-size:     18px;
+		line-height:   36px;
+	}
+
+	:is(.entry-content, .comment-content, div[class*="-text-editor"]) :is(tr th, thead th, tr td) {
+		padding: 0.5em;
+	}
+}

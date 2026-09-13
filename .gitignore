@@ -2,6 +2,8 @@
 wp-config.php
 
 # --- WordPress runtime / generated files ---
+# Media + theme/plugin caches are per-environment (min.css etc. embed the local host)
+wp-content/uploads/
 wp-content/debug.log
 wp-content/upgrade/
 wp-content/upgrade-temp-backup/

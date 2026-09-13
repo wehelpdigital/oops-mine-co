@@ -1,0 +1,89 @@
+.ideapark-variation-gallery-images {
+	*zoom:      1;
+	margin:     0 -3px;
+	padding:    0;
+	list-style: none;
+}
+
+.ideapark-variation-gallery-images:before,
+.ideapark-variation-gallery-images:after {
+	content: ' ';
+	display: table;
+}
+
+.ideapark-variation-gallery-images:after {
+	clear: both;
+}
+
+.ideapark-variation-gallery-image {
+	position:      relative;
+	cursor:        move;
+	float:         left;
+	box-sizing:    border-box;
+	margin:        3px !important;
+	background:    #F7F7F7;
+	border-radius: 2px;
+}
+
+.ideapark-variation-placeholder {
+	position:   relative;
+	margin:     0;
+	background: #F7F7F7;
+}
+
+.ideapark-variation-placeholder:after {
+	font-family:            'Dashicons';
+	speak:                  none;
+	font-weight:            normal;
+	font-variant:           normal;
+	text-transform:         none;
+	-webkit-font-smoothing: antialiased;
+	margin:                 0;
+	text-indent:            0;
+	position:               absolute;
+	top:                    -3px;
+	left:                   -3px;
+	right:                  -3px;
+	bottom:                 -3px;
+	text-align:             center;
+	content:                "\F161";
+	font-size:              2.618em;
+	line-height:            80px;
+	color:                  #DDDDDD;
+	border:                 3px dashed #DDDDDD !important;
+}
+
+.ideapark-variation-gallery-images li img {
+	width:   80px;
+	display: block;
+	height:  auto;
+	border:  1px solid #D5D5D5;
+}
+
+.ideapark-variation-remove {
+	position:        absolute;
+	top:             -5px;
+	right:           -5px;
+	padding:         2px;
+	z-index:         1;
+	text-decoration: none;
+	display:         none;
+	color:           #999;
+	background:      #fff;
+	border-radius:   50%;
+	height:          1em;
+	width:           1em;
+	font-size:       1.4em;
+	line-height:     1em;
+	cursor:          pointer;
+	margin:          0;
+	overflow:        hidden;
+}
+
+.ideapark-variation-gallery-image:hover .ideapark-variation-remove {
+	display: block;
+}
+
+.ideapark-variation-remove:hover {
+	color: #a00;
+}

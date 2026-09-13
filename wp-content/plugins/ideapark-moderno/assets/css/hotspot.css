@@ -1,0 +1,150 @@
+.ideapark-hotspot {
+	display:         flex;
+	position:        fixed;
+	left:            0;
+	right:           0;
+	top:             0;
+	bottom:          0;
+	z-index:         9999;
+	background:      rgba(0, 0, 0, 0.8);
+	justify-content: center;
+	align-items:     center;
+}
+
+.ideapark-hotspot__wrap {
+	flex:       0 0 auto;
+	position:   relative;
+	background: #fff;
+	fill:       #000;
+	stroke:     #000;
+}
+
+.ideapark-hotspot__image {
+	display:    block;
+	width:      auto;
+	height:     auto;
+	max-height: 90vh;
+	max-width:  90vw;
+}
+
+.ideapark-hotspot__close {
+	font-size:   25px;
+	width:       25px;
+	height:      25px;
+	line-height: 1;
+	position:    absolute;
+	right:       -25px;
+	top:         -25px;
+	color:       white;
+	text-shadow: 0 0 2px 10px black;
+}
+
+
+.ideapark-hotspot__point {
+	color:           #000;
+	position:        absolute;
+	width:           32px;
+	height:          32px;
+	display:         flex;
+	justify-content: center;
+	align-items:     center;
+	z-index:         1;
+	margin-top:      -16px;
+	margin-left:     -16px;
+}
+
+.ideapark-hotspot__point:before {
+	content:          attr(data-title);
+	display:          block;
+	position:         absolute;
+	left:             50%;
+	margin-left:      -80px;
+	top:              42px;
+	width:            160px;
+	padding:          15px;
+	text-align:       center;
+	background-color: #fff;
+	font-size:        14px;
+	box-shadow:       0 4px 20px 2.4px rgba(0, 0, 0, 0.3);
+	opacity:          0;
+	visibility:       hidden;
+	transition:       opacity 0.3s ease-out, visibility 0.3s ease-out;
+}
+
+.ideapark-hotspot__point:after {
+	content:             '';
+	display:             block;
+	position:            absolute;
+	left:                50%;
+	margin-left:         -10px;
+	top:                 22px;
+	border:              solid 10px transparent;
+	border-bottom-color: #fff;
+	opacity:             0;
+	visibility:          hidden;
+	transition:          opacity 0.3s ease-out, visibility 0.3s ease-out;
+}
+
+.ideapark-hotspot__point:hover:before,
+.ideapark-hotspot__point:hover:after {
+	opacity:    1;
+	visibility: visible;
+}
+
+.ideapark-hotspot__point a {
+	color: currentColor;
+}
+
+.ideapark-hotspot__point-edit {
+	-webkit-border-radius: 50%;
+	-moz-border-radius:    50%;
+	border-radius:         50%;
+	color:                 #000;
+	background-color:      #fff;
+	line-height:           26px;
+	width:                 32px;
+	height:                32px;
+	font-size:             20px;
+	border:                solid 3px currentColor;
+}
+
+.ideapark-hotspot__point-close,
+.ideapark-hotspot__search-close {
+	position:    absolute;
+	top:         -15px;
+	right:       -15px;
+	font-size:   20px;
+	line-height: 1;
+	text-shadow: 0 0 2px 10px white;
+	opacity:     0;
+	transition:  opacity 0.3s ease-out;
+}
+
+.ideapark-hotspot__search-close {
+	right:   5px;
+	top:     5px;
+	color:   #000;
+	opacity: 1;
+}
+
+.ideapark-hotspot__point:hover .ideapark-hotspot__point-close {
+	opacity: 1;
+}
+
+.ideapark-hotspot__modal {
+	position:         absolute;
+	left:             50%;
+	top:              50%;
+	transform:        translate(-50%, -50%);
+	background-color: #ffffff;
+	padding:          20px 30px;
+	border:           solid 1px black;
+	z-index:          10;
+}
+
+@media (width < 768px) {
+	.ideapark-hotspot__modal {
+		left: 50% !important;
+		top:  50% !important;
+	}
+}
