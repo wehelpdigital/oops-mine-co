@@ -35,15 +35,18 @@ const STATE_PATH = path.join(TOOL_DIR, "state.json");
 // Never transferred or deleted in either direction, even with force.
 const HARD_BLOCK = [/^\.git(\/|$)/, /^\.ftp-sync(\/|$)/, /^wp-config\.php$/, /(^|\/)\.ftpquota$/];
 const DEFAULT_INCLUDE = ["wp-content/uploads"];
-// Generated per-environment (absolute local URLs inside) or noise — live regenerates these itself.
+// Generated per-environment or noise. Never PUSHED (a locally generated copy can embed http://oopsmine.test).
 const DEFAULT_EXCLUDE = [
-  "wp-content/uploads/moderno/**",        // Moderno theme: min.css/min.js/customizer_vars.php
-  "wp-content/uploads/elementor/css/**",  // Elementor generated CSS
+  "wp-content/uploads/moderno/**",        // Moderno theme: min.css/min.js/customizer_vars.php (theme rebuilds per host)
+  "wp-content/uploads/elementor/css/**",  // Elementor generated CSS — pulled (see below) but never pushed
   "wp-content/uploads/wc-logs/**",        // WooCommerce logs
   "wp-content/uploads/wpcf7_uploads/**",  // Contact Form 7 temporary attachments
   "wp-content/uploads/cache/**",
   "**/*.log", "**/.DS_Store", "**/Thumbs.db", "**/desktop.ini",
 ];
+// PULL exceptions: generated files that are still needed locally because the shared database says they
+// exist (Elementor records "css file generated" in post meta, so the local site never rebuilds them).
+const PULL_ANYWAY = ["wp-content/uploads/elementor/css/**"];
 // Push with no baseline refuses beyond this unless allow_large (guards against a mis-configured include).
 const LARGE_FILES = 2000, LARGE_BYTES = 500 * 1024 * 1024;
 
@@ -87,10 +90,11 @@ function loadConfig() {
     tlsPinSha256: c.tlsPinSha256 ? String(c.tlsPinSha256).replace(/[^0-9a-f]/gi, "").toUpperCase() : null,
     concurrency: Math.max(1, Math.min(8, Number(c.concurrency) || 3)),
     timeoutMs: Number(c.timeoutMs) || 30000,
-    include, excludeGlobs, exclude: excludeGlobs.map(globToRegex),
+    include, excludeGlobs, exclude: excludeGlobs.map(globToRegex), pullAnyway: PULL_ANYWAY.map(globToRegex),
   };
 }
 const isExcluded = (rel, cfg) => cfg.exclude.some((re) => re.test(rel));
+const isExcludedForPull = (rel, cfg) => isExcluded(rel, cfg) && !cfg.pullAnyway.some((re) => re.test(rel));
 const inInclude = (rel, cfg) => cfg.include.some((inc) => rel === inc || rel.startsWith(inc + "/"));
 
 const loadState = () => { try { return JSON.parse(fs.readFileSync(STATE_PATH, "utf8")); } catch { return { files: {}, lastSync: null }; } };
@@ -387,7 +391,7 @@ async function runPull({ dryRun = false, overwrite = false, includeTracked = fal
   const download = [], skippedExisting = [], skippedTracked = [], excluded = [];
   for (const f of remote) {
     if (isHardBlocked(f.rel)) continue;
-    if (isExcluded(f.rel, cfg)) { excluded.push(f.rel); continue; }
+    if (isExcludedForPull(f.rel, cfg)) { excluded.push(f.rel); continue; }
     const isTracked = tracked.has(f.rel);
     const local = await statFile(f.rel);
     if (!local) download.push(f);
@@ -409,7 +413,7 @@ async function runPull({ dryRun = false, overwrite = false, includeTracked = fal
   // Pulled MEDIA is by definition identical to the server → record it so the next push doesn't re-upload it.
   // Code files are deliberately not recorded: the snapshot describes the media push set only.
   for (const f of done) {
-    if (!inInclude(f.rel, cfg) || tracked.has(f.rel)) continue;
+    if (!inInclude(f.rel, cfg) || tracked.has(f.rel) || isExcluded(f.rel, cfg)) continue;
     const s = await statFile(f.rel);
     if (s) state.files[f.rel] = { size: s.size, mtimeMs: s.mtimeMs };
   }

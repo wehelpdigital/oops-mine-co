@@ -42,7 +42,12 @@ Runs two ways:
 - **Push** (`sync`) detects changes with a size+mtime snapshot (`state.json`); deletions are only
   mirrored with `delete_orphans:true` / `--delete`.
 - **Pull** downloads server files missing locally; existing local files are only replaced with
-  `overwrite:true` / `--overwrite` (size differs). Pulled files are recorded so they aren't pushed back.
+  `overwrite:true` / `--overwrite` (size differs). Pulled media is recorded so it isn't pushed back.
+  `uploads/elementor/css/**` is pulled even though it is never pushed: Elementor records "CSS file
+  generated" in post meta, which lives in the shared database, so the local site never rebuilds those
+  files itself. After editing pages on live, run `pull --overwrite` to refresh them locally.
+  Any project folder can be pulled explicitly (e.g. a plugin installed on live); git-tracked files are
+  only replaced with `include_tracked:true` / `--include-tracked` — commit the result afterwards.
 
 ## CLI
 
