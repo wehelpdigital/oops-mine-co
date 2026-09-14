@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ftp-sync": {
+      "command": "node",
+      "args": [".ftp-sync/server.mjs"]
+    }
+  }
+}

@@ -29,3 +29,8 @@ error_log
 .user.ini
 php.ini
 cgi-bin/
+
+# --- ftp-sync tool (.ftp-sync/): credentials, sync snapshot and deps stay local ---
+.ftp-sync/config.json
+.ftp-sync/state.json
+.ftp-sync/node_modules/

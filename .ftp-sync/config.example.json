@@ -1,0 +1,15 @@
+{
+  "protocol": "ftps",
+  "host": "ftp.oopsmineco.com",
+  "port": 21,
+  "user": "mcp@oopsmineco.com",
+  "password": "CHANGE-ME",
+  "remoteRoot": "/",
+  "include": [
+    "wp-content/uploads"
+  ],
+  "exclude": [],
+  "tlsPinSha256": "(leave empty; `node .ftp-sync/server.mjs pin` fills this in)",
+  "concurrency": 3,
+  "timeoutMs": 30000
+}
