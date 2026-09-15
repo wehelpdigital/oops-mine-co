@@ -1,0 +1,23 @@
+/* WHD admin pages */
+.whd-wrap .whd-title { font-family: "Cormorant Garamond", Georgia, serif; font-size: 30px; font-weight: 500; margin-bottom: 4px; }
+.whd-intro { max-width: 820px; color: #50575e; font-size: 13px; line-height: 1.6; margin: 0 0 20px; }
+.whd-h2 { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: #b98b7e; margin: 26px 0 8px; }
+.whd-muted { color: #646970; }
+.whd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-top: 10px; }
+.whd-card { display: flex; flex-direction: column; gap: 8px; padding: 18px; background: #fff; border: 1px solid #e3ddd7; border-radius: 8px; text-decoration: none; color: #1d1d1f; transition: border-color .15s, box-shadow .15s; }
+.whd-card:hover { border-color: #b98b7e; box-shadow: 0 6px 18px -12px rgba(0, 0, 0, .3); }
+.whd-card__title { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #b98b7e; font-weight: 600; }
+.whd-card__value { font-family: "Cormorant Garamond", Georgia, serif; font-size: 22px; line-height: 1.2; }
+.whd-list { display: flex; flex-direction: column; gap: 12px; }
+.whd-row { display: flex; justify-content: space-between; gap: 20px; align-items: center; background: #fff; border: 1px solid #e3ddd7; border-radius: 8px; padding: 18px 20px; }
+.whd-row__main strong { display: block; font-size: 16px; margin: 6px 0 4px; }
+.whd-row__main p { margin: 0 0 4px; max-width: 720px; }
+.whd-row__actions { display: flex; gap: 8px; white-space: nowrap; }
+.whd-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; background: #ece8e4; color: #646970; }
+.whd-badge.is-on, .whd-badge--recovered { background: #dcefe3; color: #1e6b3a; }
+.whd-badge--sent, .whd-badge--clicked { background: #f6e6c8; color: #7a5200; }
+.whd-badge--active { background: #e3ecf8; color: #1f4f8a; }
+.whd-badge--failed { background: #f8dcdc; color: #9b1c1c; }
+.whd-table { margin-top: 8px; }
+.whd-table td, .whd-table th { vertical-align: middle; }
+.whd-form .form-table th { width: 260px; }

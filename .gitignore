@@ -34,3 +34,4 @@ cgi-bin/
 .ftp-sync/config.json
 .ftp-sync/state.json
 .ftp-sync/node_modules/
+.ftp-sync/db/

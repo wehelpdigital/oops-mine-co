@@ -91,6 +91,7 @@ function loadConfig() {
     concurrency: Math.max(1, Math.min(8, Number(c.concurrency) || 3)),
     timeoutMs: Number(c.timeoutMs) || 30000,
     include, excludeGlobs, exclude: excludeGlobs.map(globToRegex), pullAnyway: PULL_ANYWAY.map(globToRegex),
+    db: c.db || null, // { remote:{host,port,user,password,name}, local:{...}, replace:[[from,to]], bin, php } for db-pull
   };
 }
 const isExcluded = (rel, cfg) => cfg.exclude.some((re) => re.test(rel));
@@ -489,6 +490,50 @@ async function status() {
 const cap = (arr, n = 200) => (arr.length > n ? [...arr.slice(0, n), `… and ${arr.length - n} more`] : arr);
 const capResult = (r) => { for (const k of ["upload", "uploaded", "download", "downloaded", "delete", "deleted", "orphansNotDeleted", "sizeDiffersNotOverwritten"]) if (Array.isArray(r[k])) r[k] = cap(r[k]); return r; };
 
+/**
+ * DATABASE: refresh the local copy from live. mysqldump (remote) → backup local → import → URL rewrite.
+ * Destroys local-only DB changes (pages, settings created locally) — a backup of the local DB is kept first.
+ */
+async function dbPull({ dryRun = false } = {}) {
+  const { spawnSync } = await import("node:child_process");
+  const cfg = loadConfig();
+  const db = cfg.db;
+  if (!db?.remote || !db?.local) throw new Error("config.db.remote / config.db.local are not set (see README)");
+  const bin = db.bin || "C:/xampp/mysql/bin";
+  const php = db.php || "php";
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const dir = path.join(TOOL_DIR, "db");
+  fs.mkdirSync(dir, { recursive: true });
+  const dumpFile = path.join(dir, `live-${stamp}.sql`);
+  const backupFile = path.join(dir, `local-backup-${stamp}.sql`);
+  const R = db.remote, L = db.local;
+  const args = (c) => [`-h${c.host}`, `-P${c.port || 3306}`, `-u${c.user}`, ...(c.password ? [`-p${c.password}`] : [])];
+  const run = (exe, a, opts = {}) => {
+    const r = spawnSync(exe, a, { encoding: "utf8", maxBuffer: 1024 * 1024 * 1024, windowsHide: true, ...opts });
+    if (r.status !== 0) throw new Error(`${path.basename(exe)} failed: ${(r.stderr || r.stdout || "").trim().slice(0, 400)}`);
+    return r;
+  };
+  const plan = { dump: `${R.user}@${R.host}:${R.port || 3306}/${R.name} → ${path.relative(ROOT, dumpFile)}`, backupLocal: `${L.name} → ${path.relative(ROOT, backupFile)}`, import: `→ ${L.host}:${L.port || 3306}/${L.name}`, replace: db.replace || [] };
+  if (dryRun) return { dryRun: true, ...plan };
+
+  const started = Date.now();
+  console.error("[db-pull] dumping live database…");
+  const dump = run(path.join(bin, "mysqldump.exe"), [...args(R), "--single-transaction", "--quick", "--default-character-set=utf8mb4", "--no-tablespaces", "--routines=0", "--triggers=0", R.name]);
+  fs.writeFileSync(dumpFile, dump.stdout);
+  console.error("[db-pull] backing up local database…");
+  try {
+    const bak = run(path.join(bin, "mysqldump.exe"), [...args(L), "--single-transaction", "--quick", "--default-character-set=utf8mb4", L.name]);
+    fs.writeFileSync(backupFile, bak.stdout);
+  } catch (e) { fs.writeFileSync(backupFile, `-- no local database to back up: ${e.message}\n`); }
+  console.error("[db-pull] importing…");
+  run(path.join(bin, "mysql.exe"), [...args(L), "-e", `DROP DATABASE IF EXISTS \`${L.name}\`; CREATE DATABASE \`${L.name}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`]);
+  run(path.join(bin, "mysql.exe"), [...args(L), "--default-character-set=utf8mb4", L.name], { input: dump.stdout });
+  console.error("[db-pull] rewriting URLs…");
+  const rep = run(php, [path.join(TOOL_DIR, "db-replace.php"), JSON.stringify({ host: L.host, port: L.port || 3306, user: L.user, password: L.password || "", name: L.name, pairs: db.replace || [] })]);
+  let replaced = null; try { replaced = JSON.parse(rep.stdout); } catch { replaced = rep.stdout.trim(); }
+  return { ...plan, dumpBytes: dump.stdout.length, replaced, seconds: +((Date.now() - started) / 1000).toFixed(1), note: "Local DB now mirrors live. Local-only changes were overwritten; restore them from the backup file if needed." };
+}
+
 /* ───────────────────────── MCP server ───────────────────────── */
 
 async function startMcp() {
@@ -671,6 +716,7 @@ async function cli(argv) {
       const r = await runSync({ paths: args, force: !!flags.force, dryRun: !!flags["dry-run"], onProgress: prog }); process.stdout.write("\n"); return print(capResult(r));
     }
     case "mark-synced": return print(await markSynced(args));
+    case "db-pull": return print(await dbPull({ dryRun: !!flags["dry-run"] }));
     case "watch": return watch({ deleteOrphans: !!flags.delete });
     case "ls": {
       const cfg = loadConfig();
@@ -697,6 +743,7 @@ async function cli(argv) {
       console.log(`ftp-sync — media & non-git files between local and the live host
   node .ftp-sync/server.mjs status
   node .ftp-sync/server.mjs pin                          trust the host's FTPS certificate once
+  node .ftp-sync/server.mjs db-pull [--dry-run]          replace the LOCAL database with a fresh copy of live (backs up local first)
   node .ftp-sync/server.mjs sync   [--dry-run] [--delete] [--allow-large]   push local uploads/ changes
   node .ftp-sync/server.mjs pull   [--dry-run] [--overwrite] [--include-tracked] [folder…]   fetch server files missing locally
   node .ftp-sync/server.mjs upload <path…> [--force] [--dry-run]

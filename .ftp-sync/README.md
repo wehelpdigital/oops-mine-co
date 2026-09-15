@@ -60,7 +60,24 @@ node .ftp-sync/server.mjs upload <path…> [--force] [--dry-run]
 node .ftp-sync/server.mjs mark-synced [path…]
 node .ftp-sync/server.mjs watch  [--delete]
 node .ftp-sync/server.mjs ls [remote dir] | get <remote file> [local] | rm <remote file…>
+node .ftp-sync/server.mjs db-pull [--dry-run]
 ```
+
+## Database: local copy, refreshed from live
+
+The local site runs on its **own** copy of the database (XAMPP MariaDB, port 3307) — pages, menus
+and settings you create locally stay local, and pages load in ~1 s instead of 15–20 s against the
+remote DB. `db-pull` refreshes that copy from live:
+
+1. `mysqldump` of the live DB over the whitelisted remote-MySQL connection (`config.db.remote`)
+2. backup of the current local DB to `.ftp-sync/db/local-backup-<time>.sql`
+3. drop + re-import into `config.db.local`
+4. serialization-safe URL rewrite using `config.db.replace` (live URL → `http://oopsmine.test`, incl. the
+   JSON-escaped form Elementor stores, and the server's absolute path)
+
+**It overwrites everything local-only in the DB** (new pages, plugin settings…) — that is what the backup
+is for. Publishing local content *to* live is a separate, deliberate step (see the project notes).
+
 
 `config.json` keys: `protocol` (ftps|ftp|sftp), `host`, `port`, `user`, `password`, `remoteRoot`,
 `include` (project-relative folders), `exclude` (extra globs, added to the built-ins),
