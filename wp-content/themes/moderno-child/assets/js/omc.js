@@ -45,13 +45,114 @@
 		} else { start(); }
 	});
 
+	/* Hero headline: the italic line rotates through alternative phrases (data-phrases, pipe-separated).
+	   The printed phrase stays in the markup for crawlers and is the accessible name; each swap lifts
+	   the old phrase out and floats the next one in. Runs only while on screen, never under reduced motion. */
+	document.querySelectorAll('.js-omc-rotate').forEach(function (el) {
+		var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		var extra = (el.getAttribute('data-phrases') || '').split('|').map(function (w) { return w.trim(); }).filter(Boolean);
+		var base = el.textContent.trim();
+		if (!extra.length || reduce) { return; }
+		var list = [base].concat(extra), i = 0, timer = null, running = false;
+		var delay = parseInt(el.getAttribute('data-delay'), 10) || 3200;
+		el.setAttribute('aria-label', base);
+		var swap = function () {
+			el.classList.add('is-out');
+			timer = setTimeout(function () {
+				i = (i + 1) % list.length;
+				el.textContent = list[i];
+				el.classList.remove('is-out');
+				el.classList.add('is-pre');
+				requestAnimationFrame(function () { requestAnimationFrame(function () {
+					el.classList.remove('is-pre');
+					if (running) { timer = setTimeout(swap, delay); }
+				}); });
+			}, 520);
+		};
+		var start = function () { if (!running) { running = true; timer = setTimeout(swap, delay); } };
+		var stop = function () { running = false; clearTimeout(timer); };
+		if ('IntersectionObserver' in window) {
+			new IntersectionObserver(function (entries) { if (entries[0].isIntersecting) { start(); } else { stop(); } }, { threshold: 0.3 }).observe(el);
+		} else { start(); }
+	});
+
+	/* Facebook Live band: counts down to data-until (ISO 8601). Inside the live window (data-live-window
+	   seconds) the card says "live now"; after that, "wrapped". Ticks once a second while on screen. */
+	document.querySelectorAll('.js-omc-countdown').forEach(function (box) {
+		var until = Date.parse(box.getAttribute('data-until') || '');
+		if (isNaN(until)) { return; }
+		var windowMs = (parseInt(box.getAttribute('data-live-window'), 10) || 7200) * 1000;
+		var cells = {};
+		box.querySelectorAll('.omc-live__num').forEach(function (n) { cells[n.getAttribute('data-unit')] = n; });
+		var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+		var timer = null;
+		var tick = function () {
+			var diff = until - Date.now();
+			box.classList.toggle('is-live', diff <= 0 && diff > -windowMs);
+			box.classList.toggle('is-over', diff <= -windowMs);
+			var s = Math.max(0, Math.floor(diff / 1000));
+			var parts = { d: Math.floor(s / 86400), h: Math.floor((s % 86400) / 3600), m: Math.floor((s % 3600) / 60), s: s % 60 };
+			Object.keys(parts).forEach(function (k) { if (cells[k]) { cells[k].textContent = pad(parts[k]); } });
+		};
+		tick();
+		var start = function () { if (!timer) { timer = setInterval(tick, 1000); } };
+		var stop = function () { clearInterval(timer); timer = null; };
+		if ('IntersectionObserver' in window) {
+			new IntersectionObserver(function (entries) { if (entries[0].isIntersecting) { start(); } else { stop(); } }, { threshold: 0.1 }).observe(box);
+		} else { start(); }
+	});
+
+	/* Testimonial spotlight: one quote at a time, cross-fading. Arrows, arrow keys, swipe; autoplay while on
+	   screen, paused while hovered or focused, off under reduced motion. */
+	document.querySelectorAll('.js-omc-quotes').forEach(function (root) {
+		var slides = root.querySelectorAll('.omc-quotes__slide');
+		if (slides.length < 2) { return; }
+		var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		var delay = reduce ? 0 : (parseInt(root.getAttribute('data-autoplay'), 10) || 0);
+		var counter = root.querySelector('.omc-quotes__count b');
+		var index = 0, timer = null, visible = false, paused = false, downX = null;
+		var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+		var show = function (i) {
+			slides[index].classList.remove('is-active');
+			slides[index].setAttribute('aria-hidden', 'true');
+			index = (i + slides.length) % slides.length;
+			slides[index].classList.add('is-active');
+			slides[index].removeAttribute('aria-hidden');
+			if (counter) { counter.textContent = pad(index + 1); }
+		};
+		var stop = function () { if (timer) { clearInterval(timer); timer = null; } };
+		var start = function () { stop(); if (delay && visible && !paused) { timer = setInterval(function () { show(index + 1); }, delay); } };
+		var prev = root.querySelector('.omc-quotes__btn--prev'), next = root.querySelector('.omc-quotes__btn--next');
+		if (prev) { prev.addEventListener('click', function () { show(index - 1); start(); }); }
+		if (next) { next.addEventListener('click', function () { show(index + 1); start(); }); }
+		root.addEventListener('keydown', function (ev) {
+			if (ev.key === 'ArrowLeft') { show(index - 1); start(); ev.preventDefault(); }
+			if (ev.key === 'ArrowRight') { show(index + 1); start(); ev.preventDefault(); }
+		});
+		root.addEventListener('pointerdown', function (ev) { downX = ev.clientX; });
+		root.addEventListener('pointerup', function (ev) {
+			if (downX === null) { return; }
+			var dx = ev.clientX - downX; downX = null;
+			if (Math.abs(dx) > 40) { show(dx < 0 ? index + 1 : index - 1); start(); }
+		});
+		root.addEventListener('pointerenter', function () { paused = true; stop(); });
+		root.addEventListener('pointerleave', function () { paused = false; start(); });
+		root.addEventListener('focusin', function () { paused = true; stop(); });
+		root.addEventListener('focusout', function () { paused = false; start(); });
+		if ('IntersectionObserver' in window) {
+			new IntersectionObserver(function (entries) { visible = entries[0].isIntersecting; start(); }, { threshold: 0.3 }).observe(root);
+		} else { visible = true; start(); }
+		document.addEventListener('visibilitychange', function () { if (document.hidden) { stop(); } else { start(); } });
+	});
+
 	/* Banners with several photos: cross-fade through them, pause while hovered, only while visible. */
 	(function () {
 		var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 		document.querySelectorAll('.js-omc-fade').forEach(function (banner) {
-			var imgs = banner.querySelectorAll('.omc-banner__img');
+			var imgs = banner.querySelectorAll('.omc-banner__img, .omc-hero__img');
 			if (imgs.length < 2 || reduce) { return; }
 			var delay = parseInt(banner.getAttribute('data-fade'), 10) || 4500;
+			var pauseOnHover = banner.getAttribute('data-fade-hover') !== 'no'; /* the hero keeps sliding under the cursor */
 			var index = 0, timer = null, visible = false, hovered = false;
 			var show = function (i) {
 				imgs[index].classList.remove('is-active');
@@ -62,8 +163,10 @@
 			};
 			var stop = function () { if (timer) { clearInterval(timer); timer = null; } };
 			var start = function () { stop(); if (visible && !hovered) { timer = setInterval(function () { show(index + 1); }, delay); } };
-			banner.addEventListener('pointerenter', function () { hovered = true; stop(); });
-			banner.addEventListener('pointerleave', function () { hovered = false; start(); });
+			if (pauseOnHover) {
+				banner.addEventListener('pointerenter', function () { hovered = true; stop(); });
+				banner.addEventListener('pointerleave', function () { hovered = false; start(); });
+			}
 			if ('IntersectionObserver' in window) {
 				new IntersectionObserver(function (entries) { visible = entries[0].isIntersecting; start(); }, { threshold: 0.3 }).observe(banner);
 			} else { visible = true; start(); }
@@ -133,12 +236,16 @@
 			note.textContent = 'One moment…';
 			button.disabled = true;
 			var data = new FormData(form);
-			fetch(form.action, { method: 'POST', body: data, credentials: 'same-origin' })
+			/* getAttribute, not form.action: the hidden <input name="action"> shadows that property and would turn the URL into "[object HTMLInputElement]" */
+			fetch(form.getAttribute('action'), { method: 'POST', body: data, credentials: 'same-origin' })
 				.then(function (r) { return r.json(); })
 				.then(function (res) {
 					if (res && res.success) {
 						note.textContent = res.data.message;
 						form.reset();
+						form.classList.add('is-done');
+						var after = form.getAttribute('data-after') && document.querySelector(form.getAttribute('data-after'));
+						if (after) { after.hidden = false; } /* e.g. the live card reveals its "open the live" button */
 					} else {
 						note.textContent = (res && res.data && res.data.message) || 'Something went wrong. Please try again.';
 						note.classList.add('is-error');

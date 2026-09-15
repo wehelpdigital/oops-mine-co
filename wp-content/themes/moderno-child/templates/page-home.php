@@ -4,8 +4,9 @@
  * Template Post Type: page
  *
  * Editorial storefront home page for Oops, Mine Co. Sections, top to bottom:
- * hero → trust strip → shop by category → new arrivals → the edit (editorial)
- * → most loved → brand story → styling notes (journal) → newsletter.
+ * hero → trust strip → split campaign banner → edit carousel → mirrored campaign banner
+ * → shop by category → brand story → new arrivals → two wide banners → most loved
+ * → styling notes (journal) → newsletter.
  *
  * Product grids come from WooCommerce's [products] shortcode so they render
  * with the parent theme's product cards, quick-view, wishlist and swatches.
@@ -29,22 +30,32 @@ get_header();
 
 	<!-- ───────────── Hero ───────────── -->
 	<section class="omc-hero" aria-labelledby="omc-hero-title">
-		<div class="omc-hero__media">
+		<?php $omc_hero_imgs = omc_hero_images(); ?>
+		<div class="omc-hero__media<?php echo count( $omc_hero_imgs ) > 1 ? ' omc-hero__media--fade js-omc-fade' : ''; ?>" data-fade="6000" data-fade-hover="no">
 			<?php
-			echo omc_image( $omc_images['hero'], 'full', [
-				'class'         => 'omc-hero__img',
-				'loading'       => 'eager',
-				'fetchpriority' => 'high',
-				'decoding'      => 'async',
-				'alt'           => __( 'Two women in soft knit dresses — the Oops, Mine Co. edit', 'moderno-child' ),
-			] );
+			foreach ( $omc_hero_imgs as $omc_i => $omc_hero_img ) {
+				echo omc_image( $omc_hero_img, 'full', 0 === $omc_i ? [
+					'class'         => 'omc-hero__img is-active',
+					'loading'       => 'eager',
+					'fetchpriority' => 'high',
+					'decoding'      => 'async',
+					'alt'           => __( 'Two women in soft knit dresses — the Oops, Mine Co. edit', 'moderno-child' ),
+				] : [
+					'class'       => 'omc-hero__img',
+					'loading'     => 'lazy',
+					'decoding'    => 'async',
+					'alt'         => '',
+					'aria-hidden' => 'true',
+				] );
+			}
 			?>
 		</div>
 		<div class="omc-hero__content l-section__container">
 			<p class="omc-eyebrow omc-eyebrow--light"><?php esc_html_e( 'Oops, Mine Co. · Est. 2023', 'moderno-child' ); ?></p>
+			<?php $omc_phrases = omc_hero_phrases(); ?>
 			<h1 class="omc-hero__title" id="omc-hero-title">
 				<?php esc_html_e( 'Found with intention.', 'moderno-child' ); ?><br>
-				<em><?php esc_html_e( 'Claimed on instinct.', 'moderno-child' ); ?></em>
+				<em class="omc-rotate js-omc-rotate" data-phrases="<?php echo esc_attr( implode( '|', array_slice( $omc_phrases, 1 ) ) ); ?>" data-delay="3200"><?php echo esc_html( $omc_phrases[0] ); ?></em>
 			</h1>
 			<p class="omc-hero__lede"><?php esc_html_e( 'Curated Korean and Thai fashion for the pieces you weren’t looking for — and can’t leave without.', 'moderno-child' ); ?></p>
 			<div class="omc-hero__actions">
@@ -62,6 +73,73 @@ get_header();
 			<?php endforeach; ?>
 		</ul>
 	</section>
+
+	<!-- ───────────── Next Facebook Live (Customizer → Facebook Live) ───────────── -->
+	<?php $omc_live = omc_fb_live(); ?>
+	<?php if ( ! empty( $omc_live['enabled'] ) && ! empty( $omc_live['when'] ) ) : ?>
+		<section class="omc-live omc-reveal" aria-labelledby="omc-live-title">
+			<div class="l-section__container-wide">
+				<div class="omc-live__card js-omc-countdown" data-until="<?php echo esc_attr( $omc_live['when']->format( DATE_ATOM ) ); ?>" data-live-window="7200">
+					<?php if ( ! empty( $omc_images['live'] ) ) : ?>
+						<div class="omc-live__media"><?php echo omc_image( $omc_images['live'], 'large', [ 'loading' => 'lazy', 'alt' => '' ] ); ?></div>
+					<?php endif; ?>
+					<div class="omc-live__body">
+						<p class="omc-live__badge"><span class="omc-live__dot" aria-hidden="true"></span><?php esc_html_e( 'Live on Facebook', 'moderno-child' ); ?></p>
+						<h2 class="omc-live__title" id="omc-live-title"><?php echo esc_html( $omc_live['title'] ); ?></h2>
+						<p class="omc-live__text"><?php echo esc_html( $omc_live['text'] ); ?></p>
+						<div class="omc-live__count" role="timer" aria-label="<?php esc_attr_e( 'Time until we go live', 'moderno-child' ); ?>">
+							<?php foreach ( [ 'd' => __( 'Days', 'moderno-child' ), 'h' => __( 'Hours', 'moderno-child' ), 'm' => __( 'Min', 'moderno-child' ), 's' => __( 'Sec', 'moderno-child' ) ] as $omc_u => $omc_lbl ) : ?>
+								<span class="omc-live__cell"><span class="omc-live__num" data-unit="<?php echo esc_attr( $omc_u ); ?>">00</span><span class="omc-live__unit"><?php echo esc_html( $omc_lbl ); ?></span></span>
+							<?php endforeach; ?>
+						</div>
+						<p class="omc-live__status omc-live__status--now"><?php esc_html_e( 'We’re live right now — come in.', 'moderno-child' ); ?></p>
+						<p class="omc-live__status omc-live__status--over"><?php esc_html_e( 'That one’s wrapped. Leave your email for the next date.', 'moderno-child' ); ?></p>
+						<?php
+						omc_newsletter_form( [
+							'class'       => 'omc-live__form',
+							'placeholder' => __( 'Your email address', 'moderno-child' ),
+							'button'      => $omc_live['button'],
+							'source'      => 'fb_live',
+							'after'       => '#omc-live-after',
+						] );
+						?>
+						<div class="omc-live__after" id="omc-live-after" hidden>
+							<a class="omc-btn omc-btn--solid omc-live__btn" href="<?php echo esc_url( $omc_live['url'] ); ?>" target="_blank" rel="noopener"><?php echo omc_icon( 'facebook' ); ?><?php esc_html_e( 'Open the live on Facebook', 'moderno-child' ); ?></a>
+						</div>
+						<p class="omc-live__foot">
+							<time datetime="<?php echo esc_attr( $omc_live['when']->format( DATE_ATOM ) ); ?>"><?php echo esc_html( wp_date( get_option( 'date_format' ) . ' · ' . get_option( 'time_format' ), $omc_live['when']->getTimestamp() ) ); ?></time>
+						</p>
+					</div>
+				</div>
+			</div>
+		</section>
+	<?php endif; ?>
+
+	<!-- ───────────── Shop-the-look mosaic (fixed balanced pattern; omc_home_mosaic()) ───────────── -->
+	<?php $omc_tiles = omc_home_mosaic(); ?>
+	<?php if ( count( $omc_tiles ) >= 4 ) : ?>
+		<section class="omc-section omc-mosaic-section omc-reveal" aria-labelledby="omc-mosaic-title">
+			<div class="l-section__container-wide">
+				<?php omc_section_head( __( 'Shop the look', 'moderno-child' ), __( 'Pieces we can’t stop <em>styling</em>', 'moderno-child' ), $omc_shop, __( 'Shop all', 'moderno-child' ) ); ?>
+				<div class="omc-mosaic">
+					<?php foreach ( $omc_tiles as $omc_t ) :
+						$omc_t   = wp_parse_args( $omc_t, [ 'image' => '', 'label' => '', 'url' => $omc_shop, 'size' => '1x1', 'focus' => '' ] );
+						$omc_img = omc_image( $omc_t['image'], 'large', array_filter( [ 'loading' => 'lazy', 'alt' => $omc_t['label'], 'style' => $omc_t['focus'] ? 'object-position:' . $omc_t['focus'] : '' ] ) );
+						if ( ! $omc_img ) {
+							continue;
+						}
+						?>
+						<a class="omc-mosaic__item omc-mosaic__item--<?php echo esc_attr( preg_replace( '/[^0-9x]/', '', $omc_t['size'] ) ?: '1x1' ); ?>" href="<?php echo esc_url( $omc_t['url'] ); ?>">
+							<?php echo $omc_img; ?>
+							<?php if ( $omc_t['label'] ) : ?>
+								<span class="omc-mosaic__label"><?php echo esc_html( $omc_t['label'] ); ?><?php echo omc_icon( 'arrow' ); ?></span>
+							<?php endif; ?>
+						</a>
+					<?php endforeach; ?>
+				</div>
+			</div>
+		</section>
+	<?php endif; ?>
 
 	<!-- ───────────── Banner cluster: split campaign banner + 2-up edit tiles, back to back ───────────── -->
 	<?php $omc_banners = omc_home_banners(); ?>
@@ -162,71 +240,30 @@ get_header();
 		</section>
 	<?php endif; ?>
 
+	<!-- ───────────── Brand story ───────────── -->
+	<section class="omc-story omc-reveal" aria-labelledby="omc-story-title">
+		<?php if ( ! empty( $omc_images['story'] ) ) : ?>
+			<div class="omc-story__bg" aria-hidden="true"><?php echo omc_image( $omc_images['story'], 'large', [ 'loading' => 'lazy', 'alt' => '' ] ); ?></div>
+		<?php endif; ?>
+		<div class="l-section__container omc-story__inner">
+			<p class="omc-eyebrow"><?php esc_html_e( 'Our story', 'moderno-child' ); ?></p>
+			<h2 class="omc-story__title" id="omc-story-title"><?php esc_html_e( 'Oops. Mine.', 'moderno-child' ); ?></h2>
+			<p class="omc-story__text"><?php esc_html_e( 'The name came from that wonderfully spontaneous moment when you discover something you weren’t planning to buy, but suddenly — oops, mine. That instinctive little claim is at the heart of everything we do.', 'moderno-child' ); ?></p>
+			<a class="omc-btn omc-btn--ghost" href="<?php echo esc_url( omc_page_url( 'about-us' ) ); ?>"><?php esc_html_e( 'Read our story', 'moderno-child' ); ?></a>
+		</div>
+	</section>
+
 	<!-- ───────────── New arrivals ───────────── -->
 	<section class="omc-section omc-products omc-reveal" aria-labelledby="omc-new-title">
 		<div class="l-section__container-wide">
-			<?php omc_section_head( __( 'Just landed', 'moderno-child' ), __( 'New arrivals', 'moderno-child' ), omc_new_arrivals_url(), __( 'Shop all new', 'moderno-child' ) ); ?>
+			<?php omc_section_head( __( 'Just landed', 'moderno-child' ), __( 'New <em>arrivals</em>', 'moderno-child' ), omc_new_arrivals_url(), __( 'Shop all new', 'moderno-child' ) ); ?>
 			<div class="omc-products__grid">
 				<?php echo do_shortcode( '[products limit="8" columns="4" orderby="date" order="DESC" visibility="visible"' . $omc_cat_at . ']' ); ?>
 			</div>
 		</div>
 	</section>
 
-	<!-- ───────────── The edit (editorial) ───────────── -->
-	<section class="omc-section omc-edit omc-reveal" aria-labelledby="omc-edit-title">
-		<div class="l-section__container omc-edit__grid">
-			<div class="omc-edit__media">
-				<figure class="omc-edit__img omc-edit__img--a">
-					<?php echo omc_image( $omc_images['edit_a'], 'large', [ 'loading' => 'lazy', 'alt' => __( 'Cream knit — quiet, considered pieces', 'moderno-child' ) ] ); ?>
-				</figure>
-				<figure class="omc-edit__img omc-edit__img--b">
-					<?php echo omc_image( $omc_images['edit_b'], 'medium_large', [ 'loading' => 'lazy', 'alt' => __( 'Black linen shirt — everyday elegance', 'moderno-child' ) ] ); ?>
-				</figure>
-			</div>
-			<div class="omc-edit__copy">
-				<p class="omc-eyebrow"><?php esc_html_e( 'The edit', 'moderno-child' ); ?></p>
-				<h2 class="omc-section__title" id="omc-edit-title"><?php esc_html_e( 'Quiet elegance, from Seoul to Bangkok', 'moderno-child' ); ?></h2>
-				<p><?php esc_html_e( 'We don’t bring in pieces to fill a collection or chase every trend. Each one is chosen for a reason — the fabric, the fit, a detail you don’t see everywhere — so you find something you’ll reach for again and again.', 'moderno-child' ); ?></p>
-				<p><?php esc_html_e( 'Quality over quantity. Personal, never generic. Your closet should feel like you.', 'moderno-child' ); ?></p>
-				<a class="omc-btn omc-btn--outline" href="<?php echo esc_url( $omc_shop ); ?>"><?php esc_html_e( 'Explore the collection', 'moderno-child' ); ?></a>
-			</div>
-		</div>
-	</section>
-
-	<!-- ───────────── Editor's picks (framed product feature banners) ───────────── -->
-	<?php $omc_features = function_exists( 'omc_feature_products' ) ? omc_feature_products() : []; ?>
-	<?php if ( count( $omc_features ) >= 2 ) : ?>
-		<section class="omc-section omc-features omc-reveal" aria-labelledby="omc-features-title">
-			<div class="l-section__container-wide">
-				<?php omc_section_head( __( 'Editor’s picks', 'moderno-child' ), __( 'Two pieces we keep coming back to', 'moderno-child' ) ); ?>
-				<div class="omc-banners__grid omc-banners__grid--2">
-					<?php foreach ( array_slice( $omc_features, 0, 2 ) as $omc_fp ) : ?>
-						<a class="omc-feature" href="<?php echo esc_url( $omc_fp->get_permalink() ); ?>">
-							<span class="omc-feature__frame"><?php echo wp_get_attachment_image( $omc_fp->get_image_id(), 'large', false, [ 'loading' => 'lazy', 'alt' => $omc_fp->get_name() ] ); ?></span>
-							<span class="omc-feature__caption">
-								<span class="omc-eyebrow"><?php esc_html_e( 'Editor’s pick', 'moderno-child' ); ?></span>
-								<span class="omc-feature__name"><?php echo esc_html( $omc_fp->get_name() ); ?></span>
-								<span class="omc-feature__price"><?php echo wp_kses_post( $omc_fp->get_price_html() ); ?></span>
-								<span class="omc-banner__cta"><?php esc_html_e( 'Shop this piece', 'moderno-child' ); ?><?php echo omc_icon( 'arrow' ); ?></span>
-							</span>
-						</a>
-					<?php endforeach; ?>
-				</div>
-			</div>
-		</section>
-	<?php endif; ?>
-
-	<!-- ───────────── Most loved ───────────── -->
-	<section class="omc-section omc-products omc-reveal" aria-labelledby="omc-loved-title">
-		<div class="l-section__container-wide">
-			<?php omc_section_head( __( 'Most loved', 'moderno-child' ), __( 'The pieces everyone keeps reaching for', 'moderno-child' ), omc_shop_url( [ 'orderby' => 'popularity' ] ), __( 'Shop best sellers', 'moderno-child' ) ); ?>
-			<div class="omc-products__grid">
-				<?php echo do_shortcode( '[products limit="4" columns="4" best_selling="true" visibility="visible"' . $omc_cat_at . ']' ); ?>
-			</div>
-		</div>
-	</section>
-
-	<!-- ───────────── Banner cluster: wide banner + 2-up edit tiles, back to back ───────────── -->
+	<!-- ───────────── Wide banners, back to back: copy left, then copy right ───────────── -->
 	<?php if ( ! empty( $omc_banners['wide'] ) ) : ?>
 		<section class="omc-section omc-banners omc-reveal" aria-label="<?php echo esc_attr( $omc_banners['wide']['title'] ); ?>">
 			<div class="l-section__container-wide">
@@ -234,21 +271,28 @@ get_header();
 			</div>
 		</section>
 	<?php endif; ?>
-	<?php if ( ! empty( $omc_banners['more'] ) ) : ?>
-		<section class="omc-banners omc-banners--tight omc-reveal" aria-label="<?php esc_attr_e( 'More to explore', 'moderno-child' ); ?>">
-			<div class="l-section__container-wide omc-banners__grid omc-banners__grid--2">
-				<?php foreach ( $omc_banners['more'] as $omc_b ) { omc_banner( $omc_b, 'tile' ); } ?>
+	<?php if ( ! empty( $omc_banners['wide2'] ) ) : ?>
+		<section class="omc-banners omc-banners--tight omc-reveal" aria-label="<?php echo esc_attr( $omc_banners['wide2']['title'] ); ?>">
+			<div class="l-section__container-wide">
+				<?php omc_banner( $omc_banners['wide2'], 'wide' ); ?>
+			</div>
+		</section>
+	<?php endif; ?>
+	<?php if ( ! empty( $omc_banners['wide3'] ) ) : ?>
+		<section class="omc-banners omc-banners--tight omc-reveal" aria-label="<?php echo esc_attr( $omc_banners['wide3']['title'] ); ?>">
+			<div class="l-section__container-wide">
+				<?php omc_banner( $omc_banners['wide3'], 'wide' ); ?>
 			</div>
 		</section>
 	<?php endif; ?>
 
-	<!-- ───────────── Brand story ───────────── -->
-	<section class="omc-story omc-reveal" aria-labelledby="omc-story-title">
-		<div class="l-section__container omc-story__inner">
-			<p class="omc-eyebrow"><?php esc_html_e( 'Our story', 'moderno-child' ); ?></p>
-			<h2 class="omc-story__title" id="omc-story-title"><?php esc_html_e( 'Oops. Mine.', 'moderno-child' ); ?></h2>
-			<p class="omc-story__text"><?php esc_html_e( 'The name came from that wonderfully spontaneous moment when you discover something you weren’t planning to buy, but suddenly — oops, mine. That instinctive little claim is at the heart of everything we do.', 'moderno-child' ); ?></p>
-			<a class="omc-btn omc-btn--ghost" href="<?php echo esc_url( omc_page_url( 'about-us' ) ); ?>"><?php esc_html_e( 'Read our story', 'moderno-child' ); ?></a>
+	<!-- ───────────── Most loved ───────────── -->
+	<section class="omc-section omc-products omc-reveal" aria-labelledby="omc-loved-title">
+		<div class="l-section__container-wide">
+			<?php omc_section_head( __( 'Most loved', 'moderno-child' ), __( 'The pieces everyone keeps <em>reaching for</em>', 'moderno-child' ), omc_shop_url( [ 'orderby' => 'popularity' ] ), __( 'Shop best sellers', 'moderno-child' ) ); ?>
+			<div class="omc-products__grid">
+				<?php echo do_shortcode( '[products limit="4" columns="4" best_selling="true" visibility="visible"' . $omc_cat_at . ']' ); ?>
+			</div>
 		</div>
 	</section>
 
@@ -259,7 +303,7 @@ get_header();
 		?>
 		<section class="omc-section omc-journal omc-reveal" aria-labelledby="omc-journal-title">
 			<div class="l-section__container-wide">
-				<?php omc_section_head( __( 'Styling notes', 'moderno-child' ), __( 'From the journal', 'moderno-child' ), omc_page_url( 'blog', '/blog/' ), __( 'All stories', 'moderno-child' ) ); ?>
+				<?php omc_section_head( __( 'Styling notes', 'moderno-child' ), __( 'From the <em>journal</em>', 'moderno-child' ), omc_page_url( 'blog', '/blog/' ), __( 'All stories', 'moderno-child' ) ); ?>
 				<div class="omc-journal__grid">
 					<?php foreach ( $omc_posts as $omc_post ) : ?>
 						<article class="omc-card">
@@ -278,11 +322,59 @@ get_header();
 		</section>
 	<?php endif; ?>
 
+	<!-- ───────────── Testimonials: WooCommerce reviews + curated quotes, in the edit carousel ───────────── -->
+	<?php $omc_quotes = omc_testimonials(); ?>
+	<?php if ( count( $omc_quotes ) >= 3 ) : ?>
+		<section class="omc-section omc-quotes omc-reveal" aria-labelledby="omc-quotes-title">
+			<div class="omc-quotes__band js-omc-quotes" data-autoplay="7000" aria-roledescription="carousel" aria-label="<?php esc_attr_e( 'Customer reviews', 'moderno-child' ); ?>">
+				<?php if ( ! empty( $omc_images['quotes'] ) ) : ?>
+					<div class="omc-quotes__bg" aria-hidden="true"><?php echo omc_image( $omc_images['quotes'], 'large', [ 'loading' => 'lazy', 'alt' => '' ] ); ?></div>
+				<?php endif; ?>
+				<div class="l-section__container omc-quotes__inner">
+					<div class="omc-quotes__head">
+						<p class="omc-eyebrow"><?php esc_html_e( 'Kind words', 'moderno-child' ); ?></p>
+						<h2 class="omc-section__title" id="omc-quotes-title"><?php echo wp_kses( __( 'What they’re <em>saying</em>', 'moderno-child' ), [ 'em' => [] ] ); ?></h2>
+					</div>
+					<div class="omc-quotes__slides">
+						<?php foreach ( $omc_quotes as $omc_i => $omc_q ) :
+							$omc_is_review = 'review' === ( $omc_q['source'] ?? '' ) && ! empty( $omc_q['product']['url'] );
+							?>
+							<article class="omc-quotes__slide<?php echo 0 === $omc_i ? ' is-active' : ''; ?>"<?php echo 0 === $omc_i ? '' : ' aria-hidden="true"'; ?> aria-roledescription="slide" aria-label="<?php echo esc_attr( sprintf( __( 'Review %1$d of %2$d', 'moderno-child' ), $omc_i + 1, count( $omc_quotes ) ) ); ?>">
+								<div class="omc-quotes__body">
+									<span class="omc-quotes__stars" role="img" aria-label="<?php echo esc_attr( sprintf( __( '%d out of 5 stars', 'moderno-child' ), (int) $omc_q['rating'] ) ); ?>"><?php echo str_repeat( omc_icon( 'star' ), max( 1, min( 5, (int) $omc_q['rating'] ) ) ); ?></span>
+									<blockquote class="omc-quotes__text"><p><?php echo esc_html( $omc_q['text'] ); ?></p></blockquote>
+									<footer class="omc-quotes__by">
+										<span class="omc-quotes__name"><?php echo esc_html( $omc_q['author'] ); ?></span>
+										<span class="omc-quotes__meta">
+											<?php if ( $omc_is_review ) : ?>
+												<?php esc_html_e( 'Verified buyer', 'moderno-child' ); ?> · <a href="<?php echo esc_url( $omc_q['product']['url'] ); ?>"><?php echo esc_html( $omc_q['product']['name'] ); ?></a>
+											<?php else : ?>
+												<?php esc_html_e( 'Oops, Mine Co. customer', 'moderno-child' ); ?>
+											<?php endif; ?>
+										</span>
+									</footer>
+								</div>
+							</article>
+						<?php endforeach; ?>
+					</div>
+					<div class="omc-quotes__nav">
+						<button type="button" class="omc-quotes__btn omc-quotes__btn--prev" aria-label="<?php esc_attr_e( 'Previous review', 'moderno-child' ); ?>"><?php echo omc_icon( 'arrow' ); ?></button>
+						<span class="omc-quotes__count" aria-live="polite"><b>01</b><span aria-hidden="true"> / </span><?php echo esc_html( str_pad( (string) count( $omc_quotes ), 2, '0', STR_PAD_LEFT ) ); ?></span>
+						<button type="button" class="omc-quotes__btn omc-quotes__btn--next" aria-label="<?php esc_attr_e( 'Next review', 'moderno-child' ); ?>"><?php echo omc_icon( 'arrow' ); ?></button>
+					</div>
+				</div>
+			</div>
+		</section>
+	<?php endif; ?>
+
 	<!-- ───────────── Newsletter ───────────── -->
 	<section class="omc-newsletter omc-reveal" aria-labelledby="omc-news-title">
+		<?php if ( ! empty( $omc_images['newsletter'] ) ) : ?>
+			<div class="omc-newsletter__bg" aria-hidden="true"><?php echo omc_image( $omc_images['newsletter'], 'large', [ 'loading' => 'lazy', 'alt' => '' ] ); ?></div>
+		<?php endif; ?>
 		<div class="l-section__container omc-newsletter__inner">
 			<p class="omc-eyebrow"><?php esc_html_e( 'Stay close', 'moderno-child' ); ?></p>
-			<h2 class="omc-section__title" id="omc-news-title"><?php esc_html_e( 'Your next “Oops, Mine” moment', 'moderno-child' ); ?></h2>
+			<h2 class="omc-section__title" id="omc-news-title"><?php echo wp_kses( __( 'Your next <em>“Oops, Mine”</em> moment', 'moderno-child' ), [ 'em' => [] ] ); ?></h2>
 			<p class="omc-newsletter__text"><?php esc_html_e( 'New arrivals, quiet restocks and the occasional note from us. No noise.', 'moderno-child' ); ?></p>
 			<?php omc_newsletter_form(); ?>
 		</div>

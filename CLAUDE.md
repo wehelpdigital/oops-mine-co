@@ -78,15 +78,35 @@ Chromium harness for that lives in the session scratchpad, not in the repo.
 - **Page templates** are registered by header comment: `templates/page-home.php` ("OMC Home", the front page) and
   `templates/page-about.php` ("OMC About"). `templates/page-header.php` overrides the parent's part so those two
   templates don't get the theme's title band (keeps one `<h1>` per page); every other page falls through to the parent.
+- `footer.php` overrides the parent's footer on every page. The parent renders an Elementor "footer page" there, which
+  needs Elementor's frontend CSS (not loaded on the OMC templates) and carried the demo's fake contact details. The
+  child footer is plain markup: brand, Shop/Help link columns from `omc_footer_links()` (filter `omc_footer_links`;
+  only existing categories/published pages are linked), newsletter form (hidden on the front page, which already ends
+  with the newsletter band — filter `omc_footer_newsletter`), copyright. It keeps the parent's `</main>`,
+  `.c-footer` classes and `wp_footer()`.
 - The parent prints its combined CSS as handle `ideapark-core` at `wp_enqueue_scripts` priority 999; the child enqueues
   `style.css` → `omc.css` at priority 1000 with that dependency. Parent layout classes to reuse:
   `l-section__container` (centred 1170px, fluid below) and `l-section__container-wide`. Theme settings are read with
   `ideapark_mod()`; the announcement bar is an `html_block` post referenced by the `header_advert_bar_page` mod; the
   header shows the site name as a text logo when the `logo` mod is empty.
 - `functions.php` is the configuration surface. Section content is data, not markup: `omc_images()`,
-  `omc_home_banners()` (`campaign`, `campaign2`, `carousel`, `wide`, `more`), `omc_home_categories()`,
-  `omc_usp_items()`, `omc_feature_products()`, plus filters `omc_home_product_category`, `omc_home_feature_category`,
-  `omc_home_type_words`, `omc_category_tile_image`, `omc_social_profiles`, `omc_front_description`. `omc_banner()`
+  `omc_home_banners()` (`campaign`, `campaign2`, `carousel`, `wide`, `wide2`, `wide3`; `more` tiles and
+  `omc_feature_products()` are kept but no longer rendered — the editorial, editor's picks and tile-row sections were
+  removed from the home template), `omc_home_categories()`, `omc_usp_items()`, `omc_home_mosaic()` (the seven-tile
+  "Shop the look" grid under the Live card — sizes 2x2/1x1/1x2/2x1 on a dense 4-column grid, square tiles set the
+  row height; optional `focus` = object-position), `omc_hero_phrases()` (rotating hero line), `omc_testimonials()` (approved 4–5★ WooCommerce reviews first, padded with curated quotes; filters
+  `omc_testimonials_fallback` / `omc_testimonials`; rendered after the journal as a centred one-at-a-time spotlight on
+  a blurred, darkened photo band — large white quote, arrows + counter below, cross-fade autoplay — `.js-omc-quotes`
+  in omc.js; the `image` each item carries is currently unused by the template), `omc_fb_live()` (the "next Facebook Live" card under the trust strip: photo, countdown and an email form
+  that subscribes with source `fb_live` and then reveals the Facebook link — date, copy, page URL and on/off are theme
+  mods `omc_live_*` edited in Customizer → "Facebook Live (home banner)"; the date defaults to next Saturday 8 pm
+  site time until one is set), plus filters `omc_home_product_category`, `omc_home_feature_category`, `omc_home_type_words`,
+  `omc_category_tile_image`, `omc_social_profiles`, `omc_front_description`, `omc_footer_links`, `omc_hero_images`
+  (hero blur-dissolve slideshow; the first entry is the eager LCP image) and `omc_social_links` (Facebook, Instagram,
+  email, Pinterest — URLs from the parent's Customizer "Social Media Links" + header email). On desktop those icons
+  render in the logo row's top-left cell through the child's `templates/header-other.php` (the parent's "Other"
+  header block is enabled there in `header_blocks_1`); on phones they are prepended to the announcement bar at
+  `wp_head` priority 2 via the parent's `_advert_bar` temp mod and hidden ≥768px by CSS. `omc_banner()`
   renders every banner variant (`split` with `side`, `wide`, `tile`; an `images` array makes it cross-fade).
   Images are referenced by upload-relative path and resolved via `_wp_attached_file` so the same code works on any
   environment.
@@ -95,8 +115,10 @@ Chromium harness for that lives in the session scratchpad, not in the repo.
 - SEO output (meta description, Open Graph, JSON-LD Organization/WebSite/AboutPage) is emitted only when no SEO plugin
   is active (`omc_has_seo_plugin()`).
 - `assets/js/omc.js` (no dependencies): scroll reveal, the square edit carousel (native snap-scroll + autoplay), banner
-  cross-fades, the typewriter heading, and the newsletter form (AJAX `omc_subscribe`, which fires
-  `omc_newsletter_subscribed` for the plugin). Motion features respect `prefers-reduced-motion` and pause off-screen.
+  cross-fades, the typewriter heading, and the newsletter forms (`omc_newsletter_form( $args )` — AJAX `omc_subscribe`
+  with a `source` field, which fires `omc_newsletter_subscribed( $email, $source )` for the plugin; the WHD subscriber
+  table records that source). In that handler read the URL with `getAttribute('action')`: the hidden
+  `<input name="action">` shadows `form.action`. Motion features respect `prefers-reduced-motion` and pause off-screen.
 - Design tokens are CSS custom properties at the top of `assets/css/omc.css` (rose-gold `--omc-rose`, cream/sand,
   Cormorant Garamond display + Manrope body).
 

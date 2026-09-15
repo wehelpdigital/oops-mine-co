@@ -45,7 +45,7 @@ while ( have_posts() ) :
 		<section class="omc-about__cta omc-reveal" aria-label="<?php esc_attr_e( 'Start shopping', 'moderno-child' ); ?>">
 			<div class="l-section__container omc-about__cta-inner">
 				<p class="omc-eyebrow"><?php esc_html_e( 'When you know, you know', 'moderno-child' ); ?></p>
-				<h2 class="omc-section__title"><?php esc_html_e( 'Find something special', 'moderno-child' ); ?></h2>
+				<h2 class="omc-section__title"><?php echo wp_kses( __( 'Find something <em>special</em>', 'moderno-child' ), [ 'em' => [] ] ); ?></h2>
 				<div class="omc-hero__actions">
 					<a class="omc-btn omc-btn--solid" href="<?php echo esc_url( omc_new_arrivals_url() ); ?>"><?php esc_html_e( 'Shop new arrivals', 'moderno-child' ); ?></a>
 					<a class="omc-btn omc-btn--outline" href="<?php echo esc_url( omc_page_url( 'contacts', '/contacts/' ) ); ?>"><?php esc_html_e( 'Get in touch', 'moderno-child' ); ?></a>

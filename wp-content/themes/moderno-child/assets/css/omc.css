@@ -16,7 +16,8 @@
 	--omc-serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
 	--omc-sans: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
 	--omc-gutter: clamp(16px, 4vw, 48px);
-	--omc-section: clamp(56px, 8vw, 112px);
+	--omc-section: clamp(56px, 8vw, 112px);   /* inner padding of full-bleed bands (story, newsletter, About CTA) */
+	--omc-gap: clamp(32px, 4vw, 56px);        /* distance between consecutive home sections */
 	--omc-ease: cubic-bezier(.22, .61, .36, 1);
 }
 
@@ -60,11 +61,13 @@
 	color: var(--omc-ink);
 	margin: 10px 0 0;
 }
-.omc-section__title { font-size: clamp(30px, 3.4vw, 46px); }
-.omc-section__title em { font-style: italic; color: var(--omc-rose-dark); }
+/* Section titles follow one pattern site-wide: rose-gold words with the key word in italic ink
+   ("Find your next *favourite*"). On dark bands the colours flip (see .omc-quotes__head). */
+.omc-section__title { font-size: clamp(30px, 3.4vw, 46px); color: var(--omc-rose-dark); }
+.omc-section__title em { font-style: italic; color: var(--omc-ink); }
 
 .omc-section {
-	padding: var(--omc-section) 0 0;
+	padding: var(--omc-gap) 0 0;
 }
 .omc-section__head {
 	display: flex;
@@ -140,11 +143,27 @@
 	height: 100%;
 }
 .omc-hero__media img { object-fit: cover; object-position: 62% 28%; }
+/* hero slideshow: the photos stack; the active one is sharp, the others sit blurred and faded underneath,
+   so each change is a soft blur-through dissolve with a slow drift (assets/js/omc.js, .js-omc-fade) */
+.omc-hero__media--fade .omc-hero__img {
+	opacity: 0;
+	filter: blur(18px);
+	transform: scale(1.08);
+	transition: opacity 1.6s var(--omc-ease), filter 1.6s var(--omc-ease), transform 9s linear;
+	will-change: opacity, filter, transform;
+}
+.omc-hero__media--fade .omc-hero__img.is-active { opacity: 1; filter: blur(0); transform: scale(1); }
+@media (prefers-reduced-motion: reduce) {
+	.omc-hero__media--fade .omc-hero__img { transition: opacity .3s; filter: none; transform: none; }
+}
 .omc-hero::after {
 	content: "";
 	position: absolute;
 	inset: 0;
-	background: linear-gradient(180deg, rgba(20, 20, 20, .06) 0%, rgba(20, 20, 20, .14) 40%, rgba(20, 20, 20, .66) 100%);
+	/* a steady dark wash plus a heavier foot: the copy sits in the lower half over changing photos */
+	background:
+		linear-gradient(180deg, rgba(20, 20, 20, .22) 0%, rgba(20, 20, 20, .3) 45%, rgba(20, 20, 20, .74) 100%),
+		radial-gradient(ellipse 60% 55% at 50% 72%, rgba(20, 20, 20, .28), rgba(20, 20, 20, 0) 70%);
 	z-index: 1;
 }
 .omc-hero__content > * { text-shadow: 0 2px 28px rgba(0, 0, 0, .35); }
@@ -174,6 +193,10 @@
 	text-wrap: balance;
 }
 .omc-hero__title em { font-style: italic; color: var(--omc-rose-light); }
+/* rotating phrase: the outgoing line lifts and fades, the incoming one floats up into place */
+.omc-rotate { display: inline-block; transition: opacity .5s var(--omc-ease), transform .5s var(--omc-ease); will-change: opacity, transform; }
+.omc-rotate.is-out { opacity: 0; transform: translateY(-.35em); }
+.omc-rotate.is-pre { transition: none; opacity: 0; transform: translateY(.35em); }
 .omc-hero__lede {
 	max-width: 560px;
 	margin: 20px auto 0;
@@ -184,8 +207,44 @@
 .omc-hero__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 30px; }
 
 /* ─── Announcement bar (theme "advert bar" block) ─── */
-.c-header__advert_bar { background: var(--omc-ink); color: #fff; }
+.c-header__advert_bar { position: relative; background: var(--omc-ink); color: #fff; }
 .c-header__advert_bar .entry-content { max-width: none; }
+/* social icons pinned to the left edge of the bar (markup prepended by omc_advert_bar_social()) */
+.omc-announce__social { position: absolute; left: calc(var(--omc-gutter) - 6px); top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 2px; z-index: 2; }
+.omc-announce__social a {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	color: rgba(255, 255, 255, .85) !important;
+	background: none !important;
+	border: 0 !important;
+	text-decoration: none !important;
+	transition: color .2s var(--omc-ease), transform .2s var(--omc-ease);
+}
+.omc-announce__social a:hover { color: var(--omc-rose-light) !important; transform: translateY(-1px); }
+.omc-announce__social .omc-icon { width: 15px; height: 15px; }
+@media (min-width: 768px) { .omc-announce__social { display: none; } } /* on desktop the icons live in the logo row instead */
+
+/* ─── Social icons in the desktop header's logo row, top-left cell (child templates/header-other.php) ─── */
+.omc-header-social { display: flex; align-items: center; gap: 18px; } /* same rhythm as the account/search/wishlist/cart icons on the right */
+.omc-header-social a {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	color: #070707;
+	transition: color .2s var(--omc-ease), transform .2s var(--omc-ease);
+}
+.omc-header-social a:hover { color: var(--omc-rose-dark); transform: translateY(-1px); }
+.omc-header-social .omc-icon { width: 18px; height: 18px; } /* the theme's header glyphs are 18px */
+/* The parent paints every <svg> in the header with a fill, which turned the outlined Instagram and email glyphs into
+   solid blocks. Our icons are line icons: no fill, current-colour stroke — except the shapes that ask for a fill. */
+.omc-icon { fill: none; stroke: currentColor; }
+.omc-icon [fill="currentColor"] { fill: currentColor; stroke: none; }
+.c-header__top .omc-header-social { display: none; } /* the parent repeats this block inside the mobile menu, which already lists its own social links */
 .omc-announce {
 	margin: 0;
 	padding: 10px var(--omc-gutter);
@@ -224,9 +283,13 @@
 .c-header__advert_bar .entry-content .omc-announce a:hover,
 .c-header__advert_bar .omc-announce a:hover { color: #fff !important; border-color: #fff; }
 @media (max-width: 767px) {
-	.omc-announce { padding-top: 8px; padding-bottom: 8px; font-size: 10px; letter-spacing: .16em; }
-	.omc-announce > *:nth-child(2) { display: none; }       /* middle item goes on phones */
-	.omc-announce > *:nth-child(3)::before { display: block; }
+	/* phones: icons on the left, one message on the right ("Our story" lives in the mobile menu as About) */
+	.omc-announce { padding: 8px var(--omc-gutter) 8px 124px; justify-content: flex-end; font-size: 10px; letter-spacing: .16em; }
+	.omc-announce > * { padding: 0; }
+	.omc-announce > *:nth-child(n+2) { display: none; }
+	.omc-announce__social { left: calc(var(--omc-gutter) - 5px); gap: 0; }
+	.omc-announce__social a { width: 26px; height: 26px; }
+	.omc-announce__social .omc-icon { width: 14px; height: 14px; }
 }
 
 /* ─── Trust strip ─── */
@@ -253,7 +316,7 @@
 
 /* ─── Category cards ─── */
 .omc-section.omc-cats { padding-top: clamp(20px, 2.4vw, 36px); } /* sits close under the banner cluster */
-.omc-cats .omc-section__title { color: var(--omc-rose-dark); }
+.omc-section.omc-banners { padding-top: clamp(24px, 3vw, 44px); } /* banner rows follow a product grid closely, not at full section distance */
 .omc-type { color: var(--omc-ink); font-style: italic; white-space: nowrap; }
 .omc-type.is-typing::after {
 	content: "";
@@ -318,8 +381,40 @@
 .omc-cat:hover .omc-cat__name::after { right: 0; }
 .omc-cat__count { font: 500 11px/1 var(--omc-sans); letter-spacing: .14em; text-transform: uppercase; color: var(--omc-muted); }
 
-/* ─── Product sections (theme grid inside) ─── */
+/* ─── Product sections: the theme's product cards restyled to match the category cards
+   (sand card inside a hairline border, square white photo frame, serif name). Hover buttons,
+   quick view, wishlist, badges and swatches are the parent's and keep working. ─── */
 .omc-products__grid .c-product-grid__wrap { margin-bottom: 0; }
+.omc-products .c-product-grid__list { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(14px, 1.8vw, 28px); }
+.omc-products .c-product-grid__item,
+.omc-products .c-product-grid__item--background {
+	width: auto;
+	padding: clamp(10px, 1vw, 14px);
+	border: 1px solid var(--omc-line);
+	background: #f3eae2;
+	transition: border-color .3s var(--omc-ease), box-shadow .3s var(--omc-ease), transform .3s var(--omc-ease);
+}
+.omc-products .c-product-grid__item::after { display: none; } /* the parent's overlapping hairline */
+.omc-products .c-product-grid__item:hover { border-color: var(--omc-rose); box-shadow: 0 24px 48px -30px rgba(20, 20, 20, .35); transform: translateY(-3px); }
+.omc-products .c-product-grid__thumb-wrap { padding-bottom: 100%; border: 1px solid var(--omc-line); background: #fff; }   /* square frame */
+.omc-products .c-product-grid__item:hover .c-product-grid__thumb-wrap { background: #fff; }
+.omc-products .c-product-grid__thumb { object-fit: contain; padding: 6%; box-sizing: border-box; } /* show the whole piece, never crop */
+.omc-products .c-product-grid__details { padding: 14px 4px 4px; }
+.omc-products .c-product-grid__short-desc { display: none; } /* brand, name, price — like the category cards; the blurb lives on the product page */
+.omc-products .c-product-grid__category-list { font: 500 10px/1.4 var(--omc-sans); letter-spacing: .16em; text-transform: uppercase; color: var(--omc-muted); }
+.omc-products .c-product-grid__category-item { color: inherit; }
+.omc-products .woocommerce-loop-product__title {
+	font-family: var(--omc-serif);
+	font-size: clamp(19px, 1.5vw, 23px);
+	font-weight: 500;
+	line-height: 1.15;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--omc-ink);
+	margin: 6px 0 0;
+}
+.omc-products .c-product-grid__price-wrap { margin-top: 8px; font: 500 13px/1.4 var(--omc-sans); letter-spacing: .02em; color: var(--omc-ink); }
+.omc-products .c-product-grid__price-wrap ins { color: var(--omc-rose-dark); }
 
 /* ─── The edit (editorial) ─── */
 .omc-edit { background: var(--omc-cream); margin-top: var(--omc-section); padding: var(--omc-section) 0; }
@@ -345,8 +440,21 @@
 .omc-edit__copy .omc-btn { margin-top: 28px; }
 
 /* ─── Brand story band ─── */
-.omc-story { background: var(--omc-ink); color: #fff; margin-top: var(--omc-section); padding: var(--omc-section) 0; text-align: center; }
-.omc-story__inner { max-width: 760px; }
+.omc-story { position: relative; isolation: isolate; overflow: hidden; background: var(--omc-ink); color: #fff; margin-top: clamp(24px, 3vw, 44px); padding: var(--omc-section) 0; text-align: center; } /* sits close under the category grid */
+/* blurred, rose-tinted photo behind the story copy; the dark wash keeps the white text at full contrast */
+.omc-story__bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.omc-story__bg img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 35%; filter: blur(9px) saturate(1.05); transform: scale(1.08); } /* scale hides the blur's soft edge */
+.omc-story__bg::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background:
+		linear-gradient(135deg, rgba(185, 139, 126, .38) 0%, rgba(185, 139, 126, 0) 55%),
+		linear-gradient(180deg, rgba(20, 20, 20, .74) 0%, rgba(20, 20, 20, .8) 100%);
+}
+.omc-story__inner { position: relative; max-width: 760px; }
+.omc-story .omc-eyebrow { color: var(--omc-rose-light); } /* the mid rose sinks into the tinted backdrop */
+.omc-story + .omc-section { padding-top: clamp(24px, 3vw, 44px); } /* the section after the band sits as close below it as the grid does above */
 .omc-story__title { color: #fff; font-size: clamp(56px, 9vw, 128px); font-style: italic; font-weight: 400; margin-top: 8px; }
 .omc-story__text { font: 400 clamp(16px, 1.3vw, 19px)/1.7 var(--omc-sans); color: rgba(255, 255, 255, .78); margin: 18px auto 0; max-width: 620px; }
 .omc-story .omc-btn { margin-top: 30px; }
@@ -364,9 +472,170 @@
 .omc-card__title a:hover { color: var(--omc-rose-dark); }
 .omc-card__excerpt { margin: 0; font: 400 15px/1.65 var(--omc-sans); color: var(--omc-text); }
 
-/* ─── Newsletter ─── */
-.omc-newsletter { background: var(--omc-sand); margin-top: var(--omc-section); padding: var(--omc-section) 0; text-align: center; }
-.omc-newsletter__inner { max-width: 640px; }
+/* ─── Shop-the-look mosaic: a fixed, balanced pattern on four columns. Square tiles set the row height;
+   spanning tiles stretch to fill, so every row lines up without JavaScript. ─── */
+.omc-section.omc-mosaic-section { padding-top: clamp(24px, 3vw, 44px); }
+.omc-mosaic { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-flow: dense; gap: clamp(10px, 1.2vw, 18px); }
+.omc-mosaic__item { position: relative; display: block; overflow: hidden; background: var(--omc-sand); border: 1px solid var(--omc-line); isolation: isolate; }
+.omc-mosaic__item--1x1 { aspect-ratio: 1 / 1; }
+.omc-mosaic__item--2x2 { grid-column: span 2; grid-row: span 2; }
+.omc-mosaic__item--1x2 { grid-row: span 2; }
+.omc-mosaic__item--2x1 { grid-column: span 2; }
+.omc-mosaic__item img { position: absolute; inset: 0; width: 100% !important; height: 100% !important; object-fit: cover; object-position: 50% 20%; transition: transform 1.2s var(--omc-ease); }
+.omc-mosaic__item:hover img { transform: scale(1.05); }
+.omc-mosaic__item::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20, 20, 20, 0) 60%, rgba(20, 20, 20, .28) 100%); opacity: 0; transition: opacity .4s var(--omc-ease); pointer-events: none; }
+.omc-mosaic__item:hover::after { opacity: 1; }
+.omc-mosaic__label {
+	position: absolute;
+	left: 14px;
+	bottom: 14px;
+	z-index: 1;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 9px 12px 9px 14px;
+	background: rgba(255, 255, 255, .94);
+	color: var(--omc-ink);
+	font: 600 10px/1 var(--omc-sans);
+	letter-spacing: .18em;
+	text-transform: uppercase;
+	transition: background .3s var(--omc-ease), color .3s var(--omc-ease);
+}
+.omc-mosaic__label .omc-icon { width: 12px; height: 12px; }
+.omc-mosaic__item:hover .omc-mosaic__label { background: var(--omc-ink); color: #fff; }
+.omc-mosaic__item:focus-visible { outline: 2px solid var(--omc-rose); outline-offset: 2px; }
+
+/* ─── Next Facebook Live band (under the trust strip) ─── */
+.omc-live { padding-top: clamp(14px, 1.7vw, 26px); } /* a little air under the trust strip */
+.omc-live__card {
+	position: relative;
+	display: grid;
+	grid-template-columns: minmax(0, .85fr) minmax(0, 1.35fr); /* photo | copy + form */
+	align-items: stretch;
+	background: #f3eae2;
+	border: 1px solid var(--omc-line);
+	overflow: hidden;
+}
+.omc-live__media { position: relative; min-height: 100%; background: var(--omc-sand); }
+.omc-live__media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 12%; } /* keep the face in frame in every crop */
+.omc-live__body { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: clamp(26px, 3vw, 46px) clamp(22px, 3.4vw, 56px); }
+.omc-live__badge { display: inline-flex; align-items: center; gap: 10px; margin: 0; font: 600 11px/1 var(--omc-sans); letter-spacing: .22em; text-transform: uppercase; color: var(--omc-rose-dark); }
+.omc-live__dot { width: 9px; height: 9px; border-radius: 50%; background: #d14b4b; box-shadow: 0 0 0 0 rgba(209, 75, 75, .55); animation: omc-pulse 1.8s ease-out infinite; }
+@keyframes omc-pulse {
+	0% { box-shadow: 0 0 0 0 rgba(209, 75, 75, .55); }
+	70% { box-shadow: 0 0 0 10px rgba(209, 75, 75, 0); }
+	100% { box-shadow: 0 0 0 0 rgba(209, 75, 75, 0); }
+}
+.omc-live__title { margin: 2px 0 0; font-family: var(--omc-serif); font-weight: 500; font-size: clamp(30px, 3vw, 46px); line-height: 1.05; color: var(--omc-ink); }
+.omc-live__text { margin: 0; max-width: 54ch; font: 400 15px/1.7 var(--omc-sans); color: var(--omc-text); }
+.omc-live__count { display: flex; gap: clamp(8px, 1vw, 14px); margin-top: 6px; }
+.omc-live__cell { display: flex; flex-direction: column; align-items: center; min-width: 58px; padding: 10px 6px 8px; background: #fff; border: 1px solid var(--omc-line); }
+.omc-live__num { font-family: var(--omc-serif); font-size: clamp(24px, 2.2vw, 32px); line-height: 1; font-variant-numeric: lining-nums tabular-nums; color: var(--omc-ink); } /* lining figures: old-style ones jump around in a ticking counter */
+.omc-live__unit { margin-top: 5px; font: 600 9px/1 var(--omc-sans); letter-spacing: .18em; text-transform: uppercase; color: var(--omc-muted); }
+.omc-live__status { display: none; margin: 6px 0 0; font-family: var(--omc-serif); font-style: italic; font-size: 22px; color: var(--omc-rose-dark); }
+.omc-live__card.is-live .omc-live__count, .omc-live__card.is-over .omc-live__count { display: none; }
+.omc-live__card.is-live .omc-live__status--now, .omc-live__card.is-over .omc-live__status--over { display: block; }
+/* the sign-up form inside the card: left-aligned, input and button on one line */
+.omc-live__form { width: 100%; max-width: 520px; margin-top: 8px; justify-content: flex-start; gap: 8px; }
+.omc-live__form .omc-newsletter__input { flex: 1 1 220px; min-height: 48px; border-color: var(--omc-line); }
+.omc-live__form .omc-newsletter__input:focus { border-color: var(--omc-ink); }
+.omc-live__form .omc-btn { min-height: 48px; }
+.omc-live__form .omc-newsletter__note { margin-top: 2px; text-align: left; }
+.omc-live__form .omc-newsletter__note:empty { min-height: 0; margin: 0; } /* no phantom line between the button and the date until there is a message */
+.omc-live__form.is-done .omc-newsletter__input, .omc-live__form.is-done .omc-btn { display: none; } /* after a successful sign-up only the confirmation stays */
+.omc-live__after { margin-top: 2px; }
+.omc-live__btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+.omc-live__btn .omc-icon { width: 14px; height: 14px; }
+.omc-live__foot { margin: 6px 0 0; font: 600 11px/1.5 var(--omc-sans); letter-spacing: .12em; text-transform: uppercase; color: var(--omc-muted); }
+@media (prefers-reduced-motion: reduce) { .omc-live__dot { animation: none; } }
+
+/* ─── Testimonials: one spotlight quote at a time — the reviewed piece on the left, a large italic quote on the
+   right, cross-fading; arrows + counter in the band's header (assets/js/omc.js, .js-omc-quotes) ─── */
+.omc-quotes__band { /* full-bleed, like the story and newsletter bands; the inner container centres the content */
+	position: relative;
+	isolation: isolate;
+	overflow: hidden;
+	background: var(--omc-ink);
+	color: #fff;
+	text-align: center;
+	padding: var(--omc-gap) 0; /* same measure as the space between sections, above and below */
+}
+.omc-quotes__inner { position: relative; }
+/* blurred, rose-tinted photo under a dark wash — the story band's treatment */
+.omc-quotes__bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.omc-quotes__bg img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; filter: blur(14px) saturate(1.05); transform: scale(1.1); }
+.omc-quotes__bg::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background:
+		linear-gradient(135deg, rgba(185, 139, 126, .34) 0%, rgba(185, 139, 126, 0) 55%),
+		linear-gradient(180deg, rgba(20, 20, 20, .74) 0%, rgba(20, 20, 20, .8) 100%);
+}
+.omc-quotes__head { margin-bottom: clamp(18px, 2.2vw, 32px); }
+.omc-quotes__head .omc-eyebrow { color: var(--omc-rose-light); }
+.omc-quotes__head .omc-section__title { margin-top: 10px; color: #fff; }
+.omc-quotes__head .omc-section__title em { color: var(--omc-rose-light); }
+/* slides share one grid cell, so the band keeps the height of the tallest quote and nothing jumps */
+.omc-quotes__slides { display: grid; max-width: 860px; margin: 0 auto; }
+.omc-quotes__slide {
+	grid-area: 1 / 1;
+	opacity: 0;
+	visibility: hidden;
+	transform: translateY(12px);
+	transition: opacity .8s var(--omc-ease), transform .8s var(--omc-ease), visibility 0s .8s;
+}
+.omc-quotes__slide.is-active { opacity: 1; visibility: visible; transform: none; transition: opacity .8s var(--omc-ease) .1s, transform .8s var(--omc-ease) .1s, visibility 0s; }
+.omc-quotes__body { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.omc-quotes__stars { display: flex; gap: 5px; color: var(--omc-rose-light); }
+.omc-quotes__stars .omc-icon { width: 17px; height: 17px; }
+.omc-quotes__text { margin: 0; font-family: var(--omc-serif); font-style: italic; font-weight: 400; font-size: clamp(24px, 2.6vw, 40px); line-height: 1.3; color: #fff; text-wrap: balance; }
+.omc-quotes__text p { margin: 0; }
+.omc-quotes__text p::before { content: "\201C"; }
+.omc-quotes__text p::after { content: "\201D"; }
+.omc-quotes__by { display: flex; flex-direction: column; align-items: center; gap: 5px; padding-top: 20px; position: relative; }
+.omc-quotes__by::before { content: ""; position: absolute; left: 50%; top: 0; width: 44px; height: 1px; background: var(--omc-rose); transform: translateX(-50%); }
+.omc-quotes__name { font: 600 12px/1.4 var(--omc-sans); letter-spacing: .2em; text-transform: uppercase; color: #fff; }
+.omc-quotes__meta { font: 400 13px/1.6 var(--omc-sans); color: rgba(255, 255, 255, .72); }
+.omc-quotes__meta a { color: var(--omc-rose-light); text-decoration: none; border-bottom: 1px solid rgba(233, 211, 202, .45); }
+.omc-quotes__meta a:hover { color: #fff; border-color: currentColor; }
+.omc-quotes__nav { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: clamp(20px, 2.4vw, 34px); }
+.omc-quotes__btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 46px;
+	height: 46px;
+	border: 1px solid rgba(255, 255, 255, .6);
+	border-radius: 50%;
+	background: transparent;
+	color: #fff;
+	cursor: pointer;
+	transition: background .25s var(--omc-ease), color .25s var(--omc-ease), border-color .25s var(--omc-ease);
+}
+.omc-quotes__btn:hover { background: #fff; border-color: #fff; color: var(--omc-ink); }
+.omc-quotes__btn:focus-visible { outline: 2px solid var(--omc-rose-light); outline-offset: 2px; }
+.omc-quotes__btn .omc-icon { width: 18px; height: 18px; }
+.omc-quotes__btn--prev .omc-icon { transform: scaleX(-1); }
+.omc-quotes__count { min-width: 64px; text-align: center; font-family: var(--omc-serif); font-size: 18px; letter-spacing: .06em; color: rgba(255, 255, 255, .6); font-variant-numeric: lining-nums tabular-nums; }
+.omc-quotes__count b { font-weight: 500; color: #fff; }
+@media (prefers-reduced-motion: reduce) {
+	.omc-quotes__slide, .omc-quotes__slide.is-active { transition: opacity .2s, visibility 0s; transform: none; }
+}
+
+/* ─── Newsletter (blurred, sand-washed photo behind the form) ─── */
+.omc-newsletter { position: relative; isolation: isolate; overflow: hidden; background: var(--omc-sand); margin-top: var(--omc-gap); padding: var(--omc-section) 0; text-align: center; }
+.omc-newsletter__bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.omc-newsletter__bg img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; filter: blur(10px) saturate(1.05); transform: scale(1.08); }
+.omc-newsletter__bg::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background:
+		linear-gradient(135deg, rgba(185, 139, 126, .3) 0%, rgba(185, 139, 126, 0) 55%),
+		linear-gradient(180deg, rgba(239, 230, 222, .8) 0%, rgba(247, 242, 237, .84) 100%);
+}
+.omc-newsletter__inner { position: relative; max-width: 640px; }
 .omc-newsletter__text { font: 400 16px/1.7 var(--omc-sans); color: var(--omc-text); margin: 14px 0 0; }
 .omc-newsletter__form { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 26px; }
 .omc-newsletter__input {
@@ -484,6 +753,7 @@
 		linear-gradient(180deg, rgba(20, 20, 20, 0) 55%, rgba(20, 20, 20, .45) 100%);
 }
 .omc-banner--wide .omc-banner__img { object-position: 68% 50%; }
+.omc-banner--wide.omc-banner--pos-br .omc-banner__img { object-position: 32% 50%; } /* copy on the right: keep the subject on the left */
 .omc-banner__content .omc-eyebrow { color: #f3e6de; }
 .omc-banner__content {
 	position: absolute;
@@ -660,15 +930,58 @@
 .omc-feature__price ins { text-decoration: none; color: var(--omc-rose-dark); }
 .omc-feature .omc-banner__cta { color: var(--omc-ink); }
 
+/* ─── Footer (child footer.php replaces the parent's Elementor footer page) ─── */
+.c-footer.omc-footer { background: var(--omc-cream); color: var(--omc-text); border-top: 1px solid var(--omc-line); padding: 0; }
+.omc-footer__inner { padding-top: clamp(44px, 5vw, 72px); padding-bottom: 26px; }
+.omc-footer__grid { display: grid; grid-template-columns: 1.7fr 1fr 1fr 1.6fr; gap: 40px clamp(24px, 4vw, 64px); align-items: start; }
+.omc-footer__grid--3 { grid-template-columns: minmax(0, 1fr) auto auto; column-gap: clamp(48px, 9vw, 160px); } /* front page: brand left, link columns grouped right */
+.omc-footer__logo { display: inline-block; font-family: var(--omc-serif); font-weight: 500; font-size: 28px; line-height: 1.1; letter-spacing: .02em; color: var(--omc-ink); text-decoration: none; }
+.omc-footer__logo:hover { color: var(--omc-rose-dark); }
+.omc-footer__tagline { margin: 12px 0 0; font-family: var(--omc-serif); font-style: italic; font-size: 19px; line-height: 1.3; color: var(--omc-rose-dark); }
+.omc-footer__blurb { margin: 12px 0 0; max-width: 36ch; font: 400 14px/1.75 var(--omc-sans); color: var(--omc-text); }
+.omc-footer__social { list-style: none; margin: 20px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.omc-footer__social a { font: 600 11px/1 var(--omc-sans); letter-spacing: .18em; text-transform: uppercase; color: var(--omc-ink); text-decoration: none; }
+.omc-footer__heading { margin: 0 0 18px; font: 600 11px/1 var(--omc-sans); letter-spacing: .22em; text-transform: uppercase; color: var(--omc-ink); }
+.omc-footer__col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 11px; }
+.omc-footer__col li { margin: 0; padding: 0; }
+.omc-footer__col a { font: 400 14px/1.5 var(--omc-sans); color: var(--omc-text); text-decoration: none; }
+.omc-footer__col a:hover, .omc-footer__social a:hover, .omc-footer__legal a:hover { color: var(--omc-rose-dark); }
+.omc-footer__newsletter p { margin: 0; font: 400 14px/1.75 var(--omc-sans); color: var(--omc-text); }
+.omc-footer__newsletter .omc-newsletter__form { margin-top: 16px; justify-content: flex-start; }
+.omc-footer__newsletter .omc-newsletter__input { flex-basis: 190px; min-height: 46px; }
+.omc-footer__newsletter .omc-btn { min-height: 46px; }
+.omc-footer__bottom { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 24px; margin-top: clamp(36px, 4vw, 56px); padding-top: 20px; border-top: 1px solid var(--omc-line); }
+.omc-footer__copy { margin: 0; font: 500 12px/1.5 var(--omc-sans); color: var(--omc-muted); }
+.omc-footer__legal { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.omc-footer__legal li { margin: 0; }
+.omc-footer__legal a { font: 500 12px/1.5 var(--omc-sans); color: var(--omc-muted); text-decoration: none; }
+
 /* ─── Responsive ─── */
 @media (max-width: 1023px) {
+	.omc-footer__grid, .omc-footer__grid--3 { grid-template-columns: 1fr 1fr; gap: 36px 28px; }
+	.omc-footer__brand, .omc-footer__newsletter { grid-column: 1 / -1; }
 	.omc-cats__grid { grid-template-columns: repeat(2, 1fr); }
+	.omc-live__card { grid-template-columns: 1fr; }
+	.omc-live__media { min-height: 0; aspect-ratio: 16 / 9; }
+	/* product cards stay 4-up on tablets (8 and 4 products never leave an orphan row), just more compact */
+	.omc-products .c-product-grid__item, .omc-products .c-product-grid__item--background { padding: 8px; }
+	.omc-products .woocommerce-loop-product__title { font-size: 18px; }
+	.omc-products .c-product-grid__details { padding: 12px 2px 2px; }
 	.omc-usp__list { grid-template-columns: repeat(2, 1fr); }
 	.omc-journal__grid { grid-template-columns: repeat(2, 1fr); }
 	.omc-edit__grid { grid-template-columns: 1fr; }
 	.omc-edit__media { padding-right: 24%; padding-bottom: 18%; max-width: 640px; }
 	.omc-banner--wide .omc-banner__media { aspect-ratio: 16 / 9; min-height: 320px; }
+	/* split banners stack below desktop widths: photo first, copy panel second, both orientations.
+	   (Side by side, the copy column shrinks to ~220px on tablets.) The desktop media-right rule has higher
+	   specificity, so it is repeated here, and its media order is reset. */
+	.omc-banner--split,
+	.omc-banner--split.omc-banner--media-right { grid-template-columns: 1fr; }
+	.omc-banner--split.omc-banner--media-right .omc-banner__media { order: 0; }
+	.omc-banner--split .omc-banner__media { aspect-ratio: 16 / 10; min-height: 0; }
+	.omc-banner--split .omc-banner__content { padding: 40px clamp(24px, 6vw, 64px) 48px; max-width: 680px; }
 	.omc-carousel { --omc-slides: 3; }
+	.omc-quotes__text { font-size: clamp(22px, 3.2vw, 30px); }
 	.omc-carousel__btn--prev { left: 6px; }
 	.omc-carousel__btn--next { right: 6px; }
 }
@@ -679,21 +992,80 @@
 	.omc-hero__title { font-size: clamp(34px, 10.5vw, 44px); }
 	.omc-hero__lede { font-size: 15px; }
 	.omc-section__head { flex-direction: column; align-items: flex-start; gap: 14px; }
-	.omc-usp__list { grid-template-columns: 1fr; gap: 10px; padding-top: 14px; padding-bottom: 14px; }
-	.omc-usp__item { justify-content: flex-start; }
+	.omc-usp__list { grid-template-columns: 1fr 1fr; gap: 10px 14px; padding-top: 14px; padding-bottom: 14px; }
+	.omc-usp__item { justify-content: flex-start; font-size: 10px; letter-spacing: .1em; gap: 8px; }
+	.omc-usp__item .omc-icon { width: 18px; height: 18px; }
 	.omc-journal__grid { grid-template-columns: 1fr; }
 	.omc-prose .omc-values { grid-template-columns: 1fr; }
-	.omc-banners__grid--2 { grid-template-columns: 1fr; }
+	/* 2-up tiles and editor's picks stay side by side on phones (two compact columns beat two screen-tall blocks) */
+	.omc-banners__grid--2 { grid-template-columns: 1fr 1fr; gap: 10px; }
+	.omc-banner--tile .omc-banner__content { left: 12px; right: 12px; bottom: 12px; gap: 4px; }
+	.omc-banner--tile .omc-banner__title { font-size: 19px; }
+	.omc-banner--tile .omc-banner__content .omc-eyebrow { font-size: 9px; letter-spacing: .18em; }
+	.omc-banner--tile .omc-banner__cta { font-size: 9px; letter-spacing: .14em; }
+	/* on a 175px tile the copy starts halfway up the photo: scrim has to start higher and end darker */
+	.omc-banner--tile::after { background: linear-gradient(180deg, rgba(20, 20, 20, 0) 22%, rgba(20, 20, 20, .3) 50%, rgba(20, 20, 20, .74) 100%); }
+	.omc-feature__frame { padding: 8px; }
+	.omc-feature__caption { padding-top: 10px; gap: 4px; }
+	.omc-feature__caption .omc-eyebrow { font-size: 9px; }
+	.omc-feature__name { font-size: 17px; }
+	.omc-feature__price { font-size: 12px; }
+	.omc-feature .omc-banner__cta { font-size: 9px; letter-spacing: .14em; }
+	/* home product grids on phones: photo, brand, name, price — the short description made every card screen-tall */
+	.omc-products .c-product-grid__list { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+	.omc-products .c-product-grid__item, .omc-products .c-product-grid__item--background { padding: 8px; }
+	.omc-products .c-product-grid__details { padding: 10px 2px 2px; }
+	.omc-products .woocommerce-loop-product__title { font-size: 17px; }
+	.omc-products .c-product-grid__price-wrap { font-size: 12px; margin-top: 6px; }
 	.omc-carousel { --omc-slides: 2.2; }   /* a peek of the next slide invites the swipe */
+	/* testimonials on phones: tighter band, smaller quote, compact nav */
+	.omc-quotes__band { padding: 32px 0 30px; }
+	.omc-quotes__head { margin-bottom: 18px; }
+	.omc-quotes__btn { width: 40px; height: 40px; }
+	.omc-quotes__text { font-size: 22px; }
+	.omc-quotes__stars .omc-icon { width: 15px; height: 15px; }
+	.omc-quotes__nav { margin-top: 26px; }
 	.omc-carousel__btn { display: none; }
 	.omc-carousel__label { font-size: 17px; left: 10px; right: 10px; bottom: 10px; }
 	.omc-banner--wide .omc-banner__media { aspect-ratio: 4 / 5; min-height: 0; }
-	.omc-banner--split { grid-template-columns: 1fr; }
-	.omc-banner--split.omc-banner--media-right .omc-banner__media { order: 0; } /* photo on top on phones, either way round */
-	.omc-banner--split .omc-banner__media { aspect-ratio: 4 / 3; min-height: 0; }
-	.omc-banner--split .omc-banner__content { padding: 32px var(--omc-gutter) 40px; }
-	.omc-campaign { padding-top: 40px; }
+	.omc-banner--wide.omc-banner--pos-bl::after,
+	.omc-banner--wide.omc-banner--pos-br::after {
+		background: linear-gradient(180deg, rgba(20, 20, 20, .05) 0%, rgba(20, 20, 20, .2) 45%, rgba(20, 20, 20, .72) 100%);
+	}
+	.omc-banner--wide.omc-banner--pos-br .omc-banner__img { object-position: 40% 50%; }
+	/* split banners (already stacked from the 1023px block): tighter photo and panel on phones */
+	.omc-banner--split .omc-banner__media { aspect-ratio: 4 / 3; }
+	.omc-banner--split .omc-banner__content { padding: 32px var(--omc-gutter) 40px; max-width: none; }
+	.omc-live { padding-top: 12px; }
+	.omc-live__media { aspect-ratio: 4 / 3; }
+	.omc-live__body { padding: 20px 16px 22px; gap: 10px; }
+	.omc-live__title { font-size: 28px; }
+	.omc-live__text { font-size: 14px; }
+	.omc-live__count { width: 100%; gap: 8px; }
+	.omc-live__cell { flex: 1 1 0; min-width: 0; padding: 10px 4px 8px; }
+	.omc-live__num { font-size: 26px; }
+	.omc-live__form { max-width: none; }
+	.omc-live__form .omc-newsletter__input { flex-basis: 100%; }
+	/* mosaic on phones: two columns — [2×2] / [1×1][tall] / [1×1][tall] / [1×1][1×1] / [wide] */
+	.omc-mosaic { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+	.omc-mosaic__item--2x2 { aspect-ratio: 1 / 1; }   /* alone in its rows, so it sets their height */
+	.omc-mosaic__item--2x1 { aspect-ratio: 2 / 1; }
+	.omc-mosaic__label { left: 8px; bottom: 8px; padding: 7px 9px 7px 10px; font-size: 9px; letter-spacing: .14em; gap: 6px; }
+	/* banner rows sit tight on phones (Chicwish-style stack): one consistent 10px seam, not 40px */
+	.omc-campaign, .omc-carousel-section, .omc-banners--tight { padding-top: 10px; }
 	.omc-cat__body { flex-direction: column; gap: 4px; }
 	.omc-btn { width: 100%; }
 	.omc-hero__actions { flex-direction: column; }
+	/* footer: brand on top, Shop/Help side by side, newsletter full width */
+	.omc-footer__inner { padding-top: 40px; padding-bottom: 22px; }
+	.omc-footer__grid, .omc-footer__grid--3 { gap: 30px 18px; }
+	.omc-footer__logo { font-size: 24px; }
+	.omc-footer__tagline { font-size: 17px; margin-top: 8px; }
+	.omc-footer__blurb { font-size: 13px; margin-top: 10px; }
+	.omc-footer__heading { margin-bottom: 14px; }
+	.omc-footer__col ul { gap: 9px; }
+	.omc-footer__col a { font-size: 13px; }
+	.omc-footer__newsletter .omc-newsletter__input { flex-basis: 100%; }
+	.omc-footer__bottom { flex-direction: column; align-items: flex-start; gap: 10px; margin-top: 30px; padding-top: 16px; }
+	.omc-footer__legal { gap: 6px 16px; }
 }

@@ -33,14 +33,14 @@ final class WHD_Subscribers {
 	}
 
 	public static function init() {
-		add_action( 'omc_newsletter_subscribed', [ __CLASS__, 'on_theme_subscribe' ] );
+		add_action( 'omc_newsletter_subscribed', [ __CLASS__, 'on_theme_subscribe' ], 10, 2 );
 		add_action( 'wp_ajax_whd_subscribe', [ __CLASS__, 'ajax' ] );
 		add_action( 'wp_ajax_nopriv_whd_subscribe', [ __CLASS__, 'ajax' ] );
 		add_action( 'admin_post_whd_export_subscribers', [ __CLASS__, 'export' ] );
 	}
 
-	public static function on_theme_subscribe( $email ) {
-		self::add( $email, '', 'website' );
+	public static function on_theme_subscribe( $email, $source = 'website' ) {
+		self::add( $email, '', $source ? sanitize_key( $source ) : 'website' );
 	}
 
 	public static function ajax() {
