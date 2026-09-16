@@ -51,7 +51,7 @@ get_header();
 			?>
 		</div>
 		<div class="omc-hero__content l-section__container">
-			<p class="omc-eyebrow omc-eyebrow--light"><?php esc_html_e( 'Oops, Mine Co. · Est. 2023', 'moderno-child' ); ?></p>
+			<?php echo omc_logo_img( 'cream', 'omc-hero__logo', [ 'loading' => 'eager' ] ); ?>
 			<?php $omc_phrases = omc_hero_phrases(); ?>
 			<h1 class="omc-hero__title" id="omc-hero-title">
 				<?php esc_html_e( 'Found with intention.', 'moderno-child' ); ?><br>

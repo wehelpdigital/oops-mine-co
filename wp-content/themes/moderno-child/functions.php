@@ -351,6 +351,38 @@ function omc_advert_bar_social() {
 }
 add_action( 'wp_head', 'omc_advert_bar_social', 2 );
 
+/**
+ * The site logo. The Customizer logo (Appearance → Customize → Logo) wins on light backgrounds when one is set;
+ * otherwise the brand files bundled with the theme are used (assets/img/oops-logo-<variant>.png, 1071×729,
+ * transparent). Variants: rose (theme rose-gold, light backgrounds — header, footer), cream (pale rose, dark
+ * backgrounds — hero), plus the client's black and white originals. Tinted files are made by
+ * .ftp-sync/tools/make-logo-variants.php. Returns [ url, width, height, custom ]. Filter `omc_logo` to change.
+ */
+function omc_logo( $variant = 'rose' ) {
+	$variant = in_array( $variant, [ 'rose', 'cream', 'black', 'white' ], true ) ? $variant : 'rose';
+	$custom  = function_exists( 'ideapark_mod' ) ? trim( (string) ideapark_mod( 'logo' ) ) : '';
+	if ( in_array( $variant, [ 'rose', 'black' ], true ) && $custom ) {
+		return [ 'url' => $custom, 'width' => (int) ideapark_mod( 'logo__width' ), 'height' => (int) ideapark_mod( 'logo__height' ), 'custom' => true ];
+	}
+	return apply_filters( 'omc_logo', [ 'url' => OMC_URI . '/assets/img/oops-logo-' . $variant . '.png', 'width' => 1071, 'height' => 729, 'custom' => false ], $variant );
+}
+
+/** <img> for omc_logo(): intrinsic width/height (no layout shift), alt = site name, any extra attributes. */
+function omc_logo_img( $variant = 'rose', $class = '', $attrs = [] ) {
+	$logo  = omc_logo( $variant );
+	$attrs = wp_parse_args( $attrs, [ 'class' => $class, 'alt' => get_bloginfo( 'name' ), 'decoding' => 'async' ] );
+	$html  = '<img src="' . esc_url( $logo['url'] ) . '"';
+	if ( $logo['width'] && $logo['height'] ) {
+		$html .= ' width="' . (int) $logo['width'] . '" height="' . (int) $logo['height'] . '"';
+	}
+	foreach ( $attrs as $k => $v ) {
+		if ( '' !== $v && null !== $v && false !== $v ) {
+			$html .= ' ' . esc_attr( $k ) . '="' . esc_attr( $v ) . '"';
+		}
+	}
+	return $html . '>';
+}
+
 /** Tiny inline line-icons (no icon font needed). */
 function omc_icon( $name ) {
 	$icons = [
@@ -725,9 +757,7 @@ function omc_schema() {
 		'url'         => $home,
 		'description' => omc_default_description(),
 	];
-	if ( function_exists( 'ideapark_mod' ) && ideapark_mod( 'logo' ) ) {
-		$org['logo'] = ideapark_mod( 'logo' );
-	}
+	$org['logo'] = omc_logo( 'rose' )['url'];
 	$same_as = apply_filters( 'omc_social_profiles', [] );
 	if ( $same_as ) {
 		$org['sameAs'] = array_values( $same_as );

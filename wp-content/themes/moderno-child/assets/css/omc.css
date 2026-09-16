@@ -21,7 +21,59 @@
 	--omc-ease: cubic-bezier(.22, .61, .36, 1);
 }
 
-/* ─── Header: text logo (until the final logo file is uploaded) ─── */
+/* ─── Logo: the brand PNGs in assets/img (1071×729, transparent) via templates/header-logo*.php.
+   The parent sizes the header image with these variables; the artwork is landscape, so the width binds. ─── */
+.c-header {
+	--logo-size: 124px;          /* desktop: 124×84 */
+	--logo-size-sticky: 96px;    /* sticky header: 96×65 */
+	--logo-size-mobile: 92px;    /* phones: capped by the row below → 76×52 */
+	--header-height-mobile: 72px;        /* parent default 60px: the logo box is the row minus 20px, so 52px tall */
+	--sticky-header-height-mobile: 64px; /* 44px logo while scrolled */
+}
+.c-header__logo-img { display: block; }
+.c-header__logo--desktop { padding-top: 4px; padding-bottom: 4px; }
+
+/* ─── Watermark: the monogram stamped, semi-transparent, on every photo. Bottom-right by default; bottom-left
+   where the copy sits on the right; top-right on carousel slides whose label bar owns the bottom edge.
+   White logo on photography, rose logo (lighter) on white product shots. Per host: --omc-wm (width),
+   --omc-wm-inset, --omc-wm-opacity. ─── */
+.omc-hero::before,
+.omc-banner__media::after,
+.omc-mosaic__item::before,
+.omc-carousel__media::after,
+.omc-live__media::after,
+.omc-cat__media::after,
+.omc-card__media::after,
+.c-product-grid__thumb-wrap::after {
+	content: "";
+	position: absolute;
+	right: var(--omc-wm-inset, 12px);
+	bottom: var(--omc-wm-inset, 12px);
+	width: var(--omc-wm, 56px);
+	aspect-ratio: 1071 / 729;
+	background: url(../img/oops-logo-white.png) center / contain no-repeat;
+	opacity: var(--omc-wm-opacity, .55);
+	filter: drop-shadow(0 1px 6px rgba(0, 0, 0, .28));
+	z-index: 2;
+	pointer-events: none;
+}
+.omc-banner__media, .omc-carousel__media, .omc-cat__media, .omc-card__media { position: relative; }
+.omc-hero { --omc-wm: clamp(72px, 8vw, 120px); --omc-wm-inset: clamp(16px, 2.5vw, 36px); }
+.omc-banner--wide .omc-banner__media { --omc-wm: clamp(64px, 7vw, 104px); --omc-wm-inset: clamp(14px, 2vw, 28px); }
+.omc-banner--wide.omc-banner--pos-br .omc-banner__media::after { right: auto; left: var(--omc-wm-inset, 12px); } /* "Knits worth keeping": copy bottom-right */
+.omc-banner--split .omc-banner__media { --omc-wm: clamp(60px, 6vw, 88px); --omc-wm-inset: 18px; }
+.omc-mosaic__item { --omc-wm: 48px; --omc-wm-inset: 12px; }
+.omc-mosaic__item--2x2 { --omc-wm: 76px; --omc-wm-inset: 16px; }
+.omc-carousel__media { --omc-wm: 40px; --omc-wm-inset: 10px; }
+.omc-carousel__media::after { bottom: auto; top: var(--omc-wm-inset, 10px); }
+.omc-live__media { --omc-wm: 64px; --omc-wm-inset: 14px; }
+.omc-card__media { --omc-wm: 56px; --omc-wm-inset: 12px; }
+.omc-cat__media, .c-product-grid__thumb-wrap { --omc-wm: 40px; --omc-wm-inset: 8px; --omc-wm-opacity: .34; }
+.omc-cat__media::after, .c-product-grid__thumb-wrap::after { background-image: url(../img/oops-logo-rose.png); filter: none; }
+.c-product-grid__thumb-wrap::after { right: auto; left: var(--omc-wm-inset, 8px); } /* the cart icon sits bottom-right on phones */
+.c-product-grid__item:hover .c-product-grid__thumb-wrap::after { opacity: 0; }   /* the add-to-cart bar slides over that corner */
+
+/* ─── Header: text logo fallback (only if the logo files are missing) ─── */
 .c-header__logo-empty {
 	font-family: var(--omc-serif);
 	font-weight: 500;
@@ -168,6 +220,7 @@
 }
 .omc-hero__content > * { text-shadow: 0 2px 28px rgba(0, 0, 0, .35); }
 .omc-hero .omc-eyebrow--light { color: #f3e6de; }
+.omc-hero__logo { display: block; width: clamp(120px, 11vw, 168px); height: auto; margin: 0 auto 22px; filter: drop-shadow(0 6px 28px rgba(0, 0, 0, .35)); }
 /* The theme's .l-section__container centres a 1170px column (fluid + padded on small screens);
    we keep that and centre the text inside it, so it adapts to every viewport. */
 .omc-hero__content {
@@ -935,8 +988,9 @@
 .omc-footer__inner { padding-top: clamp(44px, 5vw, 72px); padding-bottom: 26px; }
 .omc-footer__grid { display: grid; grid-template-columns: 1.7fr 1fr 1fr 1.6fr; gap: 40px clamp(24px, 4vw, 64px); align-items: start; }
 .omc-footer__grid--3 { grid-template-columns: minmax(0, 1fr) auto auto; column-gap: clamp(48px, 9vw, 160px); } /* front page: brand left, link columns grouped right */
-.omc-footer__logo { display: inline-block; font-family: var(--omc-serif); font-weight: 500; font-size: 28px; line-height: 1.1; letter-spacing: .02em; color: var(--omc-ink); text-decoration: none; }
-.omc-footer__logo:hover { color: var(--omc-rose-dark); }
+.omc-footer__logo { display: inline-block; line-height: 0; }
+.omc-footer__logo img { display: block; width: 160px; height: auto; transition: opacity .25s var(--omc-ease); }
+.omc-footer__logo:hover img { opacity: .7; }
 .omc-footer__tagline { margin: 12px 0 0; font-family: var(--omc-serif); font-style: italic; font-size: 19px; line-height: 1.3; color: var(--omc-rose-dark); }
 .omc-footer__blurb { margin: 12px 0 0; max-width: 36ch; font: 400 14px/1.75 var(--omc-sans); color: var(--omc-text); }
 .omc-footer__social { list-style: none; margin: 20px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 18px; }
@@ -1059,7 +1113,8 @@
 	/* footer: brand on top, Shop/Help side by side, newsletter full width */
 	.omc-footer__inner { padding-top: 40px; padding-bottom: 22px; }
 	.omc-footer__grid, .omc-footer__grid--3 { gap: 30px 18px; }
-	.omc-footer__logo { font-size: 24px; }
+	.omc-footer__logo img { width: 132px; }
+	.omc-hero__logo { width: 116px; margin-bottom: 16px; }
 	.omc-footer__tagline { font-size: 17px; margin-top: 8px; }
 	.omc-footer__blurb { font-size: 13px; margin-top: 10px; }
 	.omc-footer__heading { margin-bottom: 14px; }

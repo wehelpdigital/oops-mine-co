@@ -28,7 +28,7 @@ $omc_show_news = apply_filters( 'omc_footer_newsletter', ! is_front_page() );
 		<div class="omc-footer__grid<?php echo $omc_show_news ? '' : ' omc-footer__grid--3'; ?>">
 
 			<div class="omc-footer__brand">
-				<a class="omc-footer__logo" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php bloginfo( 'name' ); ?></a>
+				<a class="omc-footer__logo" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php echo omc_logo_img( 'rose', '', [ 'loading' => 'lazy' ] ); ?></a>
 				<p class="omc-footer__tagline"><?php esc_html_e( 'Found with intention. Claimed on instinct.', 'moderno-child' ); ?></p>
 				<p class="omc-footer__blurb"><?php esc_html_e( 'Curated Korean and Thai fashion — pieces chosen one at a time, for the moment you see something and think: oops, mine.', 'moderno-child' ); ?></p>
 				<?php if ( $omc_social ) : ?>

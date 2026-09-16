@@ -40,7 +40,7 @@ foreach ( get_theme_mods() as $mod_key => $mod_value ) {  // drop the demo's "BE
 	}
 }
 
-/* 1 ── Palette + text logo (theme mods of the child theme) */
+/* 1 ── Palette + logo (an empty logo mod = the brand PNGs bundled in the child theme, assets/img) */
 $mods = [
 	'accent_color'                   => '#B98B7E',
 	'button_color'                   => '#141414',

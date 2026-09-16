@@ -88,7 +88,16 @@ Chromium harness for that lives in the session scratchpad, not in the repo.
   `style.css` → `omc.css` at priority 1000 with that dependency. Parent layout classes to reuse:
   `l-section__container` (centred 1170px, fluid below) and `l-section__container-wide`. Theme settings are read with
   `ideapark_mod()`; the announcement bar is an `html_block` post referenced by the `header_advert_bar_page` mod; the
-  header shows the site name as a text logo when the `logo` mod is empty.
+  logo comes from `omc_logo( $variant )` / `omc_logo_img()`: the Customizer logo when set, otherwise the brand PNGs
+  bundled in `assets/img/` — `rose` (theme rose-gold; header, footer, schema), `cream` (hero), plus the client's
+  `black`/`white` originals. The tinted files are generated from the white master by
+  `.ftp-sync/tools/make-logo-variants.php` (re-run it if the palette changes). Rendered by the child's
+  `templates/header-logo.php` / `header-logo-mobile.php` overrides, sized via the parent's `--logo-size*` and
+  `--header-height-mobile` variables redefined on `.c-header` in omc.css. The same monogram is stamped as a
+  semi-transparent **watermark** on every photo (hero, banners, mosaic, carousel, live card, category/product/journal
+  cards) with pure CSS pseudo-elements — see the "Watermark" block in omc.css: bottom-right by default, bottom-left
+  where copy sits on the right, top-right on carousel slides; rose tint on white product shots; hidden on product-card
+  hover so the add-to-cart bar is clean. Per-host `--omc-wm`, `--omc-wm-inset`, `--omc-wm-opacity`.
 - `functions.php` is the configuration surface. Section content is data, not markup: `omc_images()`,
   `omc_home_banners()` (`campaign`, `campaign2`, `carousel`, `wide`, `wide2`, `wide3`; `more` tiles and
   `omc_feature_products()` are kept but no longer rendered — the editorial, editor's picks and tile-row sections were
