@@ -12,6 +12,10 @@ final class WHD_Admin {
 
 	public static function init() {
 		add_action( 'admin_menu', [ __CLASS__, 'menu' ] );
+		add_filter( 'parent_file', [ __CLASS__, 'highlight_menu' ] );
+		add_action( 'load-admin_page_whd-editor', function () {
+			$GLOBALS['title'] = __( 'Editor', 'whd' ); // hidden pages get no <title> from the menu tables
+		} );
 		add_action( 'admin_init', [ __CLASS__, 'register_settings' ] );
 		add_action( 'admin_enqueue_scripts', [ __CLASS__, 'assets' ] );
 		add_action( 'rest_api_init', [ __CLASS__, 'rest' ] );
@@ -29,8 +33,21 @@ final class WHD_Admin {
 		add_submenu_page( 'whd', __( 'Subscribers', 'whd' ), __( 'Subscribers', 'whd' ), $cap, 'whd-subscribers', [ __CLASS__, 'page_subscribers' ] );
 		add_submenu_page( 'whd', __( 'Tracking scripts', 'whd' ), __( 'Tracking scripts', 'whd' ), $cap, 'whd-scripts', [ __CLASS__, 'page_scripts' ] );
 		add_submenu_page( 'whd', __( 'Settings', 'whd' ), __( 'Settings', 'whd' ), $cap, 'whd-settings', [ __CLASS__, 'page_settings' ] );
-		add_submenu_page( 'whd', __( 'Editor', 'whd' ), __( 'Editor', 'whd' ), $cap, 'whd-editor', [ __CLASS__, 'page_editor' ] );
-		remove_submenu_page( 'whd', 'whd-editor' );
+		// The editor is a hidden page: registered with an empty parent so its hook resolves as
+		// admin_page_whd-editor. (Registering it under 'whd' and then remove_submenu_page() leaves a hook
+		// WordPress can no longer match, and every visit — even by an administrator — gets
+		// "Sorry, you are not allowed to access this page".)
+		add_submenu_page( '', __( 'Editor', 'whd' ), __( 'Editor', 'whd' ), $cap, 'whd-editor', [ __CLASS__, 'page_editor' ] );
+	}
+
+	/** Keep the WHD menu open / the right submenu highlighted while the (hidden) editor page is shown. */
+	public static function highlight_menu( $parent_file ) {
+		global $submenu_file;
+		if ( isset( $_GET['page'] ) && 'whd-editor' === $_GET['page'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$submenu_file = ( isset( $_GET['type'] ) && 'email' === $_GET['type'] ) ? 'whd-emails' : 'whd-popups'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			return 'whd';
+		}
+		return $parent_file;
 	}
 
 	public static function register_settings() {
@@ -54,7 +71,7 @@ final class WHD_Admin {
 			return;
 		}
 		wp_enqueue_style( 'whd-admin', WHD_URL . 'admin/admin.css', [], WHD_VERSION );
-		if ( 'whd_page_whd-editor' !== $hook ) {
+		if ( 'admin_page_whd-editor' !== $hook ) { // hidden page (empty parent) → admin_page_ prefix
 			return;
 		}
 		$type = isset( $_GET['type'] ) && 'email' === $_GET['type'] ? 'email' : 'popup';
