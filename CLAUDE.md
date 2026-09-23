@@ -13,6 +13,7 @@ places:
 |---|---|
 | `wp-content/themes/moderno-child/` | All site-specific front-end code: the OMC page templates (Home, About), brand CSS/JS, helpers, SEO output. |
 | `wp-content/plugins/whd/` | "WHD" marketing plugin: popups + email designs built in a drag-and-drop block editor, abandoned-cart recovery, newsletter list, tracking scripts. |
+| `wp-content/plugins/whd-variations/` | "WHD — Variation Tiers": multi-level product variations (Colour → Size → …) built from one grid on the product screen, and one-level-at-a-time picking on the product page. |
 | `.ftp-sync/` | Dev/deploy tooling: an MCP server + CLI for FTPS media sync, DB refresh from live, and the site publish script. Never deployed (dot-folder, hard-blocked). |
 
 Per-environment files are git-ignored and hand-maintained: `wp-config.php`, `.htaccess`, `wp-content/uploads/`.
@@ -61,7 +62,7 @@ The same tool is registered as the `ftp-sync` MCP server in `.mcp.json` (tools `
 ### Deploy flow
 
 1. commit → `git push origin main` (GitHub is history; the server cannot pull it)
-2. `node .ftp-sync/server.mjs upload wp-content/themes/moderno-child wp-content/plugins/whd --force` (code)
+2. `node .ftp-sync/server.mjs upload wp-content/themes/moderno-child wp-content/plugins/whd wp-content/plugins/whd-variations --force` (code)
 3. `OMC_DB=live php .ftp-sync/publish-site.php` if pages/menu/settings changed (idempotent; creates the `OOPS10` coupon)
 4. media moves separately with `sync` / `pull`; `uploads/elementor/css/` is pulled but never pushed
 
@@ -130,6 +131,20 @@ Chromium harness for that lives in the session scratchpad, not in the repo.
   `<input name="action">` shadows `form.action`. Motion features respect `prefers-reduced-motion` and pause off-screen.
 - Design tokens are CSS custom properties at the top of `assets/css/omc.css` (rose-gold `--omc-rose`, cream/sand,
   Cormorant Garamond display + Manrope body).
+- `assets/css/omc-pages.css` (enqueued after omc.css) restyles the **theme's own screens** — shop/category grids,
+  product page, blog grid, cart/account/Elementor pages — to the home page's look: serif rose-gold page titles
+  (centred, the demo's line-art category strip hidden), the sand product card everywhere (including related-product
+  carousels), the journal card for blog posts, the 1170px container for the product page. It pairs with two
+  Customizer values that publish-site.php sets: `product_grid_width = boxed` and `product_page_layout = layout-4`
+  (the theme's only contained product layout). Grid columns: 4 desktop, 3 tablet (home page stays 4), 2 phones.
+
+### Verifying the store pages
+
+WooCommerce "Coming soon" mode is on (local and live), so shop/product/cart pages only render for logged-in users
+with permission. The screenshot harness logs in as a temporary administrator that a CLI script creates and later
+deletes. The WHD welcome popup opens 6 s after load — hide `.whd-popup` before long captures or its overlay shows up
+as a dark block in screenshots. In Git Bash set `MSYS_NO_PATHCONV=1` before passing URL paths like `/shop/` to node
+scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
 
 ### WHD plugin
 
@@ -146,6 +161,32 @@ Chromium harness for that lives in the session scratchpad, not in the repo.
 - Admin: menu `WHD`; editor screen `admin.php?page=whd-editor&type=popup|email&id=<id>` (vanilla JS in
   `admin/editor.js`) talks to REST `whd/v1/design|render|test-email` (`manage_options`). Popups print in `wp_footer`
   at priority 5 — it must stay below 20 or their assets never enqueue. `?whd_preview=<popup id>` shows a popup to admins.
+
+### WHD — Variation Tiers plugin (`whd-variations`)
+
+- Purpose: "multi-level variations". A tier is a WooCommerce **global attribute** (`pa_*`) used for variations; up to
+  `WHDV_MAX_LEVELS` (3) tiers per product, ordered = the attribute positions. Every enabled combination in the grid is a
+  real `product_variation`, so cart, stock, orders, the theme's cards/quick view and the Variation Swatches plugin all
+  keep working. Nothing is stored in a parallel structure except `_whdv_tiers` (level order + per-level-1 group images).
+- Admin: product screen → Product data → **Variation tiers** tab (`WHDV_Admin`, `admin/tiers.js`, vanilla JS, state in
+  the hidden `whdv_state` JSON field). The app switches the product type to *variable* and re-clicks its own tab
+  (WooCommerce's type-change handler jumps to the first tab). Options can be existing terms (autocomplete) or new
+  ones; a level can be a new global attribute (created with the swatch type — color/image/button/select). Swatch
+  colours/images are saved as the term meta the theme/Variation Swatches read (`product_attribute_color`,
+  `product_attribute_image`). The grid is grouped by level-1 option with per-group default images and bulk fills.
+- Save: `woocommerce_process_product_meta` (after WooCommerce's own save) → `WHDV_Model::apply()` **only when the app
+  was touched** (`dirty`), so a plain title edit never re-syncs variations. `apply()` is idempotent: ensures
+  attributes/terms, sets the product's variation attributes (other attributes stay but stop being variation
+  attributes), then creates/updates/deletes variations so they equal the enabled combinations — including "Any…" and
+  duplicate variations (the grid is the source of truth). Converting simple → variable is done by instantiating
+  `WC_Product_Variable( $id )` and saving; setting the `product_type` term and re-fetching does not work because
+  WooCommerce caches the product type per request.
+- Front end (`assets/front.js`, jQuery because WooCommerce fires its events through jQuery): rows of
+  `table.variations` are the levels; progressive reveal, hide `li.variable-item.disabled` (the swatches plugin's
+  "not available" class), auto-select single remaining option, step numerals + chosen value. Binds on DOM ready and on
+  WooCommerce's `wc_variation_form` event (quick view / AJAX). Settings: WHD → Variation tiers (`whdv_settings`).
+- Testing locally: store pages are in WooCommerce "Coming soon" mode, so product pages need a logged-in admin (or a
+  share link); the Playwright harness logs in with a temporary admin created by a CLI script and deleted afterwards.
 
 ### Site content that is *not* in code
 
@@ -169,3 +210,8 @@ run that script (it is idempotent).
   `wp-config.php` prevents that.
 - Large heredocs in the Bash tool get mangled (backslashes collapse, long ones truncate) — write files with the Write
   tool instead.
+- **Hidden admin pages** (a screen reachable by URL but not listed in a menu, like the WHD editor) must be registered
+  with an empty parent: `add_submenu_page( '', …, 'slug', … )` → hook `admin_page_slug`. Registering under a parent
+  and then `remove_submenu_page()` leaves a hook WordPress can no longer resolve and every visit, even by an
+  administrator, gets "Sorry, you are not allowed to access this page". Set `$GLOBALS['title']` on `load-admin_page_slug`
+  and use the `parent_file` filter to keep the menu highlighted.

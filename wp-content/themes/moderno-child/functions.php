@@ -41,6 +41,7 @@ function moderno_child_enqueue_styles() {
 		null
 	);
 	wp_enqueue_style( 'omc', OMC_URI . '/assets/css/omc.css', [ 'moderno-child-style', 'omc-fonts' ], $ver( '/assets/css/omc.css' ) );
+	wp_enqueue_style( 'omc-pages', OMC_URI . '/assets/css/omc-pages.css', [ 'omc' ], $ver( '/assets/css/omc-pages.css' ) ); // the theme's own screens, restyled to the home page
 	wp_enqueue_script( 'omc', OMC_URI . '/assets/js/omc.js', [], $ver( '/assets/js/omc.js' ), true );
 	wp_localize_script( 'omc', 'OMC', [
 		'ajax'  => admin_url( 'admin-ajax.php' ),

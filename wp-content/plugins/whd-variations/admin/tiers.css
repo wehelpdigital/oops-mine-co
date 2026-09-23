@@ -1,0 +1,66 @@
+/* WHD — Variation Tiers: product-screen app */
+#whdv_product_data { padding: 12px 14px 18px; }
+.whdv-app { max-width: 1100px; }
+.whdv-intro { margin: 0 0 12px; color: #50575e; }
+.whdv-muted { color: #757575; font-size: 12px; }
+.whdv-notice, .whdv-dirty { margin: 0 0 12px !important; }
+.whdv-danger { color: #b32d2e !important; }
+
+.whdv-level { border: 1px solid #c3c4c7; border-radius: 4px; background: #fff; margin: 0 0 12px; }
+.whdv-level__head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 12px; background: #f6f7f7; border-bottom: 1px solid #dcdcde; }
+.whdv-level__n { min-width: 62px; }
+.whdv-level__ctl { margin-left: auto; display: flex; gap: 8px; }
+.whdv-level__ctl .button-link { font-size: 16px; text-decoration: none; }
+.whdv-level__ctl .button-link[disabled] { opacity: .3; pointer-events: none; }
+.whdv-tax { min-width: 220px; }
+.whdv-new-label { min-width: 220px; }
+
+.whdv-options { padding: 12px; }
+.whdv-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.whdv-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 6px 4px 8px; border: 1px solid #c3c4c7; border-radius: 999px; background: #fff; font-size: 13px; line-height: 1; }
+.whdv-chip--new { border-style: dashed; background: #fbf8ff; }
+.whdv-chip--new .whdv-chip__name::after { content: " (new)"; color: #757575; font-size: 11px; }
+.whdv-chip__color { width: 22px; height: 22px; padding: 0; border: 1px solid #c3c4c7; border-radius: 50%; background: none; cursor: pointer; }
+.whdv-chip__color::-webkit-color-swatch-wrapper { padding: 0; }
+.whdv-chip__color::-webkit-color-swatch { border: 0; border-radius: 50%; }
+.whdv-chip__img { width: 24px; height: 24px; padding: 0; border: 1px solid #c3c4c7; border-radius: 50%; background: #f0f0f1; cursor: pointer; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; }
+.whdv-chip__img img { width: 100%; height: 100%; object-fit: cover; }
+.whdv-chip__x { border: 0; background: none; cursor: pointer; color: #757575; font-size: 16px; line-height: 1; padding: 0 2px; }
+.whdv-chip__x:hover { color: #b32d2e; }
+.whdv-add { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.whdv-add__input { min-width: 320px; }
+
+.whdv-add-level { margin: 4px 0 18px; }
+
+.whdv-grid { border-top: 1px solid #dcdcde; padding-top: 14px; }
+.whdv-grid__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.whdv-grid__head h4 { margin: 0; font-size: 14px; }
+.whdv-bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.whdv-bulk__input { width: 110px; }
+
+.whdv-group { border: 1px solid #dcdcde; border-radius: 4px; margin: 0 0 12px; overflow: hidden; }
+.whdv-group__head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 8px 12px; background: #f6f7f7; border-bottom: 1px solid #dcdcde; }
+.whdv-sw { display: inline-block; width: 18px; height: 18px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, .15); object-fit: cover; }
+.whdv-sw--none { background: repeating-linear-gradient(45deg, #e0e0e0 0 3px, #fff 3px 6px); }
+.whdv-img-btn { display: inline-flex; align-items: center; gap: 6px; }
+.whdv-img-btn img { width: 22px; height: 22px; object-fit: cover; border-radius: 3px; }
+.whdv-img-btn--cell { width: 36px; height: 36px; padding: 0; border: 1px dashed #c3c4c7; border-radius: 3px; background: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: #757575; font-size: 18px; overflow: hidden; }
+.whdv-img-btn--cell img { width: 100%; height: 100%; object-fit: cover; border-radius: 0; }
+
+.whdv-group__body { overflow-x: auto; }
+.whdv-table { border: 0; table-layout: auto; }
+.whdv-table th { font-weight: 600; white-space: nowrap; }
+.whdv-table td, .whdv-table th { vertical-align: middle; }
+.whdv-table__on { width: 40px; }
+.whdv-table__name { min-width: 150px; font-weight: 500; }
+.whdv-table__img { width: 70px; white-space: nowrap; }
+.whdv-in { width: 100%; min-width: 96px; max-width: 140px; }
+.whdv-in--sku { min-width: 120px; max-width: 170px; }
+.whdv-in--stock { min-width: 72px; max-width: 90px; }
+tr.whdv-off td { opacity: .45; }
+tr.whdv-off td.whdv-table__on { opacity: 1; }
+
+@media (max-width: 782px) {
+	.whdv-add__input { min-width: 0; flex: 1 1 100%; }
+	.whdv-in { max-width: none; }
+}

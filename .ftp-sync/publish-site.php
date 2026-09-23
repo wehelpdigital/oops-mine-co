@@ -33,6 +33,8 @@ $log = [ 'target' => $is_live ? 'LIVE database (' . home_url( '/' ) . ')' : 'loc
 /* 0 ── Site identity */
 update_option( 'blogname', 'Oops, Mine Co.' );
 set_theme_mod( 'truncate_logo_placeholder', false );      // show the full name as the text logo
+set_theme_mod( 'product_grid_width', 'boxed' );           // shop grid inside the 1170px container (see omc-pages.css)
+set_theme_mod( 'product_page_layout', 'layout-4' );       // product page: gallery + summary inside the container
 foreach ( get_theme_mods() as $mod_key => $mod_value ) {  // drop the demo's "BEST SPECIAL OFFERS!" header text
 	if ( is_string( $mod_value ) && stripos( $mod_value, 'BEST SPECIAL OFFERS' ) !== false ) {
 		set_theme_mod( $mod_key, '' );
@@ -187,6 +189,10 @@ $log['menu'] = [ 'id' => $menu_id, 'items' => count( wp_get_nav_menu_items( $men
 /* 5 ── WHD plugin: activate + demo configuration */
 $r = activate_plugin( 'whd/whd.php' );
 $log['plugin'] = is_wp_error( $r ) ? 'ERROR: ' . $r->get_error_message() : 'active';
+
+/* 5b ── WHD Variation Tiers plugin: activate (display settings keep their defaults; tiers are set per product) */
+$r = activate_plugin( 'whd-variations/whd-variations.php' );
+$log['plugin_variations'] = is_wp_error( $r ) ? 'ERROR: ' . $r->get_error_message() : 'active';
 if ( ! is_wp_error( $r ) ) {
 	update_option( 'whd_settings', [ 'exclude_admins' => 0, 'cart_delay_hours' => 1, 'cart_coupon' => 'OOPS10', 'from_name' => 'Oops, Mine Co.', 'from_email' => get_option( 'admin_email' ) ] );
 	foreach ( [ 'exit_intent', 'welcome' ] as $pid ) {

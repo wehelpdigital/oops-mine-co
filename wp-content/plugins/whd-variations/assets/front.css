@@ -1,0 +1,25 @@
+/* WHD — Variation Tiers: product page */
+.whdv-form tr.whdv-level { transition: opacity .3s ease; }
+.whdv-form tr.whdv-locked { display: none; }
+.whdv-form li.variable-item.whdv-hidden { display: none !important; }
+
+.whdv-step {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	margin-right: 8px;
+	border: 1px solid currentColor;
+	border-radius: 50%;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1;
+	vertical-align: middle;
+	opacity: .55;
+	transition: opacity .2s, background .2s, color .2s;
+}
+.whdv-form tr.whdv-done .whdv-step { opacity: 1; background: #141414; border-color: #141414; color: #fff; }
+
+.whdv-chosen { margin-left: 6px; font-weight: 400; text-transform: none; letter-spacing: 0; opacity: .7; }
+.whdv-chosen:not(:empty)::before { content: "· "; }

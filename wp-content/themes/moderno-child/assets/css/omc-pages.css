@@ -1,0 +1,159 @@
+/* ==========================================================================
+   Oops, Mine Co. — the theme's own screens (shop, product, blog, cart, account,
+   Elementor pages) restyled to the home page's rhythm: contained widths, the
+   serif rose-gold titles, the sand product cards. Loaded after omc.css.
+   Pairs with two Customizer values set by publish-site.php:
+   product_grid_width = boxed, product_page_layout = layout-4.
+   ========================================================================== */
+
+/* ─── Page title band (breadcrumbs row + title) ─── */
+.c-page-header { background: #fff; }
+.c-page-header__row-2 { padding-top: clamp(14px, 1.6vw, 22px); padding-bottom: clamp(14px, 1.6vw, 22px); }
+.c-page-header__title,
+.c-page-header__title--center {
+	font-family: var(--omc-serif);
+	font-weight: 500;
+	font-size: clamp(30px, 3.4vw, 46px);
+	line-height: 1.1;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--omc-rose-dark);
+	min-height: 0;
+	padding-top: 6px;
+	padding-bottom: 6px;
+}
+.c-breadcrumbs, .c-breadcrumbs a, .c-breadcrumbs span { font: 500 10px/1.6 var(--omc-sans); letter-spacing: .16em; text-transform: uppercase; color: var(--omc-muted); }
+.c-breadcrumbs a:hover { color: var(--omc-rose-dark); }
+
+/* shop / category pages: drop the demo's line-art category strip, centre the title like every other page */
+.c-page-header__row-2-col--categories { display: none; }
+.c-page-header__row-2--2-columns { justify-content: center; }
+.c-page-header__row-2--2-columns .c-page-header__row-2-col--title-breadcrumbs { width: 100%; }
+.c-page-header__title { justify-content: center; text-align: center; width: 100%; }
+.c-page-header .c-page-header__title { min-height: 0 !important; } /* the theme reserves the category-strip height here */
+.c-page-header__row-2, .c-page-header__row-2-col { min-height: 0; }
+.c-page-header__row-2-col--title-breadcrumbs { width: 100%; }
+.c-page-header__row-1 { border-bottom: 1px solid var(--omc-line); }
+.woocommerce-result-count, .woocommerce-ordering select { font: 500 10px/1.6 var(--omc-sans); letter-spacing: .14em; text-transform: uppercase; color: var(--omc-muted); }
+
+/* ─── Product grids everywhere (shop, categories, related, search): the home page card ─── */
+.c-product-grid__wrap--fullwidth, .c-product-grid__wrap--boxed { margin-right: 0; }
+.c-product-grid__list:not(.owl-carousel):not(.c-product-grid__list--carousel) {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: clamp(14px, 1.8vw, 28px);
+	margin: 0;
+}
+.c-product-grid__list--5-per-row:not(.owl-carousel):not(.c-product-grid__list--carousel) { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.c-product-grid__list--3-per-row:not(.owl-carousel):not(.c-product-grid__list--carousel) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.c-product-grid__item,
+.c-product-grid__item--background {
+	padding: clamp(10px, 1vw, 14px);
+	border: 1px solid var(--omc-line);
+	background: #f3eae2;
+	transition: border-color .3s var(--omc-ease), box-shadow .3s var(--omc-ease), transform .3s var(--omc-ease);
+}
+.c-product-grid__list:not(.owl-carousel) .c-product-grid__item { width: auto; }
+.c-product-grid__item::after { display: none; }
+.c-product-grid__item:hover { border-color: var(--omc-rose); box-shadow: 0 24px 48px -30px rgba(20, 20, 20, .35); transform: translateY(-3px); }
+/* carousels (related / recently viewed) keep the theme's slider; just space the cards */
+.c-product-grid__list.owl-carousel .owl-item > .c-product-grid__item { margin: 0 clamp(6px, .8vw, 12px); }
+.c-product-grid__list.owl-carousel .owl-stage-outer { padding: 4px 0 30px; }
+.c-product-grid__thumb-wrap { padding-bottom: 100%; border: 1px solid var(--omc-line); background: #fff; }
+.c-product-grid__item:hover .c-product-grid__thumb-wrap { background: #fff; }
+.c-product-grid__thumb { object-fit: contain; padding: 6%; box-sizing: border-box; }
+.c-product-grid__details { padding: 14px 4px 4px; }
+.c-product-grid__short-desc { display: none; }
+.c-product-grid__category-list { font: 500 10px/1.4 var(--omc-sans); letter-spacing: .16em; text-transform: uppercase; color: var(--omc-muted); }
+.c-product-grid__category-item { color: inherit; }
+.c-product-grid__item .woocommerce-loop-product__title {
+	font-family: var(--omc-serif);
+	font-size: clamp(19px, 1.5vw, 23px);
+	font-weight: 500;
+	line-height: 1.15;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--omc-ink);
+	margin: 6px 0 0;
+}
+.c-product-grid__price-wrap { margin-top: 8px; font: 500 13px/1.4 var(--omc-sans); letter-spacing: .02em; color: var(--omc-ink); }
+.c-product-grid__price-wrap ins { color: var(--omc-rose-dark); }
+.woocommerce-pagination { padding-top: clamp(24px, 3vw, 44px); }
+
+/* ─── Product page (layout-4: gallery + summary inside the 1170px container) ─── */
+.c-product__wrap--layout-4 { column-gap: clamp(32px, 5vw, 72px); padding-top: clamp(12px, 1.6vw, 24px); }
+.c-product .c-product__title, .c-product .product_title {
+	font-family: var(--omc-serif);
+	font-weight: 500;
+	font-size: clamp(30px, 3vw, 42px);
+	line-height: 1.1;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--omc-ink);
+}
+.c-product .c-product__col-2 .price { font: 500 18px/1.4 var(--omc-sans); letter-spacing: .02em; color: var(--omc-ink); }
+.c-product .c-product__col-2 .price ins { color: var(--omc-rose-dark); text-decoration: none; }
+.c-product .woocommerce-product-details__short-description { font: 400 15px/1.7 var(--omc-sans); color: var(--omc-text); }
+.c-product__products-title, .c-product__products-title > * {
+	font-family: var(--omc-serif);
+	font-weight: 500;
+	font-size: clamp(28px, 3vw, 40px);
+	line-height: 1.1;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--omc-rose-dark);
+}
+.c-product__products-title { margin-bottom: clamp(18px, 2vw, 28px); }
+/* related products use the wide container so five cards have room */
+.c-product__after-summary--boxed .c-product__products--boxed { width: var(--fullwidth-limit, 1920px); max-width: 100%; margin-left: auto; margin-right: auto; padding-left: 30px; padding-right: 30px; box-sizing: border-box; }
+
+/* ─── Blog grid: the journal cards ─── */
+.c-blog-wrap--grid { margin-right: 0; }
+.c-blog__grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: clamp(16px, 2vw, 32px);
+	width: var(--fullwidth-limit, 1920px);
+	max-width: 100%;
+	margin: clamp(12px, 1.6vw, 24px) auto 0;
+	padding: 0 30px;
+	box-sizing: border-box;
+	align-items: start;
+}
+.c-post-list--grid, .c-post-list--grid .c-post-list__wrap { width: auto; border: 0 !important; box-shadow: none; }
+.c-post-list--grid::before, .c-post-list--grid::after { display: none; }
+.c-post-list__thumb--grid .c-post-list__carousel-list, .c-post-list__thumb--grid .c-post-list__carousel-item,
+.c-post-list__thumb--grid .owl-stage-outer, .c-post-list__thumb--grid .owl-stage, .c-post-list__thumb--grid .owl-item { height: 100%; }
+.c-post-list__thumb--grid { aspect-ratio: 4 / 3; overflow: hidden; background: var(--omc-sand); }
+.c-post-list__thumb--grid img { width: 100%; height: 100%; object-fit: cover; }
+.c-post-list__wrap--grid { padding: 16px 2px 0; }
+.c-post-list__meta-date { display: inline-block; margin: 0 0 10px; padding: 0; border: 0; background: none; font: 500 11px/1 var(--omc-sans); letter-spacing: .16em; text-transform: uppercase; color: var(--omc-muted); }
+.c-post-list__header { font-family: var(--omc-serif); font-size: clamp(22px, 1.8vw, 26px); font-weight: 500; line-height: 1.2; letter-spacing: 0; text-transform: none; color: var(--omc-ink); }
+.c-post-list__header-link:hover .c-post-list__header { color: var(--omc-rose-dark); }
+
+/* ─── Cart / checkout / account / static pages ─── */
+.c-cart-empty__header, .woocommerce-account .c-account h2, .entry-content h2 { font-family: var(--omc-serif); font-weight: 500; letter-spacing: 0; text-transform: none; }
+.c-cart-empty__header { font-size: clamp(26px, 2.6vw, 34px); color: var(--omc-ink); }
+
+/* ─── Responsive ─── */
+@media (min-width: 768px) and (max-width: 1023px) { /* tablets only — phones get the 2-column rules below */
+	body:not(.omc-home-page) .c-product-grid__list:not(.owl-carousel):not(.c-product-grid__list--carousel) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+	.c-product-grid__list--5-per-row:not(.owl-carousel):not(.c-product-grid__list--carousel) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 1023px) {
+	.c-blog__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+	.c-product-grid__list:not(.owl-carousel):not(.c-product-grid__list--carousel),
+	.c-product-grid__list--5-per-row:not(.owl-carousel):not(.c-product-grid__list--carousel) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+	.c-product-grid__item, .c-product-grid__item--background { padding: 8px; }
+	.c-product-grid__details { padding: 10px 2px 2px; }
+	.c-product-grid__item .woocommerce-loop-product__title { font-size: 17px; }
+	/* the star rating sits beside the title and squeezes it to one word per line in a 2-up card: drop it below */
+	.c-product-grid__item .woocommerce-loop-product__title--left { flex-wrap: wrap; }
+	.c-product-grid__item .c-product-grid__rating { flex-basis: 100%; margin-top: 4px; }
+	.c-product-grid__price-wrap { font-size: 12px; margin-top: 6px; }
+	.c-blog__grid { grid-template-columns: 1fr; padding: 0 var(--omc-gutter); }
+	.c-product__after-summary--boxed .c-product__products--boxed { padding-left: var(--omc-gutter); padding-right: var(--omc-gutter); }
+	.c-page-header__title, .c-page-header__title--center { font-size: 28px; }
+}
