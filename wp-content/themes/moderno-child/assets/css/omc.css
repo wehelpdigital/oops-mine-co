@@ -442,6 +442,11 @@
    (sand card inside a hairline border, square white photo frame, serif name). Hover buttons,
    quick view, wishlist, badges and swatches are the parent's and keep working. ─── */
 .omc-products__grid .c-product-grid__wrap { margin-bottom: 0; }
+/* The [products] shortcode comes back wrapped in the theme's own boxed container (1170px, set by the
+   Customizer's product_grid_width). Sitting inside our wide home sections that left the product cards
+   ~50px narrower than the category cards beside them, with dead space down both edges. Scoped to the
+   home grids, so the shop and category screens keep the contained layout the Customizer asks for. */
+.omc-products__grid .l-section--container { width: 100%; max-width: none; padding-left: 0; padding-right: 0; }
 .omc-products .c-product-grid__list { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(14px, 1.8vw, 28px); }
 .omc-products .c-product-grid__item,
 .omc-products .c-product-grid__item--background {
@@ -1020,7 +1025,10 @@
 	.omc-cats__grid { grid-template-columns: repeat(2, 1fr); }
 	.omc-live__card { grid-template-columns: 1fr; }
 	.omc-live__media { min-height: 0; aspect-ratio: 16 / 9; }
-	/* product cards stay 4-up on tablets (8 and 4 products never leave an orphan row), just more compact */
+	/* Product cards go 2-up on tablets, matching the category grid above. Four columns here squeezed
+	   each card to ~167px, half the width of the category card beside it. Two also divides 8 and 4
+	   evenly, so there is still no orphan row — which is why this was 4-up before. */
+	.omc-products .c-product-grid__list:not(.owl-carousel):not(.c-product-grid__list--carousel) { grid-template-columns: repeat(2, 1fr); }
 	.omc-products .c-product-grid__item, .omc-products .c-product-grid__item--background { padding: 8px; }
 	.omc-products .woocommerce-loop-product__title { font-size: 18px; }
 	.omc-products .c-product-grid__details { padding: 12px 2px 2px; }
