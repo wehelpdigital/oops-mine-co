@@ -964,6 +964,11 @@ foreach ( [
 		$tree[] = $item;
 	}
 }
+// Style videos, when import-videos.php has created the hub.
+$videos_item = $menu_post( 'videos', 'Videos' );
+if ( $videos_item ) {
+	$tree[] = $videos_item;
+}
 $tree[] = $journal_item;
 if ( $about_id ) {
 	$tree[] = [ 'type' => 'post_type', 'object' => 'page', 'object_id' => $about_id, 'title' => 'About' ];
