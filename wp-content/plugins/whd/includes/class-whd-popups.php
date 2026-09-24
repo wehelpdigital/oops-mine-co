@@ -67,28 +67,62 @@ final class WHD_Popups {
 		update_option( self::OPTION, $stored, false );
 	}
 
+	/**
+	 * Put the shipped designs back (the publish script calls this so a deploy re-applies the
+	 * brand copy and palette). `$ids` limits it to one popup; the enabled flag is kept.
+	 */
+	public static function reset_to_defaults( $ids = null, $keep_enabled = true ) {
+		$stored = get_option( self::OPTION, [] );
+		$ids    = null === $ids ? array_keys( self::ids() ) : (array) $ids;
+		foreach ( $ids as $id ) {
+			if ( ! isset( self::ids()[ $id ] ) ) {
+				continue;
+			}
+			$design = self::default_design( $id );
+			if ( $keep_enabled && ! empty( $stored[ $id ]['settings']['enabled'] ) ) {
+				$design['settings']['enabled'] = 1;
+			}
+			$stored[ $id ] = WHD_Blocks::sanitize_design( $design, 'popup' );
+		}
+		update_option( self::OPTION, $stored, false );
+		return count( $ids );
+	}
+
 	/** Starter designs in the brand voice; everything is editable. */
 	public static function default_design( $id ) {
-		$settings = WHD_Blocks::popup_settings_defaults();
+		$settings = array_merge( WHD_Blocks::popup_settings_defaults(), [ 'bg' => '#fffaf6', 'overlay' => 'rgba(58,43,38,0.55)' ] );
 		if ( 'exit_intent' === $id ) {
 			return [
-				'settings' => array_merge( $settings, [ 'delay' => 5, 'cookie_days' => 3 ] ),
+				'settings' => array_merge( $settings, [ 'delay' => 5, 'cookie_days' => 3, 'show_on' => 'not_checkout' ] ),
 				'blocks'   => [
-					[ 'type' => 'heading', 'props' => [ 'text' => 'Oops — leaving already?', 'level' => 'h2', 'align' => 'center', 'color' => '#141414' ] ],
-					[ 'type' => 'text', 'props' => [ 'text' => 'Take 10% off your first order. The pieces you paused on are still here.', 'align' => 'center', 'size' => 16, 'color' => '#2b2724' ] ],
-					[ 'type' => 'countdown', 'props' => [ 'minutes' => 15, 'label' => 'Offer ends in', 'expired' => 'This offer has ended', 'color' => '#141414', 'hide_on_expire' => 0 ] ],
-					[ 'type' => 'coupon', 'props' => [ 'code' => 'OOPS10', 'note' => 'Use at checkout', 'color' => '#b98b7e' ] ],
-					[ 'type' => 'button', 'props' => [ 'text' => 'Claim it & keep shopping', 'url' => '{shop_url}', 'align' => 'center', 'bg' => '#141414', 'color' => '#ffffff', 'radius' => 0, 'full' => 1 ] ],
+					[ 'type' => 'heading', 'props' => [ 'text' => 'Wait — before you go', 'level' => 'h2', 'align' => 'center', 'color' => '#3a2b26' ] ],
+					[ 'type' => 'text', 'props' => [ 'text' => 'Take 15% off the pieces you paused on. This code lasts 15 minutes.', 'align' => 'center', 'size' => 16, 'color' => '#4a3f3a' ] ],
+					[ 'type' => 'countdown', 'props' => [ 'minutes' => 15, 'label' => 'Your code ends in', 'expired' => 'This code has ended', 'color' => '#3a2b26', 'hide_on_expire' => 0 ] ],
+					[ 'type' => 'coupon', 'props' => [ 'code' => '{exit_coupon}', 'note' => 'Use at checkout', 'color' => '#9c6f63' ] ],
+					[ 'type' => 'button', 'props' => [ 'text' => 'Back to my bag', 'url' => '{cart_url}', 'align' => 'center', 'bg' => '#3a2b26', 'color' => '#f7f2ed', 'radius' => 0, 'full' => 1 ] ],
 				],
 			];
 		}
 		return [
 			'settings' => array_merge( $settings, [ 'delay' => 6, 'cookie_days' => 14 ] ),
 			'blocks'   => [
-				[ 'type' => 'heading', 'props' => [ 'text' => 'Welcome to Oops, Mine Co.', 'level' => 'h2', 'align' => 'center', 'color' => '#141414' ] ],
-				[ 'type' => 'text', 'props' => [ 'text' => 'Found with intention. Claimed on instinct.<br>New arrivals land every week — start with 10% off.', 'align' => 'center', 'size' => 16, 'color' => '#2b2724' ] ],
-				[ 'type' => 'coupon', 'props' => [ 'code' => 'HELLO10', 'note' => 'Use at checkout', 'color' => '#b98b7e' ] ],
-				[ 'type' => 'button', 'props' => [ 'text' => 'Shop new arrivals', 'url' => '{shop_url}', 'align' => 'center', 'bg' => '#141414', 'color' => '#ffffff', 'radius' => 0, 'full' => 1 ] ],
+				[ 'type' => 'heading', 'props' => [ 'text' => 'Oops — you found us.', 'level' => 'h2', 'align' => 'center', 'color' => '#3a2b26' ] ],
+				[ 'type' => 'text', 'props' => [ 'text' => 'Take 10% off your first order and get first look at every new drop. One unexpected find at a time.', 'align' => 'center', 'size' => 16, 'color' => '#4a3f3a' ] ],
+				[ 'type' => 'form', 'props' => [
+					'show_name'         => 0,
+					'show_phone'        => 1,
+					'name_placeholder'  => 'First name',
+					'email_placeholder' => 'Your email',
+					'phone_placeholder' => 'Mobile (optional)',
+					'button_text'       => 'Send my code',
+					'consent_text'      => WHD_Blocks::default_consent_text(),
+					'success_text'      => 'You’re in — use code <b>{coupon_code}</b> at checkout.',
+					'source'            => 'popup',
+					'bg'                => '#3a2b26',
+					'color'             => '#f7f2ed',
+					'radius'            => 0,
+				] ],
+				[ 'type' => 'text', 'props' => [ 'text' => 'No noise — new arrivals, quiet restocks and the odd note.', 'align' => 'center', 'size' => 13, 'color' => '#8a7d76' ] ],
 			],
 		];
 	}

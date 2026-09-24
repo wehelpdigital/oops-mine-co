@@ -33,7 +33,7 @@ final class WHD_Blocks {
 					'text'  => [ 'type' => 'text', 'label' => __( 'Text', 'whd' ), 'default' => __( 'A heading', 'whd' ) ],
 					'level' => [ 'type' => 'select', 'label' => __( 'Size', 'whd' ), 'default' => 'h2', 'options' => [ 'h1' => __( 'Large', 'whd' ), 'h2' => __( 'Medium', 'whd' ), 'h3' => __( 'Small', 'whd' ) ] ],
 					'align' => $align,
-					'color' => [ 'type' => 'color', 'label' => __( 'Colour', 'whd' ), 'default' => '#141414' ],
+					'color' => [ 'type' => 'color', 'label' => __( 'Colour', 'whd' ), 'default' => '#3a2b26' ],
 				],
 			],
 			'text' => [
@@ -43,7 +43,7 @@ final class WHD_Blocks {
 					'text'  => [ 'type' => 'textarea', 'label' => __( 'Text (basic HTML and {merge_tags} allowed)', 'whd' ), 'default' => __( 'Write something people will want to read.', 'whd' ) ],
 					'align' => $align,
 					'size'  => [ 'type' => 'number', 'label' => __( 'Font size (px)', 'whd' ), 'default' => 16, 'min' => 10, 'max' => 40 ],
-					'color' => [ 'type' => 'color', 'label' => __( 'Colour', 'whd' ), 'default' => '#2b2724' ],
+					'color' => [ 'type' => 'color', 'label' => __( 'Colour', 'whd' ), 'default' => '#4a3f3a' ],
 				],
 			],
 			'image' => [
@@ -64,8 +64,8 @@ final class WHD_Blocks {
 					'text'   => [ 'type' => 'text', 'label' => __( 'Label', 'whd' ), 'default' => __( 'Shop now', 'whd' ) ],
 					'url'    => [ 'type' => 'url', 'label' => __( 'Link', 'whd' ), 'default' => '{shop_url}' ],
 					'align'  => $align,
-					'bg'     => [ 'type' => 'color', 'label' => __( 'Background', 'whd' ), 'default' => '#141414' ],
-					'color'  => [ 'type' => 'color', 'label' => __( 'Text colour', 'whd' ), 'default' => '#ffffff' ],
+					'bg'     => [ 'type' => 'color', 'label' => __( 'Background', 'whd' ), 'default' => '#3a2b26' ],
+					'color'  => [ 'type' => 'color', 'label' => __( 'Text colour', 'whd' ), 'default' => '#f7f2ed' ],
 					'radius' => [ 'type' => 'number', 'label' => __( 'Corner radius (px)', 'whd' ), 'default' => 0, 'min' => 0, 'max' => 40 ],
 					'full'   => [ 'type' => 'toggle', 'label' => __( 'Full width', 'whd' ), 'default' => 0 ],
 				],
@@ -92,6 +92,24 @@ final class WHD_Blocks {
 		];
 
 		if ( 'popup' === $mode ) {
+			$types['form'] = [
+				'label'  => __( 'Sign-up form', 'whd' ),
+				'icon'   => '✉',
+				'fields' => [
+					'show_name'         => [ 'type' => 'toggle', 'label' => __( 'Ask for a first name', 'whd' ), 'default' => 0 ],
+					'show_phone'        => [ 'type' => 'toggle', 'label' => __( 'Ask for a mobile number (SMS)', 'whd' ), 'default' => 1 ],
+					'name_placeholder'  => [ 'type' => 'text', 'label' => __( 'Name placeholder', 'whd' ), 'default' => __( 'First name', 'whd' ) ],
+					'email_placeholder' => [ 'type' => 'text', 'label' => __( 'Email placeholder', 'whd' ), 'default' => __( 'Your email', 'whd' ) ],
+					'phone_placeholder' => [ 'type' => 'text', 'label' => __( 'Phone placeholder', 'whd' ), 'default' => __( 'Mobile (optional)', 'whd' ) ],
+					'button_text'       => [ 'type' => 'text', 'label' => __( 'Button label', 'whd' ), 'default' => __( 'Send my code', 'whd' ) ],
+					'consent_text'      => [ 'type' => 'textarea', 'label' => __( 'SMS consent text (shown with the mobile field)', 'whd' ), 'default' => self::default_consent_text() ],
+					'success_text'      => [ 'type' => 'textarea', 'label' => __( 'Thank-you message (HTML and {merge_tags} allowed)', 'whd' ), 'default' => __( 'You’re in — use code <b>{coupon_code}</b> at checkout.', 'whd' ), 'help' => __( 'Shown in place of the form after sign-up, and to visitors who already signed up.', 'whd' ) ],
+					'source'            => [ 'type' => 'text', 'label' => __( 'List source (saved with the subscriber)', 'whd' ), 'default' => 'popup' ],
+					'bg'                => [ 'type' => 'color', 'label' => __( 'Button background', 'whd' ), 'default' => '#3a2b26' ],
+					'color'             => [ 'type' => 'color', 'label' => __( 'Button text colour', 'whd' ), 'default' => '#f7f2ed' ],
+					'radius'            => [ 'type' => 'number', 'label' => __( 'Corner radius (px)', 'whd' ), 'default' => 0, 'min' => 0, 'max' => 40 ],
+				],
+			];
 			$types['countdown'] = [
 				'label'  => __( 'Countdown (cookie-based)', 'whd' ),
 				'icon'   => '⏱',
@@ -99,7 +117,7 @@ final class WHD_Blocks {
 					'minutes'        => [ 'type' => 'number', 'label' => __( 'Length (minutes)', 'whd' ), 'default' => 15, 'min' => 1, 'max' => 10080 ],
 					'label'          => [ 'type' => 'text', 'label' => __( 'Label', 'whd' ), 'default' => __( 'Offer ends in', 'whd' ) ],
 					'expired'        => [ 'type' => 'text', 'label' => __( 'Text when expired', 'whd' ), 'default' => __( 'This offer has ended', 'whd' ) ],
-					'color'          => [ 'type' => 'color', 'label' => __( 'Digit colour', 'whd' ), 'default' => '#141414' ],
+					'color'          => [ 'type' => 'color', 'label' => __( 'Digit colour', 'whd' ), 'default' => '#3a2b26' ],
 					'hide_on_expire' => [ 'type' => 'toggle', 'label' => __( 'Hide the popup once expired', 'whd' ), 'default' => 0 ],
 				],
 			];
@@ -126,6 +144,17 @@ final class WHD_Blocks {
 		return apply_filters( 'whd_block_types', $types, $mode );
 	}
 
+	/** Consent line for the SMS checkbox — from the integrations module when it is there. */
+	public static function default_consent_text() {
+		if ( class_exists( 'WHD_Integrations' ) && method_exists( 'WHD_Integrations', 'consent_text' ) ) {
+			$text = trim( (string) WHD_Integrations::consent_text() );
+			if ( '' !== $text ) {
+				return $text;
+			}
+		}
+		return __( 'Text me new arrivals and offers. Message and data rates may apply. Reply STOP to opt out.', 'whd' );
+	}
+
 	public static function popup_settings_defaults() {
 		return [
 			'enabled'     => 0,
@@ -134,8 +163,8 @@ final class WHD_Blocks {
 			'scroll_pct'  => 0,     // optional: only after the visitor scrolled N%
 			'show_on'     => 'all', // all | home | shop | not_checkout
 			'width'       => 520,
-			'bg'          => '#ffffff',
-			'overlay'     => 'rgba(20,20,20,0.6)',
+			'bg'          => '#fffaf6',
+			'overlay'     => 'rgba(58,43,38,0.55)',
 			'radius'      => 0,
 			'padding'     => 40,
 			'image'       => '',    // optional side image (desktop)
@@ -178,6 +207,7 @@ final class WHD_Blocks {
 			'recovery_url'     => __( 'Abandoned cart: restore-cart link', 'whd' ),
 			'cart_total'       => __( 'Abandoned cart: total', 'whd' ),
 			'coupon_code'      => __( 'Coupon code (WHD → Settings)', 'whd' ),
+			'exit_coupon'      => __( 'Exit-intent coupon code (WHD → Settings)', 'whd' ),
 			'reset_url'        => __( 'Password reset link', 'whd' ),
 			'set_password_url' => __( 'Set-password link (new accounts)', 'whd' ),
 			'user_login'       => __( 'Username', 'whd' ),
@@ -369,6 +399,34 @@ final class WHD_Blocks {
 				$inner = '<div class="whd-b whd-b-spacer" style="height:' . (int) $p['height'] . 'px;line-height:' . (int) $p['height'] . 'px;font-size:0">&nbsp;</div>';
 				break;
 
+			case 'form':
+				if ( $email ) {
+					break; // capture forms are a popup thing
+				}
+				$source  = sanitize_key( $p['source'] ) ?: 'popup';
+				$success = wp_kses_post( self::merge( $p['success_text'], $ctx ) );
+				$fields  = '';
+				if ( ! empty( $p['show_name'] ) ) {
+					$fields .= '<input class="whd-form__input" type="text" name="name" autocomplete="given-name" placeholder="' . esc_attr( $p['name_placeholder'] ) . '" aria-label="' . esc_attr( $p['name_placeholder'] ) . '">';
+				}
+				$fields .= '<input class="whd-form__input" type="email" name="email" required autocomplete="email" placeholder="' . esc_attr( $p['email_placeholder'] ) . '" aria-label="' . esc_attr( $p['email_placeholder'] ) . '">';
+				if ( ! empty( $p['show_phone'] ) ) {
+					$fields .= '<input class="whd-form__input" type="tel" name="phone" autocomplete="tel" placeholder="' . esc_attr( $p['phone_placeholder'] ) . '" aria-label="' . esc_attr( $p['phone_placeholder'] ) . '">'
+						. '<label class="whd-form__consent"><input type="checkbox" name="sms_consent" value="1"><span>' . wp_kses_post( self::merge( $p['consent_text'], $ctx ) ) . '</span></label>';
+				}
+				$inner = '<form class="whd-b whd-b-form whd-form" method="post" action="' . esc_url( admin_url( 'admin-ajax.php' ) ) . '" data-source="' . esc_attr( $source ) . '" data-success="' . esc_attr( $success ) . '"'
+					. ' data-invalid="' . esc_attr__( 'Please enter a valid email address.', 'whd' ) . '"'
+					. ' data-error="' . esc_attr__( 'Something went wrong. Please try again.', 'whd' ) . '"'
+					. ' data-preview="' . esc_attr__( 'Preview only — nothing was sent.', 'whd' ) . '" novalidate>'
+					. '<input type="hidden" name="action" value="whd_subscribe">'
+					. '<input type="hidden" name="nonce" value="' . esc_attr( wp_create_nonce( 'whd_subscribe' ) ) . '">'
+					. '<input type="hidden" name="source" value="' . esc_attr( $source ) . '">'
+					. $fields
+					. '<button type="submit" class="whd-form__btn" style="background:' . esc_attr( $p['bg'] ) . ';color:' . esc_attr( $p['color'] ) . ';border-radius:' . (int) $p['radius'] . 'px">' . esc_html( self::merge( $p['button_text'], $ctx ) ) . '</button>'
+					. '<p class="whd-form__status" role="status" aria-live="polite"></p>'
+					. '</form>';
+				break;
+
 			case 'countdown':
 				$inner = '<div class="whd-b whd-b-countdown whd-countdown" data-minutes="' . (int) $p['minutes'] . '" data-expired="' . esc_attr( $p['expired'] ) . '" data-hide="' . ( $p['hide_on_expire'] ? '1' : '0' ) . '" data-key="cd' . (int) $index . '" style="text-align:center;margin:6px 0 18px">'
 					. '<div class="whd-countdown__label" style="font-family:' . self::SANS . ';font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#7d7470;margin-bottom:6px">' . esc_html( $p['label'] ) . '</div>'
@@ -403,11 +461,11 @@ final class WHD_Blocks {
 		foreach ( $items as $it ) {
 			$img  = ( $images && ! empty( $it['image'] ) ) ? '<img src="' . esc_url( $it['image'] ) . '" alt="" width="64" style="display:block;width:64px;height:auto;border:0;background:#f4efea">' : '';
 			$name = esc_html( $it['name'] );
-			$name = ! empty( $it['url'] ) ? '<a href="' . esc_url( $it['url'] ) . '" style="color:#141414;text-decoration:none">' . $name . '</a>' : $name;
+			$name = ! empty( $it['url'] ) ? '<a href="' . esc_url( $it['url'] ) . '" style="color:#3a2b26;text-decoration:none">' . $name . '</a>' : $name;
 			$rows .= '<tr>'
 				. ( $images ? '<td style="padding:10px 12px 10px 0;width:64px;vertical-align:top">' . $img . '</td>' : '' )
-				. '<td style="padding:10px 0;vertical-align:top;font-family:' . self::SANS . ';font-size:14px;line-height:1.5;color:#141414">' . $name . ( ! empty( $it['meta'] ) ? '<div style="font-size:12px;color:#7d7470">' . esc_html( $it['meta'] ) . '</div>' : '' ) . '<div style="font-size:12px;color:#7d7470">× ' . (int) $it['qty'] . '</div></td>'
-				. '<td align="right" style="padding:10px 0;vertical-align:top;white-space:nowrap;font-family:' . self::SANS . ';font-size:14px;color:#141414">' . wp_kses_post( $it['total'] ) . '</td>'
+				. '<td style="padding:10px 0;vertical-align:top;font-family:' . self::SANS . ';font-size:14px;line-height:1.5;color:#3a2b26">' . $name . ( ! empty( $it['meta'] ) ? '<div style="font-size:12px;color:#7d7470">' . esc_html( $it['meta'] ) . '</div>' : '' ) . '<div style="font-size:12px;color:#7d7470">× ' . (int) $it['qty'] . '</div></td>'
+				. '<td align="right" style="padding:10px 0;vertical-align:top;white-space:nowrap;font-family:' . self::SANS . ';font-size:14px;color:#3a2b26">' . wp_kses_post( $it['total'] ) . '</td>'
 				. '</tr>';
 		}
 		return '<div class="whd-b whd-b-items" style="margin:0 0 16px"><div style="font-family:' . self::SANS . ';font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#b98b7e;margin:0 0 6px">' . esc_html( $caption ) . '</div>'
@@ -422,13 +480,13 @@ final class WHD_Blocks {
 		$rows = '';
 		foreach ( $totals as $label => $value ) {
 			$bold  = strtolower( $label ) === strtolower( __( 'Total', 'whd' ) );
-			$rows .= '<tr><td style="padding:6px 0;font-family:' . self::SANS . ';font-size:' . ( $bold ? 15 : 13 ) . 'px;color:' . ( $bold ? '#141414' : '#7d7470' ) . ';' . ( $bold ? 'font-weight:700;' : '' ) . '">' . esc_html( $label ) . '</td><td align="right" style="padding:6px 0;font-family:' . self::SANS . ';font-size:' . ( $bold ? 15 : 13 ) . 'px;color:#141414;' . ( $bold ? 'font-weight:700;' : '' ) . '">' . wp_kses_post( $value ) . '</td></tr>';
+			$rows .= '<tr><td style="padding:6px 0;font-family:' . self::SANS . ';font-size:' . ( $bold ? 15 : 13 ) . 'px;color:' . ( $bold ? '#3a2b26' : '#7d7470' ) . ';' . ( $bold ? 'font-weight:700;' : '' ) . '">' . esc_html( $label ) . '</td><td align="right" style="padding:6px 0;font-family:' . self::SANS . ';font-size:' . ( $bold ? 15 : 13 ) . 'px;color:#3a2b26;' . ( $bold ? 'font-weight:700;' : '' ) . '">' . wp_kses_post( $value ) . '</td></tr>';
 		}
 		$html = '<div class="whd-b whd-b-summary" style="margin:0 0 18px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">' . $rows . '</table></div>';
 
 		if ( $addresses && ( ! empty( $ctx['billing_address'] ) || ! empty( $ctx['shipping_address'] ) ) ) {
 			$cell = function ( $title, $addr ) {
-				return '<td width="50%" style="vertical-align:top;padding:0 8px 0 0;font-family:' . self::SANS . ';font-size:13px;line-height:1.6;color:#2b2724"><div style="font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#b98b7e;margin-bottom:6px">' . esc_html( $title ) . '</div>' . wp_kses_post( $addr ) . '</td>';
+				return '<td width="50%" style="vertical-align:top;padding:0 8px 0 0;font-family:' . self::SANS . ';font-size:13px;line-height:1.6;color:#4a3f3a"><div style="font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#b98b7e;margin-bottom:6px">' . esc_html( $title ) . '</div>' . wp_kses_post( $addr ) . '</td>';
 			};
 			$html .= '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 18px"><tr>' . $cell( __( 'Billing', 'whd' ), $ctx['billing_address'] ?? '' ) . $cell( __( 'Shipping', 'whd' ), $ctx['shipping_address'] ?? '' ) . '</tr></table>';
 		}

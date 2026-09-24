@@ -19,7 +19,7 @@ define( 'OMC_DIR', get_stylesheet_directory() );
 define( 'OMC_URI', get_stylesheet_directory_uri() );
 
 /* Feature modules (each file is self-contained and hooks itself). */
-foreach ( [ 'video' ] as $omc_module ) {
+foreach ( [ 'video', 'landing', 'pdp', 'cart', 'social' ] as $omc_module ) {
 	$omc_module_file = OMC_DIR . '/inc/' . $omc_module . '.php';
 	if ( file_exists( $omc_module_file ) ) {
 		require_once $omc_module_file;
@@ -58,6 +58,21 @@ function moderno_child_enqueue_styles() {
 		wp_enqueue_style( 'omc-video', OMC_URI . '/assets/css/omc-video.css', [ 'omc' ], $ver( '/assets/css/omc-video.css' ) );
 		if ( is_page_template( 'templates/page-video.php' ) ) {
 			wp_enqueue_script( 'omc-video', OMC_URI . '/assets/js/omc-video.js', [], $ver( '/assets/js/omc-video.js' ), true );
+		}
+	}
+
+	// Cart persuasion layer: the drawer lives in the header, so it loads on every page.
+	if ( class_exists( 'WooCommerce' ) ) {
+		wp_enqueue_style( 'omc-cart', OMC_URI . '/assets/css/omc-cart.css', [ 'omc-pages' ], $ver( '/assets/css/omc-cart.css' ) );
+		wp_enqueue_script( 'omc-cart', OMC_URI . '/assets/js/omc-cart.js', [], $ver( '/assets/js/omc-cart.js' ), true );
+	}
+
+	// Product page: size guide, scarcity line, trust badges, review photos. The CSS also covers
+	// the quick view and the wishlist stock column, so it loads across the store screens.
+	if ( function_exists( 'is_woocommerce' ) && ( is_woocommerce() || ( function_exists( 'ideapark_is_wishlist_page' ) && ideapark_is_wishlist_page() ) ) ) {
+		wp_enqueue_style( 'omc-pdp', OMC_URI . '/assets/css/omc-pdp.css', [ 'omc' ], $ver( '/assets/css/omc-pdp.css' ) );
+		if ( is_product() ) {
+			wp_enqueue_script( 'omc-pdp', OMC_URI . '/assets/js/omc-pdp.js', [ 'jquery' ], $ver( '/assets/js/omc-pdp.js' ), true );
 		}
 	}
 	wp_localize_script( 'omc', 'OMC', [
@@ -326,12 +341,20 @@ function omc_social_links() {
 	if ( ! $email || false !== stripos( $email, 'moderno-demo' ) ) { // the demo's placeholder address
 		$email = get_option( 'admin_email' );
 	}
-	return apply_filters( 'omc_social_links', [
+	$links = [
 		'facebook'  => [ 'label' => 'Facebook',  'url' => $mod( 'facebook' ) ?: 'https://www.facebook.com/' ],
 		'instagram' => [ 'label' => 'Instagram', 'url' => $mod( 'instagram' ) ?: 'https://www.instagram.com/' ],
-		'email'     => [ 'label' => __( 'Email us', 'moderno-child' ), 'url' => 'mailto:' . $email ],
-		'pinterest' => [ 'label' => 'Pinterest', 'url' => $mod( 'pinterest' ) ?: 'https://www.pinterest.com/' ],
-	] );
+	];
+
+	// Customizer → Social Media Links → TikTok. No placeholder: the icon appears once a real URL is saved.
+	if ( $mod( 'tiktok' ) ) {
+		$links['tiktok'] = [ 'label' => 'TikTok', 'url' => $mod( 'tiktok' ) ];
+	}
+
+	$links['email']     = [ 'label' => __( 'Email us', 'moderno-child' ), 'url' => 'mailto:' . $email ];
+	$links['pinterest'] = [ 'label' => 'Pinterest', 'url' => $mod( 'pinterest' ) ?: 'https://www.pinterest.com/' ];
+
+	return apply_filters( 'omc_social_links', $links );
 }
 
 /** Real profile URLs (not the fallbacks, not mailto) feed the footer list and the Organization schema. */
@@ -411,6 +434,7 @@ function omc_icon( $name ) {
 		'arrow'   => '<path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>',
 		'facebook' => '<path fill="currentColor" stroke="none" d="M13.6 21v-7.2h2.4l.4-2.9h-2.8V9.1c0-.8.3-1.4 1.4-1.4h1.5V5.1c-.3 0-1.2-.1-2.2-.1-2.2 0-3.6 1.3-3.6 3.8v2.1H8.3v2.9h2.4V21z"/>',
 		'instagram' => '<rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="3.8"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none"/>',
+		'tiktok'    => '<path fill="currentColor" stroke="none" d="M16.1 3h-2.6v11.4a2.3 2.3 0 1 1-2-2.3V9.4a5 5 0 1 0 4.6 5V8.6a6 6 0 0 0 3.4 1.1V7.1a3.6 3.6 0 0 1-3.4-3.6z"/>',
 		'email'    => '<rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3.5 7l8.5 6 8.5-6"/>',
 		'star'     => '<path fill="currentColor" stroke="none" d="M12 2.6l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.5l-5.9 3.1 1.2-6.5L2.5 9.5l6.6-.9z"/>',
 		'pinterest' => '<path fill="currentColor" stroke="none" d="M12 2.5a9.5 9.5 0 0 0-3.5 18.4c-.1-.8-.2-2 0-2.8l1.2-5s-.3-.6-.3-1.5c0-1.4.8-2.4 1.8-2.4.8 0 1.3.6 1.3 1.4 0 .9-.6 2.1-.8 3.3-.2 1 .5 1.8 1.5 1.8 1.8 0 3.1-1.9 3.1-4.6 0-2.4-1.7-4.1-4.2-4.1-2.9 0-4.5 2.1-4.5 4.4 0 .9.3 1.8.7 2.3.1.1.1.2.1.3l-.3 1.2c0 .2-.2.2-.4.1-1.3-.6-2-2.4-2-3.9 0-3.2 2.3-6.1 6.6-6.1 3.5 0 6.2 2.5 6.2 5.8 0 3.4-2.2 6.2-5.2 6.2-1 0-2-.5-2.3-1.1l-.6 2.4c-.2.9-.8 2-1.2 2.6A9.5 9.5 0 1 0 12 2.5z"/>',
@@ -686,7 +710,11 @@ function omc_subscribe_ajax() {
 	if ( ! is_email( $email ) ) {
 		wp_send_json_error( [ 'message' => __( 'Please enter a valid email address.', 'moderno-child' ) ], 400 );
 	}
-	$source = isset( $_POST['source'] ) ? sanitize_key( wp_unslash( $_POST['source'] ) ) : 'newsletter';
+	// Keep the "landing:<slug>" / "video:<slug>" shape: sanitize_key() would eat the colon.
+	$source = isset( $_POST['source'] )
+		? preg_replace( '/[^a-z0-9:_-]/', '', strtolower( sanitize_text_field( wp_unslash( $_POST['source'] ) ) ) )
+		: 'newsletter';
+	$source = $source ?: 'newsletter';
 	$list   = get_option( 'omc_newsletter_subscribers', [] );
 	if ( ! isset( $list[ $email ] ) ) {
 		$list[ $email ] = current_time( 'mysql' );

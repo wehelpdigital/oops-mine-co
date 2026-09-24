@@ -55,7 +55,7 @@
 }
 .c-product-grid__list:not(.owl-carousel) .c-product-grid__item { width: auto; }
 .c-product-grid__item::after { display: none; }
-.c-product-grid__item:hover { border-color: var(--omc-rose); box-shadow: 0 24px 48px -30px rgba(20, 20, 20, .35); transform: translateY(-3px); }
+.c-product-grid__item:hover { border-color: var(--omc-rose); box-shadow: 0 24px 48px -30px rgba(58, 43, 38, .35); transform: translateY(-3px); }
 /* carousels (related / recently viewed) keep the theme's slider; just space the cards */
 .c-product-grid__list.owl-carousel .owl-item > .c-product-grid__item { margin: 0 clamp(6px, .8vw, 12px); }
 .c-product-grid__list.owl-carousel .owl-stage-outer { padding: 4px 0 30px; }

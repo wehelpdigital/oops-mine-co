@@ -10,11 +10,11 @@
 	opacity: 0;
 	transition: opacity .35s ease;
 	font-family: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
-	color: #141414;
+	color: #3a2b26;
 }
 .whd-popup[hidden] { display: none; }
 .whd-popup.is-open { opacity: 1; }
-.whd-popup__overlay { position: absolute; inset: 0; background: var(--whd-overlay, rgba(20, 20, 20, .6)); }
+.whd-popup__overlay { position: absolute; inset: 0; background: var(--whd-overlay, rgba(58, 43, 38, .55)); }
 .whd-popup__dialog {
 	position: relative;
 	display: flex;
@@ -22,7 +22,7 @@
 	max-width: var(--whd-width, 520px);
 	max-height: calc(100vh - 32px);
 	overflow: auto;
-	background: var(--whd-bg, #fff);
+	background: var(--whd-bg, #fffaf6);
 	border-radius: var(--whd-radius, 0);
 	box-shadow: 0 40px 90px -30px rgba(0, 0, 0, .5);
 	transform: translateY(18px) scale(.985);
@@ -39,14 +39,15 @@
 	height: 38px;
 	border: 0;
 	background: transparent;
-	color: #141414;
+	color: #3a2b26;
 	font-size: 30px;
 	line-height: 1;
 	cursor: pointer;
 	border-radius: 50%;
 	transition: background-color .2s;
 }
-.whd-popup__close:hover { background: rgba(0, 0, 0, .06); }
+.whd-popup__close:hover { background: rgba(58, 43, 38, .07); }
+.whd-popup__close:focus-visible { outline: 2px solid #b98b7e; outline-offset: 2px; }
 .whd-popup__image { display: none; flex: 0 0 42%; background: #efe6de; }
 .whd-popup--with-image .whd-popup__dialog { max-width: calc(var(--whd-width, 520px) + 220px); }
 .whd-popup--with-image .whd-popup__image { display: block; }
@@ -58,6 +59,63 @@
 .whd-countdown.is-expired .whd-countdown__time { opacity: .35; }
 body.whd-popup-open { overflow: hidden; }
 
+/* capture form (email + optional mobile) */
+.whd-form { display: block; margin: 4px 0 0; text-align: left; }
+.whd-form .whd-form__input {
+	display: block;
+	width: 100%;
+	box-sizing: border-box;
+	margin: 0 0 8px;
+	padding: 13px 14px;
+	border: 1px solid #e9e1da;
+	border-radius: 0;
+	background: #fff;
+	color: #3a2b26;
+	font-family: inherit;
+	font-size: 15px;
+	line-height: 1.3;
+	-webkit-appearance: none;
+	appearance: none;
+	transition: border-color .2s;
+}
+.whd-form .whd-form__input::placeholder { color: #8a7d76; opacity: 1; }
+.whd-form .whd-form__input:focus { outline: none; border-color: #b98b7e; box-shadow: 0 0 0 3px rgba(185, 139, 126, .18); }
+.whd-form .whd-form__consent { display: flex; align-items: flex-start; gap: 8px; margin: 2px 0 12px; font-size: 12px; line-height: 1.5; color: #8a7d76; cursor: pointer; }
+.whd-form .whd-form__consent input { flex: 0 0 auto; width: 16px; height: 16px; margin: 2px 0 0; accent-color: #9c6f63; }
+.whd-form__consent a { color: #9c6f63; }
+.whd-form .whd-form__btn {
+	display: block;
+	width: 100%;
+	padding: 15px 22px;
+	border: 0;
+	background: #3a2b26;
+	color: #f7f2ed;
+	font-family: inherit;
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: .16em;
+	text-transform: uppercase;
+	line-height: 1;
+	cursor: pointer;
+	transition: opacity .2s;
+}
+.whd-form .whd-form__btn:hover { opacity: .9; }
+.whd-form .whd-form__btn:focus-visible { outline: 2px solid #b98b7e; outline-offset: 2px; }
+.whd-form .whd-form__btn.is-busy, .whd-form__btn[disabled] { opacity: .6; cursor: default; }
+.whd-form .whd-form__status { margin: 8px 0 0; font-size: 12px; line-height: 1.5; color: #8a7d76; min-height: 1em; }
+.whd-form__status.is-error { color: #9c6f63; }
+.whd-form__status:empty { margin: 0; min-height: 0; }
+.whd-form__done {
+	margin: 6px 0 0;
+	padding: 16px 18px;
+	background: #f3dcd6;
+	color: #3a2b26;
+	font-size: 15px;
+	line-height: 1.6;
+	text-align: center;
+}
+.whd-form__done b, .whd-form__done strong { letter-spacing: .12em; }
+
 /* preview mode inside the editor iframe */
 .whd-popup--preview { position: fixed; }
 .whd-popup--preview .whd-popup__close { cursor: default; }
@@ -65,11 +123,22 @@ body.whd-popup-open { overflow: hidden; }
 @media (max-width: 640px) {
 	.whd-popup { padding: 10px; align-items: flex-end; }
 	.whd-popup__dialog { flex-direction: column; max-height: calc(100vh - 20px); }
-	.whd-popup__image { flex-basis: auto; height: 160px; }
+	.whd-popup__image { flex-basis: auto; height: 140px; }
 	.whd-popup__body { padding: max(20px, calc(var(--whd-pad, 40px) * .6)); }
 	.whd-b-heading--h1 { font-size: 30px !important; }
 	.whd-b-heading--h2 { font-size: 26px !important; }
 	.whd-countdown__time { font-size: 36px !important; }
+	/* 16px keeps iOS from zooming the page when a field takes focus */
+	.whd-form .whd-form__input { font-size: 16px; padding: 12px 13px; min-height: 46px; }
+	.whd-form .whd-form__consent { font-size: 11.5px; }
+	.whd-form .whd-form__btn { min-height: 46px; }
+	.whd-form__done { padding: 14px; font-size: 14px; }
+}
+@media (max-width: 400px) {
+	.whd-popup__close { top: 4px; right: 6px; }
+	.whd-popup__body { padding: 20px 16px 22px; }
+	.whd-b-heading--h2 { font-size: 24px !important; }
+	.whd-form .whd-form__btn { padding: 14px 16px; letter-spacing: .12em; }
 }
 @media (prefers-reduced-motion: reduce) {
 	.whd-popup, .whd-popup__dialog { transition: none; }

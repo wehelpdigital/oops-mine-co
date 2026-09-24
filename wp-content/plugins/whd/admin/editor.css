@@ -66,7 +66,10 @@
 .whd-ed__align button { border: 0; background: #fff; width: 40px; height: 30px; cursor: pointer; color: #50575e; }
 .whd-ed__align button + button { border-left: 1px solid #dcdcde; }
 .whd-ed__align button.is-active { background: var(--ed-ink); color: #fff; }
-.whd-ed__toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.whd-ed__toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 1.4; }
+.whd-ed__field--toggle, .whd-ed__field--checkbox { padding: 6px 0 2px; }
+.whd-ed__field--textarea textarea { min-height: 70px; font-size: 12px; line-height: 1.5; }
+.whd-ed__field--textarea .whd-ed__help { font-style: italic; }
 .whd-ed__image { display: flex; gap: 6px; }
 .whd-ed__image input { flex: 1; }
 

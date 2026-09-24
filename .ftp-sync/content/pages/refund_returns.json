@@ -1,0 +1,112 @@
+{
+  "slug": "refund_returns",
+  "type": "policy",
+  "status": "publish",
+  "title": "Refund and Returns Policy",
+  "seo_title": "Refund and Returns Policy | Oops, Mine Co.",
+  "meta_description": "Our full return policy: store credit only, seven days to postmark, an RMA number by email, plus the items that are final sale. Read it before you buy.",
+  "primary_keyword": "",
+  "keywords": [],
+  "updated": "January 08, 2027",
+  "hero": {
+    "eyebrow": "Returns and store credit",
+    "intro": "This is our return policy in full, exactly as it is written: what comes back as store credit, how long you have, and which pieces are final sale. Shipping timings live on the <a href=\"/shipping-policy/\">shipping policy</a> page, and the <a href=\"/faq/\">FAQ</a> answers the rest."
+  },
+  "sections": [
+    {
+      "heading": "The <em>short</em> version",
+      "paragraphs": [],
+      "bullets": [
+        "Returns are for store credit only.",
+        "Seven (7) days from the purchase date to postmark your return, tags and labels still attached.",
+        "Email <a href=\"mailto:hello@oopsmineco.com\">hello@oopsmineco.com</a> for an RMA number before you send anything back.",
+        "A $15.00 restocking fee applies to all returns, and sale items are final sale."
+      ]
+    },
+    {
+      "heading": "Return policy",
+      "paragraphs": [
+        "Thank you for your purchase. We hope you are happy with your purchase. However, if you are not completely satisfied with your purchase for any reason, you may return it to us for store credit only. Please see below for more information on our return policy."
+      ]
+    },
+    {
+      "heading": "Returns",
+      "paragraphs": [
+        "All returns must be postmarked within seven (7) days of the purchase date. All returned items must be in new and unused condition, with all original tags and labels attached."
+      ]
+    },
+    {
+      "heading": "Return process",
+      "paragraphs": [
+        "To return an item, please email customer service at <a href=\"mailto:hello@oopsmineco.com\">hello@oopsmineco.com</a> to obtain an Return Merchandise Authorization (RMA) number. After receiving an RMA number, place the item securely in its original packaging and include your proof of purchase, then mail your return to the following address:",
+        "Oops Mine Co. LLC<br>Attn: Returns<br>RMA #<br>12712 West Lake Houston Parkway<br>Suite B-4014<br>Houston, TX 77044<br>United States",
+        "You may also use the prepaid shipping label enclosed with your package. Return shipping charges will be paid or reimbursed by us."
+      ]
+    },
+    {
+      "heading": "Refunds",
+      "paragraphs": [
+        "After receiving your return and inspecting the condition of your item, we will process your return. Please allow at least ten (10) days from the receipt of your item to process your return. We will notify you by email when your return has been processed."
+      ]
+    },
+    {
+      "heading": "Exceptions",
+      "paragraphs": [
+        "The following items cannot be returned:"
+      ],
+      "bullets": [
+        "worn products",
+        "washed",
+        "altered",
+        "not final sale",
+        "makeup stains",
+        "deodorant stains",
+        "animal hair",
+        "smells of smoke, perfume or deodorant",
+        "damaged"
+      ]
+    },
+    {
+      "heading": "",
+      "paragraphs": [
+        "For defective or damaged products, please contact us at the contact details below to arrange a refund or exchange."
+      ]
+    },
+    {
+      "heading": "Please note",
+      "paragraphs": [],
+      "bullets": [
+        "A $15.00 restocking fee will be charged for all returns.",
+        "Sale items are FINAL SALE and cannot be returned.",
+        "FINAL SALE: All sales on sale/clearance as well as items ending in .99 are final. All items purchased with a coupon code greater than 20% are final. All sales are final on jewelry, graphic tees, purses, wallets. Also, any shapewear (all shapers, leggings, shorts), undergarments, hats and beanies (for hygienic purposes) are final sale. If you're returning a non-returnable item, you will be responsible for a $20 restocking fee that will be deducted from the retail price of the item. Non-returnable items include, but are not limited to, final sale items or items that are outside of the 7-day return period."
+      ]
+    },
+    {
+      "heading": "Questions",
+      "paragraphs": [
+        "If you have any questions concerning our return policy, please contact us at:",
+        "<a href=\"tel:+13468476606\">346-847-6606</a><br><a href=\"mailto:hello@oopsmineco.com\">hello@oopsmineco.com</a>"
+      ]
+    },
+    {
+      "heading": "More help",
+      "paragraphs": [
+        "Two more pages answer what usually comes next: the <a href=\"/shipping-policy/\">shipping policy</a> for how orders go out, and the <a href=\"/faq/\">FAQ</a> for sizing, payment and order changes. If your question is about one order, write to us from the <a href=\"/contacts/\">contact page</a> with your order number and we will pick it up from there."
+      ]
+    }
+  ],
+  "faqs": [],
+  "cta": {
+    "heading": "Find something yours",
+    "text": "New pieces land in small batches and quietly sell through. Leave your email and we will tell you when the next one arrives.",
+    "button_text": "Shop new arrivals",
+    "button_url": "/shop/?orderby=date",
+    "capture_email": true
+  },
+  "related_slugs": [
+    "faq",
+    "shipping-policy",
+    "contacts"
+  ],
+  "author_notes": "Client legal text is reproduced word for word from blueprint/return-policy.Worth a line to the owner so the swap is on the record (and so the PDF/printed policy can be matched). The client's typo 'an Return Merchandise Authorization' is left exactly as written - do not copy-edit it without the owner's say-so. The 'Last updated January 08, 2027' line is in the document's top-level `updated` key, so the policy template prints it once in the title band; the date is the client's and is in the future - worth confirming with the owner.The section with an empty heading carries the client's 'For defective or damaged products...' sentence: the renderer prints all paragraphs before bullets, so that sentence needs its own block to stay after the exceptions list (it also keeps it in post_content, which drops a section cta without a url). Only additions to the client's text: the hero intro, the 'More help' section, the closing email-capture band, mailto:/tel: links on the addresses and phone number the client already printed. `faqs` is deliberately empty - restating policy as Q&A would be a rewrite, and the template already prints its own 'Questions' block heading. `primary_keyword` and `keywords` stay empty per plan.json. Links used: /shipping-policy/, /faq/, /contacts/, /shop/?orderby=date - the shipping-policy page is created by the publish script on first run, so import this page after (or in) the same run. The template also prints omc_contact_help_card() under the text, which repeats the email and phone; if that reads as double on the page, pass a different title/text or drop the help card for the policy template. Re-checked after the banned-word fix (scratchpad/check-refund2.js, node --check clean): valid JSON, ASCII only, meta_description 150 chars, seo_title 42 chars, zero banned words on a word-boundary scan of every field except author_notes (the only substring hit is 'quest' inside the client's own 'Questions' heading, which the checker accepts), and every other line of return-policy.txt still present verbatim; php .ftp-sync/publish-site.php --dry-run still lands it as \"refund_returns\": \"#10 policy\" with skipped empty. The client's return policy is reproduced word for word, including 'however', which appears on the banned-word list: a supplied legal document is quoted, not rewritten."
+}

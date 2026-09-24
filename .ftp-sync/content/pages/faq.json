@@ -1,0 +1,251 @@
+{
+  "slug": "faq",
+  "type": "faq",
+  "status": "publish",
+  "title": "FAQ: Sizing, Shipping, Returns and Where to Find Us",
+  "seo_title": "FAQ: Sizing, Shipping, Returns | Oops, Mine Co.",
+  "meta_description": "Searched cute clothes near me and found us? We are online only, shipping from Houston, TX. Answers on sizing, shipping, returns and how we source.",
+  "primary_keyword": "cute clothes near me",
+  "keywords": [
+    "korean clothes store near me",
+    "korean clothes near me",
+    "korean fashion near me",
+    "korean fashion store nyc",
+    "korean fashion wholesaler",
+    "cute clothes stores near me",
+    "cute clothes near me",
+    "trendy clothes near me"
+  ],
+  "hero": {
+    "eyebrow": "Help center",
+    "intro": "Everything shoppers ask us before they buy, in one place: how sizing from Korea and Thailand runs, what happens after you check out, how returns for store credit work, where our pieces come from, and why there is no shop of ours down your street.",
+    "cta_text": "Shop new arrivals",
+    "cta_url": "/shop/?orderby=date"
+  },
+  "sections": [
+    {
+      "heading": "Searching <em>cute clothes near me</em>? Start here",
+      "paragraphs": [
+        "Oops, Mine Co. is an online boutique run from Houston, Texas. There is no shop floor, no rail to flick through on a Saturday afternoon — the store is this site, and it ships to you. So a search for cute clothes near me will not turn up a door of ours to open, but it may turn up the dress nobody else at brunch is wearing. Ronalyn buys in small batches from suppliers in Korea, Thailand, Vietnam and a few other countries in Asia, one piece at a time.",
+        "Nothing below replaces the detail on a product page. Every listing carries flat measurements, fabric and care notes; the <a href=\"/size-guide/\">size guide</a> shows you how to measure yourself, and the <a href=\"/refund_returns/\">refund and returns policy</a> is the wording that governs any return. If your question is not answered here, <a href=\"/contacts/\">write to us</a> — a person reads every message, not a robot, and we would rather talk you out of the wrong size than take the order."
+      ],
+      "bullets": [
+        "Online only, based in Houston, TX — the suite on our paperwork is a mailing address, not a store",
+        "Small batches from Korea and Thailand; when a color sells through it often goes for good",
+        "Returns are for store credit, postmarked within seven days of the purchase date",
+        "Flat measurements on every listing, because a size letter from Asia rarely means what it does here"
+      ]
+    },
+    {
+      "heading": "What to check <em>before</em> you order",
+      "paragraphs": [
+        "Three minutes now saves a week of posting parcels back and forth. Open the <a href=\"/size-guide/\">size guide</a> in another tab and hold your bust, waist and hip numbers against the flat measurements on the listing you are eyeing, because a size letter from a studio in Korea rarely lines up with the one on your favorite US brand. Read the fabric and care line next: weight and stretch decide whether a piece skims or clings. Then check the final sale wording, since clearance pieces, prices ending in .99 and anything bought with a coupon over 20% stay with you.",
+        "The other thing worth knowing is how little of each piece exists. Ronalyn buys a few dozen of a style across every size, so your cart is not a holding pen — nothing is reserved until you pay, and a color can sell from under you while you sleep on it. If you are torn between two sizes, write to us before you buy rather than after. The return window runs seven days from the purchase date, and swapping a size at the packing table is far kinder than doing it by mail."
+      ],
+      "bullets": [
+        "Measure yourself once, write the three numbers down, shop from them all year",
+        "Trust the flat measurements on the listing over the size letter on the label",
+        "Check whether a piece is final sale before you spend a generous coupon code",
+        "Ask us anything by email or phone — we will go and look at the actual piece"
+      ],
+      "cta": {
+        "text": "Read the size guide",
+        "url": "/size-guide/"
+      }
+    },
+    {
+      "heading": "What happens <em>after</em> you check out",
+      "paragraphs": [
+        "Payment goes through, a confirmation email lands, and your order joins the pile on the packing table. Parcels are put together by hand in Houston, which is why an address fix or a size swap is usually still possible on the day you order. When your piece leaves us a second email follows, carrying tracking wherever the carrier gives us a number. Where we ship, what packing takes and what it costs all sit on the <a href=\"/shipping-policy/\">shipping policy</a> page, because that is the page we keep current.",
+        "If something is wrong when you open the box, tell us straight away: a damaged or defective piece is refunded or exchanged rather than credited, and you are not paying to send it back. Everything else comes home for store credit inside the seven-day window, new and unused, tags attached, with an RMA number written on the parcel. The questions below walk through each step, and the <a href=\"/refund_returns/\">refund and returns policy</a> holds the wording that counts."
+      ]
+    },
+    {
+      "heading": "Still <em>curious</em>?",
+      "paragraphs": [
+        "Ask the thing you cannot find above. Email hello@oopsmineco.com or call 346-847-6606 — Monday to Friday 8:30am–5:00pm, Saturday 10:00am–5:00pm Central, closed Sunday. Tell us the piece you are looking at and your bust, waist and hip, and we will tell you honestly whether it will work for you. Opening hours, the mailing address and the rest of the detail sit on the <a href=\"/contacts/\">contact page</a>."
+      ],
+      "cta": {
+        "text": "Write to us",
+        "url": "/contacts/"
+      }
+    }
+  ],
+  "faqs": [
+    {
+      "group": "Orders & shipping",
+      "q": "How do I place an order?",
+      "a": "Pick your size on the product page, add it to the cart and check out. You will get a confirmation email as soon as the payment goes through, and a second one when the parcel leaves us. If a size cannot be selected it has already sold through — email us and we will tell you whether that color is coming back, because with small batches the honest answer is sometimes no."
+    },
+    {
+      "group": "Orders & shipping",
+      "q": "Can I change or cancel an order after I place it?",
+      "a": "Write to hello@oopsmineco.com as soon as you can and put your order number in the subject line. Orders are packed by hand, so if yours has not gone out yet we can usually swap a size, fix an address or cancel it outright. Once a parcel is on its way it has to be handled as a return instead, which means the <a href=\"/refund_returns/\">returns policy</a> applies to it."
+    },
+    {
+      "group": "Orders & shipping",
+      "q": "How much is shipping, and how long will my order take?",
+      "a": "Your cost is calculated in the cart before you pay, so nothing is added after checkout. Processing time, carriers and where we ship are set out on the <a href=\"/shipping-policy/\">shipping policy</a> page, and that is the page to read for current detail. We would rather leave a delivery promise off the site than give you a date we cannot keep."
+    },
+    {
+      "group": "Orders & shipping",
+      "q": "How do I track my order?",
+      "a": "One email confirms the order, a second one goes out when it ships, and tracking travels in that second email wherever the carrier provides it. You can also look an order up from your account or on the <a href=\"/order-tracking/\">order tracking</a> page with your order number and the email address you used. If neither email has arrived, check your spam folder before you write to us — that is usually where they hide."
+    },
+    {
+      "group": "Orders & shipping",
+      "q": "Do you have a store near me?",
+      "a": "Not one you can walk into. We are online only, based in Houston, Texas, and the suite on our paperwork is a mailing address for returns rather than a shop floor. So if you have been typing cute clothes stores near me or trendy clothes near me into a search box, think of us as the rail that ships to you: same browsing, better odds that nobody at the table owns the same dress."
+    },
+    {
+      "group": "Orders & shipping",
+      "q": "Is there a korean clothes store near me, or a korean fashion store nyc shoppers rate?",
+      "a": "We cannot point you to one, and we are not it — there is no Oops, Mine Co. counter in New York, Houston or anywhere else. Searches for korean clothes near me and korean fashion near me tend to return big chains, which is the gap we sit in: small runs bought in Korea, listed with flat measurements and honest fabric notes so you can pick a size without a fitting room."
+    },
+    {
+      "group": "Orders & shipping",
+      "q": "Can I pick up an order in Houston?",
+      "a": "No, sorry. The suite at 12712 W Lake Houston Pkwy is a mailbox, so there is nobody there to hand you a parcel and nothing on a rail to try on. Orders go out by mail, and returns come back to that same address with an RMA number on the label. Keeping it that way is part of how the pricing stays sensible."
+    },
+    {
+      "group": "Sizing & fit",
+      "q": "What size should I order?",
+      "a": "Go by the measurements, not by the letter on the label. Every listing carries flat measurements for that piece; hold them against a garment you already love, or measure yourself with the <a href=\"/size-guide/\">size guide</a>. If you sit between two sizes, send us the piece plus your bust, waist and hip and we will say which one we would put in the box for our own sister."
+    },
+    {
+      "group": "Sizing & fit",
+      "q": "Do sizes from Korea run smaller than US sizes?",
+      "a": "Often, yes. A medium from Korea or Thailand can sit closer to a US small, and body and sleeve length is usually cut shorter, which petite shoppers tend to love and taller shoppers plan around. That is why we publish flat measurements for each piece instead of one chart for the whole store. The <a href=\"/size-guide/\">size guide</a> walks you through reading them."
+    },
+    {
+      "group": "Sizing & fit",
+      "q": "How do I measure myself?",
+      "a": "Use a soft tape and wear the underwear you would wear with the piece. Bust at the fullest point, waist at the narrowest, hips at the widest part of the seat, tape level and snug without pulling. Write the three numbers down once and you can shop from them for a year. There are diagrams on the <a href=\"/size-guide/\">size guide</a> if you would rather see it than read it."
+    },
+    {
+      "group": "Sizing & fit",
+      "q": "What does one size or free size mean?",
+      "a": "It means the piece was cut to fit a range rather than a numbered size, which is a common habit in the studios we buy from. It is not a promise that it fits everyone. When a listing says one size we publish its flat measurements anyway, so you can see how much room sits in the bust, the waist and the hem before you decide."
+    },
+    {
+      "group": "Sizing & fit",
+      "q": "Do you carry petite and plus sizes?",
+      "a": "We buy as wide a size range as each supplier offers, and it moves from piece to piece — some runs stop at large, others go further. Plenty of what we carry suits petite frames anyway because of the shorter body and sleeve length. Filter by your size on the <a href=\"/shop/\">shop page</a> to see what is in stock right now, and ask us if you want a piece checked before you buy."
+    },
+    {
+      "group": "Sizing & fit",
+      "q": "What happens if it does not fit?",
+      "a": "Write to us. Returns are for store credit, they must be postmarked within seven days of the purchase date, and the piece has to come back new and unused with all original tags and labels attached. The full terms live on the <a href=\"/refund_returns/\">refund and returns policy</a> page. Because that window is short, it pays to check the measurements against the <a href=\"/size-guide/\">size guide</a> before you order rather than after."
+    },
+    {
+      "group": "Returns & store credit",
+      "q": "Can I return something I do not love?",
+      "a": "Yes, for store credit. All returns must be postmarked within seven days of the purchase date, and every returned item has to be in new and unused condition with all original tags and labels attached. A change of mind does not bring cash back, it brings credit to spend on the next piece. The <a href=\"/refund_returns/\">refund and returns policy</a> page carries the wording that applies."
+    },
+    {
+      "group": "Returns & store credit",
+      "q": "How do I start a return?",
+      "a": "Email hello@oopsmineco.com and ask for a Return Merchandise Authorization number. Once you have your RMA number, put the item back in its original packaging with your proof of purchase, write the number on the parcel and mail it to Oops Mine Co. LLC, Attn: Returns, 12712 West Lake Houston Parkway, Suite B-4014, Houston, TX 77044. Send it with the RMA number showing so we can match it to your order."
+    },
+    {
+      "group": "Returns & store credit",
+      "q": "Who pays for return shipping?",
+      "a": "We do. You may use the prepaid shipping label enclosed with your package, and return shipping charges will be paid or reimbursed by us. Keep your proof of postage until the return has been processed, just in case a parcel goes wandering. If the enclosed label has gone missing, say so in the same email in which you ask for your RMA number."
+    },
+    {
+      "group": "Returns & store credit",
+      "q": "Is there a restocking fee?",
+      "a": "Yes. A $15.00 restocking fee is charged on all returns. If you send back something that is not returnable — a final sale piece, or anything outside the seven-day return period — a $20 restocking fee is deducted from the retail price of the item instead. Both figures come straight from the <a href=\"/refund_returns/\">returns policy</a>, so read it before you post anything back."
+    },
+    {
+      "group": "Returns & store credit",
+      "q": "What cannot be returned?",
+      "a": "Sale and clearance items are final, as is anything priced ending in .99 and anything bought with a coupon code greater than 20%. Jewelry, graphic tees, purses and wallets are final sale, and so are shapewear, leggings, shorts, undergarments, hats and beanies for hygiene reasons. We also cannot take back a piece that has been worn, washed or altered, or that arrives with makeup or deodorant marks, animal hair, smoke or perfume smells, or damage."
+    },
+    {
+      "group": "Returns & store credit",
+      "q": "How long does a return take to process?",
+      "a": "Allow at least ten days from the day your item reaches us. We inspect the condition first, then process the return and email you once it has been done — your store credit follows that message. If ten days have gone by and your inbox is still quiet, send us your RMA number and we will chase it for you."
+    },
+    {
+      "group": "Returns & store credit",
+      "q": "My piece arrived damaged. What now?",
+      "a": "Tell us straight away and send a photo if you can. For defective or damaged products we arrange a refund or an exchange rather than store credit, and you will not be paying to send it back. Email hello@oopsmineco.com or call 346-847-6606 during opening hours and we will sort it out with you. This is the one place where the seven-day clock is not the point."
+    },
+    {
+      "group": "Products & sourcing",
+      "q": "Where do your clothes come from?",
+      "a": "Korea and Thailand first, with pieces from Vietnam and other countries in Asia when something is good enough to bring home. Ronalyn buys in small batches, leaning toward the small studio over the big catalog, and looks for the detail you only notice on the second pass: a covered button, an unusual sleeve, fabric with weight to it. The longer version sits on the <a href=\"/about-us/\">about page</a>."
+    },
+    {
+      "group": "Products & sourcing",
+      "q": "Are you a korean fashion wholesaler?",
+      "a": "No. We buy from suppliers in Korea and sell retail, one piece at a time, to the person who will wear it. That is the whole model: small quantities, picked by hand, priced fairly rather than stacked high and sold cheap. If you landed here searching for a korean fashion wholesaler, we are the retail end of that chain rather than the bulk end of it."
+    },
+    {
+      "group": "Products & sourcing",
+      "q": "Why do pieces sell out so quickly?",
+      "a": "Because we buy in small batches on purpose. A run might be a few dozen pieces across every size, and once a color goes it usually goes for good, since the studio has already moved on to its next sample. That is why a piece feels like yours when you wear it — and why we would rather you claimed the one you love than waited for payday."
+    },
+    {
+      "group": "Products & sourcing",
+      "q": "Do you restock?",
+      "a": "Sometimes, and we never promise it. If a supplier still has a run open we will reorder a style that sold through, but plenty of pieces are one and done. Join the email list or watch a Facebook Live evening and you will hear about a restock or a new drop early, which is usually the difference between getting your size and reading about it."
+    },
+    {
+      "group": "Products & sourcing",
+      "q": "How do I judge quality before I buy?",
+      "a": "Read the fabric and care line on the listing, then the flat measurements. We photograph pieces as they are, note weight and stretch, and say when something is sheer or wants a slip under it. If a detail is missing from the page, ask — we will go and look at the actual piece before we answer you, which is one advantage of a store this size."
+    },
+    {
+      "group": "Products & sourcing",
+      "q": "How do I hear about new pieces first?",
+      "a": "Two ways. Join the email list at the bottom of any page, which is where new arrivals get announced, and watch for a Facebook Live evening, where pieces are shown on camera and often claimed on the spot. Our <a href=\"/blog/\">journal</a> covers the styling side — what goes with what, and how to wear one piece three ways without looking like you repeated it."
+    },
+    {
+      "group": "Account & offers",
+      "q": "Do I need an account to order?",
+      "a": "No. You can check out as a guest and give us only what we need to get the parcel to you. An account is handy if you shop with us more than once: it keeps your addresses and order history together, and it makes a return simpler because your purchase date is right there. You can create one at checkout or from the <a href=\"/my-account/\">my account</a> page."
+    },
+    {
+      "group": "Account & offers",
+      "q": "What does joining the email list get me?",
+      "a": "First sight of new pieces, the odd subscriber-only offer and a heads-up before a Facebook Live starts. We send when there is something worth sending rather than on a schedule, and every email carries an unsubscribe link that actually works. Your address stays with us: we do not sell it and we do not pass it around."
+    },
+    {
+      "group": "Account & offers",
+      "q": "Do you have a discount code?",
+      "a": "From time to time. Codes turn up in the welcome offer on the site, in emails to the list and during a Facebook Live evening. Worth knowing before you use a generous one: anything bought with a coupon code greater than 20% counts as final sale under the <a href=\"/refund_returns/\">returns policy</a>, so size carefully when you spend it."
+    },
+    {
+      "group": "Account & offers",
+      "q": "Is it safe to pay on this site?",
+      "a": "Yes. Checkout runs over an encrypted connection and payment is handled by the payment provider, so card numbers are not stored on our site or sent to us by email. You will see the padlock in the address bar the whole way through. If a page ever looks wrong to you, stop and email hello@oopsmineco.com before you type anything into it."
+    },
+    {
+      "group": "Account & offers",
+      "q": "Can I save a piece for later?",
+      "a": "Add it to your cart and it will sit there while you think it over, and if you leave with something in it we may send one reminder with a link back to where you left off. Nothing is reserved though — a cart does not hold stock, so a piece can sell from under you while it waits. That is small batches for you."
+    },
+    {
+      "group": "Account & offers",
+      "q": "How do I stop the emails?",
+      "a": "Click the unsubscribe link at the foot of any email we send and you are off the list from that moment. Order emails carry on — confirmations, shipping notices and anything about a return — because those are about a purchase you made rather than marketing. If something still lands that you did not ask for, tell us and we will fix it."
+    }
+  ],
+  "cta": {
+    "eyebrow": "Stay close",
+    "heading": "Find something <em>yours</em>",
+    "text": "New pieces land in small batches and the loved ones go quickly. Leave your email and you will hear about a drop before it reaches the shop page.",
+    "button_text": "Shop new arrivals",
+    "button_url": "/shop/?orderby=date",
+    "capture_email": true
+  },
+  "related_slugs": [
+    "size-guide",
+    "contacts",
+    "refund_returns",
+    "shipping-policy"
+  ],
+  "author_notes": "Facts to confirm with the owner before this goes live. (1) Guest checkout: the 'Do I need an account to order?' answer states you can check out as a guest — confirm WooCommerce has guest checkout enabled, or drop that first sentence. (2) Payment: the safety answer says card numbers are not stored on the site — true for a hosted gateway (Stripe/PayPal); reword if a non-hosted method is added. (3) Wholesale: the 'korean fashion wholesaler' answer deliberately does NOT invite bulk enquiries, per the plan note. If the owner wants them, add one sentence pointing at hello@oopsmineco.com. (4) Order tracking: links /order-tracking/, which exists from the demo import — check the permalink or point that link at /my-account/orders/ instead. (5) /size-guide/ may publish as size-guide-2 locally because an html_block post already owns that slug (see chic-boho-clothes.json notes); check the real permalink and update the four /size-guide/ links here if it differs. Shipping answers name no carrier, price, processing time or delivery estimate on purpose — /shipping-policy/ owns all of that, so keep them out on any edit.\n\nReturn facts are taken only from blueprint/return-policy.txt: store credit only, postmarked within seven days of purchase date, new and unused with original tags and labels, RMA by email, prepaid label enclosed and return shipping paid or reimbursed, at least ten days to process after receipt, $15.00 restocking fee on all returns, $20 restocking fee on non-returnable items, final sale list (sale/clearance, prices ending .99, coupons over 20%, jewelry, graphic tees, purses, wallets, shapewear/leggings/shorts, undergarments, hats and beanies), exclusions for worn, washed, altered, makeup or deodorant stains, animal hair, smoke or perfume smells, damage, and refund-or-exchange for defective or damaged goods. Nothing is paraphrased in a way that contradicts the policy page; if the owner updates the policy text, re-check the seven answers in the 'Returns & store credit' group.\n\nTemplate note for the integrator: page-faq.php puts every section that has no questions of its own into the intro block ABOVE the accordions, so the 'Still curious?' section renders under the intro rather than at the foot of the page. That reads fine, but if you want it last, either give the FAQ groups to sections[].faqs instead of the flat list, or let the template render sections that come after the last question-bearing section below the groups. The template already prints its own 'Still looking for an answer? write to us' line under the accordions, so the two do not clash but they do say a similar thing — drop one if it feels repetitive.\n\nNo design colors named anywhere; if a featured image is added, use a cream or sand flat-lay in natural light (brand palette only). No prices beyond the two restocking fees from the policy, no shipping days, no review counts, no statistics, no social handles other than the Facebook Live mentions, which come from the brand brief.\n\nFix pass (attempt 1 failed the automated check on \"fewer than 3 sections\"; keywords and banned words were already clean). Two sections were added between the opening section and \"Still curious?\": \"What to check before you order\" (flat measurements over size letters, fabric weight, the final sale wording, small batches, the seven-day window) and \"What happens after you check out\" (confirmation email, hand packing in Houston, tracking in the second email, damaged goods, store credit). Both summarize and link to /size-guide/, /shipping-policy/ and /refund_returns/ rather than stating new facts, so nothing here can drift out of step with the policy pages, and neither one names a carrier, price, processing time or delivery estimate. No keyword text was touched, no banned word was introduced, and the FAQ list is unchanged. All four sections carry no faqs of their own, so page-faq.php renders them in the intro block above the accordions in this order — the two new ones read as a short pre-purchase and post-purchase summary, which is where a shopper wants them.\n\nValidation run after the fix: 4 sections; 729 section body words (in the 700-1100 band, up from 305); all 8 keywords still verbatim in body copy (each 1-2x); primary keyword in the first H2 and the meta description; zero banned words (banned.json plus the extra list) in body, headings or meta; no black/red/orange; title 51 chars, seo_title 47, meta_description 146; 32 answers, each 57-75 words; new paragraphs 98/93 and 87/76 words; US spelling; all links site-relative. `php .ftp-sync/publish-site.php --dry-run` maps the file to page #1803 with template templates/page-faq.php, reports no skips and writes nothing. No repo PHP or JS file was added or changed by this task, so nothing needed php -l; the two throwaway fix scripts in the scratchpad pass node --check."
+}

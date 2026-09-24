@@ -1,0 +1,176 @@
+{
+  "slug": "privacy-policy",
+  "type": "policy",
+  "status": "publish",
+  "title": "Privacy Policy: What We Collect and How We Use It",
+  "seo_title": "Privacy Policy | Oops Mine Co.",
+  "meta_description": "What Oops Mine Co. collects when you shop, sign up or browse, who we share it with, how long we keep it, and how to unsubscribe or ask us to delete it.",
+  "primary_keyword": "",
+  "keywords": [],
+  "hero": {
+    "eyebrow": "Your data",
+    "intro": "The “mine” in our name is about a piece of clothing you claim as yours. It was never about your personal details. This page says, in plain language, what Oops Mine Co. collects when you shop or sign up, why we collect it, who else sees it, and how to tell us to stop.",
+    "cta_text": "Ask us anything",
+    "cta_url": "/contacts/"
+  },
+  "sections": [
+    {
+      "heading": "The short version",
+      "paragraphs": [
+        "Last updated: September 24, 2026",
+        "We are a small online boutique, so we need a few details to send you a package and answer your notes: your name, your address, your email and the order itself. We ask for what an order needs, then we look twice at anything beyond that and leave it out. We do not sell your personal information, and we do not hand your email address or phone number to anyone who wants to market their own products to you. If you would rather hear less from us, every marketing email we send ends with a one-click unsubscribe link."
+      ],
+      "bullets": [
+        "We collect what an order, an account or a sign-up needs.",
+        "We do not sell your personal information.",
+        "Marketing emails and texts are opt-in, and you can stop them any time.",
+        "You can ask for a copy of your data, or ask us to delete it.",
+        "Questions go to <a href=\"mailto:hello@oopsmineco.com\">hello@oopsmineco.com</a>."
+      ]
+    },
+    {
+      "heading": "What we collect",
+      "paragraphs": [
+        "Almost everything we hold, you typed in yourself. The rest is the ordinary record a website keeps of a visit. We do not buy customer lists, and we do not add people to our newsletter because they once bought something — a sign-up is a separate box you tick."
+      ],
+      "bullets": [
+        "<strong>Order details:</strong> your name, billing and shipping address, email, phone number, the pieces you bought, the amounts and any note you leave for us.",
+        "<strong>Account details:</strong> your email and password (stored scrambled, never as readable text), plus anything you save for next time, like a second address.",
+        "<strong>Payment details:</strong> card numbers go straight to our payment provider. We see whether the payment cleared and the last few digits — the full card number never reaches our database.",
+        "<strong>Sign-ups:</strong> the email address you give a popup or a newsletter form, your first name when you share it, and your mobile number plus your consent when you opt in to text messages.",
+        "<strong>Messages:</strong> whatever you write in our contact form or send to hello@oopsmineco.com, so we can answer you.",
+        "<strong>Visit data:</strong> the IP address your visit came from, your browser and device type, the pages and pieces you looked at, and the cart you built."
+      ]
+    },
+    {
+      "heading": "Cookies, analytics and pixels",
+      "paragraphs": [
+        "Cookies are small files a site leaves in your browser. The shop uses them to remember your cart between pages, to keep you logged in, and to note that you already closed a popup so it stays out of your way. Those are set by WordPress, by WooCommerce and by our own popup tool, and the store cannot work properly without them.",
+        "We also use measurement tools when they are switched on: Google Analytics, the Meta pixel and a Pinterest tag. They set their own cookies, count page views and purchases, and report that back to Google, Meta and Pinterest, who may use it to show you our pieces again elsewhere. Your browser can block or delete any of these files, and private-window browsing keeps them for one session. You can still shop with them blocked; the cart is simply more forgetful."
+      ],
+      "bullets": [
+        "<strong>Shop cookies:</strong> your cart, your login and your session.",
+        "<strong>Popup cookie:</strong> remembers that you already saw or closed a popup.",
+        "<strong>Measurement cookies:</strong> Google Analytics, the Meta pixel, a Pinterest tag — only while those are switched on."
+      ]
+    },
+    {
+      "heading": "How we use what we collect",
+      "paragraphs": [
+        "Every use below is either part of selling you something, something you asked for, or something the law asks of us. We do not run your details through outside profiling services, and we do not make automated decisions that affect you."
+      ],
+      "bullets": [
+        "Take payment, pack the order and get it to your address.",
+        "Send the emails a sale needs: order confirmation, payment receipt, shipping notice, refund notice.",
+        "Answer your messages and sort out a return or an exchange.",
+        "Send marketing emails or texts when you signed up for them, and remind you about a cart you left behind.",
+        "Spot fraud and block spam, which is why our forms count repeat attempts from one address.",
+        "See which pages and pieces people like, so the shop gets better and restocks make sense.",
+        "Keep the tax and accounting records a US business has to keep."
+      ]
+    },
+    {
+      "heading": "Cart reminders",
+      "paragraphs": [
+        "If you add pieces to your cart and leave before paying, we save a snapshot of that cart — the items, the total and a link that puts them back — next to your email address when we already have one, either because you are signed in or because you typed it at checkout. That is what lets us send a friendly “you left something behind” note. We use it for nothing else. Order the cart, empty it, or use the unsubscribe link at the foot of the reminder, and the sequence stops for that address."
+      ]
+    },
+    {
+      "heading": "Emails, texts and how to stop them",
+      "paragraphs": [
+        "Order emails are part of the sale, so they keep coming while an order is open. Marketing is different: it goes only to people who asked for it. Every marketing email and every cart reminder ends with an unsubscribe link that looks like <em>oopsmineco.com/?whd_unsub=…</em> — one click and that address is off the list, no login and no form. The unsubscribe is recorded so a later sign-up does not quietly put you back.",
+        "Text messages work the same way. We only text a number when you gave it to us and ticked the consent box. Reply <strong>STOP</strong> to any message to end them and <strong>HELP</strong> if you need a hand. Your carrier's message and data rates may apply; we charge nothing for a text. Prefer to write to us instead? <a href=\"mailto:hello@oopsmineco.com\">hello@oopsmineco.com</a> reaches a person, and we will take you off by hand."
+      ]
+    },
+    {
+      "heading": "Who else sees your information",
+      "paragraphs": [
+        "We share the least we can, and only with companies that help us run the shop. They are allowed to use what we send for that job and nothing more — never for their own marketing."
+      ],
+      "bullets": [
+        "<strong>Payment providers,</strong> who take the card and check the payment for fraud.",
+        "<strong>Shipping carriers,</strong> who need your address and phone number to deliver the parcel.",
+        "<strong>Email and SMS providers,</strong> such as Mailchimp, Klaviyo or Twilio, when one is connected to the shop, so our messages send.",
+        "<strong>Our host and the tools the site runs on,</strong> which hold the database the shop lives in.",
+        "<strong>The measurement companies named above,</strong> while those tools are switched on.",
+        "<strong>Courts, tax authorities and investigators,</strong> when the law requires it or a fraud case needs it."
+      ]
+    },
+    {
+      "heading": "How long we keep it",
+      "paragraphs": [
+        "Order and payment records stay for as long as US tax and accounting rules ask a business to keep them. Account details stay until you close the account or ask us to delete them. Newsletter and SMS rows stay until you unsubscribe; after that we keep the unsubscribe itself so nobody adds you back by mistake. Cart snapshots stop being used once you order or unsubscribe, and we clear old ones when the reminders are finished. Messages you send sit in our inbox while we still need them to help you."
+      ]
+    },
+    {
+      "heading": "How we look after it",
+      "paragraphs": [
+        "The shop runs over HTTPS, so what you type is encrypted between your browser and us. Passwords are stored scrambled, card numbers never reach our database, and the keys for any connected email or SMS account are kept out of public view. Only the people who run Oops Mine Co. have admin logins, and our forms carry checks that turn away automated spam. No website can promise perfect security. If a breach ever touches your details, we will tell the customers it affects and the authorities the law names, as quickly as we can."
+      ]
+    },
+    {
+      "heading": "Children",
+      "paragraphs": [
+        "This is a shop for grown-ups. It is not meant for children under 13, and we do not knowingly collect anything from them. If you think a child under 13 gave us personal details, write to <a href=\"mailto:hello@oopsmineco.com\">hello@oopsmineco.com</a> and we will delete the record."
+      ]
+    },
+    {
+      "heading": "Your choices and your rights",
+      "paragraphs": [
+        "Wherever you live, you can ask us for a copy of what we hold about you, ask us to correct it, ask us to delete it, or ask us to stop marketing to you. Email <a href=\"mailto:hello@oopsmineco.com\">hello@oopsmineco.com</a> from the address on your account and say what you want; if we cannot tell it is you, we will ask one or two questions before we act. Requests are free, and we answer inside the time the law allows. Using a right never costs you a discount or a slower answer from us.",
+        "Residents of Texas, California and other states with a consumer privacy law have those rights in writing, plus the right to a portable copy and the right to opt out of personal data being sold or shared for targeted advertising. We do not sell your personal data. To keep the advertising pixels above from counting your visit, block those cookies in your browser or send us a note and we will record the request. If we turn a request down, you may appeal by replying to our answer, and your state attorney general can hear a complaint after that."
+      ]
+    },
+    {
+      "heading": "Changes to this policy",
+      "paragraphs": [
+        "The shop grows, and this page grows with it. When we change how we collect or use your details, we update the text and the date at the top. Changes apply from the day they appear here, not backwards, and if a change is a big one we will say so by email to people on our list. It is worth a look before you place an order if it has been a while since your last one."
+      ]
+    },
+    {
+      "heading": "How to reach us",
+      "paragraphs": [
+        "Oops Mine Co. LLC, 12712 W Lake Houston Pkwy, Ste B-4014, Houston, TX 77044. That is a mailing address, not a store, so there are no walk-ins. Email <a href=\"mailto:hello@oopsmineco.com\">hello@oopsmineco.com</a> or call 346-847-6606, Monday to Friday 8:30am–5:00pm and Saturday 10:00am–5:00pm Central Time. Put “privacy” in the subject line and your note goes to the right place. Our sale terms live on the <a href=\"/terms-and-conditions/\">terms and conditions</a> page, and the practical questions are answered in the <a href=\"/faq/\">FAQ</a>."
+      ],
+      "cta": {
+        "text": "Contact us",
+        "url": "/contacts/"
+      }
+    }
+  ],
+  "faqs": [
+    {
+      "q": "Do you sell my personal information?",
+      "a": "No. We do not sell your name, email address, phone number or order history, and we do not rent them out either. The companies that see your details — our payment provider, the carrier, the email and SMS tools — get them to do one job for your order or your sign-up, and nothing else."
+    },
+    {
+      "q": "How do I get off the email list?",
+      "a": "Scroll to the bottom of any marketing email or cart reminder and click the unsubscribe link, the one that looks like oopsmineco.com/?whd_unsub=… . One click does it, with no login and no form to fill in. Order emails keep coming while an order is open, because those are part of the sale. Stuck? Write to hello@oopsmineco.com and we will remove you by hand."
+    },
+    {
+      "q": "How do I stop the text messages?",
+      "a": "Reply STOP to any text from us and the messages end. Reply HELP if you need a hand instead. We only text numbers given to us with the consent box ticked, so you should never get one out of the blue. Your carrier may charge message and data rates; we charge nothing for a text."
+    },
+    {
+      "q": "Can I get a copy of my data, or have it deleted?",
+      "a": "Yes to both. Email hello@oopsmineco.com from the address on your account, say whether you want a copy, a correction or a deletion, and we will take care of it free of charge. We may ask a question or two to be sure it is really you. Records tied to a paid order stay as long as tax rules require, even after the rest is gone."
+    },
+    {
+      "q": "Do I have to accept cookies to shop here?",
+      "a": "You need the ones that hold your cart and your login — without them the shop forgets you between pages. The measurement cookies from Google, Meta and Pinterest are another matter: block or delete them in your browser settings and you can still browse, add to cart and check out exactly as before."
+    }
+  ],
+  "cta": {
+    "heading": "Questions about your data?",
+    "text": "Email hello@oopsmineco.com or use the contact form — a person reads every note, and privacy questions go to the top of the pile. Then head back to the racks and find something yours.",
+    "button_text": "Contact us",
+    "button_url": "/contacts/",
+    "capture_email": false
+  },
+  "related_slugs": [
+    "terms-and-conditions",
+    "contacts",
+    "faq"
+  ],
+  "author_notes": "Not legal advice: the owner should have an attorney review this text before it goes live, especially the state-rights section and the retention wording. Facts to confirm: (1) name the payment processors actually in use (PayPal, Stripe, Apple Pay/Google Pay via the gateway) if you want them listed by name; (2) confirm the SMS program is live and that the consent box wording at sign-up matches the STOP/HELP language here; (3) the Pinterest tag is only described as \"when switched on\" because WHD has no built-in Pinterest field — it would be pasted into WHD → Scripts → custom head snippet, so remove that mention if the owner never adds it; (4) fixed retention periods (for example 7 years for order records) can replace the \"as long as tax rules require\" wording once counsel names them; (5) update the \"Last updated\" line each time the text changes — the policy template lifts it out of the first section and prints it under the title. Everything described matches the code as built: WooCommerce order/account data, the whd_subscribers table (email, name, phone, sms_consent, source), the whd_carts snapshot table with the ?whd_unsub= opt-out, GA4 + Meta Pixel in WHD → Scripts, and the Mailchimp/Klaviyo/Twilio integrations. No cron job deletes old cart rows today; if the \"we clear old ones\" line should stay literal, add a purge to WHD."
+}

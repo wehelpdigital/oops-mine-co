@@ -1,0 +1,199 @@
+/* ==========================================================================
+   Oops, Mine Co. — cart persuasion layer
+   Free-shipping progress bar (mini-cart drawer + cart page), drawer footer
+   extras, empty-drawer line. Markup comes from inc/cart.php; behaviour from
+   assets/js/omc-cart.js. Loaded after omc.css, so the brand tokens are here —
+   the fallbacks keep it readable if this file is ever loaded on its own.
+   ========================================================================== */
+
+/* ─── Free-shipping progress ─── */
+.omc-ship {
+	--omc-ship-track: var(--omc-sand, #efe6de);
+	--omc-ship-fill: var(--omc-rose, #b98b7e);
+	--omc-ship-fill-done: var(--omc-rose-dark, #9c6f63);
+	box-sizing: border-box;
+	margin: 0 0 18px;
+	padding: 14px 16px 16px;
+	background: var(--omc-cream, #f7f2ed);
+	border: 1px solid var(--omc-line, #e9e1da);
+	border-radius: 0;
+	text-align: left;
+}
+.omc-ship[hidden] { display: none !important; }
+.omc-ship * { box-sizing: border-box; }
+
+/* The label is the message: small caps above the track. */
+.omc-ship__label {
+	margin: 0 0 10px;
+	font: 600 10px/1.5 var(--omc-sans, "Manrope", system-ui, sans-serif);
+	letter-spacing: .14em;
+	text-transform: uppercase;
+	color: var(--omc-text, #4a3f3a);
+	text-wrap: balance;   /* the line wraps in a narrow drawer — keep the two halves even */
+	overflow-wrap: break-word;
+}
+.omc-ship__amount,
+.omc-ship__amount .woocommerce-Price-amount,
+.omc-ship__amount .amount {
+	font-weight: 700;
+	color: var(--omc-rose-dark, #9c6f63);
+	white-space: nowrap;
+}
+.omc-ship.is-complete .omc-ship__label { color: var(--omc-rose-dark, #9c6f63); }
+
+.omc-ship__track {
+	position: relative;
+	height: 6px;
+	border-radius: 0;
+	background: var(--omc-ship-track);
+	overflow: hidden;
+}
+.omc-ship__fill {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	width: 0;
+	overflow: hidden;
+	background: var(--omc-ship-fill);
+	transition: width .7s var(--omc-ease, cubic-bezier(.22, .61, .36, 1)), background-color .4s var(--omc-ease, ease);
+}
+.omc-ship.is-complete .omc-ship__fill { background: var(--omc-ship-fill-done); }
+
+/* A slow sheen keeps the eye on the number that is still missing; it stops once
+   the bar is full, and never runs before the JS has taken over. */
+.omc-ship--ready:not(.is-complete) .omc-ship__fill::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	width: 40%;
+	background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .5), rgba(255, 255, 255, 0));
+	animation: omc-ship-sheen 3.2s var(--omc-ease, ease) infinite;
+}
+@keyframes omc-ship-sheen {
+	0%   { transform: translateX(-120%); }
+	60%  { transform: translateX(320%); }
+	100% { transform: translateX(320%); }
+}
+
+/* One quiet pulse the moment the bar fills up. */
+.omc-ship.is-just-complete .omc-ship__track { animation: omc-ship-pop .7s var(--omc-ease, ease) 1; }
+@keyframes omc-ship-pop {
+	0%   { transform: scaleY(1); }
+	35%  { transform: scaleY(1.9); }
+	100% { transform: scaleY(1); }
+}
+
+/* Inside the drawer: full width of the scrolling column, above the items. */
+.omc-ship--mini { flex: 0 0 auto; margin-bottom: 20px; }
+.omc-ship--mini .omc-ship__label { letter-spacing: .1em; }
+.c-shop-sidebar__content .widget_shopping_cart_content > .omc-ship--mini:first-child { margin-top: 2px; }
+
+/* Cart page: above the cart table. */
+.omc-ship--page {
+	margin-bottom: 24px;
+	padding: 16px 20px 18px;
+}
+.omc-ship--page .omc-ship__label { font-size: 11px; }
+
+/* ─── Drawer footer: back to shopping + trust note ─── */
+.omc-cart-extras {
+	margin-top: 16px;
+	padding-top: 16px;
+	border-top: 1px solid var(--omc-line, #e9e1da);
+	text-align: center;
+}
+.omc-cart-extras__back {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 42px;
+	width: 100%;
+	padding: 0 18px;
+	font: 600 11px/1 var(--omc-sans, "Manrope", system-ui, sans-serif);
+	letter-spacing: .18em;
+	text-transform: uppercase;
+	text-decoration: none;
+	color: var(--omc-text, #4a3f3a);
+	background: transparent;
+	border: 1px solid var(--omc-line, #e9e1da);
+	transition: background-color .25s var(--omc-ease, ease), color .25s var(--omc-ease, ease), border-color .25s var(--omc-ease, ease);
+}
+.omc-cart-extras__back:hover,
+.omc-cart-extras__back:focus {
+	background: var(--omc-cream, #f7f2ed);
+	color: var(--omc-rose-dark, #9c6f63);
+	border-color: var(--omc-rose-light, #e9d3ca);
+}
+.omc-cart-extras__trust {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 7px;
+	margin: 12px 0 0;
+	font: 400 11px/1.5 var(--omc-sans, "Manrope", system-ui, sans-serif);
+	letter-spacing: .01em;
+	color: var(--omc-muted, #8a7d76);
+}
+.omc-cart-extras__trust .omc-icon {
+	width: 13px;
+	height: 13px;
+	flex: 0 0 auto;
+	color: var(--omc-rose, #b98b7e);
+}
+
+/* ─── Empty drawer ─── */
+.omc-cart-empty {
+	margin-top: 14px;
+	text-align: center;
+}
+.omc-cart-empty__line {
+	margin: 0 0 18px;
+	font: 400 clamp(17px, 2vw, 20px)/1.45 var(--omc-serif, "Cormorant Garamond", Georgia, serif);
+	color: var(--omc-ink, #3a2b26);
+}
+.omc-cart-empty__btn {
+	min-height: 44px;
+	padding: 0 22px;
+	font-size: 11px;
+}
+/* The theme's own empty line sits right above ours — quieten it. */
+.c-shop-sidebar__content .woocommerce-mini-cart__empty-message {
+	margin-bottom: 0;
+	font: 500 11px/1.5 var(--omc-sans, "Manrope", system-ui, sans-serif);
+	letter-spacing: .14em;
+	text-transform: uppercase;
+	text-align: center;
+	color: var(--omc-muted, #8a7d76);
+}
+
+/* ─── Small screens (390px safe: the drawer is full width with 30px padding) ─── */
+@media (max-width: 480px) {
+	.omc-ship { padding: 12px 14px 14px; }
+	.omc-ship__label { font-size: 9px; letter-spacing: .12em; }
+	.omc-ship--page { padding: 14px 16px 16px; }
+	.omc-ship--page .omc-ship__label { font-size: 10px; }
+	.omc-cart-extras__trust { font-size: 10px; gap: 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.omc-ship__fill { transition: none; }
+	.omc-ship--ready:not(.is-complete) .omc-ship__fill::after { animation: none; opacity: 0; }
+	.omc-ship.is-just-complete .omc-ship__track { animation: none; }
+	.omc-cart-extras__back { transition: none; }
+}
+
+/* The return-policy link under the drawer's trust line: the terms are one click away,
+   so the reassurance never has to overstate what the policy actually allows. */
+.omc-cart-extras__terms {
+	display: inline-block;
+	margin-top: 6px;
+	font: 400 12px/1.5 var(--omc-sans);
+	letter-spacing: .02em;
+	color: var(--omc-rose-dark);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+.omc-cart-extras__terms:hover { color: var(--omc-ink); }

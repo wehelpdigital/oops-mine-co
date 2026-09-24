@@ -1,0 +1,146 @@
+{
+  "slug": "shipping-policy",
+  "type": "policy",
+  "status": "publish",
+  "title": "Shipping Policy: How Your Order Leaves Houston",
+  "seo_title": "Shipping Policy | Oops, Mine Co.",
+  "meta_description": "Our shipping policy: orders leave Houston, Texas, rates and delivery estimates are shown at checkout before you pay, and tracking is emailed when it ships.",
+  "primary_keyword": "",
+  "keywords": [],
+  "hero": {
+    "eyebrow": "Good to know",
+    "intro": "You found it, you claimed it, and now it has to travel. This page covers where your order ships from, what you see at checkout, when tracking reaches your inbox, and what to do if a parcel goes missing on the way to you."
+  },
+  "sections": [
+    {
+      "heading": "How shipping works <em>here</em>",
+      "paragraphs": [
+        "Last updated September 24, 2026",
+        "Every Oops, Mine Co. order is packed and sent from Houston, Texas. Our address is 12712 West Lake Houston Parkway, Suite B-4014, Houston, TX 77044 — a mailing address for orders and returns, not a shop you can walk into. Placing an order means you accept the terms on this page, so have a read before you pay.",
+        "The short version: what shipping costs and how long it takes are both shown at checkout, for your address, before payment. Tracking follows by email as soon as your parcel leaves us. Everything below is the long version, one question at a time."
+      ]
+    },
+    {
+      "heading": "Processing and delivery estimates",
+      "paragraphs": [
+        "Processing time is the stretch between your order reaching us and your parcel leaving our hands: picking the piece, checking it, packing it, printing the label. Delivery time is what the carrier adds on top of that. Both are shown at checkout for the address you enter, so you see real numbers for your order rather than a range on a policy page that may not match it.",
+        "We pack during our hours — Monday to Friday 8:30am to 5:00pm and Saturday 10:00am to 5:00pm Central Time, closed Sunday. Orders that land outside those hours are picked up when we are back at the desk. Carrier delivery estimates are the carrier's best guess, not a promise: weather, holidays and customs all have opinions of their own."
+      ]
+    },
+    {
+      "heading": "What shipping costs",
+      "paragraphs": [
+        "Shipping is priced at checkout. Put your pieces in the cart, enter the address you want them sent to, and the rate for that address appears with your total before you pay. Nothing is added after payment. Any sales tax that applies to your order is shown the same way, on the same screen.",
+        "If a rate looks wrong for where you live, stop before you pay and email <a href=\"mailto:hello@oopsmineco.com\">hello@oopsmineco.com</a> with your address and what you are trying to order. We would rather sort it out with you than have you guess."
+      ]
+    },
+    {
+      "heading": "Carriers and where we ship",
+      "paragraphs": [
+        "Your parcel is handed to a mail carrier once the label is printed, and from that point the carrier's scans are the record of where it is. The carrier handling your order is named in your shipping email, together with the tracking number."
+      ],
+      "bullets": [
+        "Ships from: Houston, Texas, United States.",
+        "Carriers we ship with: <strong>[To confirm by the owner — carrier names go here.]</strong>",
+        "Places we ship to: <strong>[To confirm by the owner — countries and any areas we cannot reach.]</strong> Checkout shows what is available for your address.",
+        "Address types: <strong>[To confirm by the owner — whether PO boxes, APO/FPO and parcel lockers are accepted.]</strong>",
+        "Pieces sold out of a small run can ship separately from the rest of an order — see pre-orders below."
+      ]
+    },
+    {
+      "heading": "Tracking your order",
+      "paragraphs": [
+        "When your parcel leaves us you get an email with a tracking number and a link to follow it. Check your spam folder if it has not turned up; shipping emails have a habit of hiding there. The first carrier scan can lag a day behind the label, so a tracking page that only says the label was created is normal at the start.",
+        "If the tracking still has not moved after that, send your order number to <a href=\"mailto:hello@oopsmineco.com\">hello@oopsmineco.com</a> and we will open it with the carrier for you. You do not have to sit on hold with anyone."
+      ]
+    },
+    {
+      "heading": "Changing your shipping address",
+      "paragraphs": [
+        "Read your address back to yourself before you pay. A missing apartment or suite number is all it takes for a carrier to give up and send the parcel back to Houston.",
+        "If you spot a mistake, email <a href=\"mailto:hello@oopsmineco.com\">hello@oopsmineco.com</a> with your order number as soon as you can. While the order is still with us we can change the label. Once it has been handed to the carrier the label is out of our hands, we cannot reroute it, and the parcel has to run its course before anything can be done."
+      ]
+    },
+    {
+      "heading": "International orders, duties and taxes",
+      "paragraphs": [
+        "Parcels leaving the United States can pick up customs duties, import taxes and carrier handling fees. Those are set by the country your order is going to, not by us. They are collected by the carrier or by customs, usually before the parcel is handed over, and they are not part of the total you pay at checkout. They are the buyer's to pay.",
+        "Customs paperwork travels with every international parcel and lists what is inside at the price paid, as the rules require — we cannot mark an order as a gift or write a lower value. Customs can also hold a parcel for inspection, which adds days no carrier can predict. Delivery areas and anything else about international orders: <strong>[To confirm by the owner.]</strong>"
+      ]
+    },
+    {
+      "heading": "Pre-orders and back-orders",
+      "paragraphs": [
+        "Some pieces are listed before they reach Houston. Runs are small and they go fast, so a pre-order is how you hold your size instead of watching it sell out. When a piece is on pre-order or back-order, the ship date is written on the product page, on the listing itself. That date is the one to go by — not the estimate for in-stock pieces.",
+        "If your order mixes a pre-order piece with something already in stock, email <a href=\"mailto:hello@oopsmineco.com\">hello@oopsmineco.com</a> with your order number and tell us how you would like it sent. We will tell you what is possible for that order."
+      ]
+    },
+    {
+      "heading": "Lost, late or damaged parcels",
+      "paragraphs": [
+        "Boxes get dropped and scans get missed. If your parcel arrives damaged, arrives short of what you ordered, or the tracking says delivered and it is nowhere to be found, contact us within 7 days of the delivery date at <a href=\"mailto:hello@oopsmineco.com\">hello@oopsmineco.com</a>.",
+        "Send your order number, a photo of the outer packaging and a photo of the piece if it was hurt on the way. Keep the box and the padding until the claim is settled, because carriers ask to see them. Claims raised more than 7 days after the delivery date are much harder to get anywhere with, so tell us early and let us do the chasing."
+      ],
+      "bullets": [
+        "Within 7 days of the delivery date: email us with the order number and photos.",
+        "Keep the packaging until the claim is closed.",
+        "Check with neighbors and around the building first — carriers tuck parcels in odd places.",
+        "Phone: 346-847-6606, Monday to Friday 8:30am–5:00pm, Saturday 10:00am–5:00pm Central Time."
+      ]
+    },
+    {
+      "heading": "Returns, exchanges and sizing",
+      "paragraphs": [
+        "Shipping brings a piece to you; returns take it back, and they live on their own page. Return windows, the RMA number you need before posting anything, store credit, the restocking fee and which pieces are final sale are all set out in the <a href=\"/refund_returns/\">refund and returns policy</a>.",
+        "The easiest return is the one that never happens, so check the <a href=\"/size-guide/\">size guide</a> before you order — pieces sourced from Korea and Thailand often run smaller than US sizing. More short answers sit on the <a href=\"/faq/\">FAQ page</a>, and if yours is not there, the <a href=\"/contacts/\">contact page</a> has every way to reach a person."
+      ],
+      "cta": {
+        "text": "Read the returns policy",
+        "url": "/refund_returns/"
+      }
+    }
+  ],
+  "faqs": [
+    {
+      "q": "When will my order ship?",
+      "a": "Processing time — the days between you paying and the parcel leaving us — is shown at checkout for your order, next to the delivery estimate for your address. We pack from Houston during our hours: Monday to Friday 8:30am to 5:00pm and Saturday 10:00am to 5:00pm Central Time. An email with tracking reaches you as soon as your parcel is on its way."
+    },
+    {
+      "q": "How much does shipping cost?",
+      "a": "Shipping is priced at checkout. Add your pieces to the cart, enter the address you want them sent to, and the rate for that address shows with your total before you pay. Nothing is added afterwards. If the rate looks wrong for where you live, email hello@oopsmineco.com with your address and what you are ordering, and we will look at it with you."
+    },
+    {
+      "q": "Do you ship outside the United States?",
+      "a": "Enter your address at checkout and you will see whether we can reach you and what it costs. International parcels can pick up customs duties, import taxes and carrier handling fees set by the country they are going to. Those are collected by the carrier or by customs, are not part of your checkout total, and are yours to pay."
+    },
+    {
+      "q": "Can I change my delivery address after ordering?",
+      "a": "Email hello@oopsmineco.com with your order number the moment you spot the mistake. While the order is still with us we can change the label. Once it has been handed to the carrier we cannot reroute it, and a parcel with an incomplete address tends to come back to Houston, which costs both of us time."
+    },
+    {
+      "q": "My tracking has not moved. What should I do?",
+      "a": "Give it a day. The tracking number is created when the label is printed, and the first carrier scan often lags behind the parcel itself. If there is still nothing after that, send your order number to hello@oopsmineco.com and we will open it with the carrier rather than leaving you to do it."
+    },
+    {
+      "q": "My parcel arrived damaged, or it never arrived at all.",
+      "a": "Contact us within 7 days of the delivery date at hello@oopsmineco.com. Send your order number, a photo of the outer packaging and a photo of the piece if it was hurt on the way. Keep the box and the padding until the claim is settled, since carriers ask for them. Claims raised after those 7 days are much harder to move."
+    },
+    {
+      "q": "When do pre-orders and back-orders ship?",
+      "a": "On the date shown on the product page. Pre-order pieces are listed before they reach us so you can hold your size in a small run, and the listing carries the ship date. If your order mixes a pre-order piece with something in stock, email hello@oopsmineco.com with your order number and tell us how you would like it sent."
+    }
+  ],
+  "cta": {
+    "heading": "One unexpected find, on its way",
+    "text": "New pieces land in small runs and leave just as quickly. Put your email on the list and you will see them first — then the only question left is which size to claim.",
+    "button_text": "Shop new arrivals",
+    "button_url": "/shop/?orderby=date",
+    "capture_email": true
+  },
+  "related_slugs": [
+    "refund_returns",
+    "faq",
+    "contacts"
+  ],
+  "author_notes": "Nothing on this page is invented: rates, processing windows and delivery times all point at checkout, and pre-order dates point at the product page. Four things still need the owner and are marked in the copy as [To confirm by the owner]: (1) carrier names in \"Carriers and where we ship\"; (2) the countries/areas we ship to, in the same list and at the end of \"International orders, duties and taxes\"; (3) whether PO boxes, APO/FPO and parcel lockers are accepted; (4) a standard processing window, if the owner wants one stated rather than left to checkout. Free shipping is deliberately not mentioned anywhere — if a threshold exists, add it to \"What shipping costs\" and to the cart drawer progress bar. The \"Last updated September 24, 2026\" line is the first paragraph of the first section so omc_landing_updated() lifts it into the title band; change the date whenever the owner updates the facts. Address, phone and hours come from the brand questionnaire. The 7-day window for lost/damaged parcels matches the 7-day return window in the client's return policy. Links used: /refund_returns/, /size-guide/, /faq/, /contacts/, /shop/?orderby=date — publish the size guide and FAQ pages before this one goes live so no link lands on a 404."
+}

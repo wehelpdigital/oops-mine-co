@@ -4,9 +4,9 @@
  * Template Post Type: page
  *
  * Editorial storefront home page for Oops, Mine Co. Sections, top to bottom:
- * hero → trust strip → split campaign banner → edit carousel → mirrored campaign banner
- * → shop by category → brand story → new arrivals → two wide banners → most loved
- * → styling notes (journal) → newsletter.
+ * hero → trust strip → Facebook Live card → shop-the-look mosaic → split campaign banner
+ * → edit carousel → mirrored campaign banner → shop by category → brand story → new arrivals
+ * → wide banners → most loved → styling notes (journal) → reviews → from our feed → newsletter.
  *
  * Product grids come from WooCommerce's [products] shortcode so they render
  * with the parent theme's product cards, quick-view, wishlist and swatches.
@@ -59,7 +59,7 @@ get_header();
 			</h1>
 			<p class="omc-hero__lede"><?php esc_html_e( 'Curated Korean and Thai fashion for the pieces you weren’t looking for — and can’t leave without.', 'moderno-child' ); ?></p>
 			<div class="omc-hero__actions">
-				<a class="omc-btn omc-btn--solid" href="<?php echo esc_url( omc_new_arrivals_url() ); ?>"><?php esc_html_e( 'Shop new arrivals', 'moderno-child' ); ?></a>
+				<a class="omc-btn omc-btn--solid" href="<?php echo esc_url( omc_new_arrivals_url() ); ?>"><?php esc_html_e( 'Shop distinctive finds', 'moderno-child' ); ?></a>
 				<a class="omc-btn omc-btn--ghost" href="<?php echo esc_url( omc_page_url( 'about-us' ) ); ?>"><?php esc_html_e( 'Our story', 'moderno-child' ); ?></a>
 			</div>
 		</div>
@@ -366,6 +366,14 @@ get_header();
 			</div>
 		</section>
 	<?php endif; ?>
+
+	<!-- ───────────── From our feed: reels / TikTok / Facebook videos + the hashtag call-out
+	     (Customizer → "Social feed"; renders nothing until a URL or a profile is set — inc/social.php) ───────────── -->
+	<?php
+	if ( function_exists( 'omc_feed_section' ) ) {
+		omc_feed_section();
+	}
+	?>
 
 	<!-- ───────────── Newsletter ───────────── -->
 	<section class="omc-newsletter omc-reveal" aria-labelledby="omc-news-title">

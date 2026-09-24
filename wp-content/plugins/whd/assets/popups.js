@@ -1,4 +1,5 @@
-/* WHD popups — triggers (exit-intent / delay / scroll), "seen" cookies and cookie-based countdowns. */
+/* WHD popups — triggers (exit-intent / delay / scroll), "seen" cookies, cookie-based countdowns
+   and the email/SMS capture form (AJAX → whd_subscribe). */
 (function () {
 	'use strict';
 
@@ -13,6 +14,76 @@
 			document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + d.toUTCString() + '; path=/; SameSite=Lax';
 		}
 	};
+
+	var SUBSCRIBED = 'whd_subscribed';
+
+	/* ─────────── capture form ─────────── */
+
+	function successNode(form) {
+		var div = document.createElement('div');
+		div.className = 'whd-form__done';
+		div.setAttribute('role', 'status');
+		div.innerHTML = form.getAttribute('data-success') || '';
+		return div;
+	}
+
+	function replaceWithSuccess(form) {
+		if (!form.parentNode) { return; }
+		form.parentNode.replaceChild(successNode(form), form);
+	}
+
+	function submitForm(form, ev) {
+		ev.preventDefault();
+		if (form.__whdBusy) { return; }
+		var status = form.querySelector('.whd-form__status');
+		var button = form.querySelector('.whd-form__btn');
+		var email = form.querySelector('input[type="email"]');
+		var say = function (msg, isError) {
+			if (!status) { return; }
+			status.textContent = msg || '';
+			status.classList.toggle('is-error', !!isError);
+		};
+		if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.value.trim())) {
+			say(form.getAttribute('data-invalid') || 'Please enter a valid email address.', true);
+			email.focus();
+			return;
+		}
+		// Inside the admin preview nothing is sent.
+		if (form.closest('.whd-popup--preview')) { say(form.getAttribute('data-preview') || 'Preview only — nothing was sent.'); return; }
+
+		form.__whdBusy = true;
+		if (button) { button.disabled = true; button.classList.add('is-busy'); }
+		say('');
+		var data = new FormData(form);
+		// The hidden <input name="action"> shadows form.action, so read the attribute.
+		fetch(form.getAttribute('action'), { method: 'POST', body: data, credentials: 'same-origin' })
+			.then(function (r) { return r.json().catch(function () { return { success: false }; }); })
+			.then(function (res) {
+				if (!res || !res.success) {
+					throw new Error((res && res.data && res.data.message) || form.getAttribute('data-error') || 'Something went wrong. Please try again.');
+				}
+				cookie.set(SUBSCRIBED, '1', 90);
+				document.dispatchEvent(new CustomEvent('whd:subscribed', {
+					detail: { email: data.get('email'), source: form.getAttribute('data-source') || 'popup' }
+				}));
+				replaceWithSuccess(form);
+			})
+			.catch(function (err) {
+				say(err.message, true);
+				form.__whdBusy = false;
+				if (button) { button.disabled = false; button.classList.remove('is-busy'); }
+			});
+	}
+
+	function initForms(scope) {
+		var done = cookie.get(SUBSCRIBED);
+		(scope || document).querySelectorAll('form.whd-form[data-source]').forEach(function (form) {
+			if (form.__whd) { return; }
+			form.__whd = true;
+			if (done && !form.closest('.whd-popup--preview')) { replaceWithSuccess(form); return; }
+			form.addEventListener('submit', function (ev) { submitForm(form, ev); });
+		});
+	}
 
 	function pad(n) { return (n < 10 ? '0' : '') + n; }
 	function format(ms) {
@@ -125,6 +196,7 @@
 
 	function boot() {
 		document.querySelectorAll('.whd-popup').forEach(function (el) { if (!el.__whd) { el.__whd = new Popup(el); } });
+		initForms(document);
 	}
 	if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
 })();

@@ -31,6 +31,7 @@ final class WHD_Admin {
 		add_submenu_page( 'whd', __( 'Emails', 'whd' ), __( 'Emails', 'whd' ), $cap, 'whd-emails', [ __CLASS__, 'page_emails' ] );
 		add_submenu_page( 'whd', __( 'Abandoned carts', 'whd' ), __( 'Abandoned carts', 'whd' ), $cap, 'whd-carts', [ __CLASS__, 'page_carts' ] );
 		add_submenu_page( 'whd', __( 'Subscribers', 'whd' ), __( 'Subscribers', 'whd' ), $cap, 'whd-subscribers', [ __CLASS__, 'page_subscribers' ] );
+		add_submenu_page( 'whd', __( 'Integrations', 'whd' ), __( 'Integrations', 'whd' ), $cap, 'whd-integrations', [ 'WHD_Integrations', 'page' ] );
 		add_submenu_page( 'whd', __( 'Tracking scripts', 'whd' ), __( 'Tracking scripts', 'whd' ), $cap, 'whd-scripts', [ __CLASS__, 'page_scripts' ] );
 		add_submenu_page( 'whd', __( 'Settings', 'whd' ), __( 'Settings', 'whd' ), $cap, 'whd-settings', [ __CLASS__, 'page_settings' ] );
 		// The editor is a hidden page: registered with an empty parent so its hook resolves as
@@ -53,16 +54,19 @@ final class WHD_Admin {
 	public static function register_settings() {
 		register_setting( 'whd_scripts_group', WHD_Scripts::OPTION, [ 'type' => 'array', 'sanitize_callback' => [ 'WHD_Scripts', 'sanitize' ] ] );
 		register_setting( 'whd_settings_group', 'whd_settings', [ 'type' => 'array', 'sanitize_callback' => [ __CLASS__, 'sanitize_settings' ] ] );
+		register_setting( 'whd_integrations_group', WHD_Integrations::OPTION, [ 'type' => 'array', 'sanitize_callback' => [ 'WHD_Integrations', 'sanitize' ] ] );
 	}
 
 	public static function sanitize_settings( $in ) {
 		$in = is_array( $in ) ? $in : [];
 		return [
-			'exclude_admins'   => empty( $in['exclude_admins'] ) ? 0 : 1,
-			'cart_delay_hours' => max( 0.25, (float) ( $in['cart_delay_hours'] ?? 1 ) ),
-			'cart_coupon'      => sanitize_text_field( $in['cart_coupon'] ?? '' ),
-			'from_name'        => sanitize_text_field( $in['from_name'] ?? '' ),
-			'from_email'       => sanitize_email( $in['from_email'] ?? '' ),
+			'exclude_admins'          => empty( $in['exclude_admins'] ) ? 0 : 1,
+			'cart_delay_hours'        => max( 0.25, (float) ( $in['cart_delay_hours'] ?? 1 ) ),
+			'cart_coupon'             => sanitize_text_field( $in['cart_coupon'] ?? '' ),
+			'exit_coupon'             => sanitize_text_field( $in['exit_coupon'] ?? '' ),
+			'free_shipping_threshold' => max( 0, round( (float) ( $in['free_shipping_threshold'] ?? 0 ), 2 ) ),
+			'from_name'               => sanitize_text_field( $in['from_name'] ?? '' ),
+			'from_email'              => sanitize_email( $in['from_email'] ?? '' ),
 		];
 	}
 
@@ -161,6 +165,7 @@ final class WHD_Admin {
 		self::card( __( 'Email designs', 'whd' ), sprintf( __( '%1$d of %2$d active', 'whd' ), $on( $emails ), count( $emails ) ), admin_url( 'admin.php?page=whd-emails' ) );
 		self::card( __( 'Abandoned carts', 'whd' ), sprintf( __( '%1$d waiting · %2$d reminded · %3$d recovered', 'whd' ), $stats['active'], $stats['sent'], $stats['recovered'] ), admin_url( 'admin.php?page=whd-carts' ) );
 		self::card( __( 'Subscribers', 'whd' ), sprintf( _n( '%d address', '%d addresses', WHD_Subscribers::count(), 'whd' ), WHD_Subscribers::count() ), admin_url( 'admin.php?page=whd-subscribers' ) );
+		self::card( __( 'Integrations', 'whd' ), implode( ' · ', WHD_Integrations::status_lines() ), admin_url( 'admin.php?page=whd-integrations' ) );
 		self::card( __( 'Tracking', 'whd' ), implode( ' · ', array_filter( [ $s['ga4_id'] ? 'GA4' : '', $s['gsc_verification'] ? 'Search Console' : '', $s['fb_pixel_id'] ? 'Meta Pixel' : '' ] ) ) ?: __( 'Nothing configured yet', 'whd' ), admin_url( 'admin.php?page=whd-scripts' ) );
 		echo '</div></div>';
 	}
@@ -231,15 +236,27 @@ final class WHD_Admin {
 	}
 
 	public static function page_subscribers() {
-		self::header( __( 'Subscribers', 'whd' ), __( 'Addresses collected by the newsletter form on the site. Enable the “Newsletter welcome” email design to greet new subscribers automatically.', 'whd' ) );
-		echo '<p><a class="button" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=whd_export_subscribers' ), 'whd_export' ) ) . '">' . esc_html__( 'Export CSV', 'whd' ) . '</a> <span class="whd-muted">' . sprintf( esc_html( _n( '%d subscriber', '%d subscribers', WHD_Subscribers::count(), 'whd' ) ), WHD_Subscribers::count() ) . '</span></p>';
-		echo '<table class="widefat striped whd-table"><thead><tr><th>' . esc_html__( 'Email', 'whd' ) . '</th><th>' . esc_html__( 'Name', 'whd' ) . '</th><th>' . esc_html__( 'Source', 'whd' ) . '</th><th>' . esc_html__( 'Subscribed', 'whd' ) . '</th></tr></thead><tbody>';
+		self::header( __( 'Subscribers', 'whd' ), __( 'Addresses collected by the newsletter form and the popups. Enable the “Newsletter welcome” email design to greet new subscribers automatically, and set up WHD → Integrations to copy each one into Mailchimp, Klaviyo or your own webhook.', 'whd' ) );
+		$total = WHD_Subscribers::count();
+		$sms   = WHD_Subscribers::sms_count();
+		echo '<p><a class="button" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=whd_export_subscribers' ), 'whd_export' ) ) . '">' . esc_html__( 'Export CSV', 'whd' ) . '</a> <span class="whd-muted">'
+			. sprintf( esc_html( _n( '%d subscriber', '%d subscribers', $total, 'whd' ) ), (int) $total ) . ' · '
+			. sprintf( esc_html( _n( '%d says yes to texts', '%d say yes to texts', $sms, 'whd' ) ), (int) $sms ) . '</span></p>';
+		echo '<table class="widefat striped whd-table"><thead><tr><th>' . esc_html__( 'Email', 'whd' ) . '</th><th>' . esc_html__( 'Name', 'whd' ) . '</th><th>' . esc_html__( 'Phone', 'whd' ) . '</th><th>' . esc_html__( 'SMS consent', 'whd' ) . '</th><th>' . esc_html__( 'Source', 'whd' ) . '</th><th>' . esc_html__( 'Subscribed', 'whd' ) . '</th><th>' . esc_html__( 'Synced', 'whd' ) . '</th></tr></thead><tbody>';
 		$rows = WHD_Subscribers::recent( 200 );
 		if ( ! $rows ) {
-			echo '<tr><td colspan="4">' . esc_html__( 'No subscribers yet.', 'whd' ) . '</td></tr>';
+			echo '<tr><td colspan="7">' . esc_html__( 'No subscribers yet.', 'whd' ) . '</td></tr>';
 		}
+		$connected = class_exists( 'WHD_Integrations' ) && WHD_Integrations::email_enabled();
 		foreach ( $rows as $r ) {
-			echo '<tr><td>' . esc_html( $r->email ) . '</td><td>' . esc_html( $r->name ) . '</td><td>' . esc_html( $r->source ) . '</td><td>' . esc_html( mysql2date( get_option( 'date_format' ) . ' H:i', $r->created_at ) ) . '</td></tr>';
+			$consent = ! empty( $r->sms_consent );
+			$synced  = ! empty( $r->synced_at );
+			echo '<tr><td>' . esc_html( $r->email ) . '</td><td>' . esc_html( $r->name ) . '</td><td>' . esc_html( $r->phone ?: '—' ) . '</td>'
+				. '<td><span class="whd-pill ' . ( $consent ? 'whd-pill--on' : 'whd-pill--off' ) . '">' . ( $consent ? esc_html__( 'Yes', 'whd' ) : esc_html__( 'No', 'whd' ) ) . '</span></td>'
+				. '<td>' . esc_html( $r->source ) . '</td><td>' . esc_html( mysql2date( get_option( 'date_format' ) . ' H:i', $r->created_at ) ) . '</td>'
+				. '<td>' . ( $synced
+					? '<span class="whd-pill whd-pill--on">' . esc_html( mysql2date( get_option( 'date_format' ), $r->synced_at ) ) . '</span>'
+					: '<span class="whd-pill whd-pill--off">' . ( $connected ? esc_html__( 'Waiting', 'whd' ) : esc_html__( 'Not sent', 'whd' ) ) . '</span>' ) . '</td></tr>';
 		}
 		echo '</tbody></table></div>';
 	}
@@ -272,6 +289,8 @@ final class WHD_Admin {
 		echo '<tr><th>' . esc_html__( 'Popups for administrators', 'whd' ) . '</th><td><label><input type="checkbox" name="whd_settings[exclude_admins]" value="1" ' . checked( $s['exclude_admins'], 1, false ) . '> ' . esc_html__( 'Hide popups from logged-in administrators (use “Preview on site” to see them).', 'whd' ) . '</label></td></tr>';
 		echo '<tr><th><label for="cdh">' . esc_html__( 'Abandoned-cart reminder after (hours)', 'whd' ) . '</label></th><td><input type="number" step="0.25" min="0.25" id="cdh" name="whd_settings[cart_delay_hours]" value="' . esc_attr( $s['cart_delay_hours'] ) . '"><p class="description">' . esc_html__( 'Checked every 15 minutes by WP-Cron.', 'whd' ) . '</p></td></tr>';
 		echo '<tr><th><label for="cc">' . esc_html__( 'Coupon code for {coupon_code}', 'whd' ) . '</label></th><td><input class="regular-text" id="cc" name="whd_settings[cart_coupon]" value="' . esc_attr( $s['cart_coupon'] ) . '" placeholder="OOPS10"><p class="description">' . esc_html__( 'Create the coupon in WooCommerce → Marketing → Coupons; this only fills the merge tag.', 'whd' ) . '</p></td></tr>';
+		echo '<tr><th><label for="xc">' . esc_html__( 'Exit-intent coupon', 'whd' ) . '</label></th><td><input class="regular-text" id="xc" name="whd_settings[exit_coupon]" value="' . esc_attr( $s['exit_coupon'] ) . '" placeholder="STAY15"><p class="description">' . esc_html__( 'Offered by the exit-intent popup to keep a leaving visitor. Create the coupon in WooCommerce first.', 'whd' ) . '</p></td></tr>';
+		echo '<tr><th><label for="fst">' . esc_html__( 'Free shipping threshold', 'whd' ) . '</label></th><td><input type="number" step="1" min="0" id="fst" name="whd_settings[free_shipping_threshold]" value="' . esc_attr( $s['free_shipping_threshold'] ) . '"><p class="description">' . esc_html__( 'The cart progress bar counts up to this amount (“you are $15 away from free shipping”). Set the matching free-shipping method in WooCommerce → Shipping; 0 hides the bar.', 'whd' ) . '</p></td></tr>';
 		echo '<tr><th><label for="fn">' . esc_html__( 'Sender name (automations)', 'whd' ) . '</label></th><td><input class="regular-text" id="fn" name="whd_settings[from_name]" value="' . esc_attr( $s['from_name'] ) . '"></td></tr>';
 		echo '<tr><th><label for="fe">' . esc_html__( 'Sender email (automations)', 'whd' ) . '</label></th><td><input class="regular-text" id="fe" type="email" name="whd_settings[from_email]" value="' . esc_attr( $s['from_email'] ) . '"></td></tr>';
 		echo '</tbody></table>';

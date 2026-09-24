@@ -1,0 +1,480 @@
+/* ==========================================================================
+   Oops, Mine Co. — content pages: landing, FAQ, contact, policy.
+   Loaded after omc.css / omc-pages.css on the four OMC content templates only
+   (see inc/landing.php). Tokens come from omc.css; the tinted band keeps a
+   literal fallback next to --omc-pink so it is never a colourless section.
+   Written 390px-first: the two-column layouts start at 1024px.
+   ========================================================================== */
+
+.omc-landing-page {
+	--omc-lp-pink: var(--omc-pink, #f3dcd6);
+	--omc-lp-read: 72ch;          /* comfortable reading measure for paragraphs */
+	--omc-lp-stick: 108px;        /* sticky nav / anchor offset below the header */
+}
+
+/* These templates print their own <h1>, so the theme's title band stays away
+   (belt and braces: templates/page-header.php also returns early for them). */
+.omc-landing-page .c-page-header { display: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+	.omc-landing-page { scroll-behavior: smooth; }
+}
+.omc-lp [id] { scroll-margin-top: var(--omc-lp-stick); }
+
+/* ─────────────────────────── Hero / title bands ─────────────────────────── */
+
+.omc-lp-hero {
+	position: relative;
+	isolation: isolate;
+	overflow: hidden;
+	background: var(--omc-cream);
+	padding: clamp(48px, 7vw, 92px) 0 clamp(40px, 6vw, 76px);
+	text-align: center;
+}
+.omc-lp-hero__bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.omc-lp-hero__bg img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 35%; filter: blur(12px) saturate(1.05); transform: scale(1.1); }
+.omc-lp-hero__bg::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(180deg, rgba(247, 242, 237, .88) 0%, rgba(247, 242, 237, .94) 100%);
+}
+.omc-lp-hero--photo { background: var(--omc-sand); }
+.omc-lp-hero__inner { position: relative; max-width: 760px; }
+.omc-lp-hero__title {
+	font-family: var(--omc-serif);
+	font-weight: 500;
+	font-size: clamp(34px, 5vw, 62px);
+	line-height: 1.08;
+	letter-spacing: -.005em;
+	color: var(--omc-ink);
+	margin: 10px 0 0;
+	text-wrap: balance;
+}
+.omc-lp-hero__intro,
+.omc-lp-head__intro {
+	max-width: 620px;
+	margin: 18px auto 0;
+	font: 400 clamp(16px, 1.3vw, 19px)/1.7 var(--omc-sans);
+	color: var(--omc-text);
+	text-wrap: pretty;
+}
+.omc-lp-hero__actions,
+.omc-lp-head__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 28px 0 0; }
+
+/* the plainer band the FAQ / contact / policy pages use */
+.omc-lp-head {
+	background: #fff;
+	border-bottom: 1px solid var(--omc-line);
+	padding: clamp(36px, 5vw, 72px) 0 clamp(28px, 4vw, 52px);
+	text-align: center;
+}
+.omc-lp-head--policy { background: var(--omc-cream); border-bottom-color: transparent; }
+.omc-lp-head__inner { max-width: 760px; }
+.omc-lp-head__title {
+	font-family: var(--omc-serif);
+	font-weight: 500;
+	font-size: clamp(32px, 4.2vw, 52px);
+	line-height: 1.1;
+	color: var(--omc-ink);
+	margin: 10px 0 0;
+	text-wrap: balance;
+}
+.omc-lp-head__updated {
+	margin: 16px 0 0;
+	font: 500 11px/1.5 var(--omc-sans);
+	letter-spacing: .16em;
+	text-transform: uppercase;
+	color: var(--omc-muted);
+}
+
+/* ───────────────────────────── Sections ───────────────────────────── */
+
+.omc-lp-section { padding: clamp(40px, 5vw, 76px) 0; }
+.omc-lp-section--alt { background: var(--omc-lp-pink); }
+.omc-lp-section + .omc-lp-section:not(.omc-lp-section--alt) { padding-top: clamp(28px, 3.6vw, 56px); }
+.omc-lp-section__inner { max-width: 760px; }
+.omc-lp-block { margin: 0 0 clamp(30px, 4vw, 52px); }
+
+.omc-lp-section__title {
+	font-family: var(--omc-serif);
+	font-weight: 500;
+	font-size: clamp(26px, 2.8vw, 38px);
+	line-height: 1.15;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--omc-rose-dark);
+	margin: 6px 0 clamp(14px, 1.6vw, 20px);
+	text-wrap: balance;
+}
+.omc-lp-section__title em, .omc-lp-section__title i { font-style: italic; color: var(--omc-ink); }
+
+/* The reading measure belongs to the words: tables, buttons and images may use
+   the full column width, paragraphs and bullets stay at ~72 characters. */
+.omc-lp-prose { max-width: none; }
+.omc-lp-prose p { max-width: var(--omc-lp-read); font: 400 clamp(16px, 1.15vw, 17px)/1.8 var(--omc-sans); color: var(--omc-text); margin: 0 0 1.25em; text-wrap: pretty; }
+.omc-lp-prose p:last-child { margin-bottom: 0; }
+.omc-lp-prose a:not(.omc-btn):not(.omc-link) { color: var(--omc-rose-dark); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.omc-lp-prose a:not(.omc-btn):not(.omc-link):hover { color: var(--omc-ink); }
+.omc-lp-prose strong { font-weight: 600; color: var(--omc-ink); }
+
+.omc-lp-list { list-style: none; max-width: var(--omc-lp-read); margin: 0 0 1.4em; padding: 0; display: grid; gap: 10px; }
+.omc-lp-list li {
+	position: relative;
+	padding-left: 26px;
+	font: 400 clamp(15px, 1.1vw, 17px)/1.7 var(--omc-sans);
+	color: var(--omc-text);
+}
+.omc-lp-list li::before {
+	content: "";
+	position: absolute;
+	left: 2px;
+	top: .62em;
+	width: 8px;
+	height: 8px;
+	border: 1px solid var(--omc-rose);
+	background: var(--omc-rose-light);
+	transform: rotate(45deg);
+}
+.omc-lp-section__cta { margin: clamp(18px, 2vw, 26px) 0 0; }
+
+/* ─────────────────────────────── Tables ─────────────────────────────── */
+
+.omc-lp-table {
+	margin: 0 0 1.6em;
+	max-width: 100%;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+	border: 1px solid var(--omc-line);
+	background: #fff;
+}
+.omc-lp-table:focus-visible { outline: 2px solid var(--omc-rose); outline-offset: 2px; }
+.omc-lp-table table { width: 100%; border-collapse: collapse; margin: 0; font: 400 14px/1.5 var(--omc-sans); color: var(--omc-text); }
+.omc-lp-table caption {
+	caption-side: top;
+	text-align: left;
+	padding: 12px 14px;
+	font: 500 11px/1.4 var(--omc-sans);
+	letter-spacing: .16em;
+	text-transform: uppercase;
+	color: var(--omc-muted);
+	background: var(--omc-cream);
+}
+.omc-lp-table th, .omc-lp-table td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--omc-line); white-space: nowrap; }
+.omc-lp-table thead th {
+	background: var(--omc-sand);
+	font: 600 11px/1.4 var(--omc-sans);
+	letter-spacing: .14em;
+	text-transform: uppercase;
+	color: var(--omc-ink);
+	white-space: nowrap;
+}
+.omc-lp-table tbody th { font-weight: 600; color: var(--omc-ink); background: var(--omc-cream); }
+.omc-lp-table tbody tr:last-child th, .omc-lp-table tbody tr:last-child td { border-bottom: 0; }
+.omc-lp-table tbody tr:hover td, .omc-lp-table tbody tr:hover th { background: rgba(233, 211, 202, .28); }
+
+/* ───────────────────────── FAQ accordions ───────────────────────── */
+
+.omc-faq { display: grid; gap: 10px; margin: clamp(16px, 2vw, 24px) 0 0; }
+.omc-faq__group-title { font-family: var(--omc-serif); font-weight: 500; font-size: clamp(22px, 2.2vw, 28px); color: var(--omc-ink); margin: 0 0 12px; }
+.omc-faq__item {
+	background: #fff;
+	border: 1px solid var(--omc-line);
+	transition: border-color .25s var(--omc-ease), box-shadow .25s var(--omc-ease);
+}
+.omc-faq__item[open] { border-color: var(--omc-rose); box-shadow: 0 18px 40px -34px rgba(58, 43, 38, .6); }
+.omc-faq__item:hover { border-color: var(--omc-rose-light); }
+.omc-faq__q {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 16px 18px;
+	cursor: pointer;
+	list-style: none;
+	font: 500 clamp(15px, 1.2vw, 18px)/1.45 var(--omc-sans);
+	color: var(--omc-ink);
+}
+.omc-faq__q::-webkit-details-marker { display: none; }
+.omc-faq__q:focus-visible { outline: 2px solid var(--omc-rose); outline-offset: -2px; }
+.omc-faq__q-text { text-wrap: pretty; }
+.omc-faq__mark { position: relative; flex: 0 0 18px; width: 18px; height: 18px; margin-top: .18em; }
+.omc-faq__mark::before,
+.omc-faq__mark::after {
+	content: "";
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 14px;
+	height: 1.5px;
+	background: var(--omc-rose-dark);
+	transform: translate(-50%, -50%);
+	transition: transform .25s var(--omc-ease), opacity .25s var(--omc-ease);
+}
+.omc-faq__mark::after { transform: translate(-50%, -50%) rotate(90deg); }
+.omc-faq__item[open] .omc-faq__mark::after { transform: translate(-50%, -50%) rotate(0); opacity: 0; }
+.omc-faq__a { padding: 0 18px 18px; max-width: var(--omc-lp-read); }
+.omc-faq__a p { font: 400 clamp(15px, 1.1vw, 16px)/1.75 var(--omc-sans); color: var(--omc-text); margin: 0 0 .9em; }
+.omc-faq__a p:last-child { margin-bottom: 0; }
+.omc-faq__a a { color: var(--omc-rose-dark); text-decoration: underline; text-underline-offset: 3px; }
+@media (prefers-reduced-motion: no-preference) {
+	.omc-faq__item[open] .omc-faq__a { animation: omc-faq-in .3s var(--omc-ease) both; }
+}
+@keyframes omc-faq-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+/* the FAQ band shares the reading column of the sections above it, so the two
+   left edges line up on a landing or contact page */
+.omc-lp-faq .omc-lp-section__inner { max-width: 760px; }
+.omc-faq-group { margin: 0 0 clamp(30px, 4vw, 48px); }
+.omc-faq-group .omc-lp-section__title { margin-bottom: 10px; }
+
+/* ───────────── Two-column layouts (sticky nav + the text) ───────────── */
+
+/* Vertical padding only: these elements also carry .l-section__container, whose
+   left/right padding is the site's gutter on small screens. */
+.omc-lp-cols { padding-top: clamp(32px, 4vw, 64px); padding-bottom: clamp(40px, 5vw, 72px); }
+.omc-lp-cols__main { min-width: 0; }
+.omc-lp-cols__foot { margin: clamp(24px, 3vw, 36px) 0 0; font: 400 15px/1.7 var(--omc-sans); color: var(--omc-text); }
+.omc-lp-cols__foot a { color: var(--omc-rose-dark); text-decoration: underline; text-underline-offset: 3px; }
+.omc-lp-cols__foot a:hover { color: var(--omc-ink); }
+.omc-lp-intro { padding-top: clamp(28px, 4vw, 52px); }
+.omc-lp-intro .omc-lp-block:last-child { margin-bottom: 0; }
+
+.omc-lp-nav {
+	margin: 0 0 28px;
+	padding: 18px 20px;
+	background: var(--omc-cream);
+	border: 1px solid var(--omc-line);
+}
+.omc-lp-nav__title {
+	margin: 0 0 10px;
+	font: 500 11px/1.4 var(--omc-sans);
+	letter-spacing: .22em;
+	text-transform: uppercase;
+	color: var(--omc-rose);
+}
+.omc-lp-nav__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.omc-lp-nav__link {
+	display: block;
+	padding: 7px 0 7px 12px;
+	border-left: 2px solid transparent;
+	font: 400 14px/1.45 var(--omc-sans);
+	color: var(--omc-text);
+	text-decoration: none;
+	transition: color .2s var(--omc-ease), border-color .2s var(--omc-ease);
+}
+.omc-lp-nav__link:hover { color: var(--omc-rose-dark); border-left-color: var(--omc-rose-light); }
+.omc-lp-nav__link.is-current { color: var(--omc-ink); font-weight: 600; border-left-color: var(--omc-rose); }
+
+.omc-lp-doc .omc-lp-section__title { font-size: clamp(23px, 2.2vw, 30px); margin-top: 0; }
+.omc-lp-doc .omc-lp-prose p { line-height: 1.85; }
+
+/* ─────────────────────────── Contact page ─────────────────────────── */
+
+.omc-contact__grid { padding-top: clamp(32px, 4vw, 64px); padding-bottom: clamp(16px, 2vw, 28px); display: grid; gap: clamp(24px, 3vw, 40px); }
+.omc-contact__card { background: var(--omc-cream); border: 1px solid var(--omc-line); padding: clamp(22px, 3vw, 34px); }
+.omc-contact__card-title { font-family: var(--omc-serif); font-weight: 500; font-size: clamp(24px, 2.4vw, 32px); line-height: 1.15; color: var(--omc-ink); margin: 0; }
+.omc-contact__card-text { font: 400 15px/1.7 var(--omc-sans); color: var(--omc-text); margin: 10px 0 0; }
+.omc-contact__list { list-style: none; margin: clamp(18px, 2vw, 26px) 0 0; padding: 0; display: grid; gap: 18px; }
+.omc-contact__item { display: flex; align-items: flex-start; gap: 14px; }
+.omc-contact__icon { flex: 0 0 38px; width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; background: #fff; border: 1px solid var(--omc-line); color: var(--omc-rose-dark); }
+.omc-contact__icon .omc-icon { width: 18px; height: 18px; }
+.omc-contact__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.omc-contact__label { font: 500 10px/1.4 var(--omc-sans); letter-spacing: .2em; text-transform: uppercase; color: var(--omc-muted); }
+.omc-contact__value { font: 500 16px/1.5 var(--omc-sans); color: var(--omc-ink); text-decoration: none; word-break: break-word; }
+a.omc-contact__value { border-bottom: 1px solid var(--omc-rose-light); align-self: flex-start; transition: color .2s var(--omc-ease), border-color .2s var(--omc-ease); }
+a.omc-contact__value:hover { color: var(--omc-rose-dark); border-bottom-color: var(--omc-rose-dark); }
+.omc-contact__note { font: 400 13px/1.5 var(--omc-sans); color: var(--omc-muted); }
+
+.omc-contact__form-wrap { min-width: 0; }
+.omc-contact__form-title { font-family: var(--omc-serif); font-weight: 500; font-size: clamp(24px, 2.4vw, 32px); line-height: 1.15; color: var(--omc-ink); margin: 0; }
+.omc-contact__form-text { font: 400 15px/1.7 var(--omc-sans); color: var(--omc-text); margin: 10px 0 clamp(18px, 2vw, 26px); max-width: 60ch; }
+
+/* the theme's own form and Contact Form 7 share one look */
+.omc-form__grid { display: grid; gap: 0 18px; }
+.omc-form__row { margin: 0 0 16px; display: flex; flex-direction: column; gap: 6px; }
+.omc-form__row--hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.omc-form label,
+.wpcf7-form label { font: 500 11px/1.4 var(--omc-sans); letter-spacing: .16em; text-transform: uppercase; color: var(--omc-muted); }
+/* Contact Form 7 wraps each field in its label; give those labels the row rhythm. */
+.wpcf7-form label { display: block; margin: 0 0 16px; }
+.wpcf7-form .wpcf7-form-control-wrap { display: block; margin-top: 6px; }
+.omc-form input[type="text"],
+.omc-form input[type="email"],
+.omc-form textarea,
+.wpcf7-form input[type="text"],
+.wpcf7-form input[type="email"],
+.wpcf7-form input[type="tel"],
+.wpcf7-form input[type="url"],
+.wpcf7-form textarea,
+.wpcf7-form select {
+	width: 100%;
+	box-sizing: border-box;
+	min-height: 50px;
+	padding: 13px 16px;
+	background: #fff;
+	border: 1px solid var(--omc-line);
+	border-radius: 0;
+	font: 400 15px/1.5 var(--omc-sans);
+	color: var(--omc-ink);
+	transition: border-color .2s var(--omc-ease);
+}
+.omc-form textarea, .wpcf7-form textarea { min-height: 150px; resize: vertical; }
+.omc-form input:focus, .omc-form textarea:focus,
+.wpcf7-form input:focus, .wpcf7-form textarea:focus, .wpcf7-form select:focus { outline: 2px solid var(--omc-rose); outline-offset: 1px; border-color: var(--omc-rose); }
+.omc-form input::placeholder, .wpcf7-form input::placeholder, .wpcf7-form textarea::placeholder { color: var(--omc-muted); }
+.omc-form__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin: 4px 0 0; }
+.omc-form__note { font: 500 13px/1.5 var(--omc-sans); color: var(--omc-rose-dark); }
+.omc-form__note.is-error { color: var(--omc-rose-dark); font-weight: 600; }
+/* once the note is away the fields and the button go, and the thank-you line
+   becomes the confirmation block */
+.omc-form.is-done .omc-form__grid,
+.omc-form.is-done .omc-form__row:not(.omc-form__row--hp),
+.omc-form.is-done .omc-form__actions .omc-btn { display: none; }
+.omc-form.is-done .omc-form__note {
+	display: block;
+	width: 100%;
+	padding: 14px 16px;
+	background: var(--omc-cream);
+	border-left: 3px solid var(--omc-rose);
+	font-size: 15px;
+	color: var(--omc-ink);
+}
+.omc-form__flash {
+	margin: 0 0 18px;
+	padding: 14px 16px;
+	background: var(--omc-cream);
+	border-left: 3px solid var(--omc-rose);
+	font: 500 15px/1.6 var(--omc-sans);
+	color: var(--omc-ink);
+}
+.omc-form__flash--error { border-left-color: var(--omc-rose-dark); }
+.wpcf7-form .wpcf7-submit {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 50px;
+	padding: 0 30px;
+	background: var(--omc-ink);
+	color: #fff;
+	border: 1px solid var(--omc-ink);
+	border-radius: 0;
+	font: 600 12px/1 var(--omc-sans);
+	letter-spacing: .18em;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition: background-color .25s var(--omc-ease), border-color .25s var(--omc-ease);
+}
+.wpcf7-form .wpcf7-submit:hover { background: var(--omc-rose-dark); border-color: var(--omc-rose-dark); }
+.wpcf7-form .wpcf7-response-output {
+	margin: 18px 0 0;
+	padding: 14px 16px;
+	border: 0;
+	border-left: 3px solid var(--omc-rose);
+	background: var(--omc-cream);
+	font: 500 14px/1.6 var(--omc-sans);
+	color: var(--omc-ink);
+}
+.wpcf7-form .wpcf7-not-valid-tip { font: 500 12px/1.5 var(--omc-sans); color: var(--omc-rose-dark); }
+.wpcf7-form p { margin: 0 0 16px; }
+
+/* ───────────────────── Help card / related / CTA ───────────────────── */
+
+.omc-help-card {
+	margin: clamp(28px, 4vw, 44px) 0 0;
+	padding: clamp(22px, 3vw, 32px);
+	background: var(--omc-lp-pink);
+	border: 1px solid var(--omc-rose-light);
+}
+.omc-help-card__title { font-family: var(--omc-serif); font-weight: 500; font-size: clamp(22px, 2.2vw, 28px); line-height: 1.2; color: var(--omc-ink); margin: 0; }
+.omc-help-card__text { font: 400 15px/1.7 var(--omc-sans); color: var(--omc-text); margin: 8px 0 0; max-width: 56ch; }
+.omc-help-card__links { display: flex; flex-wrap: wrap; gap: 14px 26px; margin: 16px 0 0; }
+.omc-help-card__more { margin: 18px 0 0; }
+
+.omc-lp-related { padding-top: clamp(40px, 5vw, 72px); }
+.omc-lp-related__grid { display: grid; gap: clamp(12px, 1.6vw, 20px); }
+.omc-lp-card {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: clamp(18px, 2.2vw, 26px);
+	background: var(--omc-cream);
+	border: 1px solid var(--omc-line);
+	text-decoration: none;
+	transition: border-color .25s var(--omc-ease), transform .25s var(--omc-ease), box-shadow .25s var(--omc-ease);
+}
+.omc-lp-card:hover { border-color: var(--omc-rose); transform: translateY(-3px); box-shadow: 0 24px 48px -34px rgba(58, 43, 38, .5); }
+.omc-lp-card__title { font-family: var(--omc-serif); font-weight: 500; font-size: clamp(20px, 1.9vw, 25px); line-height: 1.2; color: var(--omc-ink); }
+.omc-lp-card__text { font: 400 14px/1.65 var(--omc-sans); color: var(--omc-text); }
+.omc-lp-card__more { display: inline-flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 6px; font: 600 11px/1 var(--omc-sans); letter-spacing: .16em; text-transform: uppercase; color: var(--omc-rose-dark); }
+.omc-lp-card__more .omc-icon { width: 15px; height: 15px; transition: transform .25s var(--omc-ease); }
+.omc-lp-card:hover .omc-lp-card__more .omc-icon { transform: translateX(4px); }
+
+.omc-lp-cta { margin-top: clamp(40px, 5vw, 72px); background: var(--omc-sand); padding: var(--omc-section) 0; text-align: center; }
+.omc-lp-cta__inner { max-width: 640px; }
+.omc-lp-cta__text { font: 400 16px/1.7 var(--omc-sans); color: var(--omc-text); margin: 14px 0 0; }
+.omc-lp-cta__form { margin-top: 26px; }
+.omc-lp-cta__actions { margin: 22px 0 0; }
+.omc-lp-cta__form.is-done + .omc-lp-cta__actions { margin-top: 16px; }
+
+/* product grid section on a landing page */
+.omc-lp-products { padding-top: clamp(40px, 5vw, 72px); }
+.omc-lp-products__intro { max-width: var(--omc-lp-read); margin: -10px 0 clamp(20px, 2.4vw, 30px); font: 400 16px/1.7 var(--omc-sans); color: var(--omc-text); }
+.omc-lp-products__more { margin: clamp(22px, 2.6vw, 32px) 0 0; text-align: center; }
+
+/* the fallback prose column (no content document yet) */
+.omc-lp--landing .omc-prose, .omc-lp--faq .omc-prose, .omc-lp--contact .omc-prose, .omc-lp--policy .omc-prose { padding-top: clamp(32px, 4vw, 56px); }
+
+/* ───────────────────────────── Responsive ───────────────────────────── */
+
+@media (min-width: 768px) {
+	.omc-form__grid { grid-template-columns: 1fr 1fr; }
+	.omc-lp-related__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.omc-contact__grid { grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: clamp(28px, 3vw, 48px); align-items: start; }
+}
+
+@media (min-width: 1024px) {
+	.omc-lp-cols { display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: clamp(32px, 4vw, 64px); align-items: start; }
+	.omc-lp-nav { position: sticky; top: var(--omc-lp-stick); margin: 0; max-height: calc(100vh - var(--omc-lp-stick) - 24px); overflow-y: auto; }
+	.omc-lp-related__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+	.omc-contact__grid { grid-template-columns: minmax(0, 380px) minmax(0, 1fr); }
+	.omc-contact__card { position: sticky; top: var(--omc-lp-stick); }
+}
+
+@media (max-width: 767px) {
+	.omc-lp-hero { padding-top: clamp(36px, 9vw, 56px); }
+	.omc-lp-hero__actions, .omc-lp-head__actions { flex-direction: column; }
+	.omc-lp-hero__actions .omc-btn, .omc-lp-head__actions .omc-btn { width: 100%; }
+	.omc-faq__q { padding: 14px 15px; }
+	.omc-faq__a { padding: 0 15px 15px; }
+	.omc-lp-table table { font-size: 13px; }
+	.omc-lp-table th, .omc-lp-table td { padding: 9px 12px; }
+	.omc-lp-cta { padding: clamp(40px, 12vw, 64px) 0; }
+	.omc-lp-cta__actions .omc-btn { width: 100%; }
+}
+
+/* ───────────────────────────── Print (policy) ───────────────────────────── */
+
+@media print {
+	.omc-lp-nav,
+	.omc-lp-cta,
+	.omc-lp-related,
+	.omc-help-card__more,
+	.omc-lp-head__actions,
+	.c-header,
+	.c-footer,
+	.omc-footer,
+	.whd-popup { display: none !important; }
+	.omc-landing-page { background: #fff; }
+	.omc-lp-head, .omc-lp-head--policy { background: #fff; border: 0; padding: 0 0 12pt; text-align: left; }
+	.omc-lp-head__title { font-size: 22pt; color: #000; }
+	.omc-lp-cols { display: block; padding: 0; }
+	.omc-lp-prose { max-width: none; }
+	.omc-lp-prose p, .omc-lp-list li { font-size: 10.5pt; line-height: 1.5; color: #000; }
+	.omc-lp-section__title { font-size: 14pt; color: #000; page-break-after: avoid; }
+	.omc-lp-block, .omc-faq__item { page-break-inside: avoid; }
+	.omc-faq__item { border-color: #ccc; }
+	.omc-faq__item .omc-faq__a { display: block; }
+	.omc-lp-table { overflow: visible; }
+	.omc-lp-prose a:not(.omc-btn)::after { content: " (" attr(href) ")"; font-size: 9pt; color: #555; }
+}

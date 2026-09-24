@@ -25,7 +25,9 @@ final class WHD_Emails {
 			'customer_note'             => [ 'label' => __( 'Note to customer', 'whd' ), 'group' => 'customer', 'template' => 'emails/customer-note.php' ],
 			'customer_new_account'      => [ 'label' => __( 'New account welcome', 'whd' ), 'group' => 'customer', 'template' => 'emails/customer-new-account.php' ],
 			'customer_reset_password'   => [ 'label' => __( 'Password reset', 'whd' ), 'group' => 'customer', 'template' => 'emails/customer-reset-password.php' ],
-			'abandoned_cart'            => [ 'label' => __( 'Abandoned cart recovery', 'whd' ), 'group' => 'automation', 'template' => '' ],
+			'abandoned_cart'            => [ 'label' => __( 'Abandoned cart — 1 h: friendly reminder', 'whd' ), 'group' => 'automation', 'template' => '' ],
+			'abandoned_cart_2'          => [ 'label' => __( 'Abandoned cart — 24 h: still available + social proof', 'whd' ), 'group' => 'automation', 'template' => '' ],
+			'abandoned_cart_3'          => [ 'label' => __( 'Abandoned cart — 48 h: 10% incentive', 'whd' ), 'group' => 'automation', 'template' => '' ],
 			'welcome_subscriber'        => [ 'label' => __( 'Newsletter welcome', 'whd' ), 'group' => 'automation', 'template' => '' ],
 			'new_order'                 => [ 'label' => __( 'New order (to admin)', 'whd' ), 'group' => 'admin', 'template' => 'emails/admin-new-order.php' ],
 			'cancelled_order'           => [ 'label' => __( 'Cancelled order (to admin)', 'whd' ), 'group' => 'admin', 'template' => 'emails/admin-cancelled-order.php' ],
@@ -63,22 +65,54 @@ final class WHD_Emails {
 		return $stored[ $id ];
 	}
 
+	/**
+	 * Fill in any design an install is missing (also on upgrade — the cart follow-ups
+	 * were added later, and they arrive switched on so the sequence works out of the box).
+	 */
 	public static function ensure_defaults() {
-		$stored = get_option( self::OPTION, [] );
+		$stored   = get_option( self::OPTION, [] );
+		// Step 1 has to be on with steps 2 and 3. The sequence advances one step per send, so a
+		// disabled first email parks every cart at step 0: the send returns false, the row is
+		// written back as 'failed', and steps 2 and 3 are never reached.
+		$auto_on  = [ 'abandoned_cart', 'abandoned_cart_2', 'abandoned_cart_3' ];
 		foreach ( self::triggers() as $id => $t ) {
 			if ( empty( $stored[ $id ] ) ) {
 				$stored[ $id ] = self::default_design( $id );
+				if ( in_array( $id, $auto_on, true ) ) {
+					$stored[ $id ]['settings']['enabled'] = 1;
+				}
 			}
 		}
 		update_option( self::OPTION, $stored, false );
 	}
 
+	/**
+	 * Put the shipped designs back. `$ids` limits it to some triggers; the enabled flag
+	 * is kept unless $keep_enabled is false. Called by the publish script.
+	 */
+	public static function reset_to_defaults( $ids = null, $keep_enabled = true ) {
+		$stored = get_option( self::OPTION, [] );
+		$ids    = null === $ids ? array_keys( self::triggers() ) : (array) $ids;
+		foreach ( $ids as $id ) {
+			if ( ! isset( self::triggers()[ $id ] ) ) {
+				continue;
+			}
+			$enabled       = $keep_enabled && ! empty( $stored[ $id ]['settings']['enabled'] ) ? 1 : 0;
+			$design        = self::default_design( $id );
+			$design['settings']['enabled'] = $enabled ?: $design['settings']['enabled'];
+			$stored[ $id ] = WHD_Blocks::sanitize_design( $design, 'email' );
+		}
+		update_option( self::OPTION, $stored, false );
+		return count( $ids );
+	}
+
 	/** Brand-voice starter design per trigger. */
 	public static function default_design( $id ) {
 		$b = function ( $type, $props ) { return [ 'type' => $type, 'props' => $props ]; };
-		$heading = function ( $text ) use ( $b ) { return $b( 'heading', [ 'text' => $text, 'level' => 'h2', 'align' => 'left', 'color' => '#141414' ] ); };
-		$text    = function ( $text ) use ( $b ) { return $b( 'text', [ 'text' => $text, 'align' => 'left', 'size' => 16, 'color' => '#2b2724' ] ); };
-		$button  = function ( $label, $url ) use ( $b ) { return $b( 'button', [ 'text' => $label, 'url' => $url, 'align' => 'left', 'bg' => '#141414', 'color' => '#ffffff', 'radius' => 0, 'full' => 0 ] ); };
+		$heading = function ( $text ) use ( $b ) { return $b( 'heading', [ 'text' => $text, 'level' => 'h2', 'align' => 'left', 'color' => '#3a2b26' ] ); };
+		$text    = function ( $text ) use ( $b ) { return $b( 'text', [ 'text' => $text, 'align' => 'left', 'size' => 16, 'color' => '#4a3f3a' ] ); };
+		$note    = function ( $text ) use ( $b ) { return $b( 'text', [ 'text' => $text, 'align' => 'left', 'size' => 15, 'color' => '#9c6f63' ] ); };
+		$button  = function ( $label, $url ) use ( $b ) { return $b( 'button', [ 'text' => $label, 'url' => $url, 'align' => 'left', 'bg' => '#3a2b26', 'color' => '#f7f2ed', 'radius' => 0, 'full' => 0 ] ); };
 		$brand   = $b( 'text', [ 'text' => '<strong>OOPS, MINE CO.</strong>', 'align' => 'left', 'size' => 12, 'color' => '#b98b7e' ] );
 		$signoff = $text( 'Find something special. Trust your instinct. And when you know, you know.<br>— {site_name}' );
 		$items   = $b( 'order_items', [ 'show_images' => 1 ] );
@@ -93,7 +127,9 @@ final class WHD_Emails {
 			'customer_note'             => [ 'A note about your order #{order_number}', [ $brand, $heading( 'A quick note from us' ), $text( '{customer_note}' ), $items, $button( 'View your order', '{order_url}' ), $signoff ] ],
 			'customer_new_account'      => [ 'Welcome to {site_name}', [ $brand, $heading( 'Welcome, {first_name}.' ), $text( 'Your account is ready. Save your details, follow your orders and keep a wishlist of the pieces that caught your eye.' ), $button( 'Go to my account', '{my_account_url}' ), $signoff ] ],
 			'customer_reset_password'   => [ 'Reset your {site_name} password', [ $brand, $heading( 'Reset your password' ), $text( 'Someone asked to reset the password for <strong>{user_login}</strong>. If that was you, use the button below. If not, you can safely ignore this email.' ), $button( 'Choose a new password', '{reset_url}' ), $signoff ] ],
-			'abandoned_cart'            => [ 'You left something behind, {first_name}', [ $brand, $heading( 'Still thinking about it?' ), $text( 'Your bag is exactly how you left it. Some pieces don’t stay in stock long — and this one caught your eye for a reason.' ), $b( 'cart_items', [ 'show_images' => 1 ] ), $b( 'coupon', [ 'code' => '{coupon_code}', 'note' => 'A little nudge — use it at checkout', 'color' => '#b98b7e' ] ), $button( 'Return to my bag', '{recovery_url}' ), $text( 'Oops, mine? We thought so.<br>— {site_name}' ) ] ],
+			'abandoned_cart'            => [ 'Oops — did you forget something?', [ $brand, $heading( 'Your bag is still here, {first_name}.' ), $text( 'You picked, then life happened. We kept everything exactly where you left it — one tap and you are back to it.' ), $b( 'cart_items', [ 'show_images' => 1 ] ), $button( 'Back to my bag', '{recovery_url}' ), $text( 'Oops, mine? We thought so.<br>— {site_name}' ) ] ],
+			'abandoned_cart_2'          => [ 'Still thinking it over? These don’t come back', [ $brand, $heading( 'Still on your mind?' ), $text( 'Your picks are waiting, {first_name}. Take another look while your size is still there.' ), $b( 'cart_items', [ 'show_images' => 1 ] ), $note( 'Small batches. When a size sells through, it’s gone.' ), $button( 'Take another look', '{recovery_url}' ), $text( 'Find something yours.<br>— {site_name}' ) ] ],
+			'abandoned_cart_3'          => [ '10% off to finish the look', [ $brand, $heading( 'Here’s 10% off to finish the look.' ), $text( 'Last note about your bag, {first_name}. Use the code below at checkout and make it yours.' ), $b( 'coupon', [ 'code' => '{coupon_code}', 'note' => '10% off your order', 'color' => '#9c6f63' ] ), $b( 'cart_items', [ 'show_images' => 1 ] ), $button( 'Finish my order', '{recovery_url}' ), $text( 'One unexpected find at a time.<br>— {site_name}' ) ] ],
 			'welcome_subscriber'        => [ 'Welcome to Oops, Mine Co.', [ $brand, $heading( 'Found with intention. Claimed on instinct.' ), $text( 'Thanks for joining the list. Expect new arrivals, quiet restocks and the occasional note — never noise.' ), $b( 'coupon', [ 'code' => '{coupon_code}', 'note' => '10% off your first order', 'color' => '#b98b7e' ] ), $button( 'Shop new arrivals', '{shop_url}' ), $signoff ] ],
 			'new_order'                 => [ '[{site_name}] New order #{order_number} from {customer_name}', [ $brand, $heading( 'New order #{order_number}' ), $text( '{customer_name} ({email}) placed an order on {order_date}. Status: {order_status}.' ), $items, $summary, $button( 'Open in WooCommerce', '{admin_order_url}' ) ] ],
 			'cancelled_order'           => [ '[{site_name}] Order #{order_number} cancelled', [ $brand, $heading( 'Order #{order_number} was cancelled' ), $text( 'Order from {customer_name} ({email}) has been cancelled.' ), $items, $summary ] ],
@@ -193,6 +229,7 @@ final class WHD_Emails {
 			'checkout_url'   => $wc ? wc_get_checkout_url() : home_url( '/checkout/' ),
 			'my_account_url' => $wc ? wc_get_page_permalink( 'myaccount' ) : home_url( '/my-account/' ),
 			'coupon_code'    => $settings['cart_coupon'],
+			'exit_coupon'    => $settings['exit_coupon'] ?? 'STAY15', // exit-intent code (WHD → Settings)
 			'year'           => date_i18n( 'Y' ),
 			'first_name'     => __( 'there', 'whd' ),
 			'customer_name'  => '',
@@ -285,7 +322,7 @@ final class WHD_Emails {
 		if ( $user && $user->ID ) {
 			$args['user'] = $user;
 		}
-		if ( in_array( $id, [ 'abandoned_cart', 'welcome_subscriber' ], true ) ) {
+		if ( in_array( $id, [ 'abandoned_cart', 'abandoned_cart_2', 'abandoned_cart_3', 'welcome_subscriber' ], true ) ) {
 			$args['cart'] = self::sample_cart();
 		}
 		$ctx = self::context( $args );

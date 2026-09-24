@@ -141,7 +141,7 @@
 	/* ─────────── canvas ─────────── */
 	function summary(block) {
 		var p = block.props || {};
-		var s = p.text || p.code || p.label || p.alt || p.url || '';
+		var s = p.text || p.code || p.button_text || p.success_text || p.label || p.alt || p.url || '';
 		s = String(s).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 		return s.length > 60 ? s.slice(0, 60) + '…' : s;
 	}
@@ -267,10 +267,12 @@
 		var block = state.design.blocks[state.selected];
 		if (!block) { body.appendChild(h('p', { class: 'whd-ed__hint', text: I18N.selectHint })); return; }
 		var def = typeDef(block.type);
+		if (!def) { body.appendChild(h('p', { class: 'whd-ed__hint', text: block.type + ': ' + I18N.selectHint })); return; }
+		block.props = block.props || {};
 		body.appendChild(h('h3', { class: 'whd-ed__h', text: def.label }));
 		Object.keys(def.fields).forEach(function (name) {
 			var f = def.fields[name];
-			body.appendChild(field(f, name, block.props[name], function (v) {
+			body.appendChild(field(f, name, block.props[name] === undefined ? f.default : block.props[name], function (v) {
 				block.props[name] = v;
 				markDirty();
 				var card = ui.list.querySelector('.whd-ed__block[data-index="' + state.selected + '"] .whd-ed__block-summary');
@@ -283,11 +285,11 @@
 	function field(f, name, value, onChange) {
 		var wrap = h('div', { class: 'whd-ed__field whd-ed__field--' + f.type });
 		var id = 'whd-f-' + name + '-' + Math.random().toString(36).slice(2, 7);
-		if (f.type !== 'toggle') { wrap.appendChild(h('label', { for: id, text: f.label })); }
+		if (f.type !== 'toggle' && f.type !== 'checkbox') { wrap.appendChild(h('label', { for: id, text: f.label })); }
 		var input;
 		switch (f.type) {
 			case 'textarea':
-				input = h('textarea', { id: id, rows: 4 });
+				input = h('textarea', { id: id, rows: f.rows || 3 });
 				input.value = value || '';
 				input.addEventListener('input', function () { onChange(input.value); });
 				break;
@@ -318,6 +320,7 @@
 					input.appendChild(b);
 				});
 				break;
+			case 'checkbox': // alias, so a field definition can use either name
 			case 'toggle':
 				var cb = h('input', { id: id, type: 'checkbox' }); cb.checked = !!(value && value !== '0');
 				cb.addEventListener('change', function () { onChange(cb.checked ? 1 : 0); });

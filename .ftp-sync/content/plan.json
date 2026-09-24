@@ -1,0 +1,1694 @@
+{
+  "generated": "2026-09-24",
+  "source_keywords": "blueprint/keywords.json (460 keywords)",
+  "pages": [
+    {
+      "slug": "korean-fashion",
+      "type": "landing",
+      "title_hint": "Korean Fashion Online Store — Pieces You Will Not See Everywhere",
+      "purpose": "Commercial hub for shoppers searching for Korean clothing online; positions the boutique as a hand-picked Korean fashion online store rather than a bulk reseller.",
+      "primary_keyword": "korean fashion online store",
+      "keywords": [
+        "korean fashion online store",
+        "korean fashion online",
+        "korean wear online",
+        "korean fashion online shopping",
+        "korean fashion websites",
+        "korean fashion women",
+        "korean fashion for women",
+        "korean fashion female",
+        "korean clothes woman",
+        "korean fashion clothes for women",
+        "korean fashion clothes women",
+        "korean fashion wear",
+        "korean fashion and style",
+        "dress korean fashion",
+        "korean fashion casual dress",
+        "korean fashion formal dress",
+        "korean fashion skirt",
+        "korean fashion pants",
+        "korean clothes pants",
+        "korean fashion jeans",
+        "casual korean fashion",
+        "korean casual wear",
+        "korean clothes casual",
+        "korean golf clothes"
+      ],
+      "related_slugs": [
+        "korean-winter-fashion",
+        "korean-street-style",
+        "korean-fashion-brands",
+        "asian-fashion"
+      ],
+      "notes": "Lead section: what makes Korean fashion different (fit, fabric, detailing) and how the owner sources it from Korea. Sub-sections for dresses, skirts, pants and jeans so \"korean fashion skirt\", \"korean fashion pants\", \"korean clothes pants\" and \"korean fashion jeans\" land in real product talk; link /product-category/korean-fashion/, /product-category/dresses/, /product-category/skirts/, /product-category/jeans_and_denim/. Include a short \"how we shop for you\" note (curation, small batches) and an email capture. Do not invent shipping times, factory names, delivery dates or sourcing partners. Do not claim to be an official brand reseller.",
+      "category": {
+        "slug": "korean-fashion",
+        "name": "Korean Fashion",
+        "parent": "women",
+        "description_hint": "Hand-picked Korean pieces: knit dresses, midi skirts, denim and easy separates, in a wide colour and size range.",
+        "assign_products": [
+          366,
+          364,
+          215,
+          213,
+          268,
+          270,
+          372,
+          2223,
+          2213
+        ]
+      }
+    },
+    {
+      "slug": "korean-winter-fashion",
+      "type": "landing",
+      "title_hint": "Winter Korean Fashion: Layers That Look Like Seoul in January",
+      "purpose": "Seasonal shoppable edit for cold-weather Korean styling, aimed at shoppers planning winter outfits and buying coats, knits and layering pieces.",
+      "primary_keyword": "winter korean fashion",
+      "keywords": [
+        "winter korean fashion",
+        "korean fashion winter",
+        "korean fashion in winter",
+        "korean style winter wear",
+        "korean fashion winter coat",
+        "korean fashion for fall",
+        "korean fashion jacket",
+        "korean fashion blazer"
+      ],
+      "related_slugs": [
+        "korean-fashion",
+        "korean-street-style",
+        "cute-clothes-for-winter",
+        "kpop-fashion"
+      ],
+      "notes": "Build three or four outfit formulas (knit dress + tights + boots, denim + long knit, blazer over a sweater dress). Cover coats and jackets honestly — describe the layering idea, do not promise stock we cannot confirm. \"korean fashion for fall\" belongs in a shoulder-season paragraph. Link the Korean Fashion category, /product-category/dresses/ and /product-category/jeans_and_denim/. No weather claims for specific cities or invented temperatures.",
+      "category": {
+        "slug": "korean-winter-fashion",
+        "name": "Korean Winter Fashion",
+        "parent": "women",
+        "description_hint": "Cold-weather Korean layering: sweater dresses, knits, denim and tights to build warm outfits that still look put together.",
+        "assign_products": [
+          366,
+          364,
+          361,
+          215,
+          242,
+          268,
+          270,
+          2223
+        ]
+      }
+    },
+    {
+      "slug": "thai-fashion",
+      "type": "landing",
+      "title_hint": "Thai Fashion: Colour, Silk and Detail From Bangkok Boutiques",
+      "purpose": "Commercial page for the Thailand side of the sourcing story, for shoppers looking for Thai clothing and Thai labels online.",
+      "primary_keyword": "thai fashion",
+      "keywords": [
+        "thai fashion",
+        "fashion in thai",
+        "thai fashion brand",
+        "thai clothes brand",
+        "thai clothes for women",
+        "thailand clothes for women",
+        "thailand clothes to wear",
+        "thai clothes online shopping",
+        "modern thai clothes"
+      ],
+      "related_slugs": [
+        "traditional-thai-clothes",
+        "bangkok-shopping-guide",
+        "asian-fashion",
+        "korean-fashion"
+      ],
+      "notes": "Explain what Thai fashion looks like day to day (colour, lightweight fabric, embellishment) versus the traditional dress covered in the traditional-thai-clothes journal. \"fashion in thai\", \"thai clothes brand\" and \"thai fashion brand\" fit a paragraph about how the owner finds small Thai labels — name no brand we cannot verify. \"modern thai clothes\" and \"thailand clothes to wear\" suit a travel-friendly styling paragraph. Link /product-category/thai-fashion/ and the Bangkok guide.",
+      "category": {
+        "slug": "thai-fashion",
+        "name": "Thai Fashion",
+        "parent": "women",
+        "description_hint": "Thai-sourced pieces with the colour, print and hand-finished detail the Bangkok boutiques are known for.",
+        "assign_products": [
+          379,
+          368,
+          370,
+          213,
+          219,
+          194,
+          190,
+          2225
+        ]
+      }
+    },
+    {
+      "slug": "asian-fashion",
+      "type": "landing",
+      "title_hint": "Asian Fashion Store: Korea, Thailand and Beyond, Chosen Piece by Piece",
+      "purpose": "Umbrella category page for shoppers searching broadly for Asian fashion, routing them to the Korean, Thai and K-pop edits.",
+      "primary_keyword": "asian fashion store",
+      "keywords": [
+        "asian fashion store",
+        "asian fashion",
+        "asian fashion for women",
+        "asian fashion women",
+        "ladies asian fashion",
+        "asian fashion style",
+        "south asian fashion"
+      ],
+      "related_slugs": [
+        "korean-fashion",
+        "thai-fashion",
+        "kpop-fashion",
+        "korean-fashion-brands"
+      ],
+      "notes": "Frame it as the umbrella: three short blocks (Korea, Thailand, elsewhere in Asia) each ending in a link to that category. \"south asian fashion\" needs an honest sentence — say what we do and do not stock rather than implying a full South Asian range. \"ladies asian fashion\" and \"asian fashion women\" fit the intro. Keep the Houston, TX base and worldwide shipping wording vague enough to stay true; no shipping times.",
+      "category": {
+        "slug": "asian-fashion",
+        "name": "Asian Fashion",
+        "parent": "women",
+        "description_hint": "One place for everything we source across Asia — Korea and Thailand first, with Vietnam and other countries in the mix.",
+        "assign_products": [
+          366,
+          372,
+          213,
+          215,
+          268,
+          364,
+          194,
+          2213
+        ]
+      }
+    },
+    {
+      "slug": "kpop-fashion",
+      "type": "landing",
+      "title_hint": "K Pop Fashion: Stage-Inspired Pieces You Can Actually Wear",
+      "purpose": "Shoppable edit translating K-pop styling into wearable everyday pieces for fans who want the look without a costume.",
+      "primary_keyword": "k pop fashion",
+      "keywords": [
+        "k pop fashion",
+        "kpop fashion",
+        "kpop clothes",
+        "kpop style clothes",
+        "kpop fashion styles",
+        "kpop clothes style",
+        "kpop idol wear",
+        "kpop inspired clothes",
+        "kpop fashion dress",
+        "k pop fashion store",
+        "k pop fashion trends",
+        "kpop fashion trend",
+        "kpop fashion online store",
+        "cheap kpop fashion",
+        "kpop merchandise near me",
+        "kpop shirts near me",
+        "kpop clothes near me"
+      ],
+      "related_slugs": [
+        "kpop-outfit-ideas",
+        "korean-street-style",
+        "korean-fashion",
+        "kpop-fashion-for-men"
+      ],
+      "notes": "Separate \"inspired by\" from \"official merch\" in plain words: we sell clothing, not band merchandise. That answers \"kpop merchandise near me\", \"kpop shirts near me\" and \"kpop clothes near me\" honestly — say we are an online boutique shipping from Houston, TX, with no physical store. \"cheap kpop fashion\" needs the fair-pricing line (not cheap, not luxury), never a discount we have not created. Link /product-category/kpop-fashion/ and the K-pop outfit ideas journal.",
+      "category": {
+        "slug": "kpop-fashion",
+        "name": "K-Pop Inspired",
+        "parent": "women",
+        "description_hint": "Stage-inspired shapes — mini skirts, cropped knits, denim and sneakers — toned down enough for a normal Tuesday.",
+        "assign_products": [
+          217,
+          199,
+          219,
+          266,
+          268,
+          364,
+          2223,
+          2213
+        ]
+      }
+    },
+    {
+      "slug": "petite-dresses",
+      "type": "landing",
+      "title_hint": "Petite Dresses for Women: Lengths That Land Where They Should",
+      "purpose": "Main commercial page for the petite dress cluster, sorted by length, sleeve and fabric so shoppers can find the dress shape they searched for.",
+      "primary_keyword": "petite dresses for women",
+      "keywords": [
+        "petite dresses for women",
+        "petite dresses maxi",
+        "petite dresses summer",
+        "petite dresses casual",
+        "petite dresses mini",
+        "petite sundresses",
+        "petite dresses linen",
+        "petite dress long sleeve",
+        "petite dresses long sleeve",
+        "petite dresses cotton",
+        "petite dresses with sleeves",
+        "petite dresses purple",
+        "petite kaftan dresses"
+      ],
+      "related_slugs": [
+        "petite-clothes-for-women",
+        "petite-dresses-for-wedding-guest",
+        "petite-evening-dresses",
+        "what-does-petite-mean"
+      ],
+      "notes": "Structure by what people search: maxi, summer, mini, casual, sundresses, linen, cotton, long sleeve, with sleeves, purple, kaftan. Each gets one honest sentence about length and fit on a shorter frame; if a fabric or colour is not in stock, write it as a styling note (\"a linen petite dress works when…\") rather than a false stock claim. Cross-link the size guide and the wedding-guest and evening pages. Note that hem-length talk should reference the size guide measurements, not invented inseams.",
+      "category": {
+        "slug": "petite-dresses",
+        "name": "Petite Dresses",
+        "parent": "women",
+        "description_hint": "Dresses chosen for shorter frames — maxi, midi and mini lengths that hit where they are meant to.",
+        "assign_products": [
+          379,
+          374,
+          366,
+          372,
+          364,
+          370,
+          368,
+          361,
+          320,
+          376
+        ]
+      }
+    },
+    {
+      "slug": "petite-clothes-for-women",
+      "type": "landing",
+      "title_hint": "Shop for Petite Clothes That Fit Without a Tailor",
+      "purpose": "Category page for petite separates and everyday petite shopping intent (where to buy, brands, price, work pieces).",
+      "primary_keyword": "shop for petite clothes",
+      "keywords": [
+        "shop for petite clothes",
+        "petite clothes brand",
+        "petite dress pants",
+        "petite dress pants for work",
+        "petite dress pants for women",
+        "cheap petite clothes",
+        "inexpensive petite clothes",
+        "trendy petite clothes for women",
+        "petite clothes for work",
+        "where to buy petite clothes",
+        "petite clothes online shopping",
+        "petite exercise clothes",
+        "petite fashion for women",
+        "petite cute clothes",
+        "cute petite clothes",
+        "cute clothes for petite women",
+        "petite clothes for women near me"
+      ],
+      "related_slugs": [
+        "petite-dresses",
+        "what-does-petite-mean",
+        "petite-fashion-over-50",
+        "size-guide"
+      ],
+      "notes": "Cover: where to buy petite clothes online, what to look for in a petite clothes brand, price honesty for \"cheap petite clothes\" and \"inexpensive petite clothes\" (fair pricing, small batches — never claim a sale that does not exist), petite dress pants for work, and a short honest answer for \"petite exercise clothes\" (we do not stock activewear; here is what does the job). \"petite clothes for women near me\" is answered by saying we are online-only and ship from Houston, TX. Link the size guide and /product-category/petite-clothing/.",
+      "category": {
+        "slug": "petite-clothing",
+        "name": "Petite Clothing",
+        "parent": "women",
+        "description_hint": "Petite separates — denim, skirts, knits and layers — picked for proportion, not just a shorter hem.",
+        "assign_products": [
+          268,
+          266,
+          263,
+          213,
+          215,
+          242,
+          244,
+          366,
+          372,
+          2213
+        ]
+      }
+    },
+    {
+      "slug": "petite-dresses-for-wedding-guest",
+      "type": "landing",
+      "title_hint": "Petite Dresses for Wedding Guest Season, Without the Hem Problem",
+      "purpose": "High-intent occasion page for petite wedding guests choosing a dress for a specific event.",
+      "primary_keyword": "petite dresses for wedding guest",
+      "keywords": [
+        "petite dresses for wedding guest",
+        "petite dresses wedding",
+        "petite dresses for wedding"
+      ],
+      "related_slugs": [
+        "petite-evening-dresses",
+        "petite-dresses",
+        "chic-style",
+        "size-guide"
+      ],
+      "notes": "This page uses the same Wedding Guest occasion category listed in occasion_categories — create the term once, do not duplicate it. Cover dress codes by venue, colour etiquette, length on a petite frame, and shoe height. Three keywords only, so keep copy about the reader, not repetition: \"petite dresses for wedding guest\", \"petite dresses wedding\", \"petite dresses for wedding\" each once. Link the evening page, the size guide and the wedding-guest category. Do not invent delivery cut-off dates for event shopping.",
+      "category": {
+        "slug": "wedding-guest",
+        "name": "Wedding Guest",
+        "parent": "women",
+        "description_hint": "Dresses for weddings, showers and every event with a dress code — chosen so a shorter frame does not need alterations.",
+        "assign_products": [
+          379,
+          376,
+          374,
+          370,
+          368,
+          361,
+          320,
+          196,
+          192,
+          190
+        ]
+      }
+    },
+    {
+      "slug": "petite-evening-dresses",
+      "type": "landing",
+      "title_hint": "Petite Dresses Evening Wear: Prom, Parties and Special Occasions",
+      "purpose": "Occasion page for evening, prom, party and special-occasion dress searches in petite lengths.",
+      "primary_keyword": "petite dresses evening wear",
+      "keywords": [
+        "petite dresses evening wear",
+        "petite dress evening",
+        "petite dresses special occasion",
+        "petite dresses prom",
+        "petite dresses party"
+      ],
+      "related_slugs": [
+        "petite-dresses-for-wedding-guest",
+        "petite-dresses",
+        "affordable-luxury-clothes",
+        "statement-pieces"
+      ],
+      "notes": "This page uses the same Evening occasion category listed in occasion_categories — create the term once. Sections: evening wear, prom, party, special occasion. Use the demo gowns (376, 374, 370, 361, 320) by shape, not by invented fabric composition — read the product data before describing fabric. Prom copy must stay age-appropriate for 17+ readers. Link the wedding-guest page and the size guide.",
+      "category": {
+        "slug": "evening",
+        "name": "Evening",
+        "parent": "women",
+        "description_hint": "Gowns, satin and sequins for evenings out, with lengths that work on a shorter frame.",
+        "assign_products": [
+          376,
+          374,
+          370,
+          368,
+          361,
+          320,
+          196,
+          194,
+          190,
+          199
+        ]
+      }
+    },
+    {
+      "slug": "chic-boho-clothes",
+      "type": "landing",
+      "title_hint": "Chic Boho Clothes: Soft, Relaxed and Not Everywhere",
+      "purpose": "Largest single style cluster — a shoppable boho edit for shoppers who want relaxed pieces with detail.",
+      "primary_keyword": "chic boho clothes",
+      "keywords": [
+        "chic boho clothes",
+        "coastal chic fashion",
+        "chic vintage style",
+        "chic outfit ideas"
+      ],
+      "related_slugs": [
+        "chic-style",
+        "thai-fashion",
+        "statement-pieces",
+        "cute-vacation-outfits"
+      ],
+      "notes": "Highest-volume keyword on the site (33,100) — this page should be the strongest landing. Build outfit formulas (flowy skirt + knit, maxi + flat sandal), a colour paragraph using the brand palette words (cream, sand, rose, brown, soft pink — no black or red framing), and a \"coastal chic fashion\" section for warm-weather and holiday dressing. Link /product-category/chic-boho/, the Thai edit and the vacation journal. No festival or event name-drops we cannot back up.",
+      "category": {
+        "slug": "chic-boho",
+        "name": "Chic & Boho",
+        "parent": "women",
+        "description_hint": "Relaxed shapes with something going on up close — texture, print, a detail you notice on the second look.",
+        "assign_products": [
+          379,
+          368,
+          213,
+          219,
+          366,
+          194,
+          2225,
+          2227
+        ]
+      }
+    },
+    {
+      "slug": "chic-style",
+      "type": "landing",
+      "title_hint": "Chic Style: Simple Pieces, Better Details",
+      "purpose": "Hub for the broad chic cluster, including what a chic dress code actually means, with a shoppable capsule.",
+      "primary_keyword": "chic style",
+      "keywords": [
+        "chic style",
+        "chic boutique",
+        "chic fashion",
+        "casual chic fashion",
+        "chic dress to impress",
+        "french chic fashion",
+        "chic style women",
+        "chic attire women",
+        "modern chic fashion",
+        "sporty chic fashion",
+        "rock chic fashion",
+        "chic attire for women",
+        "chic dress code",
+        "chic attire dress code"
+      ],
+      "related_slugs": [
+        "chic-boho-clothes",
+        "affordable-luxury-clothes",
+        "petite-dresses-for-wedding-guest",
+        "statement-pieces"
+      ],
+      "notes": "Two halves. First, shoppable: casual chic, modern chic, French chic, sporty chic, rock chic, coastal-adjacent, vintage and elegant chic each get one or two sentences with a product or category link. Second, an FAQ-style block answering \"chic dress code\" and \"chic attire dress code\" — what to wear to a chic-dress-code event, for women, with a link to the wedding-guest and evening pages. \"chic boutique\" fits the closing line about what kind of boutique this is. Never use the banned words list; \"chic dress to impress\" must read as a real sentence, not a slogan.",
+      "category": {
+        "slug": "chic-style",
+        "name": "Chic Style",
+        "parent": "women",
+        "description_hint": "The quiet end of the boutique: clean shapes, good fabric, one detail that makes it yours.",
+        "assign_products": [
+          372,
+          366,
+          213,
+          215,
+          268,
+          192,
+          178,
+          2213
+        ]
+      }
+    },
+    {
+      "slug": "cute-fashion",
+      "type": "landing",
+      "title_hint": "Cute Fashion Ideas: Outfits That Feel Like You Found Them First",
+      "purpose": "Broad cute-clothing hub that converts general \"cute clothes\" browsing into category visits and an email signup.",
+      "primary_keyword": "cute fashion ideas",
+      "keywords": [
+        "cute fashion ideas",
+        "pinterest cute clothes",
+        "comfy cute clothes",
+        "aesthetic cute clothes",
+        "cute clothes aesthetic",
+        "cute clothes to wear",
+        "cute fashion style",
+        "cute fashion",
+        "cute clothes sets",
+        "cute clothes for chubby ladies",
+        "cute clothes for moms",
+        "casual cute clothes",
+        "too cute clothes",
+        "2 cute clothes",
+        "cheap cute clothes stores",
+        "cute clothes for women in their 30s",
+        "cute clothes for women in their 20s",
+        "cute clothes for middle aged women",
+        "cute clothes inspo",
+        "pictures of cute clothes",
+        "where to buy cute clothes reddit",
+        "black cute clothes",
+        "cute clothes for twins",
+        "perfectly cute clothes"
+      ],
+      "related_slugs": [
+        "japanese-kawaii-fashion",
+        "cute-clothes-for-winter",
+        "cute-fashion-for-teens",
+        "korean-fashion"
+      ],
+      "notes": "Lots of near-duplicate keywords — spread them across sections so nothing reads stuffed: comfy and casual cute clothes, cute clothes sets, preppy, aesthetic, colour (black cute clothes as one honest line about the pieces, not the site design), cute clothes for moms, for women in their 20s and 30s, for middle aged women, for chubby ladies (write it warmly and inclusively, sizing-led). \"pinterest cute clothes\" fits a line about saving looks on Pinterest; \"where to buy cute clothes reddit\" and \"cheap cute clothes stores\" fit a short honest \"where to shop\" paragraph. \"2 cute clothes\", \"too cute clothes\", \"perfectly cute clothes\" and \"cute clothes for twins\" work in a light intro line about what people type when they hunt for this. \"pictures of cute clothes\" and \"cute clothes inspo\" belong to a line about the photography on the product pages. No invented review counts.",
+      "category": {
+        "slug": "cute-fashion",
+        "name": "Cute Fashion",
+        "parent": "women",
+        "description_hint": "The easy, everyday cute: comfy knits, playful skirts, sets and sneakers you will actually reach for.",
+        "assign_products": [
+          364,
+          366,
+          217,
+          213,
+          266,
+          268,
+          2223,
+          2213,
+          2225
+        ]
+      }
+    },
+    {
+      "slug": "affordable-luxury-clothes",
+      "type": "landing",
+      "title_hint": "Affordable Luxury Clothes: The Feel Without the Four-Figure Tag",
+      "purpose": "Positioning page for the 18k-volume affordable luxury cluster; explains fabric, finish and fair pricing and sells the elevated end of the catalogue.",
+      "primary_keyword": "affordable luxury clothes",
+      "keywords": [
+        "affordable luxury clothes",
+        "classy chic fashion",
+        "elegant chic fashion"
+      ],
+      "related_slugs": [
+        "chic-style",
+        "petite-evening-dresses",
+        "statement-pieces",
+        "korean-fashion-brands"
+      ],
+      "notes": "One keyword, high volume — the page must earn it with substance, not repetition. Cover: what affordable luxury means, how to judge fabric weight, lining, seams and hardware, why small-batch sourcing keeps prices fair, and how to care for the pieces. Use the real demo products (silk blend gown 376, wool and silk dress 372, Saffiano leather pump 192) and read their product data before describing materials. Never compare against a named luxury house or claim designer equivalence.",
+      "category": {
+        "slug": "affordable-luxury",
+        "name": "Affordable Luxury",
+        "parent": "women",
+        "description_hint": "Pieces that feel expensive in the hand — silk blends, satin, sequins, leather — priced like a boutique, not a flagship.",
+        "assign_products": [
+          376,
+          370,
+          372,
+          320,
+          192,
+          196,
+          178,
+          217
+        ]
+      }
+    },
+    {
+      "slug": "statement-pieces",
+      "type": "landing",
+      "title_hint": "Statement Fashion: One Piece That Does All the Talking",
+      "purpose": "Sells the brand promise directly — unique, look-twice pieces and the accessories that finish them.",
+      "primary_keyword": "statement fashion",
+      "keywords": [
+        "statement fashion",
+        "unique fashion",
+        "trendy fashion jewelry",
+        "stylish fashion jewellery",
+        "cute fashion tennis shoes",
+        "cute fashion sneakers",
+        "cute clothes accessories",
+        "unique yoga clothes"
+      ],
+      "related_slugs": [
+        "chic-boho-clothes",
+        "affordable-luxury-clothes",
+        "kpop-fashion",
+        "chic-style"
+      ],
+      "notes": "Best home for the brand lines (\"not made to blend in\", \"find something yours\"). Sections: statement dresses and skirts, statement shoes (\"cute fashion sneakers\", \"cute fashion tennis shoes\" — use the real sneakers 2223 and 2213), jewellery and accessories (\"trendy fashion jewelry\", \"stylish fashion jewellery\", \"cute clothes accessories\") written as styling advice since we do not list jewellery yet — say what we do stock. \"unique yoga clothes\" gets one honest line: we do not stock activewear, here is the soft everyday alternative. Do not claim exclusivity numbers (\"only 5 made\") unless the product data says so.",
+      "category": {
+        "slug": "statement-pieces",
+        "name": "Statement Pieces",
+        "parent": "women",
+        "description_hint": "The one that gets asked about: sequins, chain mail, metallics, and shoes that carry a plain outfit.",
+        "assign_products": [
+          370,
+          368,
+          199,
+          219,
+          217,
+          194,
+          361,
+          2227
+        ]
+      }
+    },
+    {
+      "slug": "what-does-petite-mean",
+      "type": "journal",
+      "title_hint": "What Does Petite Clothes Mean? Height, Proportion and Plus Size Petite",
+      "purpose": "Definitional guide that captures the petite meaning cluster and sends readers to the petite categories and size guide.",
+      "primary_keyword": "what does petite clothes mean",
+      "keywords": [
+        "what does petite clothes mean",
+        "petite meaning in clothes",
+        "petite clothes definition",
+        "what does women's petite clothes mean",
+        "plus size petite fashion",
+        "petite clothing plus size",
+        "asian petite fashion",
+        "petite clothes for juniors"
+      ],
+      "related_slugs": [
+        "petite-clothes-for-women",
+        "petite-dresses",
+        "size-guide",
+        "petite-fashion-over-50"
+      ],
+      "notes": "Explain petite as a set of proportions (shorter torso, arm and leg measurements), not a size or a body weight, and that petite sizing exists alongside regular and plus. Cover plus size petite fashion and petite clothing plus size honestly — say whether we carry those ranges based on the live catalogue, never guess. \"petite clothes for juniors\" needs a line on juniors versus petite sizing. \"asian petite fashion\" fits a paragraph on why Korean and Thai sourcing often suits shorter frames. Link the size guide and both petite categories. Use standard US petite height guidance (around 5'4\" and under) and say it is a guide, not a rule."
+    },
+    {
+      "slug": "petite-fashion-over-50",
+      "type": "journal",
+      "title_hint": "Petite Fashion Over 50: Proportion Advice That Ages Well",
+      "purpose": "Advice piece for older petite shoppers, the second-biggest petite sub-cluster, with links into the petite categories.",
+      "primary_keyword": "petite fashion over 50",
+      "keywords": [
+        "petite fashion over 50",
+        "petite dresses for older women",
+        "petite clothes for older women",
+        "petite clothes for mature women",
+        "petite clothes for women over 60",
+        "petite clothes women over 50",
+        "petite fashion for women over 50",
+        "where to buy petite clothes for older ladies online",
+        "petite fashion advice",
+        "petite fashion blog",
+        "blogs for petite fashion",
+        "petite fashion reddit",
+        "reddit petite fashion",
+        "petite fashion influencers"
+      ],
+      "related_slugs": [
+        "petite-dresses",
+        "petite-clothes-for-women",
+        "what-does-petite-mean",
+        "chic-style"
+      ],
+      "notes": "Warm, respectful tone — no \"flattering\" clichés about hiding anything. Cover proportion, sleeve length, necklines, fabric weight and shoe height, plus dresses for older women and mature women. The community keywords (\"petite fashion blog\", \"blogs for petite fashion\", \"petite fashion influencers\", \"petite fashion reddit\", \"reddit petite fashion\") belong in a closing \"where petite shoppers compare notes\" paragraph — describe the kind of community, do not name or link accounts we have not verified, and do not invent quotes. \"where to buy petite clothes for older ladies online\" answers with our own categories plus honest general advice."
+    },
+    {
+      "slug": "cute-clothes-for-winter",
+      "type": "journal",
+      "title_hint": "Cute Clothes for Winter: Christmas, New Year and Valentine Outfits",
+      "purpose": "Seasonal outfit guide covering the cold-weather and winter-holiday cute clusters, ending in shoppable links.",
+      "primary_keyword": "cute clothes for winter",
+      "keywords": [
+        "cute clothes for winter",
+        "cute clothes for cold weather",
+        "cute fall fashion",
+        "cute xmas outfits",
+        "cute clothes for christmas",
+        "cute xmas dress",
+        "cute clothes christmas",
+        "cute clothes for valentine's day",
+        "cute clothes to wear on a date",
+        "cute clothes for couples"
+      ],
+      "related_slugs": [
+        "korean-winter-fashion",
+        "cute-fashion",
+        "cute-vacation-outfits",
+        "petite-evening-dresses"
+      ],
+      "notes": "Run it as a calendar: layering for cold weather and early fall, then cute xmas outfits and a cute xmas dress, then Valentine and date-night looks, then a short matching-outfits line for couples. Use real products (sweater dress 364, knit 366, tights 242, sequin gown 361). Christmas copy stays non-religious and inclusive. No gift-delivery promises or dated shipping cut-offs. Link the Korean winter edit, the cute fashion category and the evening dresses page."
+    },
+    {
+      "slug": "cute-vacation-outfits",
+      "type": "journal",
+      "title_hint": "Cute Clothes for a Cruise, a Beach Week or a Spring Break Trip",
+      "purpose": "Travel packing and outfit guide that covers the vacation cute cluster and funnels to the boho and Thai edits.",
+      "primary_keyword": "cute clothes for a cruise",
+      "keywords": [
+        "cute clothes for a cruise",
+        "cute clothes to wear on a cruise",
+        "cute clothes for vacation",
+        "cute clothes for spring break",
+        "cute clothes for camping",
+        "cute clothes for italy",
+        "chic travel clothes for women"
+      ],
+      "related_slugs": [
+        "chic-boho-clothes",
+        "thai-fashion",
+        "cute-clothes-for-winter",
+        "bangkok-shopping-guide"
+      ],
+      "notes": "Build a capsule: pieces that mix, wrinkle-tolerant fabric, one dress that covers dinner. Sections for a cruise (including formal night), vacation and spring break, camping, and a city trip to Italy, plus \"chic travel clothes for women\" for the grown-up version. Keep any dress-code claims general (\"many cruise lines ask for…\") and attribute nothing to a named cruise line. Link the boho category, the Thai edit and the maxi dresses."
+    },
+    {
+      "slug": "cute-fashion-for-teens",
+      "type": "journal",
+      "title_hint": "Cute Fashion for Teens: Trendy Clothes That Still Feel Like You",
+      "purpose": "Guide for teen and junior shoppers (13+) and the parents buying with them, linking to the cute and petite categories.",
+      "primary_keyword": "cute fashion for teens",
+      "keywords": [
+        "cute fashion for teens",
+        "trendy clothes teens",
+        "cute clothes for high schoolers",
+        "cute clothes stores for teens",
+        "petite clothes for teens",
+        "affordable cute clothes for juniors",
+        "cute clothes for dance",
+        "preppy cute clothes",
+        "cute clothes preppy"
+      ],
+      "related_slugs": [
+        "cute-fashion",
+        "kpop-outfit-ideas",
+        "petite-clothes-for-women",
+        "japanese-kawaii-fashion"
+      ],
+      "notes": "Keep it to high-school age and up — nothing aimed at children. Cover trendy clothes teens actually wear, school-to-weekend outfits, a dance or formal look (\"cute clothes for dance\"), budget advice for \"affordable cute clothes for juniors\", where teens shop (\"cute clothes stores for teens\" — answer with online boutiques generally plus us), and \"petite clothes for teens\" with a size-guide link. No body-shaming, no age-inappropriate styling, no claims about what is \"in\" this season that we cannot support."
+    },
+    {
+      "slug": "japanese-kawaii-fashion",
+      "type": "journal",
+      "title_hint": "Japanese Cute Fashion: Kawaii, Cutecore and the Softer Aesthetics",
+      "purpose": "Explains the Japanese cute aesthetics family and shows how to wear a toned-down version from our catalogue.",
+      "primary_keyword": "japanese cute fashion",
+      "keywords": [
+        "japanese cute fashion",
+        "japan cute fashion",
+        "kawaii cute fashion",
+        "cute kawaii fashion",
+        "cute clothes kawaii",
+        "cutecore fashion",
+        "creepy cute clothes",
+        "creepy cute fashion",
+        "cute clothes anime",
+        "cute clothes for anime",
+        "little princess cute fashion",
+        "pastel cute clothes",
+        "cute clothes pink",
+        "pink cute clothes",
+        "cute clothes with bows",
+        "cute fashion korean",
+        "korean fashion cute",
+        "korean cute fashion style"
+      ],
+      "related_slugs": [
+        "cute-fashion",
+        "korean-street-style",
+        "kpop-fashion",
+        "pop-fashion-decades"
+      ],
+      "notes": "Define the styles plainly: kawaii, cutecore, creepy cute, anime-influenced dressing, pastel and pink palettes, bows as a detail, and how Japanese cute differs from Korean cute. Say clearly that we source from Korea and Thailand, so this is a styling guide, not a Japanese-brand shop. \"little princess cute fashion\" fits the soft-romantic paragraph. Link the cute fashion category and the Korean street style piece. Do not name Japanese brands or subculture districts as if we stock them."
+    },
+    {
+      "slug": "korean-fashion-for-men",
+      "type": "journal",
+      "title_hint": "Korean Fashion Men's Clothing: A Guide to the Look",
+      "purpose": "One guide covering the whole Korean menswear cluster; useful for partners and gift shoppers while being honest that the shop is womenswear.",
+      "primary_keyword": "korean fashion men's clothing",
+      "keywords": [
+        "korean fashion men's clothing",
+        "korean fashion clothes men",
+        "korean fashion men",
+        "korean fashion guy",
+        "korean clothes style men",
+        "korean fashion guys",
+        "korean style clothes men",
+        "korean fashion trends male",
+        "korean fashion for guys",
+        "male asian fashion",
+        "asian fashion for men",
+        "men's korean fashion",
+        "south korean fashion men",
+        "korean fashion men suit",
+        "korean fashion suit",
+        "winter korean fashion men",
+        "korean fashion men pants",
+        "chic clothes for men"
+      ],
+      "related_slugs": [
+        "korean-street-style",
+        "kpop-fashion-for-men",
+        "korean-fashion",
+        "traditional-korean-clothes"
+      ],
+      "notes": "State in the first 60 words that Oops Mine Co. stocks womenswear, so this is a style guide, not a menswear shop — that keeps every men keyword honest. Cover the staples (oversized shirting, wide trousers, knitwear, outerwear), suits and blazers, pants, winter layering, and how the look reads outside Korea. Close with a line for women shopping for themselves, linking the Korean Fashion category. \"chic clothes for men\" fits the smart-casual section. No brand shopping links we cannot verify."
+    },
+    {
+      "slug": "kpop-fashion-for-men",
+      "type": "journal",
+      "title_hint": "Kpop Outfit Men: Stage Looks Broken Down Into Real Clothes",
+      "purpose": "Second men-facing guide, focused on male K-pop styling, catching the male kpop cluster in one place.",
+      "primary_keyword": "kpop outfit men",
+      "keywords": [
+        "kpop outfit men",
+        "kpop fashion men",
+        "male kpop fashion",
+        "kpop fashion for men",
+        "k pop fashion male",
+        "men's kpop fashion"
+      ],
+      "related_slugs": [
+        "korean-fashion-for-men",
+        "kpop-outfit-ideas",
+        "kpop-fashion",
+        "korean-street-style"
+      ],
+      "notes": "Break stage styling into wearable parts: layering, proportion, accessories, hair and colour. Be explicit that we sell womenswear and this is styling reading. Describe looks by type (performance, airport, variety show) without naming groups, members or claiming what any artist wore — no celebrity facts. Link the K-pop Inspired category for readers shopping for themselves."
+    },
+    {
+      "slug": "kpop-outfit-ideas",
+      "type": "journal",
+      "title_hint": "Kpop Outfit Ideas: Five Looks You Can Build From a Normal Closet",
+      "purpose": "Ideas-driven guide for fans building K-pop-inspired outfits, converting to the K-pop Inspired category.",
+      "primary_keyword": "kpop outfit ideas",
+      "keywords": [
+        "kpop outfit ideas",
+        "kpop outfits female",
+        "kpop outfits female ideas",
+        "kpop fashion for female",
+        "kpop fashion inspiration",
+        "kpop dress up",
+        "kpop costumes adults"
+      ],
+      "related_slugs": [
+        "kpop-fashion",
+        "korean-street-style",
+        "cute-fashion-for-teens",
+        "kpop-fashion-for-men"
+      ],
+      "notes": "Five named looks (school-uniform inspired, sporty, soft girl, stage-glam, airport casual) each built from real catalogue pieces (skirt 217 or 199, knit 364, denim 268, sneakers 2223 or 2213). \"kpop dress up\" and \"kpop costumes adults\" get one paragraph that draws the line between a costume and a wearable outfit — keep it about clothing, never about impersonating a named artist. Link /product-category/kpop-fashion/ and the K-pop landing."
+    },
+    {
+      "slug": "korean-fashion-brands",
+      "type": "journal",
+      "title_hint": "Korean Fashion Brands: How the Scene Works and What to Look For",
+      "purpose": "Explainer for the large brands and designers cluster, positioning our curation as the alternative to brand-hunting.",
+      "primary_keyword": "korean fashion brands",
+      "keywords": [
+        "korean fashion brands",
+        "korean fashion brand",
+        "south korean fashion brands",
+        "korean clothes brands popular",
+        "best korean clothes brands",
+        "best korean clothes brand",
+        "south korean fashion designers",
+        "korean fashion designer",
+        "asian fashion brands",
+        "asian fashion houses",
+        "korean fashion model",
+        "asian fashion model"
+      ],
+      "related_slugs": [
+        "korean-fashion",
+        "korean-street-style",
+        "asian-fashion",
+        "affordable-luxury-clothes"
+      ],
+      "notes": "Describe the landscape by tier, not by name: designer labels shown at Seoul Fashion Week, mid-market labels, online-first labels, and the small studios we buy from. Naming real brands invites errors, so keep any specific name out unless the writer can verify it from a primary source; the safer angle is \"how to judge a Korean label\" (fabric, sizing notes, restock habits). \"asian fashion houses\" and \"asian fashion brands\" widen the last section. Close with why a curated boutique beats chasing labels, and link the Korean Fashion category."
+    },
+    {
+      "slug": "korean-street-style",
+      "type": "journal",
+      "title_hint": "Korean Fashion Styles: Street Style, Aesthetics and How to Wear Them",
+      "purpose": "Big style explainer covering Korean aesthetics, trends, seasons and finishing details, feeding the Korean categories.",
+      "primary_keyword": "korean fashion styles",
+      "keywords": [
+        "korean fashion styles",
+        "korean fashion outfit",
+        "korean fashion outfits",
+        "korean fashion idea",
+        "korean fashion ideas",
+        "korean fashion trends",
+        "korean clothes trend",
+        "korean fashion aesthetics",
+        "korean fashion aesthetic",
+        "minimalist korean fashion",
+        "preppy korean fashion",
+        "90's korean fashion",
+        "seoul fashion",
+        "seoul clothes",
+        "asian fashion street style",
+        "summer korean fashion",
+        "korean fashion drama",
+        "korean fashion glasses",
+        "korean fashion hair",
+        "korean fashion bag",
+        "korean fashion backpack",
+        "korean fashion hat",
+        "korean fashion shoes"
+      ],
+      "related_slugs": [
+        "korean-fashion",
+        "korean-winter-fashion",
+        "korean-fashion-brands",
+        "japanese-kawaii-fashion"
+      ],
+      "notes": "Sections: the main aesthetics (minimalist, preppy, 90s revival, street), what changes season to season including summer korean fashion, Seoul as the reference point (seoul fashion, seoul clothes, asian fashion street style), the finishing details (bag, backpack, hat, glasses, shoes, hair) and a short note on sportier pieces such as korean golf clothes. \"korean fashion drama\" covers the on-screen styling many readers arrive from — describe the look, never a named show or actor. \"korean fashion model\" and \"asian fashion model\" fit a line about how runway and lookbook images differ from real wear. Link the Korean Fashion and Korean Winter categories."
+    },
+    {
+      "slug": "traditional-korean-clothes",
+      "type": "journal",
+      "title_hint": "Traditional Korean Fashion: Hanbok, Its Names and Its Modern Echoes",
+      "purpose": "Culture and style explainer for the very large traditional Korean cluster, connecting it to modern pieces we sell.",
+      "primary_keyword": "traditional korean fashion",
+      "keywords": [
+        "traditional korean fashion",
+        "korean clothes traditional",
+        "traditional korean clothes for men",
+        "korean clothes culture",
+        "korean clothes name"
+      ],
+      "related_slugs": [
+        "traditional-thai-clothes",
+        "korean-street-style",
+        "korean-fashion",
+        "asian-gift-guide"
+      ],
+      "notes": "Respectful, accurate, factual: hanbok, jeogori, chima, baji, durumagi — the garment names answer \"korean clothes name\". Cover when hanbok is worn today (holidays, weddings, first birthdays), traditional korean clothes for men, and how modern designers echo the lines (high waist, wrap front, soft volume). Verify every term and historical claim before publishing; no dates or dynasties from memory. Close by linking modern wrap and high-waist pieces in the Korean Fashion category. Do not sell hanbok or imply we stock it."
+    },
+    {
+      "slug": "traditional-thai-clothes",
+      "type": "journal",
+      "title_hint": "Traditional Thai Clothes: What They Are and Who Wears Them Today",
+      "purpose": "Culture explainer for the traditional Thai cluster (8,100 + 6,600 + 6,600), linking to the Thai fashion edit.",
+      "primary_keyword": "traditional thai clothes",
+      "keywords": [
+        "traditional thai clothes",
+        "traditional thai fashion",
+        "thailand clothes traditional",
+        "traditional thai clothes for women",
+        "traditional thai clothes men",
+        "thai clothes for men",
+        "thailand clothes for men",
+        "hmong thai clothes"
+      ],
+      "related_slugs": [
+        "thai-fashion",
+        "bangkok-shopping-guide",
+        "traditional-korean-clothes",
+        "asian-fashion"
+      ],
+      "notes": "Cover the chut thai family for women and men, the role of Thai silk, when traditional dress appears (temple visits, weddings, Songkran, formal occasions) and what visitors are expected to wear. \"hmong thai clothes\" needs a careful, accurate paragraph about Hmong communities and their embroidery — research it properly or cut it. Verify every garment name and spelling; no invented history. Link the Thai Fashion category for the modern, wearable side and the Bangkok guide."
+    },
+    {
+      "slug": "bangkok-shopping-guide",
+      "type": "journal",
+      "title_hint": "Bangkok Clothes Shopping: How the Markets and Malls Actually Work",
+      "purpose": "Travel-and-sourcing guide that shows where our Thai pieces come from and helps readers planning a Bangkok trip.",
+      "primary_keyword": "bangkok clothes shopping",
+      "keywords": [
+        "bangkok clothes shopping",
+        "bangkok thailand clothes",
+        "bangkok clothes",
+        "bangkok fashion island"
+      ],
+      "related_slugs": [
+        "thai-fashion",
+        "traditional-thai-clothes",
+        "cute-vacation-outfits",
+        "asian-fashion"
+      ],
+      "notes": "Write from general, checkable facts: market versus mall shopping, sizing that runs small, fabric in a hot climate, bargaining etiquette, and what to pack. \"bangkok fashion island\" refers to a named mall — confirm current details from a primary source or describe it only in general terms. Never invent opening hours, prices, stall numbers or transport directions. End with the honest brand angle: this is where some of our pieces are found, and the Thai Fashion category link."
+    },
+    {
+      "slug": "pop-fashion-decades",
+      "type": "journal",
+      "title_hint": "Pop Fashion Through the Decades: 60s, 80s, 90s and 2000s",
+      "purpose": "Evergreen style-history piece capturing the pop-fashion decade cluster and connecting it to pieces we sell now.",
+      "primary_keyword": "pop fashion",
+      "keywords": [
+        "pop fashion",
+        "brit pop fashion",
+        "1960s pop fashion",
+        "1980s pop fashion",
+        "80s pop fashion",
+        "90s pop fashion",
+        "90s pop stars outfits",
+        "2000s pop fashion",
+        "city pop fashion",
+        "bubble pop fashion",
+        "pop art clothing",
+        "girly pop fashion",
+        "cute clothes y2k",
+        "cute clothes tumblr crop tops",
+        "1920s asian fashion"
+      ],
+      "related_slugs": [
+        "japanese-kawaii-fashion",
+        "statement-pieces",
+        "korean-street-style",
+        "cute-fashion"
+      ],
+      "notes": "One section per era: 1960s, 1980s, 1990s, 2000s and Y2K, with brit pop, city pop, bubble pop, pop art prints, girly pop and the 90s pop stars look as sub-threads, plus a short paragraph on 1920s Asian fashion for the same reason (silhouette history). Describe movements and silhouettes, not named celebrities or bands. \"cute clothes tumblr crop tops\" fits the 2010s-into-Y2K revival line. End with today: which sequin, metallic or mini pieces in the shop echo each era, linking Statement Pieces."
+    },
+    {
+      "slug": "asian-gift-guide",
+      "type": "journal",
+      "title_hint": "Gift for Chinese New Year: Clothing Ideas for Mom, Dad and the Exchange",
+      "purpose": "Gift guide covering the Lunar New Year and Asian family gifting cluster, aimed at conversion through gift-friendly pieces.",
+      "primary_keyword": "gift for chinese new year",
+      "keywords": [
+        "gift for chinese new year",
+        "good gift for chinese new year",
+        "gift for chinese new year 2026",
+        "traditional gift for chinese new year",
+        "gift for chinese mom",
+        "gift for asian mom",
+        "gifts for asian moms",
+        "gift for asian dad",
+        "gift for chinese wedding",
+        "gifts for chinese gift exchange",
+        "asian gift store near me"
+      ],
+      "related_slugs": [
+        "traditional-korean-clothes",
+        "traditional-thai-clothes",
+        "asian-fashion",
+        "affordable-luxury-clothes"
+      ],
+      "notes": "Structure: Lunar New Year gifting etiquette (red envelopes, lucky colours, gifts to avoid such as clocks and sharp objects — verify each custom), gifts for a Chinese mom, for an Asian mom, for an Asian dad, a Chinese wedding gift, and an office gift exchange price bracket. \"gift for chinese new year 2026\" needs the correct 2026 date and zodiac animal — check a primary source, do not write it from memory. \"asian gift store near me\" is answered honestly: we are an online boutique, here is what ships. Avoid stereotypes; keep customs specific and sourced. No delivery-date promises."
+    },
+    {
+      "slug": "faq",
+      "type": "faq",
+      "title_hint": "FAQ: Sizing, Shipping, Returns and Where to Find Us",
+      "purpose": "Answers the practical questions that stop a purchase, including the near-me and wholesale questions we cannot answer with a shop address.",
+      "primary_keyword": "cute clothes near me",
+      "keywords": [
+        "korean clothes store near me",
+        "korean clothes near me",
+        "korean fashion near me",
+        "korean fashion store nyc",
+        "korean fashion wholesaler",
+        "cute clothes stores near me",
+        "cute clothes near me",
+        "trendy clothes near me"
+      ],
+      "related_slugs": [
+        "size-guide",
+        "contacts",
+        "refund_returns",
+        "shipping-policy"
+      ],
+      "notes": "Grouped questions: ordering, sizing (link the size guide), shipping, returns (link the refund policy, quote nothing that contradicts the client text), the pieces themselves (small batches, restocks), and \"do you have a store near me\" — answer that we are online-only, based in Houston, TX, with a mailing address and no walk-ins; that covers \"cute clothes near me\", \"cute clothes stores near me\", \"trendy clothes near me\", \"korean clothes near me\", \"korean clothes store near me\", \"korean fashion near me\" and \"korean fashion store nyc\". \"korean fashion wholesaler\" gets an honest answer: we buy from suppliers in Korea and sell retail; say whether wholesale enquiries are welcome only if the owner confirms. Use FAQPage JSON-LD. No shipping times, carriers or prices unless the owner supplies them."
+    },
+    {
+      "slug": "size-guide",
+      "type": "sizeguide",
+      "title_hint": "Size Guide: Petite Clothing Size, Korean Sizes and How to Measure",
+      "purpose": "Reduces returns by explaining Asian sizing against US sizing and how to measure, for shoppers unsure before checkout.",
+      "primary_keyword": "petite clothing size",
+      "keywords": [
+        "petite clothing size",
+        "korean clothes sizing",
+        "korean clothes sizes",
+        "korean clothes size",
+        "size chart korean clothes",
+        "korean fashion plus size"
+      ],
+      "related_slugs": [
+        "what-does-petite-mean",
+        "petite-clothes-for-women",
+        "faq",
+        "refund_returns"
+      ],
+      "notes": "Cover: how to measure bust, waist, hip and height; what petite clothing size means; how Korean clothes sizes work (S/M/L and the free-size habit) and why they run smaller than US sizes; a conversion table presented as a guide with the note that each piece differs; korean fashion plus size and what we can and cannot fit. Every measurement table must come from the actual product data or be labelled as a general guide — no invented brand charts. Link each product page measurement block, the FAQ and the returns policy."
+    },
+    {
+      "slug": "contacts",
+      "type": "contact",
+      "title_hint": "Contact Oops Mine Co.",
+      "purpose": "Gives shoppers a direct, human way to reach the owner and captures questions before they become abandoned carts.",
+      "primary_keyword": "",
+      "keywords": [],
+      "related_slugs": [
+        "faq",
+        "refund_returns",
+        "shipping-policy"
+      ],
+      "notes": "Use only the supplied details: hello@oopsmineco.com, 346-847-6606, Mon-Fri 8:30am-5:00pm and Sat 10:00am-5:00pm Central, Sunday closed, 12712 W Lake Houston Pkwy, Ste B-4014, Houston, TX 77044 (mailing address, no walk-ins). Facebook link from the Customizer social settings; no Instagram or TikTok handles until the owner supplies them. Contact form plus the newsletter capture. No response-time promise."
+    },
+    {
+      "slug": "refund_returns",
+      "type": "policy",
+      "title_hint": "Refund and Returns Policy",
+      "purpose": "Publishes the client-supplied return policy verbatim so shoppers can check terms before buying.",
+      "primary_keyword": "",
+      "keywords": [],
+      "related_slugs": [
+        "faq",
+        "shipping-policy",
+        "contacts"
+      ],
+      "notes": "Use the client text in blueprint/return-policy.txt word for word. Do not rewrite, summarise, shorten or add keywords. Add only the contact line and links to the FAQ and shipping policy around it."
+    },
+    {
+      "slug": "shipping-policy",
+      "type": "policy",
+      "title_hint": "Shipping Policy",
+      "purpose": "States how orders are processed and shipped so the checkout has a terms page to link.",
+      "primary_keyword": "",
+      "keywords": [],
+      "related_slugs": [
+        "refund_returns",
+        "faq",
+        "contacts"
+      ],
+      "notes": "Owner must supply carriers, processing time, rates and international details — leave clearly marked placeholders rather than inventing any of them. No delivery estimates, no free-shipping threshold unless the owner confirms one."
+    },
+    {
+      "slug": "privacy-policy",
+      "type": "policy",
+      "title_hint": "Privacy Policy",
+      "purpose": "Explains what data the shop collects (orders, newsletter, abandoned-cart tracking) and how it is used.",
+      "primary_keyword": "",
+      "keywords": [],
+      "related_slugs": [
+        "terms-and-conditions",
+        "contacts",
+        "faq"
+      ],
+      "notes": "Must match what the site actually does: WooCommerce order data, the WHD newsletter and abandoned-cart tables, cookies and any tracking scripts enabled in WHD. Include the unsubscribe route (?whd_unsub=) and the contact address for data requests. No keywords."
+    },
+    {
+      "slug": "terms-and-conditions",
+      "type": "policy",
+      "title_hint": "Terms and Conditions",
+      "purpose": "Sets the terms of sale and site use for the store.",
+      "primary_keyword": "",
+      "keywords": [],
+      "related_slugs": [
+        "privacy-policy",
+        "refund_returns",
+        "contacts"
+      ],
+      "notes": "Standard terms of sale for a US online boutique: orders, pricing and errors, payment, cancellation, intellectual property, limitation of liability, governing law (Texas). Have the owner review before publishing; no legal claims invented. No keywords."
+    }
+  ],
+  "occasion_categories": [
+    {
+      "slug": "casual",
+      "name": "Casual",
+      "assign_products": [
+        268,
+        270,
+        263,
+        246,
+        213,
+        215,
+        366,
+        364,
+        2223,
+        2213
+      ]
+    },
+    {
+      "slug": "workwear",
+      "name": "Workwear",
+      "assign_products": [
+        372,
+        366,
+        213,
+        215,
+        268,
+        192,
+        178,
+        2213
+      ]
+    },
+    {
+      "slug": "evening",
+      "name": "Evening",
+      "assign_products": [
+        376,
+        374,
+        370,
+        368,
+        361,
+        320,
+        196,
+        194,
+        190,
+        199
+      ]
+    },
+    {
+      "slug": "wedding-guest",
+      "name": "Wedding Guest",
+      "assign_products": [
+        379,
+        376,
+        374,
+        370,
+        368,
+        361,
+        320,
+        196,
+        192,
+        190
+      ]
+    }
+  ],
+  "excluded": [
+    {
+      "keyword": "cute clothes for yorkies",
+      "reason": "pet clothing — the boutique sells womenswear only"
+    },
+    {
+      "keyword": "cute clothes for corgis",
+      "reason": "pet clothing — the boutique sells womenswear only"
+    },
+    {
+      "keyword": "chihuahua cute clothes",
+      "reason": "pet clothing — the boutique sells womenswear only"
+    },
+    {
+      "keyword": "cute clothes for puppy",
+      "reason": "pet clothing — the boutique sells womenswear only"
+    },
+    {
+      "keyword": "cute clothes for small dogs",
+      "reason": "pet clothing — the boutique sells womenswear only"
+    },
+    {
+      "keyword": "cute clothes for big dogs",
+      "reason": "pet clothing — the boutique sells womenswear only"
+    },
+    {
+      "keyword": "cute clothes codes for roblox",
+      "reason": "Roblox game item codes — no shopping intent"
+    },
+    {
+      "keyword": "sims 4 cute clothes cc",
+      "reason": "Sims 4 custom content — no shopping intent"
+    },
+    {
+      "keyword": "sims 4 cc cute clothes",
+      "reason": "Sims 4 custom content — no shopping intent"
+    },
+    {
+      "keyword": "cute clothes stardew valley",
+      "reason": "Stardew Valley game query — no shopping intent"
+    },
+    {
+      "keyword": "animal crossing cute clothes",
+      "reason": "Animal Crossing game query — no shopping intent"
+    },
+    {
+      "keyword": "cute clothes animal crossing",
+      "reason": "Animal Crossing game query — no shopping intent"
+    },
+    {
+      "keyword": "acnh cute clothes",
+      "reason": "Animal Crossing (ACNH) game query — no shopping intent"
+    },
+    {
+      "keyword": "cute clothes acnh",
+      "reason": "Animal Crossing (ACNH) game query — no shopping intent"
+    },
+    {
+      "keyword": "kpop dress up games",
+      "reason": "dress-up game query — no shopping intent"
+    },
+    {
+      "keyword": "cute clothes app",
+      "reason": "app download intent, not a clothing purchase"
+    },
+    {
+      "keyword": "cute clothes drawing",
+      "reason": "drawing tutorial intent, not shopping"
+    },
+    {
+      "keyword": "how to draw cute clothes",
+      "reason": "drawing tutorial intent, not shopping"
+    },
+    {
+      "keyword": "cute clothes for drawing",
+      "reason": "drawing reference intent, not shopping"
+    },
+    {
+      "keyword": "cute clothes to draw",
+      "reason": "drawing reference intent, not shopping"
+    },
+    {
+      "keyword": "cute clothes drawing ideas",
+      "reason": "drawing tutorial intent, not shopping"
+    },
+    {
+      "keyword": "cute clothes drawing easy",
+      "reason": "drawing tutorial intent, not shopping"
+    },
+    {
+      "keyword": "cute clothes drawing reference",
+      "reason": "drawing reference intent, not shopping"
+    },
+    {
+      "keyword": "cute clothes reference",
+      "reason": "drawing reference intent, not shopping"
+    },
+    {
+      "keyword": "cute clothes drawing pinterest",
+      "reason": "drawing reference intent, not shopping"
+    },
+    {
+      "keyword": "cute fashion drawing",
+      "reason": "drawing tutorial intent, not shopping"
+    },
+    {
+      "keyword": "crochet cute clothes",
+      "reason": "crochet craft intent — we do not sell patterns or yarn"
+    },
+    {
+      "keyword": "cute clothes to crochet",
+      "reason": "crochet craft intent — we do not sell patterns or yarn"
+    },
+    {
+      "keyword": "cute clothes pattern",
+      "reason": "sewing pattern intent — we do not sell patterns"
+    },
+    {
+      "keyword": "cute clothes hangers",
+      "reason": "clothes hangers are a homeware product we do not sell"
+    },
+    {
+      "keyword": "cute clothes hanger",
+      "reason": "clothes hangers are a homeware product we do not sell"
+    },
+    {
+      "keyword": "cute clothes patches",
+      "reason": "iron-on patches are a craft product we do not sell"
+    },
+    {
+      "keyword": "cute clothes shop names",
+      "reason": "people naming their own shop — not a customer query"
+    },
+    {
+      "keyword": "pop's old fashion ice cream co",
+      "reason": "ice cream company, not fashion"
+    },
+    {
+      "keyword": "thai style fried egg",
+      "reason": "food recipe query"
+    },
+    {
+      "keyword": "muay thai clothes",
+      "reason": "muay thai fight gear — not our category"
+    },
+    {
+      "keyword": "petite maternity clothes",
+      "reason": "maternity wear — not stocked, would mislead shoppers"
+    },
+    {
+      "keyword": "petite pregnancy clothes",
+      "reason": "maternity wear — not stocked, would mislead shoppers"
+    },
+    {
+      "keyword": "maternity petite clothes",
+      "reason": "maternity wear — not stocked, would mislead shoppers"
+    },
+    {
+      "keyword": "cute clothes for 9 year olds",
+      "reason": "children under 13 — we sell womenswear"
+    },
+    {
+      "keyword": "cute clothes 11 year olds",
+      "reason": "children under 13 — we sell womenswear"
+    },
+    {
+      "keyword": "cute clothes 10 year olds",
+      "reason": "children under 13 — we sell womenswear"
+    },
+    {
+      "keyword": "cute clothes for 10 year olds amazon",
+      "reason": "children under 13 plus a retailer name"
+    },
+    {
+      "keyword": "cute clothes for nine year olds",
+      "reason": "children under 13 — we sell womenswear"
+    },
+    {
+      "keyword": "cute clothes for eight year olds",
+      "reason": "children under 13 — we sell womenswear"
+    },
+    {
+      "keyword": "cute clothes 10 12",
+      "reason": "children's size range 10-12 — we sell womenswear"
+    },
+    {
+      "keyword": "cute clothes for sixth graders",
+      "reason": "school grade query — children under 13"
+    },
+    {
+      "keyword": "cute clothes for 6th graders",
+      "reason": "school grade query — children under 13"
+    },
+    {
+      "keyword": "cute clothes for 7th graders",
+      "reason": "school grade query — children under 13"
+    },
+    {
+      "keyword": "cute clothes for 5th graders",
+      "reason": "school grade query — children under 13"
+    },
+    {
+      "keyword": "cute clothes for 8th graders",
+      "reason": "school grade query — children under 13"
+    },
+    {
+      "keyword": "cute clothes for picture day",
+      "reason": "school picture day — children under 13"
+    },
+    {
+      "keyword": "cute fashion for tweens",
+      "reason": "tweens — children under 13"
+    },
+    {
+      "keyword": "cute clothes for tweens amazon",
+      "reason": "tweens plus a retailer name"
+    },
+    {
+      "keyword": "cute clothes for teens amazon",
+      "reason": "teen clothing at a named retailer — navigational"
+    },
+    {
+      "keyword": "cute clothes for 10 year olds shein",
+      "reason": "children's sizing at a named retailer — navigational"
+    },
+    {
+      "keyword": "korean newborn clothes",
+      "reason": "newborn clothing — we sell womenswear"
+    },
+    {
+      "keyword": "petite dresses at jcpenney",
+      "reason": "navigational query for JCPenney"
+    },
+    {
+      "keyword": "petite dresses jcpenney",
+      "reason": "navigational query for JCPenney"
+    },
+    {
+      "keyword": "petite dresses loft",
+      "reason": "navigational query for Loft"
+    },
+    {
+      "keyword": "petite clothing loft",
+      "reason": "navigational query for Loft"
+    },
+    {
+      "keyword": "boden petite clothes",
+      "reason": "navigational query for Boden"
+    },
+    {
+      "keyword": "petite dresses talbots",
+      "reason": "navigational query for Talbots"
+    },
+    {
+      "keyword": "shein petite clothes",
+      "reason": "navigational query for Shein"
+    },
+    {
+      "keyword": "petite fashion nova",
+      "reason": "navigational query for Fashion Nova"
+    },
+    {
+      "keyword": "old navy petite clothes",
+      "reason": "navigational query for Old Navy"
+    },
+    {
+      "keyword": "kohl's petite clothes",
+      "reason": "navigational query for Kohl's"
+    },
+    {
+      "keyword": "petite dresses kohls",
+      "reason": "navigational query for Kohl's"
+    },
+    {
+      "keyword": "amazon petite clothes",
+      "reason": "navigational query for Amazon"
+    },
+    {
+      "keyword": "petite clothes amazon",
+      "reason": "navigational query for Amazon"
+    },
+    {
+      "keyword": "petite dresses on amazon",
+      "reason": "navigational query for Amazon"
+    },
+    {
+      "keyword": "walmart petite clothes",
+      "reason": "navigational query for Walmart"
+    },
+    {
+      "keyword": "belks petite clothes",
+      "reason": "navigational query for Belk"
+    },
+    {
+      "keyword": "petite dresses gap",
+      "reason": "navigational query for Gap"
+    },
+    {
+      "keyword": "petite xscape dresses",
+      "reason": "navigational query for the Xscape label"
+    },
+    {
+      "keyword": "cute clothes from amazon",
+      "reason": "navigational query for Amazon"
+    },
+    {
+      "keyword": "cute clothes on amazon",
+      "reason": "navigational query for Amazon"
+    },
+    {
+      "keyword": "how to find cute clothes on amazon",
+      "reason": "navigational query for Amazon"
+    },
+    {
+      "keyword": "target cute clothes",
+      "reason": "navigational query for Target"
+    },
+    {
+      "keyword": "cute clothes target",
+      "reason": "navigational query for Target"
+    },
+    {
+      "keyword": "cute clothes shopee",
+      "reason": "navigational query for Shopee"
+    },
+    {
+      "keyword": "korean clothes shopee",
+      "reason": "navigational query for Shopee"
+    },
+    {
+      "keyword": "korean fashion yesstyle",
+      "reason": "navigational query for YesStyle"
+    },
+    {
+      "keyword": "yesstyle asian fashion",
+      "reason": "navigational query for YesStyle"
+    },
+    {
+      "keyword": "shein cute clothes",
+      "reason": "navigational query for Shein"
+    },
+    {
+      "keyword": "cute clothes from shein",
+      "reason": "navigational query for Shein"
+    },
+    {
+      "keyword": "cute clothes on shein",
+      "reason": "navigational query for Shein"
+    },
+    {
+      "keyword": "what to search on shein for cute clothes",
+      "reason": "navigational query for Shein"
+    },
+    {
+      "keyword": "forever 21 cute clothes",
+      "reason": "navigational query for Forever 21"
+    },
+    {
+      "keyword": "cute clothes at ross",
+      "reason": "navigational query for Ross"
+    },
+    {
+      "keyword": "cute clothes thredup",
+      "reason": "navigational query for ThredUp"
+    },
+    {
+      "keyword": "goodwill cute clothes",
+      "reason": "navigational query for Goodwill"
+    },
+    {
+      "keyword": "cute fashion nova outfits",
+      "reason": "navigational query for Fashion Nova"
+    },
+    {
+      "keyword": "cute fashion nova dresses",
+      "reason": "navigational query for Fashion Nova"
+    },
+    {
+      "keyword": "asian fashion llc nepali clothing store",
+      "reason": "navigational query for another named store"
+    },
+    {
+      "keyword": "chococo korean fashion boutique",
+      "reason": "navigational query for another named boutique"
+    },
+    {
+      "keyword": "chic me fashion",
+      "reason": "navigational query for Chic Me"
+    },
+    {
+      "keyword": "chic boutique ny",
+      "reason": "navigational query for a New York boutique"
+    },
+    {
+      "keyword": "chic boutique bedford nh",
+      "reason": "navigational query for a Bedford NH boutique"
+    },
+    {
+      "keyword": "the korean fashion review",
+      "reason": "review query for another shop (thekoreanfashion)"
+    },
+    {
+      "keyword": "is the korean fashion legit",
+      "reason": "legitimacy check for another shop (thekoreanfashion)"
+    },
+    {
+      "keyword": "the korean fashion reviews",
+      "reason": "review query for another shop (thekoreanfashion)"
+    },
+    {
+      "keyword": "trendy queen clothes",
+      "reason": "navigational query for the Trendy Queen label"
+    },
+    {
+      "keyword": "cyte 09 fashion",
+      "reason": "unclear brand string with no usable intent"
+    },
+    {
+      "keyword": "zoey kpop outfit",
+      "reason": "named K-pop character costume query"
+    },
+    {
+      "keyword": "kpop costumes rumi",
+      "reason": "named K-pop character costume query"
+    },
+    {
+      "keyword": "kpop costumes zoey",
+      "reason": "named K-pop character costume query"
+    },
+    {
+      "keyword": "rumi kpop clothes",
+      "reason": "named K-pop character costume query"
+    },
+    {
+      "keyword": "kpop groups that start with q",
+      "reason": "band trivia, not fashion"
+    },
+    {
+      "keyword": "twice kpop fashion",
+      "reason": "named band merchandise query"
+    },
+    {
+      "keyword": "twice kpop clothes",
+      "reason": "named band merchandise query"
+    },
+    {
+      "keyword": "blackpink kpop fashion",
+      "reason": "named band merchandise query"
+    },
+    {
+      "keyword": "popular fashion quotes",
+      "reason": "quotes for captions, no shopping intent"
+    },
+    {
+      "keyword": "cute fashion background",
+      "reason": "phone or design wallpaper, no shopping intent"
+    },
+    {
+      "keyword": "pop style bracelet maker",
+      "reason": "toy bracelet maker, not clothing"
+    }
+  ],
+  "notes": "345 of the 460 keywords are assigned verbatim to exactly one page; 115 are excluded. The exclusion count sits above the 90 target because the mandated classes alone (retailer and marketplace navigational 45, children and school grades 19, drawing/crochet/sewing/hangers/patches/shop-names 17, games and apps 11, celebrity and band 8, pets 6, maternity 3, food 2, plus muay thai, quotes, wallpaper and two unusable brand strings) account for all of them - nothing was excluded outside those classes. Landing pages each create one new product category under \"women\"; the petite-dresses-for-wedding-guest and petite-evening-dresses landings reuse the wedding-guest and evening occasion categories of the same slug, so create each term once. Occasion categories are for the mega menu and need no page of their own. Product ids are the existing demo products; a product may sit in several categories."
+}

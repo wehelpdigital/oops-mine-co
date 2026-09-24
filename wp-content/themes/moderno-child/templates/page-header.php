@@ -17,6 +17,10 @@ $omc_own_hero = [
 	'templates/page-about.php',
 	'templates/page-video.php',
 	'templates/page-videos.php',
+	'templates/page-landing.php',
+	'templates/page-faq.php',
+	'templates/page-contact.php',
+	'templates/page-policy.php',
 ];
 
 foreach ( $omc_own_hero as $omc_tpl ) {

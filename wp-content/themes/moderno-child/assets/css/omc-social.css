@@ -1,0 +1,196 @@
+/* ==========================================================================
+   Oops, Mine Co. — social proof
+   "From our feed" band on the home page + the Save to Pinterest link on the
+   product page. Loaded after omc.css, only where one of them renders
+   (see omc_social_assets() in inc/social.php). Tokens come from omc.css.
+   ========================================================================== */
+
+/* ─── From our feed: the video grid ─── */
+.omc-feed__grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr)); /* minmax(0) — a loaded embed must not push the other columns */
+	gap: clamp(12px, 1.8vw, 26px);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.omc-feed__item {
+	display: flex;   /* the tile fills the row, so a tall embed never leaves a gap beside it */
+	margin: 0;
+}
+
+.omc-feed__card {
+	position: relative;
+	display: flex;
+	width: 100%;
+	min-width: 0;   /* the tile follows its column, never the embed's own width */
+	background: var(--omc-cream);
+	border: 1px solid var(--omc-line);
+	overflow: hidden;
+}
+/* A card with an embed on the way holds a portrait placeholder, so the swap does
+   not shift the page. A card that only ever links out stays compact — there is no
+   thumbnail to fill it — and grows to the row height when a neighbour's embed is
+   taller (the stretch above). */
+.omc-feed__card.js-omc-embed:not(.is-loaded) { aspect-ratio: 4 / 5; }
+.omc-feed__card:not(.js-omc-embed) { min-height: clamp(190px, 17vw, 240px); }
+
+/* ─── Link card: shown when the network gives us no embed (Instagram, Facebook)
+   and as the no-JS state of every card ─── */
+.omc-feed__link {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+	width: 100%;
+	padding: clamp(18px, 3vw, 32px);
+	text-align: center;
+	text-decoration: none;
+	color: var(--omc-ink);
+	background: linear-gradient(180deg, var(--omc-cream) 0%, var(--omc-sand) 100%);
+	transition: background-color .3s var(--omc-ease);
+}
+.omc-feed__link:hover,
+.omc-feed__link:focus-visible { background: var(--omc-sand); }
+
+.omc-feed__badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 56px;
+	height: 56px;
+	border-radius: 50%;
+	background: #fff;
+	border: 1px solid var(--omc-rose-light);
+	color: var(--omc-rose-dark);
+	transition: transform .35s var(--omc-ease), border-color .3s var(--omc-ease);
+}
+.omc-feed__badge .omc-icon { width: 24px; height: 24px; }
+.omc-feed__link:hover .omc-feed__badge {
+	transform: translateY(-2px);
+	border-color: var(--omc-rose);
+}
+
+.omc-feed__watch {
+	font-family: var(--omc-serif);
+	font-size: clamp(19px, 1.7vw, 23px);
+	font-weight: 500;
+	line-height: 1.2;
+	color: var(--omc-ink);
+}
+.omc-feed__link:hover .omc-feed__watch { color: var(--omc-rose-dark); }
+
+.omc-feed__url {
+	font: 400 12px/1.5 var(--omc-sans);
+	letter-spacing: .02em;
+	color: var(--omc-muted);
+	word-break: break-word;
+	max-width: 100%;
+}
+
+/* ─── Loaded embed: the provider's own markup, boxed into the tile ─── */
+.omc-feed__card.is-loaded {
+	display: block;
+	aspect-ratio: auto;
+	background: #fff; /* the providers draw on white; matching it hides the seam */
+}
+.omc-feed__embed { width: 100%; }
+.omc-feed__embed iframe,
+.omc-feed__embed blockquote,
+.omc-feed__embed > * {
+	max-width: 100% !important;
+	min-width: 0 !important;
+	margin: 0 !important;
+}
+.omc-feed__embed iframe { width: 100% !important; border: 0; display: block; }
+
+/* ─── UGC call-out under the grid ─── */
+.omc-feed__ugc {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px 28px;
+	margin-top: clamp(18px, 2.4vw, 32px);
+	padding: clamp(20px, 2.8vw, 34px) clamp(18px, 3vw, 40px);
+	background: var(--omc-sand);
+}
+.omc-feed__ugc-text {
+	margin: 0;
+	font-family: var(--omc-serif);
+	font-size: clamp(18px, 1.7vw, 23px);
+	font-weight: 400;
+	line-height: 1.45;
+	color: var(--omc-ink);
+	max-width: 46ch;
+}
+.omc-feed__tag {
+	font-style: italic;
+	color: var(--omc-rose-dark);
+	white-space: nowrap;
+}
+.omc-feed__follow {
+	gap: 10px;
+	flex: 0 0 auto;
+}
+.omc-feed__follow .omc-icon { width: 18px; height: 18px; }
+
+/* ─── Breakpoints: 3 → 2 → 1 ─── */
+@media (max-width: 1023px) {
+	.omc-feed__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+	.omc-feed__grid { grid-template-columns: 1fr; gap: 14px; }
+	.omc-feed__card.js-omc-embed:not(.is-loaded) { aspect-ratio: 16 / 10; }
+	.omc-feed__card:not(.js-omc-embed) { min-height: 170px; }
+	.omc-feed__ugc { flex-direction: column; align-items: flex-start; }
+	.omc-feed__ugc-text { font-size: 19px; }
+	.omc-feed__follow { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.omc-feed__link,
+	.omc-feed__badge { transition: none; }
+	.omc-feed__link:hover .omc-feed__badge { transform: none; }
+}
+
+/* ─── Product page: Save to Pinterest, beside the theme's wishlist + share ─── */
+.c-product__buttons-wrap {
+	flex-wrap: wrap;
+	row-gap: 12px;
+}
+.omc-pin {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	margin-left: 40px;
+	font: 500 11px/15px var(--omc-sans);
+	letter-spacing: .0625em;
+	text-transform: uppercase;
+	color: var(--omc-text);
+	text-decoration: none;
+	transition: color .25s var(--omc-ease);
+}
+.omc-pin .omc-icon {
+	width: 16px;
+	height: 16px;
+	color: var(--omc-rose);
+	transition: color .25s var(--omc-ease);
+}
+.omc-pin:hover,
+.omc-pin:focus-visible { color: var(--omc-rose-dark); }
+.omc-pin:hover .omc-icon { color: var(--omc-rose-dark); }
+
+/* On phones the row runs out of space, so the link takes one of its own and
+   lines up with "Add to wishlist" instead of hanging off a wrapped line. */
+@media (max-width: 560px) {
+	.omc-pin {
+		flex: 0 0 100%;
+		margin-left: 0;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.omc-pin,
+	.omc-pin .omc-icon { transition: none; }
+}

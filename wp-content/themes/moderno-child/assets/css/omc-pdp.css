@@ -1,0 +1,585 @@
+/* ==========================================================================
+   Oops, Mine Co. — product page conversion layer
+   Size guide modal, scarcity line, trust badges, review photos.
+   Loaded after omc.css / omc-pages.css; every colour comes from the brand
+   tokens in omc.css (fallbacks keep this file standalone-safe).
+   ========================================================================== */
+
+.omc-sg,
+.omc-trust,
+.omc-scarcity,
+.omc-review-upload,
+.omc-review-photos {
+	--omc-pdp-ink: var(--omc-ink, #3a2b26);
+	--omc-pdp-text: var(--omc-text, #4a3f3a);
+	--omc-pdp-muted: var(--omc-muted, #8a7d76);
+	--omc-pdp-line: var(--omc-line, #e9e1da);
+	--omc-pdp-cream: var(--omc-cream, #f7f2ed);
+	--omc-pdp-sand: var(--omc-sand, #efe6de);
+	--omc-pdp-pink: var(--omc-pink, #f3dcd6);
+	--omc-pdp-rose: var(--omc-rose, #b98b7e);
+	--omc-pdp-rose-dark: var(--omc-rose-dark, #9c6f63);
+	--omc-pdp-rose-light: var(--omc-rose-light, #e9d3ca);
+}
+
+/* The theme's compiled CSS sets `svg { fill: currentColor }`, which beats the
+   presentation attribute — restore the line-icon look. */
+.omc-pdp-icon {
+	fill: none;
+	stroke: currentColor;
+}
+
+.omc-pdp-icon [fill="currentColor"] {
+	fill: currentColor;
+	stroke: none;
+}
+
+/* ─────────────────── Size guide: the trigger ─────────────────── */
+
+.omc-sg-slot {
+	display: block;
+}
+
+.omc-sg-slot--simple {
+	margin: 0 0 14px;
+}
+
+.omc-sg-slot--variable {
+	margin: 0 0 10px;
+}
+
+.omc-sg-open {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	margin: 0;
+	padding: 0 0 2px;
+	border: 0;
+	border-bottom: 1px solid var(--omc-rose-light, #e9d3ca);
+	border-radius: 0;
+	background: none;
+	box-shadow: none;
+	color: var(--omc-rose-dark, #9c6f63);
+	font: 600 11px/1.4 var(--omc-sans, "Manrope", system-ui, sans-serif);
+	letter-spacing: .14em;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition: color .25s var(--omc-ease, ease), border-color .25s var(--omc-ease, ease);
+}
+
+.omc-sg-open:hover,
+.omc-sg-open:focus-visible {
+	color: var(--omc-ink, #3a2b26);
+	border-bottom-color: var(--omc-ink, #3a2b26);
+}
+
+.omc-sg-open .omc-pdp-icon {
+	width: 16px;
+	height: 16px;
+	flex: none;
+}
+
+/* Moved by omc-pdp.js into the label cell of the Size row. The theme renders
+   those cells as blocks stacked above the swatches, so the link can sit at the
+   far end of that line. */
+.variations tr.omc-has-size-guide > td.label,
+.variations tr.omc-has-size-guide > th.label {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px 10px;
+}
+
+.variations td.label .omc-sg-open,
+.variations th.label .omc-sg-open {
+	margin-left: auto;
+}
+
+/* ─────────────────── Size guide: the modal ─────────────────── */
+
+.omc-sg[hidden] {
+	display: none;
+}
+
+.omc-sg {
+	position: fixed;
+	inset: 0;
+	z-index: 100000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: clamp(12px, 4vw, 40px);
+	box-sizing: border-box;
+}
+
+.omc-sg__overlay {
+	position: absolute;
+	inset: 0;
+	background: rgba(58, 43, 38, .45);
+	backdrop-filter: blur(2px);
+	animation: omc-sg-fade .25s var(--omc-ease, ease) both;
+}
+
+.omc-sg__dialog {
+	position: relative;
+	width: min(680px, 100%);
+	max-height: min(88vh, 860px);
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	padding: clamp(24px, 4vw, 40px) clamp(20px, 3.5vw, 40px) clamp(28px, 4vw, 40px);
+	box-sizing: border-box;
+	background: #fff;
+	border: 1px solid var(--omc-line, #e9e1da);
+	border-radius: 4px;
+	box-shadow: 0 40px 90px -40px rgba(58, 43, 38, .55);
+	animation: omc-sg-rise .32s var(--omc-ease, cubic-bezier(.22, .61, .36, 1)) both;
+}
+
+.omc-sg__dialog:focus {
+	outline: none;
+}
+
+.omc-sg__close {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 38px;
+	height: 38px;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--omc-muted, #8a7d76);
+	cursor: pointer;
+	border-radius: 50%;
+	transition: color .2s ease, background .2s ease;
+}
+
+.omc-sg__close:hover,
+.omc-sg__close:focus-visible {
+	color: var(--omc-ink, #3a2b26);
+	background: var(--omc-cream, #f7f2ed);
+}
+
+.omc-sg__close .omc-pdp-icon {
+	width: 20px;
+	height: 20px;
+}
+
+.omc-sg__title {
+	margin: 0 40px 8px 0;
+	font: 500 clamp(26px, 3.4vw, 36px)/1.15 var(--omc-serif, "Cormorant Garamond", Georgia, serif);
+	letter-spacing: .01em;
+	color: var(--omc-rose, #b98b7e);
+	text-transform: none;
+}
+
+.omc-sg__intro {
+	margin: 0 0 18px;
+	font: 400 14px/1.7 var(--omc-sans, "Manrope", system-ui, sans-serif);
+	color: var(--omc-text, #4a3f3a);
+}
+
+.omc-sg__units {
+	display: inline-flex;
+	margin: 0 0 16px;
+	padding: 3px;
+	border: 1px solid var(--omc-line, #e9e1da);
+	border-radius: 999px;
+	background: var(--omc-cream, #f7f2ed);
+}
+
+.omc-sg__unit {
+	min-width: 54px;
+	padding: 7px 14px;
+	border: 0;
+	border-radius: 999px;
+	background: none;
+	color: var(--omc-muted, #8a7d76);
+	font: 600 11px/1 var(--omc-sans, "Manrope", system-ui, sans-serif);
+	letter-spacing: .14em;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition: background .2s ease, color .2s ease;
+}
+
+.omc-sg__unit.is-active {
+	background: var(--omc-rose, #b98b7e);
+	color: #fff;
+}
+
+.omc-sg__unit:not(.is-active):hover {
+	color: var(--omc-ink, #3a2b26);
+}
+
+.omc-sg__table-wrap {
+	overflow-x: auto;
+	margin: 0 0 18px;
+	border: 1px solid var(--omc-line, #e9e1da);
+	border-radius: 3px;
+}
+
+.omc-sg__table {
+	width: 100%;
+	min-width: 420px;
+	border-collapse: collapse;
+	font: 400 14px/1.5 var(--omc-sans, "Manrope", system-ui, sans-serif);
+	color: var(--omc-text, #4a3f3a);
+	margin: 0;
+}
+
+.omc-sg__table th,
+.omc-sg__table td {
+	padding: 11px 12px;
+	text-align: left;
+	border-bottom: 1px solid var(--omc-line, #e9e1da);
+	white-space: nowrap;
+}
+
+.omc-sg__table thead th {
+	background: var(--omc-sand, #efe6de);
+	color: var(--omc-ink, #3a2b26);
+	font: 600 10px/1.4 var(--omc-sans, "Manrope", system-ui, sans-serif);
+	letter-spacing: .16em;
+	text-transform: uppercase;
+}
+
+.omc-sg__table tbody th[scope="row"] {
+	font-weight: 700;
+	color: var(--omc-ink, #3a2b26);
+	background: var(--omc-cream, #f7f2ed);
+}
+
+.omc-sg__table tbody tr:last-child th,
+.omc-sg__table tbody tr:last-child td {
+	border-bottom: 0;
+}
+
+.omc-sg[data-unit="in"] .omc-sg__table [data-omc-unit="cm"],
+.omc-sg[data-unit="cm"] .omc-sg__table [data-omc-unit="in"] {
+	display: none;
+}
+
+.omc-sg__note {
+	margin: 0 0 22px;
+	padding: 14px 16px;
+	background: var(--omc-pink, #f3dcd6);
+	border-radius: 3px;
+	font: 400 14px/1.65 var(--omc-sans, "Manrope", system-ui, sans-serif);
+	color: var(--omc-ink, #3a2b26);
+}
+
+.omc-sg__sub {
+	margin: 0 0 10px;
+	font: 500 clamp(19px, 2.2vw, 23px)/1.3 var(--omc-serif, "Cormorant Garamond", Georgia, serif);
+	color: var(--omc-ink, #3a2b26);
+	text-transform: none;
+	letter-spacing: 0;
+}
+
+.omc-sg__steps {
+	margin: 0 0 22px;
+	padding: 0 0 0 20px;
+	font: 400 14px/1.7 var(--omc-sans, "Manrope", system-ui, sans-serif);
+	color: var(--omc-text, #4a3f3a);
+}
+
+.omc-sg__steps li {
+	margin: 0 0 7px;
+}
+
+.omc-sg__steps strong {
+	color: var(--omc-ink, #3a2b26);
+	font-weight: 600;
+}
+
+.omc-sg__link {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	color: var(--omc-rose-dark, #9c6f63);
+	font: 600 11px/1 var(--omc-sans, "Manrope", system-ui, sans-serif);
+	letter-spacing: .16em;
+	text-transform: uppercase;
+	text-decoration: none;
+	border-bottom: 1px solid var(--omc-rose-light, #e9d3ca);
+	padding-bottom: 3px;
+	transition: color .25s ease, border-color .25s ease;
+}
+
+.omc-sg__link:hover,
+.omc-sg__link:focus-visible {
+	color: var(--omc-ink, #3a2b26);
+	border-bottom-color: var(--omc-ink, #3a2b26);
+}
+
+.omc-sg__link .omc-pdp-icon {
+	width: 16px;
+	height: 16px;
+	transition: transform .25s ease;
+}
+
+.omc-sg__link:hover .omc-pdp-icon {
+	transform: translateX(4px);
+}
+
+body.omc-sg-open-body {
+	overflow: hidden;
+}
+
+@keyframes omc-sg-fade {
+	from { opacity: 0; }
+	to   { opacity: 1; }
+}
+
+@keyframes omc-sg-rise {
+	from { opacity: 0; transform: translateY(18px); }
+	to   { opacity: 1; transform: none; }
+}
+
+/* ─────────────────────── Scarcity ─────────────────────── */
+
+.omc-scarcity {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	font: 600 11px/1.4 var(--omc-sans, "Manrope", system-ui, sans-serif);
+	letter-spacing: .14em;
+	text-transform: uppercase;
+	color: var(--omc-rose-dark, #9c6f63);
+}
+
+.omc-scarcity__dot {
+	width: 7px;
+	height: 7px;
+	flex: none;
+	border-radius: 50%;
+	background: var(--omc-rose-dark, #9c6f63);
+	box-shadow: 0 0 0 0 rgba(156, 111, 99, .55);
+	animation: omc-scarcity-pulse 1.9s var(--omc-ease, ease-out) infinite;
+}
+
+@keyframes omc-scarcity-pulse {
+	0%   { box-shadow: 0 0 0 0 rgba(156, 111, 99, .5); }
+	70%  { box-shadow: 0 0 0 8px rgba(156, 111, 99, 0); }
+	100% { box-shadow: 0 0 0 0 rgba(156, 111, 99, 0); }
+}
+
+p.stock.omc-scarcity-line,
+.c-product__summary p.stock {
+	margin: 10px 0 0;
+}
+
+.woocommerce-variation-availability p.stock.omc-scarcity-line {
+	margin: 0 0 10px;
+}
+
+/* ─────────────────────── Trust badges ─────────────────────── */
+
+.omc-trust {
+	display: grid;
+	/* The theme keeps the add-to-cart column narrow (~350px on desktop), so the
+	   four lines stack there and only pair up in a wider container. */
+	grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+	gap: 10px 18px;
+	margin: 20px 0 0;
+	padding: 16px 18px;
+	list-style: none;
+	background: var(--omc-cream, #f7f2ed);
+	border: 1px solid var(--omc-line, #e9e1da);
+	border-radius: 3px;
+}
+
+.omc-trust__item {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.omc-trust__item::before,
+.omc-trust__item::marker {
+	content: none;
+}
+
+.omc-trust__link {
+	display: flex;
+	align-items: flex-start;
+	gap: 9px;
+	font: 500 12.5px/1.45 var(--omc-sans, "Manrope", system-ui, sans-serif);
+	color: var(--omc-text, #4a3f3a);
+	text-decoration: none;
+	overflow-wrap: anywhere;
+}
+
+a.omc-trust__link:hover,
+a.omc-trust__link:focus-visible {
+	color: var(--omc-rose-dark, #9c6f63);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+.omc-trust .omc-pdp-icon {
+	width: 18px;
+	height: 18px;
+	flex: none;
+	margin-top: 1px;
+	color: var(--omc-rose, #b98b7e);
+}
+
+/* ─────────────────────── Review photos ─────────────────────── */
+
+.omc-review-upload {
+	margin: 0 0 18px;
+}
+
+/* The theme hides every comment-form label except the rating one
+   (`.comment-form label:not([for="rating"])…{display:none}`), so this one needs
+   a heavier selector. */
+.comment-form p.omc-review-upload label[for="omc_review_photos"],
+.omc-review-upload label {
+	display: block;
+	margin: 0 0 6px;
+	font: 600 11px/1.4 var(--omc-sans, "Manrope", system-ui, sans-serif);
+	letter-spacing: .14em;
+	text-transform: uppercase;
+	color: var(--omc-ink, #3a2b26);
+}
+
+.omc-review-upload__input {
+	display: block;
+	width: 100%;
+	max-width: 420px;
+	padding: 10px 12px;
+	box-sizing: border-box;
+	border: 1px dashed var(--omc-rose-light, #e9d3ca);
+	border-radius: 3px;
+	background: var(--omc-cream, #f7f2ed);
+	font: 400 13px/1.5 var(--omc-sans, "Manrope", system-ui, sans-serif);
+	color: var(--omc-text, #4a3f3a);
+	cursor: pointer;
+}
+
+.omc-review-upload__input::file-selector-button {
+	margin-right: 10px;
+	padding: 6px 12px;
+	border: 1px solid var(--omc-rose, #b98b7e);
+	border-radius: 999px;
+	background: #fff;
+	color: var(--omc-rose-dark, #9c6f63);
+	font: 600 10px/1 var(--omc-sans, "Manrope", system-ui, sans-serif);
+	letter-spacing: .12em;
+	text-transform: uppercase;
+	cursor: pointer;
+}
+
+.omc-review-upload__hint,
+.omc-review-upload__list {
+	display: block;
+	margin: 6px 0 0;
+	font: 400 12px/1.6 var(--omc-sans, "Manrope", system-ui, sans-serif);
+	color: var(--omc-muted, #8a7d76);
+}
+
+.omc-review-upload__list:empty {
+	display: none;
+}
+
+.omc-review-upload__list--error {
+	color: var(--omc-rose-dark, #9c6f63);
+	font-weight: 600;
+}
+
+.omc-review-photos {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 12px 0 0;
+}
+
+.omc-review-photos__item {
+	display: block;
+	width: 84px;
+	height: 84px;
+	overflow: hidden;
+	border: 1px solid var(--omc-line, #e9e1da);
+	border-radius: 3px;
+	background: var(--omc-cream, #f7f2ed);
+	transition: border-color .25s ease, transform .25s ease;
+}
+
+.omc-review-photos__item:hover,
+.omc-review-photos__item:focus-visible {
+	border-color: var(--omc-rose, #b98b7e);
+	transform: translateY(-2px);
+}
+
+.omc-review-photos__img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+/* ─────────────────────── Phones ─────────────────────── */
+
+@media (max-width: 767px) {
+	.omc-sg {
+		padding: 0;
+		align-items: flex-end;
+	}
+
+	.omc-sg__dialog {
+		width: 100%;
+		max-height: 92vh;
+		border-radius: 8px 8px 0 0;
+		border-left: 0;
+		border-right: 0;
+		border-bottom: 0;
+		padding: 26px 16px 32px;
+	}
+
+	.omc-sg__title {
+		margin-right: 44px;
+	}
+
+	.omc-sg__table {
+		min-width: 360px;
+	}
+
+	.omc-sg__table th,
+	.omc-sg__table td {
+		padding: 10px 9px;
+		font-size: 13px;
+	}
+
+	.omc-trust {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 10px;
+		padding: 14px 15px;
+	}
+
+	.omc-review-photos__item {
+		width: 72px;
+		height: 72px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.omc-sg__overlay,
+	.omc-sg__dialog {
+		animation: none;
+	}
+
+	.omc-scarcity__dot {
+		animation: none;
+	}
+
+	.omc-sg-open,
+	.omc-sg__link,
+	.omc-sg__link .omc-pdp-icon,
+	.omc-review-photos__item {
+		transition: none;
+	}
+}
