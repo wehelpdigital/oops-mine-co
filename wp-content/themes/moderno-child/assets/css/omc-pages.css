@@ -157,3 +157,83 @@
 	.c-product__after-summary--boxed .c-product__products--boxed { padding-left: var(--omc-gutter); padding-right: var(--omc-gutter); }
 	.c-page-header__title, .c-page-header__title--center { font-size: 28px; }
 }
+
+
+/* ==========================================================================
+   One width system, every page
+   --------------------------------------------------------------------------
+   The home page sets the rule the rest of the site follows:
+     card rows and grids  ->  full width inside a 30px gutter (20px on phones)
+     reading columns      ->  760px, centred
+   Landing, FAQ, contact, policy and video pages already do this. Two places did
+   not, and the jump was visible when moving between them.
+   ========================================================================== */
+
+/* 1. Shop, category and tag archives.
+   product_grid_width is "boxed", which wraps the archive in the theme's 1170px
+   container. The same product card measured 273px here against 326px on the home
+   page and the landing pages that link straight to it. */
+.woocommerce-shop .l-section--container,
+.post-type-archive-product .l-section--container,
+.tax-product_cat .l-section--container,
+.tax-product_tag .l-section--container {
+	width: auto;
+	max-width: none;
+	padding-left: 30px;
+	padding-right: 30px;
+}
+
+/* 2. Single journal posts.
+   The theme puts the post in a 740px column pinned left with a demo widget
+   sidebar beside it, so the text started at x136 while every other page on the
+   site starts at x340. Same column width as the landing pages, centred, and the
+   sidebar goes: it holds the demo category list, not anything curated. */
+.single-post .l-section__sidebar,
+.single-post .c-post-sidebar__wrap { display: none; }
+
+.single-post .l-section--with-sidebar { display: block; }
+
+/* Those side borders drew the frame between post and sidebar. With the sidebar gone they
+   were two stray hairlines down an otherwise open page. */
+.single-post .c-post__container { border-left: 0; border-right: 0; }
+
+.single-post .l-section__content,
+.single-post .l-section__content--with-sidebar {
+	width: auto;
+	max-width: 760px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.single-post .c-page-header__title {
+	max-width: 760px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+/* Same reading measure as the landing and policy pages, so text sits in the same place
+   whichever page you land on. Headings are capped with the copy, otherwise a heading
+   starts 20px left of the paragraph under it. Media keeps the full column. */
+.single-post .c-post__content > * {
+	max-width: 640px;
+	margin-left: auto;
+	margin-right: auto;
+}
+.single-post .c-post__content > figure,
+.single-post .c-post__content > img,
+.single-post .c-post__content > .wp-block-image,
+.single-post .c-post__content > .wp-block-embed,
+.single-post .c-post__content > iframe,
+.single-post .c-post__content > table {
+	max-width: 100%;
+}
+
+@media (max-width: 767px) {
+	.woocommerce-shop .l-section--container,
+	.post-type-archive-product .l-section--container,
+	.tax-product_cat .l-section--container,
+	.tax-product_tag .l-section--container {
+		padding-left: 20px;
+		padding-right: 20px;
+	}
+}
