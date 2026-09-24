@@ -18,6 +18,15 @@ define( 'OMC_VERSION', '1.1.0' );
 define( 'OMC_DIR', get_stylesheet_directory() );
 define( 'OMC_URI', get_stylesheet_directory_uri() );
 
+/* Feature modules (each file is self-contained and hooks itself). */
+foreach ( [ 'video' ] as $omc_module ) {
+	$omc_module_file = OMC_DIR . '/inc/' . $omc_module . '.php';
+	if ( file_exists( $omc_module_file ) ) {
+		require_once $omc_module_file;
+	}
+}
+unset( $omc_module, $omc_module_file );
+
 /* ─────────────────────────── Assets ─────────────────────────── */
 
 /**
@@ -43,6 +52,14 @@ function moderno_child_enqueue_styles() {
 	wp_enqueue_style( 'omc', OMC_URI . '/assets/css/omc.css', [ 'moderno-child-style', 'omc-fonts' ], $ver( '/assets/css/omc.css' ) );
 	wp_enqueue_style( 'omc-pages', OMC_URI . '/assets/css/omc-pages.css', [ 'omc' ], $ver( '/assets/css/omc-pages.css' ) ); // the theme's own screens, restyled to the home page
 	wp_enqueue_script( 'omc', OMC_URI . '/assets/js/omc.js', [], $ver( '/assets/js/omc.js' ), true );
+
+	// Style videos: only the two templates that show a player need these.
+	if ( is_page_template( 'templates/page-video.php' ) || is_page_template( 'templates/page-videos.php' ) ) {
+		wp_enqueue_style( 'omc-video', OMC_URI . '/assets/css/omc-video.css', [ 'omc' ], $ver( '/assets/css/omc-video.css' ) );
+		if ( is_page_template( 'templates/page-video.php' ) ) {
+			wp_enqueue_script( 'omc-video', OMC_URI . '/assets/js/omc-video.js', [], $ver( '/assets/js/omc-video.js' ), true );
+		}
+	}
 	wp_localize_script( 'omc', 'OMC', [
 		'ajax'  => admin_url( 'admin-ajax.php' ),
 		'nonce' => wp_create_nonce( 'omc_newsletter' ),
@@ -726,6 +743,12 @@ function omc_seo_head() {
 		$desc = __( 'Shop new arrivals from Oops, Mine Co. — curated Korean and Thai fashion, chosen with intention.', 'moderno-child' );
 	}
 
+	/**
+	 * Let a page supply its own meta description (landing pages, video pages, …).
+	 *
+	 * @param string $desc Description derived from the page above.
+	 */
+	$desc = apply_filters( 'omc_meta_description', $desc );
 	$desc = trim( preg_replace( '/\s+/', ' ', (string) $desc ) );
 	if ( $desc ) {
 		echo '<meta name="description" content="' . esc_attr( wp_html_excerpt( $desc, 158, '…' ) ) . '">' . "\n";

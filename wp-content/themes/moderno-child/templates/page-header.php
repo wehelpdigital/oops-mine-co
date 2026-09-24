@@ -12,8 +12,17 @@
 
 defined( 'ABSPATH' ) || exit;
 
-if ( function_exists( 'omc_is_home_template' ) && ( omc_is_home_template() || omc_is_about_template() ) ) {
-	return;
+$omc_own_hero = [
+	'templates/page-home.php',
+	'templates/page-about.php',
+	'templates/page-video.php',
+	'templates/page-videos.php',
+];
+
+foreach ( $omc_own_hero as $omc_tpl ) {
+	if ( is_page_template( $omc_tpl ) ) {
+		return;
+	}
 }
 
 require get_template_directory() . '/templates/page-header.php';
