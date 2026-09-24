@@ -119,7 +119,6 @@
 
 /* ─── Cards (hub + "keep watching") ─── */
 .omc-video-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(16px, 2vw, 30px); }
-.omc-video-cards--hub { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
 .omc-video-card { display: flex; flex-direction: column; text-decoration: none; color: inherit; }
 .omc-video-card__media {
 	position: relative;
@@ -129,7 +128,6 @@
 	background: var(--omc-sand);
 	border: 1px solid var(--omc-line);
 }
-.omc-video-card--square .omc-video-card__media { aspect-ratio: 1 / 1; }
 .omc-video-card__media img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.1s var(--omc-ease); }
 .omc-video-card:hover .omc-video-card__media img { transform: scale(1.04); }
 .omc-video-card__play {
@@ -198,7 +196,7 @@
 @media (max-width: 1023px) {
 	.omc-video__grid { grid-template-columns: 1fr; gap: 26px; }
 	.omc-video__media { position: static; }
-	.omc-video-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.omc-video-cards, .omc-video-cards--hub { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 767px) {
 	.omc-video__frame--portrait, .omc-video__frame--square { max-width: none; }

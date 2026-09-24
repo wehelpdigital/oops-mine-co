@@ -48,8 +48,8 @@ $omc_intro  = $omc_hub && ! empty( $omc_hub['intro'] ) ? $omc_hub['intro'] : get
 	$omc_content = trim( get_the_content() );
 	if ( $omc_content ) :
 		?>
-		<section class="omc-section omc-videos__prose">
-			<div class="l-section__container">
+		<section class="omc-section">
+			<div class="l-section__container omc-videos__prose">
 				<?php
 				while ( have_posts() ) {
 					the_post();
