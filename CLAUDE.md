@@ -54,6 +54,8 @@ node .ftp-sync/server.mjs upload <paths> --force     # DEPLOY code: push git-tra
 node .ftp-sync/server.mjs db-pull                    # replace local DB with a fresh copy of live (backs up first)
 php .ftp-sync/publish-site.php                       # (re)apply pages/menu/theme settings/WHD activation to local DB
 OMC_DB=live php .ftp-sync/publish-site.php           # …to the LIVE DB (production write — user runs/approves this)
+php .ftp-sync/import-videos.php [--dry-run]          # style videos: media-library attachments + one page each
+OMC_DB=live php .ftp-sync/import-videos.php          # …to the LIVE DB (production write — user runs/approves this)
 ```
 
 The same tool is registered as the `ftp-sync` MCP server in `.mcp.json` (tools `ftp_sync`, `ftp_pull`, `ftp_upload`,
@@ -65,6 +67,10 @@ The same tool is registered as the `ftp-sync` MCP server in `.mcp.json` (tools `
 2. `node .ftp-sync/server.mjs upload wp-content/themes/moderno-child wp-content/plugins/whd wp-content/plugins/whd-variations --force` (code)
 3. `OMC_DB=live php .ftp-sync/publish-site.php` if pages/menu/settings changed (idempotent; creates the `OOPS10` coupon)
 4. media moves separately with `sync` / `pull`; `uploads/elementor/css/` is pulled but never pushed
+5. `OMC_DB=live php .ftp-sync/import-videos.php` after a `sync`, if the video pages or their media changed
+
+Steps 3 and 5 write to the production database. The agent harness blocks them, so the site owner runs them; a
+`--dry-run` first shows exactly which rows would change.
 
 ### Verifying changes
 
@@ -76,9 +82,12 @@ Chromium harness for that lives in the session scratchpad, not in the repo.
 
 ### Child theme (`moderno-child`)
 
-- **Page templates** are registered by header comment: `templates/page-home.php` ("OMC Home", the front page) and
-  `templates/page-about.php` ("OMC About"). `templates/page-header.php` overrides the parent's part so those two
-  templates don't get the theme's title band (keeps one `<h1>` per page); every other page falls through to the parent.
+- **Page templates** are registered by header comment: `templates/page-home.php` ("OMC Home", the front page),
+  `templates/page-about.php` ("OMC About"), `page-landing.php`, `page-faq.php`, `page-contact.php`,
+  `page-policy.php` (the keyword/content pages) and `page-video.php` / `page-videos.php` (style videos).
+  `templates/page-header.php` overrides the parent's part so those templates don't get the theme's title band
+  (keeps one `<h1>` per page) — **add every new template's path to its `$omc_own_hero` list or the page ships
+  two `<h1>`s**; every other page falls through to the parent.
 - `footer.php` overrides the parent's footer on every page. The parent renders an Elementor "footer page" there, which
   needs Elementor's frontend CSS (not loaded on the OMC templates) and carried the demo's fake contact details. The
   child footer is plain markup: brand, Shop/Help link columns from `omc_footer_links()` (filter `omc_footer_links`;
@@ -138,6 +147,57 @@ Chromium harness for that lives in the session scratchpad, not in the repo.
   Customizer values that publish-site.php sets: `product_grid_width = boxed` and `product_page_layout = layout-4`
   (the theme's only contained product layout). Grid columns: 4 desktop, 3 tablet (home page stays 4), 2 phones.
 
+### Feature modules (`moderno-child/inc/`)
+
+`functions.php` requires every name in one list near the top:
+
+```php
+foreach ( [ 'video', 'landing', 'pdp', 'cart', 'social' ] as $omc_module ) { ... }
+```
+
+Each file is self-contained and hooks itself, so adding a feature means dropping in `inc/<name>.php` and adding the
+name to that array. Assets are enqueued either inside the module (landing, social — at `wp_enqueue_scripts` 1001) or
+in `moderno_child_enqueue_styles()` (video, cart, pdp), always with the `omc` or `omc-pages` handle as a dependency.
+
+| Module | What it owns |
+|---|---|
+| `video.php` | Style-video pages: `_omc_video` meta, player, chapters, `VideoObject` + `Clip` schema, the hub's `ItemList`. |
+| `landing.php` | The four content templates: `_omc_landing` meta, section/table/FAQ renderers, `FAQPage` schema, the contact form endpoint, `omc-landing-page--{landing,faq,contact,policy}` body classes. |
+| `pdp.php` | Product page: size-guide modal, scarcity line, trust badges, review photos. |
+| `cart.php` | Slide-out cart drawer, free-shipping progress bar, drawer trust line. |
+| `social.php` | Social/UGC band and the feed on the home and product pages. |
+
+Two shared filters tie them together: `omc_meta_description` (a page supplies its own description to
+`omc_seo_head()`) and `omc_social_links` / `omc_social_profiles` (footer icons and the Organization `sameAs`).
+
+**The free-shipping bar makes a commercial promise.** `omc_free_shipping_rule()` has no fallback number on purpose:
+it reads a real WooCommerce free-shipping zone first, then `whd_settings['free_shipping_threshold']` (0 means off).
+The store currently has no shipping zones at all, so the bar stays hidden. Never reintroduce a default.
+
+### Page content (`.ftp-sync/content/`)
+
+Content is data, not markup, and is not in the database until the publish script runs.
+
+- `plan.json` — which of the 460 researched keywords belong to which page, plus the deliberately excluded ones and
+  the reason for each (pet clothing, game items, other retailers' names, children's sizing).
+- `pages/<slug>.json` — one document per page: `title`, `seo_title`, `meta_description`, `keywords`, `hero`,
+  `sections[]` (heading, paragraphs, bullets, optional `table` and `faqs`), `faqs[]`, `cta`, `related_slugs`,
+  `author_notes`. `type` picks the template: landing → page-landing, faq → page-faq, contact → page-contact,
+  policy/sizeguide → page-policy.
+- `videos/<slug>.json` — the same idea for the video pages, imported by `.ftp-sync/import-videos.php`.
+
+`publish-site.php` writes each document to `_omc_landing` (JSON) plus `_omc_meta_description` / `_omc_seo_title`, and
+keeps a plain-HTML copy in `post_content` as the fallback when the meta is missing.
+
+Rules the copy has to keep (checked deterministically, not by eye):
+
+- every string in a page's `keywords` array appears **verbatim** in reader-visible copy;
+- no entry from the banned-word list appears in reader-visible copy — the one exception is `however` inside the
+  client's return policy, which is quoted, not rewritten;
+- nothing is asserted that the store cannot back up: no delivery estimates, carriers, discounts, stock or review
+  counts, named brands or people. The store has no shipping zones, so "shown at checkout" claims about delivery are
+  false.
+
 ### Verifying the store pages
 
 WooCommerce "Coming soon" mode is on (local and live), so shop/product/cart pages only render for logged-in users
@@ -190,9 +250,14 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
 
 ### Site content that is *not* in code
 
-The front page, About page, Main Menu, announcement block, Customizer palette, plugin activation and demo popup/email
-settings are database rows created by `.ftp-sync/publish-site.php`. If a fresh environment shows the demo homepage,
-run that script (it is idempotent).
+The front page, About page, the 37 keyword pages and journal posts, the product and occasion categories, the Main
+Menu, announcement block, Customizer palette, WooCommerce and legal-page options, plugin activation and the
+popup/email designs are all database rows created by `.ftp-sync/publish-site.php`. If a fresh environment shows the
+demo homepage, run that script (it is idempotent). The video pages and their media come from
+`.ftp-sync/import-videos.php`, which is also idempotent.
+
+Both scripts honour `OMC_DB=live`, which writes to the **production** database. That step is the site owner's to
+run or approve — it is a production write, and the agent harness blocks it.
 
 ## Gotchas
 
@@ -210,6 +275,13 @@ run that script (it is idempotent).
   `wp-config.php` prevents that.
 - Large heredocs in the Bash tool get mangled (backslashes collapse, long ones truncate) — write files with the Write
   tool instead.
+- **Moderno caches its Customizer CSS.** The palette is concatenated into `uploads/moderno/min.css` behind the option
+  `ideapark_styles_hash`, and that hash is built from file mtimes and the theme version — no theme-mod input. Writing
+  mods from the CLI therefore leaves the stale sheet in place and the site keeps serving the demo palette while the
+  script reports success. `publish-site.php` now deletes the hash options at the end, the way the Customizer does.
+- **WooCommerce "coming soon" gates whichever page is the terms page.** With `woocommerce_store_pages_only = yes`,
+  `/shop/`, `/cart/`, product pages *and* `woocommerce_terms_page_id` render the maintenance screen for logged-out
+  visitors. A content page showing two `<h1>`s and ~80 kB instead of ~98 kB is usually this, not a template bug.
 - **Hidden admin pages** (a screen reachable by URL but not listed in a menu, like the WHD editor) must be registered
   with an empty parent: `add_submenu_page( '', …, 'slug', … )` → hook `admin_page_slug`. Registering under a parent
   and then `remove_submenu_page()` leaves a hook WordPress can no longer resolve and every visit, even by an
