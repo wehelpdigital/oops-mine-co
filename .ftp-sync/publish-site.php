@@ -184,6 +184,113 @@ function omc_pub_strip_elementor( $post_id ) {
 	return true;
 }
 
+/* ── Journal thumbnails ──────────────────────────────────────────────────────
+   The keyword posts were imported without images, so the blog grid rendered as a
+   wall of text. These are the theme's own demo photographs, assigned by slug so a
+   post keeps the same picture on every environment and on every re-run. Swap them
+   for real photography by setting a featured image in the editor: anything already
+   set is left alone. */
+function omc_pub_post_thumbnails() {
+	// Womenswear and still-life only: the demo library also holds men's shots, and a male model
+	// on "Traditional Thai Clothes" on a womenswear boutique reads as a mistake. Checked by eye
+	// against a contact sheet, not by filename.
+	$pool = [
+		'2023/04/ricky-2127760710.jpg',
+		'2023/04/ricky-2131286131.jpg',
+		'2023/04/ricky-2152926699.jpg',
+		'2023/04/ricky-2152516324.jpg',
+		'2023/04/ricky-2152193566.jpg',
+		'2023/04/ricky-2202377559.jpg',
+		'2023/04/ricky-2347110865.jpg',
+		'2023/04/ricky-2347961730.jpg',
+		'2023/04/ricky-2347791350.jpg',
+		'2023/04/moderno-2338177441.jpg',
+		'2023/04/moderno-2338441644.jpg',
+		'2023/04/moderno-2338813525.jpg',
+		'2023/04/moderno-2346592900.jpg',
+		'2023/04/moderno-2310883787.jpg',
+		'2023/04/moderno-2310427039.jpg',
+		'2023/04/moderno-2327197569.jpg',
+		'2023/04/moderno-2607419203.jpg',
+		'2023/04/moderno-2606815318.jpg',
+		'2023/04/moderno-2606742971.jpg',
+		'2023/04/moderno-2840461420.jpg',
+		'2023/04/moderno-2844197659.jpg',
+		'2023/04/moderno-2842566551.jpg',
+	];
+
+	$ids = [];
+	foreach ( $pool as $file ) {
+		$id = omc_pub_attachment_by_file( $file );
+		if ( $id ) {
+			$ids[] = $id;
+		}
+	}
+	if ( ! $ids ) {
+		omc_pub_note( 'journal thumbnails: none of the demo photographs are in this media library, skipped' );
+		return;
+	}
+
+	$posts = get_posts( [
+		'post_type'   => 'post',
+		'numberposts' => -1,
+		'post_status' => [ 'publish', 'draft' ],
+		'orderby'     => 'ID',
+		'order'       => 'ASC',
+	] );
+
+	$set = 0;
+	foreach ( $posts as $post ) {
+		if ( get_post_thumbnail_id( $post->ID ) ) {
+			continue; // a real image was chosen for this one
+		}
+		// crc32 of the slug: stable across environments, and neighbouring slugs do not collide.
+		$id = $ids[ crc32( $post->post_name ) % count( $ids ) ];
+		omc_pub_note( "post {$post->post_name} (#{$post->ID}): featured image set to #{$id}" );
+		if ( ! omc_pub_dry() ) {
+			set_post_thumbnail( $post->ID, $id );
+		}
+		$set++;
+	}
+	$GLOBALS['omc_pub_log_thumbs'] = $set;
+}
+
+/**
+ * Every imported post landed in Style notes AND in WordPress's default Uncategorized, so each
+ * journal card read "STYLE NOTES · UNCATEGORIZED". Drop the default wherever a real category
+ * is set; a post with nothing else keeps it, so nothing ends up with no category at all.
+ */
+function omc_pub_tidy_categories() {
+	$default = get_category( (int) get_option( 'default_category' ) );
+	if ( ! $default || is_wp_error( $default ) ) {
+		return;
+	}
+	$cleaned = 0;
+	foreach ( get_posts( [ 'post_type' => 'post', 'numberposts' => -1, 'post_status' => [ 'publish', 'draft' ] ] ) as $post ) {
+		$terms = wp_get_post_categories( $post->ID );
+		if ( count( $terms ) < 2 || ! in_array( $default->term_id, $terms, true ) ) {
+			continue;
+		}
+		$keep = array_values( array_diff( $terms, [ $default->term_id ] ) );
+		omc_pub_note( "post {$post->post_name} (#{$post->ID}): removed the {$default->name} category" );
+		if ( ! omc_pub_dry() ) {
+			wp_set_post_categories( $post->ID, $keep );
+		}
+		$cleaned++;
+	}
+	$GLOBALS['omc_pub_log_cats'] = $cleaned;
+}
+
+/** Attachment id for an uploads-relative path, the way the child theme resolves images. */
+function omc_pub_attachment_by_file( $file ) {
+	global $wpdb;
+	$id = $wpdb->get_var( $wpdb->prepare(
+		"SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_wp_attached_file' AND meta_value = %s LIMIT 1",
+		$file
+	) );
+	return $id ? (int) $id : 0;
+}
+
 /**
  * Create or update a post/page by slug. Only writes when a field really differs, so
  * post_modified does not churn on a second run.
@@ -1224,6 +1331,11 @@ if ( ! omc_pub_dry() ) {
 	omc_pub_note( "theme css cache: $omc_busted hash option(s) cleared; min.css rebuilds on the next request" );
 	$log['css_cache_busted'] = $omc_busted;
 }
+
+omc_pub_post_thumbnails();
+$log['journal_thumbnails'] = $GLOBALS['omc_pub_log_thumbs'] ?? 0;
+omc_pub_tidy_categories();
+$log['uncategorized_removed'] = $GLOBALS['omc_pub_log_cats'] ?? 0;
 
 if ( ! omc_pub_dry() ) {
 	flush_rewrite_rules();

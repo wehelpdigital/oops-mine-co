@@ -53,8 +53,8 @@ function moderno_child_enqueue_styles() {
 	wp_enqueue_style( 'omc-pages', OMC_URI . '/assets/css/omc-pages.css', [ 'omc' ], $ver( '/assets/css/omc-pages.css' ) ); // the theme's own screens, restyled to the home page
 	wp_enqueue_script( 'omc', OMC_URI . '/assets/js/omc.js', [], $ver( '/assets/js/omc.js' ), true );
 
-	// Style videos: only the two templates that show a player need these.
-	if ( is_page_template( 'templates/page-video.php' ) || is_page_template( 'templates/page-videos.php' ) ) {
+	// Style videos: the two video templates, plus the home page, which shows the same cards.
+	if ( is_page_template( 'templates/page-video.php' ) || is_page_template( 'templates/page-videos.php' ) || is_page_template( 'templates/page-home.php' ) ) {
 		wp_enqueue_style( 'omc-video', OMC_URI . '/assets/css/omc-video.css', [ 'omc' ], $ver( '/assets/css/omc-video.css' ) );
 		if ( is_page_template( 'templates/page-video.php' ) ) {
 			wp_enqueue_script( 'omc-video', OMC_URI . '/assets/js/omc-video.js', [], $ver( '/assets/js/omc-video.js' ), true );
@@ -431,6 +431,9 @@ function omc_icon( $name ) {
 		'hand'    => '<path d="M8 13V6a2 2 0 1 1 4 0v6"/><path d="M12 12V5a2 2 0 1 1 4 0v8"/><path d="M16 13V8a2 2 0 1 1 4 0v6a7 7 0 0 1-7 7h-1a7 7 0 0 1-6-3.4L3.6 14a2 2 0 0 1 3.3-2.2L8 13"/>',
 		'return'  => '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>',
 		'lock'    => '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+		'shield'  => '<path d="M12 3l7 3v5.5c0 4.3-2.9 7.8-7 9.5-4.1-1.7-7-5.2-7-9.5V6z"/><path d="M9.2 12.2l2 2 3.6-3.9"/>',
+		'card'    => '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18"/><path d="M6.5 14.5h3"/>',
+		'truck'   => '<path d="M3 7h10v9H3z"/><path d="M13 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/>',
 		'arrow'   => '<path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>',
 		'facebook' => '<path fill="currentColor" stroke="none" d="M13.6 21v-7.2h2.4l.4-2.9h-2.8V9.1c0-.8.3-1.4 1.4-1.4h1.5V5.1c-.3 0-1.2-.1-2.2-.1-2.2 0-3.6 1.3-3.6 3.8v2.1H8.3v2.9h2.4V21z"/>',
 		'instagram' => '<rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="3.8"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none"/>',
@@ -673,6 +676,59 @@ function omc_section_head( $eyebrow, $title, $link_url = '', $link_text = '' ) {
 		echo '<a class="omc-link" href="' . esc_url( $link_url ) . '">' . esc_html( $link_text ) . omc_icon( 'arrow' ) . '</a>';
 	}
 	echo '</header>';
+}
+
+/**
+ * The "As seen on" strip on the home page.
+ *
+ * PLACEHOLDERS. These are names to swap, not coverage we have. Replace each entry with a real
+ * mention (and ideally a link to it) before the store opens, or drop the section with
+ * `add_filter( 'omc_press_logos', '__return_empty_array' );` — a press strip naming outlets that
+ * never covered the brand is the kind of claim a shopper can check.
+ *
+ * @return array List of [ name, url ]. An empty list hides the section.
+ */
+function omc_press_logos() {
+	return apply_filters( 'omc_press_logos', [
+		[ 'name' => 'FOX', 'url' => '' ],
+		[ 'name' => 'NBC', 'url' => '' ],
+		[ 'name' => 'CBS', 'url' => '' ],
+		[ 'name' => 'USA TODAY', 'url' => '' ],
+		[ 'name' => 'ABC', 'url' => '' ],
+	] );
+}
+
+/**
+ * The reassurance row in the footer: what is true about paying here, said plainly.
+ *
+ * No card-brand marks on purpose — printing a Visa or PayPal logo asserts a gateway that is not
+ * connected yet. These say what the site itself can back up.
+ *
+ * @return array List of [ icon, title, text ].
+ */
+function omc_footer_badges() {
+	return apply_filters( 'omc_footer_badges', [
+		[
+			'icon'  => 'lock',
+			'title' => __( 'Secure checkout', 'moderno-child' ),
+			'text'  => __( 'Encrypted end to end', 'moderno-child' ),
+		],
+		[
+			'icon'  => 'shield',
+			'title' => __( 'Your details stay yours', 'moderno-child' ),
+			'text'  => __( 'Never sold, never shared', 'moderno-child' ),
+		],
+		[
+			'icon'  => 'card',
+			'title' => __( 'Card numbers never touch us', 'moderno-child' ),
+			'text'  => __( 'Handled by the payment processor', 'moderno-child' ),
+		],
+		[
+			'icon'  => 'return',
+			'title' => __( '7-day store-credit returns', 'moderno-child' ),
+			'text'  => __( 'Terms on the return policy', 'moderno-child' ),
+		],
+	] );
 }
 
 /** Newsletter form (progressively enhanced by assets/js/omc.js). */

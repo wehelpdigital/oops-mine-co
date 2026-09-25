@@ -253,6 +253,27 @@ get_header();
 		</div>
 	</section>
 
+	<!-- ───────────── As seen on (placeholder names — see omc_press_logos()) ───────────── -->
+	<?php $omc_press = function_exists( 'omc_press_logos' ) ? omc_press_logos() : []; ?>
+	<?php if ( $omc_press ) : ?>
+		<section class="omc-press omc-reveal" aria-labelledby="omc-press-title">
+			<div class="l-section__container omc-press__inner">
+				<p class="omc-eyebrow" id="omc-press-title"><?php esc_html_e( 'As seen on', 'moderno-child' ); ?></p>
+				<ul class="omc-press__list">
+					<?php foreach ( $omc_press as $omc_p ) : ?>
+						<li class="omc-press__item">
+							<?php if ( ! empty( $omc_p['url'] ) ) : ?>
+								<a href="<?php echo esc_url( $omc_p['url'] ); ?>" target="_blank" rel="noopener"><?php echo esc_html( $omc_p['name'] ); ?></a>
+							<?php else : ?>
+								<span><?php echo esc_html( $omc_p['name'] ); ?></span>
+							<?php endif; ?>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+			</div>
+		</section>
+	<?php endif; ?>
+
 	<!-- ───────────── New arrivals ───────────── -->
 	<section class="omc-section omc-products omc-reveal" aria-labelledby="omc-new-title">
 		<div class="l-section__container-wide">
@@ -295,6 +316,41 @@ get_header();
 			</div>
 		</div>
 	</section>
+
+	<!-- ───────────── Style videos ───────────── -->
+	<?php
+	$omc_vids = function_exists( 'omc_video_pages' ) ? omc_video_pages() : [];
+	if ( $omc_vids ) :
+		$omc_vid_hub = get_page_by_path( 'videos' );
+		?>
+		<section class="omc-section omc-vidrow omc-reveal" aria-labelledby="omc-vidrow-title">
+			<div class="l-section__container-wide">
+				<?php
+				omc_section_head(
+					__( 'Watch', 'moderno-child' ),
+					__( 'See how it <em>moves</em>', 'moderno-child' ),
+					$omc_vid_hub ? get_permalink( $omc_vid_hub ) : '',
+					$omc_vid_hub ? __( 'All videos', 'moderno-child' ) : ''
+				);
+				?>
+				<p class="omc-vidrow__lede">
+					<?php
+					echo wp_kses(
+						__( 'Photographs give you the colour. Video gives you the movement — how a korean fashion skirt swings when you walk, where a waistband actually sits, how a sheer panel reads in daylight. We film every rack before it goes online: the ruffles and organza, the chic boho clothes, the one statement fashion piece that gets asked about twice.', 'moderno-child' ),
+						[ 'em' => [] ]
+					);
+					?>
+				</p>
+				<div class="omc-video-cards omc-vidrow__grid">
+					<?php
+					foreach ( array_slice( $omc_vids, 0, 3, true ) as $omc_vid_id => $omc_vid ) {
+						omc_video_card( $omc_vid_id, $omc_vid );
+					}
+					?>
+				</div>
+			</div>
+		</section>
+	<?php endif; ?>
 
 	<!-- ───────────── Styling notes (journal) ───────────── -->
 	<?php

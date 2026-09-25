@@ -431,6 +431,8 @@ a.omc-contact__value:hover { color: var(--omc-rose-dark); border-bottom-color: v
 	.omc-form__grid { grid-template-columns: 1fr 1fr; }
 	.omc-lp-related__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 	.omc-contact__grid { grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: clamp(28px, 3vw, 48px); align-items: start; }
+	/* With no message form beside it the card would stretch the full column and read as a banner. */
+	.omc-contact__grid--single { grid-template-columns: minmax(0, 520px); justify-content: center; }
 }
 
 @media (min-width: 1024px) {
@@ -438,6 +440,8 @@ a.omc-contact__value:hover { color: var(--omc-rose-dark); border-bottom-color: v
 	.omc-lp-nav { position: sticky; top: var(--omc-lp-stick); margin: 0; max-height: calc(100vh - var(--omc-lp-stick) - 24px); overflow-y: auto; }
 	.omc-lp-related__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 	.omc-contact__grid { grid-template-columns: minmax(0, 380px) minmax(0, 1fr); }
+	.omc-contact__grid--single { grid-template-columns: minmax(0, 520px); }
+	.omc-contact__grid--single .omc-contact__card { position: static; }
 	.omc-contact__card { position: sticky; top: var(--omc-lp-stick); }
 }
 

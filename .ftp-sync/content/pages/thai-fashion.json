@@ -2,9 +2,9 @@
   "slug": "thai-fashion",
   "type": "landing",
   "status": "publish",
-  "title": "Thai Fashion: Color, Silk and Detail From Bangkok Boutiques",
+  "title": "Thai Fashion: Color, Silk and Detail You Look Twice At",
   "seo_title": "Thai Fashion: Color, Silk and Detail | Oops, Mine Co.",
-  "meta_description": "Thai fashion with the color, print and hand-finished detail Bangkok boutiques are known for. Small runs, real measurements, pieces you won't see everywhere.",
+  "meta_description": "Thai fashion with the color, print and hand-finished detail Bangkok boutiques are known for. Small runs, light fabrics, pieces you won't see everywhere.",
   "primary_keyword": "thai fashion",
   "keywords": [
     "thai fashion",
@@ -19,7 +19,7 @@
   ],
   "hero": {
     "eyebrow": "The Thai edit",
-    "intro": "Thailand sends us color. Print over print, silk blends that move, embroidery you only catch on the second look. This is the Thai half of our sourcing: small runs from Bangkok boutiques and the sewing rooms behind them, one piece at a time.",
+    "intro": "Thailand sends us color. Print over print, silk blends that move, embroidery you only catch on the second look. This is the Thai side of our sourcing: small batches, chosen one piece at a time, leaning toward the small studio over the big catalog.",
     "cta_text": "Shop the Thai edit",
     "cta_url": "/product-category/thai-fashion/"
   },
@@ -27,7 +27,7 @@
     "slug": "thai-fashion",
     "name": "Thai Fashion",
     "parent": "women",
-    "description": "Thai-sourced pieces with the color, print and hand-finished detail Bangkok boutiques are known for. Small runs, light fabrics, flat measurements on every listing.",
+    "description": "Thai-sourced pieces with the color, print and hand-finished detail Bangkok boutiques are known for. Small runs, light fabrics, and the fit details we have on each listing.",
     "assign_products": [
       379,
       368,
@@ -48,25 +48,10 @@
       ]
     },
     {
-      "heading": "How we pick a <em>thai clothes brand</em>",
+      "heading": "How we pick a <em>Thai clothes brand</em>",
       "paragraphs": [
-        "Ronalyn buys slowly, in person where she can, leaning toward the small studio over the big catalog. A thai clothes brand we carry is often a handful of people — a designer, a pattern cutter, a sewing room one floor up. We print a label's name only when we can stand behind it, so you get the piece and an honest note on the fabric.",
-        "A thai fashion brand that size never makes thousands of one dress. That is the appeal and the catch: when a color sells through, it is often gone for good. Our <a href=\"/bangkok-shopping-guide/\">Bangkok shopping guide</a> walks through how that buying works."
-      ],
-      "cta": {
-        "text": "Read the Bangkok guide",
-        "url": "/bangkok-shopping-guide/"
-      }
-    },
-    {
-      "heading": "Three ways to wear <em>modern thai clothes</em>",
-      "paragraphs": [
-        "One printed piece, everything else quiet. Modern thai clothes carry the color, so the rest of the outfit gets to be cream, sand, soft brown or denim."
-      ],
-      "bullets": [
-        "<strong>Print top, gone to work.</strong> Boxy embroidered blouse, wide cream trousers, flat sandals, gold hoops.",
-        "<strong>Silk-blend midi, day to night.</strong> Sneakers and a knotted linen shirt by day; a heeled sandal and a small bag after six.",
-        "<strong>Two-piece set, split up.</strong> The top with jeans one week, the skirt with a plain tee the next. Two outfits, one buy."
+        "Ronalyn buys in small batches, leaning toward the small studio over the big catalog. A Thai clothes brand we carry is usually a small label rather than a name you already know, which is part of why the pieces do not turn up on every boutique page. We print a label's name only when we can stand behind it, so you get the piece and an honest note on the fabric.",
+        "A Thai fashion brand that size never makes thousands of one dress. That is the appeal and the catch: when a color sells through, it is often gone for good. Our <a href=\"/bangkok-shopping-guide/\">Bangkok shopping guide</a> walks through how buying in Thailand works."
       ],
       "cta": {
         "text": "Shop the Thai edit",
@@ -74,16 +59,35 @@
       }
     },
     {
-      "heading": "<em>Thailand clothes to wear</em> when the heat is real",
+      "heading": "Three ways to wear <em>modern Thai clothes</em>",
       "paragraphs": [
-        "Clothes made for hot, humid weather do a job most closets are short on. Thailand clothes to wear in August in Houston are the ones you would want in Bangkok in April: loose sleeves, an open weave, a hem that moves. Three pieces and sandals cover a week of travel without meeting an iron. They layer once it cools, because thailand clothes for women are cut generous through the shoulder — over a long sleeve, under a cardigan, no pulling."
-      ]
+        "One printed piece, everything else quiet. Modern Thai clothes carry the color, so the rest of the outfit gets to be cream, sand, soft brown or denim. It works because the eye lands in one place instead of three, and it means one blouse can cover three different days without reading as the same outfit twice."
+      ],
+      "bullets": [
+        "<strong>Print top, gone to work.</strong> Boxy embroidered blouse, wide cream trousers, flat sandals, gold hoops.",
+        "<strong>Silk-blend midi, day to night.</strong> Sneakers and a knotted linen shirt by day; a heeled sandal and a small bag after six.",
+        "<strong>Two-piece set, split up.</strong> The top with jeans one week, the skirt with a plain tee the next. Two outfits, one buy."
+      ],
+      "cta": {
+        "text": "Shop the printed pieces",
+        "url": "/product-category/thai-fashion/"
+      }
     },
     {
-      "heading": "Fit and sizing, <em>before</em> you add to cart",
+      "heading": "<em>Thailand clothes to wear</em> when the heat is real",
       "paragraphs": [
-        "Asian sizing runs smaller than US sizing, through the shoulder and bust first. Every product page lists flat measurements — chest, length, waist, sleeve — because a letter on a tag tells you little. Lay a garment you already own and love flat, measure it, compare. Our <a href=\"/size-guide/\">size guide</a> takes two minutes.",
-        "Thai clothes for women are often cut loose on purpose, so drape matters more than the number: size up on anything structured, stay put on anything flowing. Unsure? Message us first. If it turns out wrong, our <a href=\"/refund_returns/\">return policy</a> sets out what to do."
+        "Clothes made for hot, humid weather do a job most closets are short on. Thailand clothes to wear in August in Houston are the ones you would want in Bangkok in April: loose sleeves, an open weave, a hem that moves. Three pieces and sandals cover a week of travel without meeting an iron. They layer once it cools, because Thailand clothes for women are cut generous through the shoulder — over a long sleeve, under a cardigan, no pulling."
+      ],
+      "cta": {
+        "text": "Shop lightweight pieces",
+        "url": "/product-category/thai-fashion/"
+      }
+    },
+    {
+      "heading": "Fit and sizing, before you <em>add to cart</em>",
+      "paragraphs": [
+        "Asian sizing runs smaller than US sizing, through the shoulder and bust first. Product pages list the flat measurements we have — chest, length, waist, sleeve — because a letter on a tag tells you little. Lay a garment you already own and love flat, measure it, compare. Our <a href=\"/size-guide/\">size guide</a> takes two minutes.",
+        "Thai clothes for women are often cut loose on purpose, so drape matters more than the number: size up on anything structured, stay put on anything flowing. Unsure? Message us first. If it turns out wrong, returns come back as store credit — seven days from the purchase date to postmark — and our <a href=\"/refund_returns/\">return policy</a> has the rest."
       ],
       "cta": {
         "text": "Open the size guide",
@@ -101,29 +105,33 @@
       }
     },
     {
-      "heading": "What people mean when they search <em>fashion in thai</em>",
+      "heading": "What you might mean by <em>fashion in Thai</em>",
       "paragraphs": [
-        "Two shoppers type fashion in thai into a search bar: one wants the traditional silk dress, the other saw a Bangkok street-style photo and wants that exact top. This page is for the second. Thai clothes online shopping has one real problem — trust — so we answer it the same way on every listing."
+        "Two people can mean two different things by fashion in Thai: one wants the silk wedding set, the other saw a Bangkok street-style photo and wants that exact top. This page is for the second. Thai clothes online shopping has one real problem — trust — so we answer it the same way on every listing."
       ],
       "bullets": [
         "Sourced in Thailand in small runs, not pulled off a warehouse list.",
-        "Flat measurements and fabric on every product page, not only S/M/L.",
+        "Fabric, and the measurements we have, on the listing — not only S/M/L.",
         "Ask us anything and a person answers, not a script."
-      ]
+      ],
+      "cta": {
+        "text": "Shop the Thai edit",
+        "url": "/product-category/thai-fashion/"
+      }
     }
   ],
   "faqs": [
     {
       "q": "Is this the same as traditional Thai dress?",
-      "a": "No. Traditional dress — the chut thai and its silk sets — belongs to weddings, temple visits and holidays like Songkran. What we carry is the everyday side: printed blouses, silk-blend midis, two-piece sets you could wear to an office. Our journal piece on traditional Thai clothes has the cultural background."
+      "a": "No. Traditional dress — the chut thai and its silk sets — belongs to weddings, temple visits and holidays like Songkran. What we carry is the everyday side: printed blouses, silk-blend midis, two-piece sets you could wear to an office. Our journal piece on <a href=\"/traditional-thai-clothes/\">traditional Thai clothes</a> has the cultural background."
     },
     {
       "q": "Where do your Thai pieces come from?",
-      "a": "Small studios and boutiques in and around Bangkok, found in person rather than ordered off a wholesale list. Some come from a thai fashion brand with one shop and a sewing room behind it. We name a label only when we can stand behind it, so pieces are listed by what they are, with fabric and measurements spelled out."
+      "a": "Thailand, in small batches rather than off a wholesale list. Ronalyn leans toward the small studio over the big catalog, so a piece may come from a Thai fashion brand you have never heard of — that is rather the point. We name a label only when we can stand behind it, so pieces are listed by what they are, with the fabric spelled out."
     },
     {
-      "q": "How does thai clothes online shopping work for sizing?",
-      "a": "Every listing carries flat measurements taken from the garment, plus the fabric. Lay a piece you already own flat, measure across the chest and down the length, then compare. Asian sizing runs smaller, so a US medium is often a Thai large. Stuck between two sizes? Message us before you order."
+      "q": "How do I get the size right buying Thai clothes online?",
+      "a": "Start with numbers, not letters. Lay a piece you already own and wear flat, measure across the chest and down the length, then compare that with the measurements and fabric on the listing. Asian sizing runs smaller, so a US medium is often a Thai large. Stuck between two sizes? Message us before you order."
     },
     {
       "q": "Do these pieces work outside hot weather?",
@@ -131,7 +139,7 @@
     },
     {
       "q": "How do I hear about new Thai arrivals first?",
-      "a": "Join the email list below. New pieces are often shown on our Facebook Live before they are listed, and the list hears when a drop is coming. Runs are small, so a color that sells through frequently doesn't return. One email when there is something worth seeing, not one every day."
+      "a": "Join the email list below. New pieces are often shown on our Facebook Live before they are listed, and the list hears when a drop is coming. Runs are small, so a color that sells through frequently doesn't return. We email when there's something worth seeing."
     }
   ],
   "cta": {
@@ -147,5 +155,5 @@
     "asian-fashion",
     "korean-fashion"
   ],
-  "author_notes": "Body links: /traditional-thai-clothes/, /bangkok-shopping-guide/, /size-guide/, /refund_returns/, plus section CTAs to /product-category/thai-fashion/ and /shop/?orderby=date. Two of the related_slugs (traditional-thai-clothes, bangkok-shopping-guide) are journal POSTS, not pages: omc_landing_related() looks siblings up with get_page_by_path( $slug ), which only matches the 'page' post type, so those two get skipped until that lookup also checks posts — a small fix in inc/landing.php. Same point applies to the two in-body links: confirm the permalink structure resolves /<post-slug>/ before publishing. Hero image: one color-forward Thai piece shot on cream or sand, props kept inside the brand palette (cream, sand, soft brown, pink, rose-gold); the template only shows a hero photo when the page has a featured image. Facts kept deliberately general — no label names, prices, shipping windows or reply times. 'chut thai' and Songkran are the only Thai terms used, both in their ordinary sense; worth one read-through by the owner. Category 'Thai Fashion' sits under 'women' with the eight product IDs from the plan."
+  "author_notes": "BEFORE PUBLISHING — the eight assign_products are demo items (Prada, Missoni, Stella McCartney, YSL, Fabiana Filippi; mostly 'Made in Italy' shoes and eveningwear) and they render straight under the bullet 'Sourced in Thailand in small runs, not pulled off a warehouse list.' Fill the Thai Fashion category with real Thai stock first, or the page contradicts itself on screen. Sourcing wording deliberately matches the FAQ page ('Ronalyn buys in small batches, leaning toward the small studio over the big catalog'): the earlier draft claimed in-person buying trips to Bangkok boutiques and sewing rooms, which nothing in the brief supports — do not put that back without the owner confirming it, and if she does, the hero and title can go back to naming Bangkok. Measurement claims are hedged ('the flat measurements we have') because the current listings carry supplier copy with fabric percentages and at most one length, no chest/waist/sleeve; if the owner commits to adding flat measurements to every listing, this can go back to 'every product page'. Return wording follows the real policy: store credit only, postmarked within seven days of the purchase date, $15 restocking fee, sale items final. Body links: /traditional-thai-clothes/, /bangkok-shopping-guide/, /size-guide/, /refund_returns/, plus section CTAs to /product-category/thai-fashion/ and /shop/?orderby=date. Two of the related_slugs (traditional-thai-clothes, bangkok-shopping-guide) are journal POSTS, not pages: omc_landing_related() looks siblings up with get_page_by_path( $slug ), which only matches the 'page' post type, so those two get skipped until that lookup also checks posts — a small fix in inc/landing.php. The same two links appear in the body (section 1 and section 2) and in FAQ 1, and they will 404 if this page publishes before those posts do — publish the posts first, or strip the links. Hero image: one color-forward Thai piece shot on cream or sand, props kept inside the brand palette (cream, sand, soft brown, pink, rose-gold); the template only shows a hero photo when the page has a featured image. Facts kept deliberately general — no label names, prices, shipping windows or reply times. 'chut thai' and Songkran are the only Thai terms used, both in their ordinary sense; worth one read-through by the owner. Category 'Thai Fashion' sits under 'women' with the eight product IDs from the plan."
 }

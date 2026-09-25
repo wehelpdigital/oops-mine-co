@@ -27,7 +27,7 @@
   ],
   "hero": {
     "eyebrow": "The K-pop edit",
-    "intro": "Stage styling, turned into clothes you can wear to work, to class and to dinner. Same silhouettes, same playful mixing, none of the costume. Each piece is picked one at a time from Korea, Thailand and Vietnam, for the detail that makes you look twice.",
+    "intro": "Stage styling, turned into clothes you can wear to work, to class and to dinner. Same silhouettes, same playful mixing, nothing that needs a stage to make sense. Each piece is picked one at a time from Korea, Thailand and Vietnam, for the detail that makes you look twice.",
     "cta_text": "Shop the K-Pop Inspired edit",
     "cta_url": "/product-category/kpop-fashion/"
   },
@@ -36,7 +36,16 @@
     "name": "K-Pop Inspired",
     "parent": "women",
     "description": "Stage-inspired shapes: mini skirts, cropped knits, denim and sneakers, toned down enough for a normal Tuesday. Chosen one piece at a time from Korea, Thailand and Vietnam, in a wide color range.",
-    "assign_products": [217, 199, 219, 266, 268, 364, 2223, 2213]
+    "assign_products": [
+      217,
+      199,
+      219,
+      266,
+      268,
+      364,
+      2223,
+      2213
+    ]
   },
   "sections": [
     {
@@ -58,7 +67,10 @@
         "Colors from the soft end: cream, sand, pink, brown, denim blue.",
         "Garment measurements on the product page wherever the maker sends them."
       ],
-      "cta": { "text": "Shop the K-Pop Inspired edit", "url": "/product-category/kpop-fashion/" }
+      "cta": {
+        "text": "Shop the K-Pop Inspired edit",
+        "url": "/product-category/kpop-fashion/"
+      }
     },
     {
       "heading": "How to wear it: three <em>outfits</em>",
@@ -71,15 +83,21 @@
         "Off-duty: oversized shirt buttoned once over a fitted tank, straight denim, white sneakers, one hair clip.",
         "Dinner: a kpop fashion dress — a short knit or a pleated mini dress — with sheer tights, a cardigan on the shoulders and a low heel."
       ],
-      "cta": { "text": "Read the K-pop outfit ideas", "url": "/kpop-outfit-ideas/" }
+      "cta": {
+        "text": "Read the K-pop outfit ideas",
+        "url": "/kpop-outfit-ideas/"
+      }
     },
     {
       "heading": "Fit and sizing, before you <em>add to cart</em>",
       "paragraphs": [
-        "Korean and Thai sizing runs smaller than US sizing, and it runs smaller in uneven places: shoulders and sleeves first, then bust. A letter from Seoul usually sits about a size under the same letter from a US brand, and usually is doing real work in that sentence. Where we have garment measurements, they sit on the product page, so you can compare numbers instead of guessing from a letter.",
-        "The easiest way to get it right is to measure one top and one skirt you already like, then match those numbers. Our <a href=\"/size-guide/\">size guide</a> shows how to take each measurement and how Korean sizes line up against US ones. If a piece sits between two sizes, email hello@oopsmineco.com and we will tell you which way that style runs."
+        "Korean and Thai sizing runs smaller than US sizing, and it runs smaller in uneven places: shoulders and sleeves first, then bust. A letter from Seoul usually sits about a size under the same letter from a US brand, and “usually” is doing real work in that sentence. Where we have garment measurements, they sit on the product page, so you can compare numbers instead of guessing from a letter.",
+        "The easiest way to get it right is to measure one top and one skirt you already like, then match those numbers. Our <a href=\"/size-guide/\">size guide</a> shows how to take each measurement and how Korean sizes line up against US ones. If a piece sits between two sizes, email hello@oopsmineco.com and we will tell you which way that style runs. It takes a minute, and it saves a return."
       ],
-      "cta": { "text": "Open the size guide", "url": "/size-guide/" }
+      "cta": {
+        "text": "Open the size guide",
+        "url": "/size-guide/"
+      }
     },
     {
       "heading": "New pieces, <em>small</em> batches",
@@ -87,7 +105,10 @@
         "We buy in small batches. A style lands in a handful of sizes, sells through, and often cannot be reordered because the supplier has already moved on to the next run. That is the honest reason to act when something fits — nothing is ticking down on a timer, it is simply how a small boutique orders. The newest styles reach <a href=\"/shop/?orderby=date\">new arrivals</a> first, then settle into this edit.",
         "K pop fashion trends move quickly because comebacks do. A kpop fashion trend usually starts with one detail: a collar, a hem length, a way of layering. The pieces carrying it are around for a season, then the next one arrives. Our pricing sits in the middle: not cheap, not luxury. A search for cheap kpop fashion mostly turns up thin fabric that photographs well once, and we would rather sell you one piece you keep reaching for."
       ],
-      "cta": { "text": "See what landed this week", "url": "/shop/?orderby=date" }
+      "cta": {
+        "text": "See what landed this week",
+        "url": "/shop/?orderby=date"
+      }
     },
     {
       "heading": "Merch, near me, and the other things you <em>typed</em>",
@@ -98,9 +119,12 @@
       "bullets": [
         "Type kpop merchandise near me and you are after albums, lightsticks or licensed prints. We carry none of it, and we would rather say so than sell you a lookalike.",
         "If you searched kpop shirts near me hoping for a tour tee, ours are fashion tops: cropped knits, boxy shirts, ribbed tees. No band prints, no logos.",
-        "The honest answer to kpop clothes near me is your mailbox. We ship from Houston, TX, and the shipping choices sit at checkout."
+        "The honest answer to kpop clothes near me is your mailbox. Orders leave Houston, TX, and how that works is set out in our <a href=\"/shipping-policy/\">shipping policy</a>."
       ],
-      "cta": { "text": "See what we do carry", "url": "/product-category/kpop-fashion/" }
+      "cta": {
+        "text": "See what we do carry",
+        "url": "/product-category/kpop-fashion/"
+      }
     }
   ],
   "faqs": [
@@ -110,7 +134,7 @@
     },
     {
       "q": "Is there a store near me, or is everything online?",
-      "a": "Everything is online. Our Houston, TX address is a mailing address only, so there are no walk-ins and no fitting room to visit. Orders ship to you, and email or phone reaches a person on a weekday, Monday through Friday 8:30am–5:00pm, with Saturday hours 10:00am–5:00pm Central Time. It is all on our <a href=\"/contacts/\">contact page</a>. Living close by makes no difference to your order; the same pieces reach you the same way."
+      "a": "Everything is online. Our Houston, TX address is a mailing address only, so there are no walk-ins and no fitting room to visit. Orders ship to you, and email or phone reaches a person Monday through Friday, 8:30am–5:00pm, and Saturday 10:00am–5:00pm Central Time. It is all on our <a href=\"/contacts/\">contact page</a>. Living close by makes no difference to your order; the same pieces reach you the same way."
     },
     {
       "q": "What size should I order if Korean sizing is new to me?",
@@ -122,7 +146,7 @@
     },
     {
       "q": "What happens if a piece does not fit?",
-      "a": "Returns come back as store credit, not cash. You have seven days from the purchase date to postmark the parcel, tags and labels still attached, and a $15 restocking fee applies to every return. Email hello@oopsmineco.com for an RMA number first. Some pieces are final sale and cannot come back at all, so read the full list in our <a href=\"/refund_returns/\">return policy</a> before you order. If you would like a second opinion first, send your measurements and the piece you are looking at and we will tell you how that style runs."
+      "a": "Returns come back as store credit, not cash. You have seven days from the purchase date to postmark the package, tags and labels still attached, and a $15 restocking fee applies to every return. Email hello@oopsmineco.com first for an RMA number. Some pieces are final sale and cannot come back at all, so read the full list in our <a href=\"/refund_returns/\">return policy</a> before you order. Easier still: send us your measurements beforehand and we will tell you how that style runs."
     }
   ],
   "cta": {
@@ -138,5 +162,5 @@
     "korean-fashion",
     "kpop-fashion-for-men"
   ],
-  "author_notes": "Revised after editorial review. Return terms are now named in FAQ 5 straight from blueprint/return-policy.txt (store credit only, seven days from the purchase date to postmark, new and unused with original tags and labels, RMA by email, $15.00 restocking fee, final-sale list), with the policy link for the exceptions - re-check that answer if the owner updates the policy. Section 5 and section 6 each gained a CTA (/shop/?orderby=date and /product-category/kpop-fashion/) so no section ends without a next step. The three near-me phrases stay verbatim but now sit inside sentences. The size promise is made once, in section 2, hedged the way /size-guide/ hedges it ('as much of the size run as each supplier will give us, which is rarely all of it'); the hero, the fourth bullet and the category description no longer claim a size range, and section 4 now uses the guide's own wording ('a letter from Seoul usually sits about a size under the same letter from a US brand') and says Korean and Thai sizing rather than Asian sizing. House spelling: 'K-pop' in prose, 'K Pop Fashion' / 'kpop ...' only where a keyword must be verbatim, 'K-Pop Inspired' only as the category name; all three buttons to /product-category/kpop-fashion/ read 'Shop the K-Pop Inspired edit' except the section 6 one, which is deliberately 'See what we do carry'. IMPORTANT: the section 3 and FAQ 4 links point at /kpop-outfit-ideas/ (the journal post in plan.json) - publish it before or with this page or those two links 404. Hero still wants a featured image: lifestyle shot in the brand palette (ivory, cream, sand, soft pink, brown). Other links used: /product-category/kpop-fashion/, /size-guide/ (may publish as size-guide-2 locally if an html_block already owns that slug - check the permalink), /refund_returns/, /contacts/, /shop/?orderby=date. Category 'K-Pop Inspired' needs creating under Women with the description above; assign_products are the demo IDs from plan.json, so confirm each still exists. Facts come only from the brief and the client policy (Houston TX mailing address, no walk-ins, contact hours, sourcing from Korea/Thailand/Vietnam, 'not cheap, not luxury', the return terms); no shipping days, prices, discounts, reviews or counts. The merch section is deliberate: we say plainly that we do not sell licensed band merchandise."
+  "author_notes": "Revised twice after editorial review. Return terms are now named in FAQ 5 straight from blueprint/return-policy.txt (store credit only, seven days from the purchase date to postmark, new and unused with original tags and labels, RMA by email, $15.00 restocking fee, final-sale list), with the policy link for the exceptions - re-check that answer if the owner updates the policy. Section 5 and section 6 each gained a CTA (/shop/?orderby=date and /product-category/kpop-fashion/) so no section ends without a next step. The three near-me phrases stay verbatim but now sit inside sentences. The size promise is made once, in section 2, hedged the way /size-guide/ hedges it ('as much of the size run as each supplier will give us, which is rarely all of it'); the hero, the fourth bullet and the category description no longer claim a size range, and section 4 now uses the guide's own wording ('a letter from Seoul usually sits about a size under the same letter from a US brand') and says Korean and Thai sizing rather than Asian sizing. House spelling: 'K-pop' in prose, 'K Pop Fashion' / 'kpop ...' only where a keyword must be verbatim, 'K-Pop Inspired' only as the category name; all three buttons to /product-category/kpop-fashion/ read 'Shop the K-Pop Inspired edit' except the section 6 one, which is deliberately 'See what we do carry'. IMPORTANT: the section 3 and FAQ 4 links point at /kpop-outfit-ideas/ (the journal post in plan.json) - publish it before or with this page or those two links 404. Hero still wants a featured image: lifestyle shot in the brand palette (ivory, cream, sand, soft pink, brown). Other links used: /product-category/kpop-fashion/, /size-guide/ (may publish as size-guide-2 locally if an html_block already owns that slug - check the permalink), /refund_returns/, /contacts/, /shop/?orderby=date. Category 'K-Pop Inspired' needs creating under Women with the description above; assign_products are the demo IDs from plan.json, so confirm each still exists. Facts come only from the brief and the client policy (Houston TX mailing address, no walk-ins, contact hours, sourcing from Korea/Thailand/Vietnam, 'not cheap, not luxury', the return terms); no shipping days, prices, discounts, reviews or counts. The merch section is deliberate: we say plainly that we do not sell licensed band merchandise. SECOND PASS: 'postmark the parcel' is now 'postmark the package' (American English, and the client policy's own word); FAQ 5 trimmed to ~80 words. The section 6 near-me bullet no longer says 'the shipping choices sit at checkout' - the store has no shipping zones configured, so it now links /shipping-policy/ instead of implying a menu of methods at checkout. FAQ 2 no longer says 'a person on a weekday' immediately before quoting Saturday hours. Hero dropped the third use of 'costume'. Section 4 paragraph 2 lifted over the 60-word floor and 'usually' is quoted so the sentence reads. Verified against the sources: the five looks cited in FAQ 4 really are the five in kpop-outfit-ideas.json, and every return term in FAQ 5 matches blueprint/return-policy.txt. /shipping-policy/ is the slug in shipping-policy.json."
 }

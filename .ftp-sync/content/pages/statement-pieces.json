@@ -3,8 +3,8 @@
   "type": "landing",
   "status": "publish",
   "title": "Statement Fashion: One Piece That Does All the Talking",
-  "seo_title": "Statement Fashion Pieces, Not Everywhere | Oops, Mine",
-  "meta_description": "Statement fashion for closets never meant to look like everyone else's: sequins, chain mail, metallic pleats and the shoes that carry them. Look twice.",
+  "seo_title": "Statement Fashion You Will Not See Everywhere | Oops, Mine",
+  "meta_description": "Statement fashion for closets never meant to look like everyone else's: sequins, chain mail and the shoes that carry them. Short runs, flat measurements listed.",
   "primary_keyword": "statement fashion",
   "keywords": [
     "statement fashion",
@@ -26,7 +26,7 @@
     "slug": "statement-pieces",
     "name": "Statement Pieces",
     "parent": "women",
-    "description": "The one that gets asked about: sequins, chain mail, metallic pleats and the shoes that carry a plain outfit. Picked in short runs from Korea and Thailand, with the fabric and the flat measurements on every listing.",
+    "description": "The one that gets asked about: the skirt a stranger stops you over, the dress that needs nothing but shoes, the slides that carry a plain outfit. Picked in short runs from Korea and Thailand, with the fabric and the flat measurements on every listing.",
     "assign_products": [
       370,
       368,
@@ -42,7 +42,7 @@
     {
       "heading": "What makes <em>statement fashion</em> different",
       "paragraphs": [
-        "Statement dressing is not the same as loud. Loud is easy — one bright print and you get looked at once. A statement piece earns the second look: chain mail that moves like fabric, sequins set into the knit instead of stuck on top, pleated satin that shifts color as you turn. You read the shape first and the detail a moment later, which is why one of these works twice — with denim at brunch, on its own by eight.",
+        "Statement dressing is not the same as loud. Loud is easy — one bright print and you get looked at once. A statement piece earns the second look, and the second look is where the making shows: weight in the hand, a lining that sits flat instead of clinging, a seam strong enough to carry a beaded hem. You read the shape first and the detail a moment later, which is why one of these works twice — with denim at brunch, on its own by eight.",
         "Pieces like that come from small studios in Korea and Thailand, bought in short runs and picked one at a time. Not made to blend in, not chosen to be everywhere. If a stranger has ever stopped you to ask about a skirt, that is the moment we buy for: the quiet, slightly smug oops, mine feeling of wearing the one nobody else in the room has."
       ]
     },
@@ -61,7 +61,7 @@
       "heading": "How to <em>wear</em> it: three outfits",
       "paragraphs": [
         "The dresses are the easy version of a big night: one piece, one decision, done. A pleated satin maxi with crystal at the waist and a cutout doing the job a necklace usually would. A lamé maxi in a zigzag that reads as shimmer across a room and as pattern up close. A sequin knit gown that moves with you and sits down comfortably.",
-        "Skirts are the same idea on an ordinary day — a metallic chain mail mini, a fishnet overlay in wool and silk scattered with glass droplets, a celadon leather mini with neat pleats. One rule keeps any of them looking chosen rather than costumed: a single piece carries the noise and everything else stays quiet."
+        "Skirts are the same idea on an ordinary day — a metallic chain mail mini, a fishnet overlay in wool and silk scattered with droplets that catch the light, a celadon leather mini with neat pleats. Worn with a tee and flat sandals they read as Tuesday. Worn with a heel after six they read as something else entirely, and nothing underneath has changed."
       ],
       "bullets": [
         "<strong>Chain mail mini + plain tee.</strong> White cotton, half-tucked, flat sandals by day and a heeled slide after dark. The tee is what makes the skirt look like your idea.",
@@ -69,15 +69,15 @@
         "<strong>Satin maxi + low-top sneakers.</strong> The fastest way to wear something shiny before dark, and the reason a dress like this gets worn on a Saturday."
       ],
       "cta": {
-        "text": "Shop statement pieces",
-        "url": "/product-category/statement-pieces/"
+        "text": "Shop dresses",
+        "url": "/product-category/dresses/"
       }
     },
     {
       "heading": "Shoes: <em>cute fashion sneakers</em> and a heel for later",
       "paragraphs": [
         "Two of the hardest-working things in this edit have no sparkle at all. Cute fashion sneakers do what a heel cannot: they take a piece that reads as dressy and make it a Tuesday. The Ethyl low top is clean and crisp, the kind of shoe that goes quiet beside a loud skirt. The V-10 court sneaker leans sporty without looking like gym kit, and it is listed in unisex sizing, so read the conversion on the product page.",
-        "Typed cute fashion tennis shoes into a search bar and ended up here? Same shelf. A court-style low top sits happily under wide denim, a pleated midi or that satin maxi. For later there are two slides: a crystal-covered platform for the nights you want height, and a strappy leather pair that carries day clothes into the evening."
+        "A court-style low top and cute fashion tennis shoes are the same shelf here — either one sits happily under wide denim, a pleated midi or that satin maxi. The shoe is doing the same job in each case: taking the temperature down so the piece above it can do the talking. For later there are two slides, a crystal-covered platform for the nights you want height and a strappy leather pair that carries day clothes into the evening."
       ],
       "cta": {
         "text": "Shop shoes and accessories",
@@ -87,20 +87,24 @@
     {
       "heading": "<em>Jewelry</em> and the rest of the outfit",
       "paragraphs": [
-        "Straight answer first: we do not list jewelry yet, so this is styling advice rather than a sales pitch. Beside chain mail or sequins, trendy fashion jewelry should stay small — one thin hoop, one fine chain, a stud you forget you have on. Save the stylish fashion jewellery you love most for plain days, when a cream knit and denim are the ones that need something to happen.",
-        "What we do stock alongside the clothes is the finishing half: cute clothes accessories that complete a look instead of competing with it — a bag that keeps quiet, a sandal that repeats the shine already in the outfit. Hair beats a second necklace most days: a claw clip, a clean part, done."
+        "Straight answer first: we do not list jewelry yet, so this is styling advice rather than a sales pitch. Beside chain mail or sequins, trendy fashion jewelry should stay small — one thin hoop, one fine chain, a stud you forget you have on. The pieces you love most are better saved for plain days, when a cream knit and denim are the ones that need something to happen.",
+        "What we do stock alongside the clothes is the finishing half: cute clothes accessories that complete a look instead of competing with it — <a href=\"/product-category/handbags/\">a bag that keeps quiet</a>, a sandal that repeats the shine already in the outfit. Hair beats a second necklace most days: a claw clip, a clean part, done."
       ],
       "bullets": [
         "<strong>One loud thing.</strong> If the skirt sparkles, the top, the bag and the shoes stay plain.",
         "<strong>One metal family.</strong> Warm gold with sequins, cool silver with chain mail, and everything else in step.",
         "<strong>Let the bag disappear.</strong> Cream, sand or soft brown does more here than a matching bag ever will."
-      ]
+      ],
+      "cta": {
+        "text": "Shop bags and accessories",
+        "url": "/product-category/shoes_and_accessories/"
+      }
     },
     {
       "heading": "Fit and sizing, <em>before</em> you add to cart",
       "paragraphs": [
         "Sparkle has no give. Leather, chain mail, pleats and anything beaded sit where they were cut, so read waist and length first on a skirt, chest and length on a dress. Every listing carries flat measurements taken off the garment itself. Lay a piece you already love face down, measure across and down, then hold those numbers against the ones on the page — the <a href=\"/size-guide/\">size guide</a> walks you through it in about two minutes.",
-        "Sizing from Korea and Thailand runs smaller than US sizing, and the room runs out at the shoulder and bust first. Caught between two sizes on something structured, take the bigger one; sequin knits stretch, so stay where you are. Still torn? <a href=\"/contacts/\">Send us a message</a> with your usual size and the piece — it is here on a rail and we will measure it again. Should it arrive wrong anyway, the <a href=\"/refund_returns/\">return policy</a> explains how to send it back."
+        "Sizing from Korea and Thailand runs smaller than US sizing, and the room runs out at the shoulder and bust first. Caught between two sizes on something structured, take the bigger one; sequin knits stretch, so stay where you are. Still torn? <a href=\"/contacts/\">Send us a message</a> with your usual size and the piece — it is here with us and we will measure it again. Should it arrive wrong anyway, you have seven days to postmark it back with the tags on, for store credit — the <a href=\"/refund_returns/\">return policy</a> has the steps."
       ],
       "cta": {
         "text": "Open the size guide",
@@ -111,7 +115,7 @@
       "heading": "New pieces, <em>small</em> batches",
       "paragraphs": [
         "Short runs are the trade-off for clothes that are not everywhere. A sequin color might arrive in four sizes and never be repeated, so this page looks different from one month to the next. We are not going to dress that up with a countdown clock; it is simply what buying from small studios means. If a piece has been sitting in your cart since last week, that is usually your answer.",
-        "New arrivals often turn up on our Facebook Live before they are listed here, and the email list hears next. If this edit is louder than your week, the <a href=\"/chic-style/\">chic style</a> pages are the calm end of the same shelf."
+        "New arrivals often turn up on our Facebook Live before they are listed here, and the email list hears next. The home page carries the date of the <a href=\"/#omc-live-title\">next live</a>, so leave your email there and we will send you the link. If this edit is louder than your week, the <a href=\"/chic-style/\">chic style</a> pages are the calm end of the same shelf."
       ],
       "cta": {
         "text": "See new arrivals",
@@ -126,14 +130,14 @@
     },
     {
       "q": "Do you stock unique yoga clothes?",
-      "a": "Not at the moment. We do not carry activewear, and we would rather tell you than sell you something that was never made for a mat. If unique yoga clothes were your way of asking for soft, easy pieces in a wide size range, the closest thing here is a knit dress or a relaxed set — lovely for the coffee run afterwards, not for the class itself."
+      "a": "Not at the moment. Activewear is not what we buy for, and we would rather tell you than sell you something that was never made for a mat. If unique yoga clothes were your way of asking for soft, easy pieces in a wide size range, the closest thing here is a knit dress or a relaxed set — lovely for the coffee run afterwards, not for the class itself."
     },
     {
       "q": "Will a statement piece end up wearing me?",
-      "a": "Only if you give it company. Keep everything else plain: quiet top, quiet shoes, small jewelry, one bag that stays out of the way. If you want sparkle further from your face, put it on the bottom half — a metallic skirt under a cream knit is far easier to wear all day than a sequin top."
+      "a": "Only if you give it company. Keep the rest of the outfit quiet: a simple top, flat shoes, one bag that stays out of the way, one thin chain at most. Save the stylish fashion jewellery you love most for a day when nothing else is competing. If you want sparkle further from your face, put it on the bottom half — a metallic skirt under a cream knit is far easier to wear all day than a sequin top."
     },
     {
-      "q": "Can I wear these during the day?",
+      "q": "Can you wear statement pieces during the day?",
       "a": "Yes, and that is most of the point. A chain mail mini with a cotton tee and flat sandals is a daytime outfit. Low-top sneakers under a satin maxi is a daytime outfit. These pieces read as evening only when you style them that way, which is why the shoes matter as much as the dress does."
     },
     {
@@ -154,5 +158,5 @@
     "kpop-fashion",
     "chic-style"
   ],
-  "author_notes": "Links used in body copy: /product-category/statement-pieces/, /product-category/shoes_and_accessories/, /size-guide/, /contacts/, /refund_returns/, /chic-style/, /shop/?orderby=date. The product_cat 'statement-pieces' does not exist in the local DB yet — the publish script has to create it under 'women' (term 134) and assign the eight IDs, or the template hides the grid. IMPORTANT: the copy names the two real sneakers, 2223 Ethyl Low Top Sneaker and 2213 V-10 Sneaker (Unisex), plus the two slides 194 and 2227; 2223 and 2213 are NOT in the plan's assign_products list, so either add them to the category (recommended, the shoes section sends people straight to them) or the /product-category/shoes_and_accessories/ link has to carry that traffic. Product references are taken from the live product titles/excerpts: 370 pleated satin maxi with crystal belt and cutouts, 368 zigzag lame maxi, 361 sequin textured knit A-line gown, 199 metallic chain mail miniskirt, 219 fishnet overlay wool and silk skirt, 217 celadon leather miniskirt, 194 crystal platform slide, 2227 strappy leather slide. No designer or brand names were used even though the demo excerpts contain them — if those demo products are swapped for real stock, re-check the four sentences in 'How to wear it' and 'Shoes' that describe them. Honest gaps stated in copy, please keep them honest: no jewelry is listed in the store (the jewelry section is styling advice) and no activewear, which is how 'unique yoga clothes' is handled in the FAQ. No prices, shipping times, review counts or scarcity numbers are claimed anywhere. 'jewellery' is British spelling only inside the assigned keyword 'stylish fashion jewellery'; every other use is US 'jewelry'. Hero photo suggestion: a metallic or sequin skirt with a plain cream tee, natural light on a cream or sand background — the template only shows a hero image when the page has a featured image. Sibling page links assume /chic-style/ is published; /affordable-luxury-clothes/ is a related slug written in parallel, so confirm it exists before the 'You might also like' row is rendered."
+  "author_notes": "Links used in body copy: /product-category/statement-pieces/, /product-category/dresses/, /product-category/shoes_and_accessories/, /product-category/handbags/, /size-guide/, /contacts/, /refund_returns/, /chic-style/, /#omc-live-title, /shop/?orderby=date. STATE (checked against the local DB): product_cat 'statement-pieces' already exists as term 178 under 'women' (134) and already holds the eight assigned IDs, so the publish script only has to keep them in step. /size-guide/ (page 2820), /chic-style/ (2539), /contacts/ (51), /refund_returns/ (10) and /affordable-luxury-clothes/ (2613) are all published. /product-category/handbags/ has two published products (86, 79); the top-level /product-category/accessories/ has none of its own, so never link it. /#omc-live-title is the id on the home page's Facebook Live card, which carries the countdown and the email form (source fb_live) — if that section is ever renamed or turned off in Customizer, repoint that link at the Facebook page URL in the Customizer social settings. IMPORTANT: the copy names the two real sneakers, 2223 Ethyl Low Top Sneaker and 2213 V-10 Sneaker (Unisex), plus the two slides 194 and 2227; 2223 and 2213 are still NOT in term 178, so either add them to the category (recommended, the shoes section sends people straight to them) or the /product-category/shoes_and_accessories/ link has to carry that traffic. Product references are taken from the live product titles/excerpts: 370 pleated satin maxi with crystal belt and cutouts, 368 zigzag lame maxi, 361 sequin textured knit A-line gown, 199 metallic chain mail miniskirt, 219 fishnet overlay wool and silk skirt (the listing says 'glittering droplets' and does not name the material, so the copy says 'droplets that catch the light' — do not upgrade that to glass or crystal), 217 celadon leather miniskirt, 194 crystal platform slide, 2227 strappy leather slide. No designer or brand names were used even though the demo excerpts contain them — if those demo products are swapped for real stock, re-check the four sentences in 'How to wear it' and 'Shoes' that describe them AND the sourcing sentences ('small studios in Korea and Thailand' in section 1 and the same claim in the category description), because the eight demo products currently sitting in the grid are European designer stock and the sentence sits directly above them. Honest gaps stated in copy, please keep them honest: no jewelry is listed in the store (the jewelry section is styling advice, so its links go to handbags and to shoes and accessories) and 'unique yoga clothes' is answered with 'activewear is not what we buy for' rather than a flat 'we do not carry activewear', because the demo catalog still publishes 309 Interlude Rib Longline Sports Bra and 316 Live In High Waist Leggings in the term displayed as 'Activewear' (slug activewear-men, term 143, under Men). If those demo items are removed before launch the flatter wording can come back. Return terms in 'Fit and sizing' are quoted from /refund_returns/: store credit only, postmarked within seven days, tags and labels attached (the $15 restocking fee and the RMA step live on the policy page and are not restated here). No prices, shipping times, delivery estimates, review counts or scarcity numbers are claimed anywhere. 'jewellery' is British spelling only inside the assigned keyword 'stylish fashion jewellery' in the third FAQ answer; the section paragraph uses US 'jewelry' and the two spellings are never in the same block. Hero photo suggestion: a metallic or sequin skirt with a plain cream tee, natural light on a cream or sand background — the template only shows a hero image when the page has a featured image."
 }

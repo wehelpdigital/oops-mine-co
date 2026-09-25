@@ -72,6 +72,21 @@ $omc_show_news = apply_filters( 'omc_footer_newsletter', ! is_front_page() );
 
 		</div>
 
+		<?php $omc_badges = function_exists( 'omc_footer_badges' ) ? omc_footer_badges() : []; ?>
+		<?php if ( $omc_badges ) : ?>
+			<ul class="omc-footer__badges" aria-label="<?php esc_attr_e( 'Shopping here', 'moderno-child' ); ?>">
+				<?php foreach ( $omc_badges as $omc_b ) : ?>
+					<li class="omc-footer__badge">
+						<?php echo omc_icon( $omc_b['icon'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static inline SVG ?>
+						<span>
+							<strong><?php echo esc_html( $omc_b['title'] ); ?></strong>
+							<em><?php echo esc_html( $omc_b['text'] ); ?></em>
+						</span>
+					</li>
+				<?php endforeach; ?>
+			</ul>
+		<?php endif; ?>
+
 		<div class="omc-footer__bottom">
 			<p class="omc-footer__copy">&copy; <?php echo esc_html( $omc_year . ' ' . rtrim( get_bloginfo( 'name' ), '.' ) ); ?>. <?php esc_html_e( 'All rights reserved.', 'moderno-child' ); ?></p>
 			<?php if ( ! empty( $omc_links['legal'] ) ) : ?>

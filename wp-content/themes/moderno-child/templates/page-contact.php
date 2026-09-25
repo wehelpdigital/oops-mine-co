@@ -3,12 +3,12 @@
  * Template Name: OMC Contact
  * Template Post Type: page
  *
- * Title band → contact details card + message form → the page's sections
- * ("Before you write" and friends) → FAQ → closing call to action.
+ * Title band → contact card → the page's sections ("Before you write" and
+ * friends) → FAQ → closing call to action.
  *
- * The form is Contact Form 7's when that plugin is active and the site's form
- * exists; otherwise the theme's own form, which posts to admin-ajax (action
- * omc_contact) and answers in place through assets/js/omc-landing.js.
+ * There is no message form. The boutique is one person answering one inbox, and a
+ * form that quietly drops into the same inbox only adds a step and a place for the
+ * message to go missing. The card links straight to hello@oopsmineco.com.
  *
  * @package moderno-child
  */
@@ -29,7 +29,6 @@ while ( have_posts() ) :
 
 	$omc_id   = get_the_ID();
 	$omc_data = omc_landing_data( $omc_id );
-	$omc_cf7  = omc_contact_cf7_shortcode();
 	?>
 
 	<article <?php post_class( 'omc-lp omc-lp--contact' ); ?>>
@@ -51,22 +50,9 @@ while ( have_posts() ) :
 			</div>
 		<?php endif; ?>
 
-		<!-- ───────────── Details + form ───────────── -->
-		<div class="l-section__container omc-contact__grid omc-reveal">
-
+		<!-- ───────────── How to reach us ───────────── -->
+		<div class="l-section__container omc-contact__grid omc-contact__grid--single omc-reveal">
 			<?php omc_contact_card(); ?>
-
-			<div class="omc-contact__form-wrap">
-				<h2 class="omc-contact__form-title"><?php esc_html_e( 'Send us a note', 'moderno-child' ); ?></h2>
-				<p class="omc-contact__form-text"><?php esc_html_e( 'Sizing, a piece you are hunting for, an order that needs a nudge — write to us and we will come back to you.', 'moderno-child' ); ?></p>
-				<?php
-				if ( $omc_cf7 ) {
-					echo do_shortcode( $omc_cf7 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped — Contact Form 7 output
-				} else {
-					omc_contact_form();
-				}
-				?>
-			</div>
 		</div>
 
 		<!-- ───────────── Sections ("Before you write", shipping notes…) ───────────── -->

@@ -744,7 +744,9 @@
 .omc-about__title { color: #fff; font-size: clamp(38px, 5.4vw, 76px); margin-top: 14px; max-width: 20ch; text-wrap: balance; }
 .omc-about__tagline { margin: 16px auto 0; font-family: var(--omc-serif); font-style: italic; font-size: clamp(20px, 2vw, 28px); color: var(--omc-rose-light); }
 
-.omc-prose { max-width: 720px; padding-top: clamp(48px, 7vw, 96px); padding-bottom: clamp(32px, 5vw, 64px); }
+/* 640px is the site's reading measure — the same one the landing, FAQ, policy and journal
+   pages use, so the About copy starts where every other page's copy starts. */
+.omc-prose { max-width: 640px; padding-top: clamp(48px, 7vw, 96px); padding-bottom: clamp(32px, 5vw, 64px); }
 .omc-prose p { font: 400 clamp(16px, 1.25vw, 18px)/1.8 var(--omc-sans); color: var(--omc-text); margin: 0 0 1.4em; }
 .omc-prose .omc-lead { font-family: var(--omc-serif); font-size: clamp(22px, 2.1vw, 30px); line-height: 1.4; color: var(--omc-ink); }
 .omc-prose h2 { font-family: var(--omc-serif); font-weight: 500; font-size: clamp(28px, 2.8vw, 38px); line-height: 1.15; color: var(--omc-ink); margin: 2.2em 0 .6em; }
@@ -1134,4 +1136,95 @@
 	.omc-footer__newsletter .omc-newsletter__input { flex-basis: 100%; }
 	.omc-footer__bottom { flex-direction: column; align-items: flex-start; gap: 10px; margin-top: 30px; padding-top: 16px; }
 	.omc-footer__legal { gap: 6px 16px; }
+}
+
+
+/* ─── Style videos on the home page ─────────────────────────────────────────
+   The cards themselves come from omc-video.css, which is enqueued here too.
+   This only adds the lede paragraph and the row spacing. ─────────────────── */
+.omc-vidrow__lede {
+	max-width: 640px;
+	margin: clamp(10px, 1.4vw, 18px) 0 clamp(22px, 2.6vw, 34px);
+	font: 400 clamp(15px, 1.15vw, 17px)/1.75 var(--omc-sans);
+	color: var(--omc-text);
+	text-wrap: pretty;
+}
+.omc-vidrow__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* ─── As seen on ─────────────────────────────────────────────────────────────
+   A quiet band, not a billboard: the names are set in the body face at a small
+   size with wide tracking, so the strip reads as a credit line. ───────────── */
+.omc-press {
+	padding: clamp(30px, 4vw, 52px) 0;
+	border-top: 1px solid var(--omc-line);
+	border-bottom: 1px solid var(--omc-line);
+	background: var(--omc-cream);
+}
+.omc-press__inner { text-align: center; }
+.omc-press .omc-eyebrow { margin: 0 0 clamp(14px, 1.8vw, 22px); }
+.omc-press__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: clamp(22px, 4vw, 64px);
+}
+.omc-press__item {
+	font: 600 clamp(15px, 1.5vw, 20px)/1 var(--omc-sans);
+	letter-spacing: .18em;
+	text-transform: uppercase;
+	color: var(--omc-ink);
+	opacity: .55;
+	transition: opacity .3s var(--omc-ease);
+}
+.omc-press__item:hover { opacity: 1; }
+.omc-press__item a { color: inherit; text-decoration: none; }
+
+/* ─── Footer: what is true about paying here ─────────────────────────────── */
+.omc-footer__badges {
+	list-style: none;
+	margin: clamp(28px, 3.4vw, 44px) 0 0;
+	padding: clamp(24px, 2.8vw, 34px) 0 0;
+	border-top: 1px solid var(--omc-footer-line, rgba(247, 242, 237, .16));
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: clamp(16px, 2vw, 32px);
+}
+.omc-footer__badge { display: flex; align-items: flex-start; gap: 10px; }
+.omc-footer__badge svg {
+	flex: 0 0 auto;
+	width: 20px;
+	height: 20px;
+	margin-top: 1px;
+	stroke: currentColor;
+	stroke-width: 1.4;
+	fill: none;
+	opacity: .8;
+}
+.omc-footer__badge span { display: block; }
+.omc-footer__badge strong {
+	display: block;
+	font: 500 13px/1.35 var(--omc-sans);
+	letter-spacing: .01em;
+}
+.omc-footer__badge em {
+	display: block;
+	margin-top: 3px;
+	font: 400 12px/1.45 var(--omc-sans);
+	font-style: normal;
+	opacity: .62;
+}
+
+@media (max-width: 1023px) {
+	.omc-vidrow__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.omc-footer__badges { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+	.omc-vidrow__grid { grid-template-columns: 1fr; }
+	.omc-press__list { gap: 18px 26px; }
+	.omc-press__item { font-size: 14px; letter-spacing: .14em; }
+	.omc-footer__badges { grid-template-columns: 1fr; gap: 14px; }
 }

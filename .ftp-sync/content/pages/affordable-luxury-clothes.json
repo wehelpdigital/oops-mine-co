@@ -4,7 +4,7 @@
   "status": "publish",
   "title": "Affordable Luxury Clothes: What Makes a Piece Feel Expensive",
   "seo_title": "Affordable Luxury Clothes | Fabric, Fit & Finish",
-  "meta_description": "Affordable luxury clothes judged by hand: fabric weight, lining, seams and finish, plus three ways to wear them. Small batches, honest labels, real silk.",
+  "meta_description": "Affordable luxury clothes judged on fabric weight, lining, seams and finish, plus three ways to wear them. Small batches, honest labels, fiber percentages.",
   "primary_keyword": "affordable luxury clothes",
   "keywords": [
     "affordable luxury clothes",
@@ -12,16 +12,16 @@
     "elegant chic fashion"
   ],
   "hero": {
-    "eyebrow": "The elevated edit",
-    "intro": "The heavier end of the boutique: silk blends, wool, satin, sequins and real leather, picked for how they feel in the hand rather than how they photograph. Fewer pieces, better cloth, labels that say exactly what you are holding. Look twice — that is usually the point.",
-    "cta_text": "Shop the elevated edit",
+    "eyebrow": "Fabric first",
+    "intro": "The heavier end of the boutique: silk blends, wool, satin, crystal embellishment and real leather, picked on fiber content, lining and finish rather than on how well they photograph. Fewer pieces, better cloth, labels that say exactly what you are holding. Look twice — that is usually the point.",
+    "cta_text": "Shop affordable luxury",
     "cta_url": "/product-category/affordable-luxury/"
   },
   "category": {
     "slug": "affordable-luxury",
     "name": "Affordable Luxury",
     "parent": "women",
-    "description": "Pieces that feel expensive in the hand — silk blends, wool, satin, sequins and leather — chosen for fabric weight, lining and finish. Priced like a boutique rather than a flagship, and bought in small numbers.",
+    "description": "Pieces that feel expensive in the hand — silk blends, wool, satin, crystal embellishment and leather — chosen for fabric weight, lining and finish. Priced like a boutique rather than a flagship, and bought in small numbers.",
     "assign_products": [
       376,
       370,
@@ -37,36 +37,36 @@
     {
       "heading": "What affordable luxury clothes actually <em>mean</em>",
       "paragraphs": [
-        "The phrase gets thrown around, so here is where we stand. It does not mean a cheaper copy of something famous — a copy is still someone else's idea, and it shows at the seams. It means the material is good enough to recognize with your eyes shut, the inside is finished as carefully as the outside, and the price comes from a small boutique buying small runs rather than a name you pay for twice.",
-        "That sets a limit on what we claim. We will not tell you a piece equals a runway one, because it does not. We tell you what it is made of, how it is lined, where it fastens and how it has to be cleaned — then you decide whether it feels like yours."
+        "The phrase gets thrown around, so here is where we stand. It doesn't mean a cheaper copy of something famous — a copy is still someone else's idea, and it shows at the seams. It means the material is good enough to recognize with your eyes shut, the inside is finished as carefully as the outside, and the price comes from a small boutique buying small runs rather than a name you pay for twice.",
+        "That sets a limit on what we claim. We won't tell you a piece equals a runway one, because it doesn't. We tell you what it is made of, how it is lined, where it fastens and how it has to be cleaned — then you decide whether it feels like yours."
       ]
     },
     {
-      "heading": "How we choose: five things we check <em>by hand</em>",
+      "heading": "How we choose: five checks <em>before</em> we buy",
       "paragraphs": [
-        "Photos flatter everything, so a piece has to hold up in the hand before it reaches the rail. These are the five checks we run — the same ones you can run the day your parcel lands."
+        "Photos flatter everything, so the label and the details decide it, not the styling. These are the five checks we run before a piece goes into an order — and the same five you can run the day your package lands."
       ],
       "bullets": [
         "<strong>Fabric weight.</strong> Hold it up to a window. Good cloth keeps its shape and its color; thin cloth goes sheer and clings. The sweetheart gown here is 57% silk to 43% polyester, so it falls instead of hanging flat.",
-        "<strong>The fiber list.</strong> Read the label, not the adjective. One dress on this page is 65% virgin wool and 35% silk, which moves nothing like a polyester with shine printed on it.",
+        "<strong>The fiber list.</strong> Read the label, not the adjective. One dress on this page is 65% virgin wool and 35% silk, which moves nothing like a thin woven that only looks like wool in a photo. Polyester isn't a problem in itself — the metallic column gown is 100% of it and does exactly what a metallic column gown should — but you want to know that before you buy, not after.",
         "<strong>Lining.</strong> A lined skirt or gown hangs off you instead of sticking to you. The silk blend gown is lined in silk; the column gown and the leather miniskirt are lined too.",
         "<strong>Seams and closures.</strong> A hidden back zip that lies flat, side seams that match, pleats that keep their spacing all the way around. Plissé pleating that stays even is slow work.",
         "<strong>Soles and hardware.</strong> On shoes, check the sole, not only the upper. One pump here is leather through — upper, lining and sole — on a four-inch heel; another is golden patent on a synthetic sole. We print which is which."
       ],
       "cta": {
-        "text": "Shop the elevated edit",
+        "text": "Shop affordable luxury",
         "url": "/product-category/affordable-luxury/"
       }
     },
     {
       "heading": "Three outfits: classy chic fashion, <em>minus</em> the fuss",
       "paragraphs": [
-        "Classy chic fashion is mostly restraint plus one good thing. Keep the outfit quiet, let the fabric do the talking, and stop adding once the piece has been seen. Each of these uses one item from this edit and two you already own."
+        "Classy chic fashion is mostly restraint plus one good thing. Keep the outfit quiet, let the fabric do the talking, and stop adding once the piece has been seen. Each of these uses one or two items from this edit and the rest from what you already own."
       ],
       "bullets": [
         "<strong>Desk to dinner.</strong> The wool and silk dress with patch pockets, a pointed-toe pump, a thin gold chain. Short sleeves and a jewel neck keep it plain enough for a Tuesday; the cloth does the rest. More in <a href=\"/product-category/workwear/\">workwear</a>.",
         "<strong>Weekend with an edge.</strong> The celadon leather miniskirt, pleated on a set-in yoke, a soft knit tucked in, a flat sandal. Leather reads formal until you put something slouchy with it.",
-        "<strong>Evening, no costume.</strong> The silk blend sweetheart gown, one pair of earrings, nothing else; the gathers and plissé pleating already catch the light. The rest of the rail is in the <a href=\"/product-category/evening/\">evening edit</a>."
+        "<strong>Evening, no costume.</strong> The silk blend sweetheart gown, one pair of earrings, nothing else; the gathers and plissé pleating already catch the light. More of that in the <a href=\"/product-category/evening/\">evening edit</a>."
       ],
       "cta": {
         "text": "Shop dresses",
@@ -77,7 +77,7 @@
       "heading": "Fit and sizing: <em>numbers</em>, not promises",
       "paragraphs": [
         "Pieces sourced from Korea, Thailand and elsewhere in Asia run on their own sizing scales, so we publish measurements instead of promises. Take your bust, natural waist, hip, and — for a gown — shoulder down to where you want the hem to land, in the shoes you plan to wear. Our <a href=\"/size-guide/\">size guide</a> shows where to put the tape and what to do when you land between two sizes.",
-        "Some numbers sit on the listing because they change the answer: a column gown at 63 inches, a pleated satin maxi at 58 and a half, a leather miniskirt at 23. Heavier cloth fits differently from a stretch knit — wool and silk hold a line rather than give — so go by your widest measurement. If a piece arrives wrong, the <a href=\"/refund_returns/\">returns page</a> has the steps and <a href=\"/contacts/\">contacts</a> reaches a person on a weekday."
+        "Some numbers sit on the listing because they change the answer: a column gown at 63 inches, a pleated satin maxi at 58 and a half, a leather miniskirt at 23. Those are single-size measurements, not the whole run, so read the number next to your own size. Heavier cloth fits differently from a stretch knit — wool and silk hold a line rather than give — so go by your widest measurement. If a piece arrives wrong, the <a href=\"/refund_returns/\">returns page</a> has the steps and the window, and <a href=\"/contacts/\">contacts</a> reaches a person Monday through Saturday."
       ],
       "cta": {
         "text": "Read the size guide",
@@ -85,10 +85,10 @@
       }
     },
     {
-      "heading": "New pieces, <em>small</em> batches",
+      "heading": "Small batches, and why that <em>sets</em> the price",
       "paragraphs": [
         "This is the part that keeps prices fair. We buy in small runs directly from sellers in Korea and Thailand, with a short chain between them and you. There is no flagship storefront behind this boutique and no wall of standing stock, and that is a real reason a silk blend or a leather piece here is priced the way it is.",
-        "It also means a piece arrives in a handful of sizes and then it is gone. When something sells through, the next order is rarely the same thing, so waiting for a sale usually means watching it leave. Look again in a few weeks, or let us email you when one turns up that sounds like you. Oops, mine."
+        "It also means a piece arrives in a handful of sizes and then it's gone. When something sells through, the next order is rarely the same thing, so waiting for a sale usually means watching it leave. Look again in a few weeks, or let us email you when one turns up that sounds like you. Oops, mine."
       ],
       "cta": {
         "text": "See what just landed",
@@ -96,22 +96,10 @@
       }
     },
     {
-      "heading": "Care: keeping the <em>feel</em> it came with",
+      "heading": "Caring for silk blends, wool and <em>leather</em>",
       "paragraphs": [
-        "Good fabric asks for a little more and pays it back for years. Every listing prints its own care line and they are not interchangeable: the silk blend gown and the wool and silk dress say dry clean, the metallic column gown says spot clean, the leather miniskirt says professional leather clean. Follow the line on the piece in your hands.",
-        "The rest is storage. Hang gowns on a padded hanger so the straps keep their shape, fold knits instead of hanging them, keep leather out of direct sun, and wipe leather shoes with a soft dry cloth before they go back in the box. A dust bag is not fussy — it is the cheapest way to keep a good pair looking new."
-      ]
-    },
-    {
-      "heading": "The questions behind the <em>search</em>",
-      "paragraphs": [
-        "People type very similar phrases and mean different things by them. Here is how we read the ones that bring shoppers to this page."
-      ],
-      "bullets": [
-        "<strong>Is affordable luxury only marketing?</strong> It can be. It stops being marketing when a seller prints the fiber percentages, the lining, the closures and the care, and lets you check all four before you buy.",
-        "<strong>Classy or chic — what is the difference?</strong> Classy is restraint: clean lines, good cloth, nothing shouting. Chic adds one deliberate choice, like a color you did not see coming or a heel with an angle to it.",
-        "<strong>What counts as elegant chic fashion?</strong> A simple shape in a fabric that behaves: a column gown that falls straight, a wool and silk dress that holds its line, one pump, no clutter on top.",
-        "<strong>Where should I start?</strong> With the thing you will wear most. Three pieces with real cloth in them beat a closet full of thin ones, and a good pump or a plain dress earns its keep faster than a gown."
+        "Good fabric asks for a little more and pays it back for years. Every listing prints its own care line and they're not interchangeable: the silk blend gown and the wool and silk dress say dry clean, the metallic column gown says spot clean, the leather miniskirt says professional leather clean. Follow the line on the piece in your hands.",
+        "The rest is storage. Hang gowns on a padded hanger so the straps keep their shape, fold knits instead of hanging them, keep leather out of direct sun, and wipe leather shoes with a soft dry cloth before they go back in the box. A dust bag isn't fussy — it's the cheapest way to keep a good pair looking new."
       ]
     }
   ],
@@ -121,30 +109,38 @@
       "a": "Three things you can check before you buy: what it is made of, whether it is lined, and how it closes. A wool and silk dress or a silk blend gown holds a shape that a thin woven never will, and a hidden zip that lies flat is a sign the rest was sewn with the same care. Everything else is packaging."
     },
     {
-      "q": "How do I judge fabric quality when I am shopping online?",
-      "a": "Start with the fiber percentages in the product details rather than the description. Look for a lining, a stated care method, and words that describe the cloth itself — silk blend, virgin wool, satin, leather. Then read the measurements. A listing that hides all of that is telling you something too. Message us if a detail you need is missing and we will go and check the piece."
+      "q": "How can you tell if fabric is good quality online?",
+      "a": "Start with the fiber percentages in the product details rather than the description. Look for a lining, a stated care method, and words that describe the cloth itself — silk blend, virgin wool, satin, leather. Then read the measurements. A listing that hides all of that is telling you something too. Message us if a detail you need is missing and we'll get it from the seller before you buy."
     },
     {
       "q": "Are these pieces designer clothes?",
-      "a": "We are a boutique, not a house, and we do not claim a piece here is the equal of anything on a runway. What we do is pick the elevated end of what our sellers in Korea, Thailand and elsewhere in Asia carry: better fabric, proper lining, finishing you can feel. The label on the inside is always the honest version."
+      "a": "We are a boutique, not a house, and we don't claim a piece here is the equal of anything on a runway. What we do is pick the heavier end of what our sellers in Korea, Thailand and elsewhere in Asia carry: better fabric, proper lining, finishing you can feel. The label on the inside is always the honest version."
+    },
+    {
+      "q": "What counts as elegant chic fashion?",
+      "a": "A simple shape in a fabric that behaves: a column gown that falls straight, a wool and silk dress that holds its line, one pump, no clutter on top. The test is whether the piece still works when you take one thing off it. If it needs three accessories to make sense, the cloth is doing none of the work."
+    },
+    {
+      "q": "Classy or chic — what is the difference?",
+      "a": "Classy is restraint: clean lines, good cloth, nothing shouting. Chic adds one deliberate choice, like a color you did not see coming or a heel with an angle to it. Most of what we buy sits between the two, which is why a plain jewel-neck dress and a celadon leather miniskirt end up on the same page."
     },
     {
       "q": "How should I care for silk blends, wool and leather?",
-      "a": "By the label on that piece, every time. Several of these say dry clean, the metallic column gown says spot clean, and leather asks for a professional leather clean. Between wears, air things out, keep them off wire hangers, and store leather shoes in a dust bag away from sun. Good cloth lasts a long time when it is not fought with."
+      "a": "By the label on that piece, every time. Several of these say dry clean, the metallic column gown says spot clean, and leather asks for a professional leather clean. Between wears, air things out, keep them off wire hangers, and store leather shoes in a dust bag away from sun. Good cloth lasts a long time when it isn't fought with."
     },
     {
       "q": "Do pieces come back once they sell out?",
-      "a": "Rarely the same one. We buy in small batches from sellers who move on to the next thing quickly, so a restock is the exception and not the plan. If a piece is right for an event that already has a date on it, treat it as now or never, and join the email list so the next arrivals reach you before the middle sizes go."
+      "a": "Rarely the same one. We buy in small batches from sellers who move on to the next thing quickly, so a restock is the exception and not the plan. If a piece is right for an event that already has a date on it, buy it when you see it rather than waiting for a second chance that usually doesn't come, and join the email list so the next arrivals reach you before the middle sizes go."
     },
     {
       "q": "What if the size turns out to be wrong?",
-      "a": "Check the measurements against your own first, because that solves most of it. If a piece still does not work, the returns page has the steps and the window, and you can message us on a weekday through the contacts page. Sizing from Asia runs on its own scale, so we would rather help you pick right than process a return."
+      "a": "Check the measurements against your own first, because that solves most of it. Returns are store credit, postmarked within seven days of purchase, with a $15 restocking fee — so the measurements are worth five minutes before you order. The <a href=\"/refund_returns/\">returns page</a> has the full terms, and you can reach us through <a href=\"/contacts/\">contacts</a> Monday through Saturday. Sizing from Asia runs on its own scale, so we'd rather help you pick right than process a return."
     }
   ],
   "cta": {
     "heading": "Find something yours",
-    "text": "Pieces at this end of the boutique land in small numbers and leave quietly. Leave your email and we will send the next ones while the middle sizes are still on the page — one unexpected find at a time.",
-    "button_text": "Shop the elevated edit",
+    "text": "Not sure where to start? Take the thing you'll wear most — three pieces with real cloth in them beat a closet full of thin ones. Pieces at this end land in small numbers, so leave your email and we'll send the next ones with their fabric and sizes while the middle sizes are still on the page.",
+    "button_text": "Shop affordable luxury",
     "button_url": "/product-category/affordable-luxury/",
     "capture_email": true
   },
@@ -154,5 +150,5 @@
     "statement-pieces",
     "korean-fashion-brands"
   ],
-  "author_notes": "Category 'affordable-luxury' is new: create it under Women (term 134) with the description above and assign 376, 370, 372, 320, 192, 196, 178, 217. Product facts come from the demo product data and are described by material and construction only, never by brand: 376 strapless sweetheart gown (57% silk / 43% polyester, silk lining, gathers and plisse pleating, back zip, dry clean), 372 wool and silk dress (65% virgin wool / 35% silk, jewel neck, short sleeves, front patch pockets, hidden back zip, dry clean), 320 metallic column gown (63 inch length, lined, spot clean), 370 pleated satin maxi (58 1/2 inch length), 217 celadon leather miniskirt (23 inch length, lined, hidden back zip, professional leather clean), 192 pointed-toe pump (leather upper, lining and sole, 4 inch heel), 178 golden patent pump (synthetic upper, lining and sole, slanted comma heel), 196 crystal pump (wipe with a soft dry cloth, store in a dust bag). The demo prices are placeholder designer figures, so no price, discount or shipping claim appears anywhere on the page - keep it that way if the page is reviewed after real prices land. Product 196 has a lacquered sole in a color outside the brand palette: keep it out of hero and close-crop imagery. Inline links assume /size-guide/, /refund_returns/ and /contacts/ exist, plus the product categories affordable-luxury, workwear, evening and dresses. Hero image suggestion: a close crop of fabric in hand - silk blend gathers or the wool and silk dress sleeve - on cream or sand, brand palette only."
+  "author_notes": "Category 'affordable-luxury' is new: create it under Women (term 134) with the description above and assign 376, 370, 372, 320, 192, 196, 178, 217. INTEGRATION TRAP - the eight assigned products are demo designer items: their descriptions name Burberry, Valentino, Prada, Louboutin, Stella McCartney and Mac Duggal, and carry 'Made in Italy' / \"Women's Designer Clothing\". That grid renders directly under FAQ 3, which says we are a boutique and not a house and sell what our sellers in Korea and Thailand carry. The grid must be swapped for real stock before this page is public, or FAQ 3 and the small-batch sourcing section read as false on the page itself. Product facts come from the demo product data and are described by material and construction only, never by brand: 376 strapless sweetheart gown (57% silk / 43% polyester, silk lining, gathers and plisse pleating, back zip, dry clean), 372 wool and silk dress (65% virgin wool / 35% silk, jewel neck, short sleeves, front patch pockets, hidden back zip, dry clean), 320 metallic column gown (100% polyester, 63 inch length, lined, spot clean - the copy names it as polyester on purpose, do not soften that), 370 crystal-embellished pleated satin maxi (64% acetate / 36% viscose, 58 1/2 inch length on size 38IT), 217 celadon leather miniskirt (23 inch length on size 10, lined, hidden back zip, professional leather clean), 192 pointed-toe pump (leather upper, lining and sole, 4 inch heel on size 38.5), 178 golden patent pump (synthetic upper, lining and sole, slanted comma heel), 196 crystal-embellished pump (leather upper, lining and sole, wipe with a soft dry cloth, store in a dust bag). Nothing on the page claims 100% silk or sequins because no assigned product has either. The demo prices are placeholder designer figures, so no price, discount or shipping claim appears anywhere on the page - keep it that way if the page is reviewed after real prices land. The returns terms in FAQ 8 (store credit, postmarked within seven days of the purchase date, $15 restocking fee) are summarised from /refund_returns/; the policy page itself stays verbatim, so if the policy changes, fix this line too. Product 196 has a lacquered sole in a color outside the brand palette: keep it out of hero and close-crop imagery. Inline links assume /size-guide/, /refund_returns/ and /contacts/ exist, plus the product categories affordable-luxury, workwear, evening and dresses. Hero image suggestion: a close crop of fabric - silk blend gathers or the wool and silk dress sleeve - on cream or sand, brand palette only."
 }

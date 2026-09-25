@@ -2,73 +2,51 @@
   "slug": "contacts",
   "type": "contact",
   "status": "publish",
-  "title": "Contact Oops Mine Co.: Email, Phone and Boutique Hours",
-  "seo_title": "Contact Oops Mine Co. | Email, Phone & Hours",
-  "meta_description": "Contact Oops Mine Co.: email hello@oopsmineco.com, call 346-847-6606 or send a note. Boutique hours, what to write in about, and answers before you ask.",
+  "title": "Contact Oops, Mine Co.: One Inbox, One Answer",
+  "seo_title": "Contact Oops, Mine Co. | Email Us",
+  "meta_description": "Contact Oops, Mine Co. by email at hello@oopsmineco.com. What to send with your first message, how long a reply takes, and quick answers to the usual questions.",
   "primary_keyword": "",
   "keywords": [],
   "hero": {
     "eyebrow": "Say hello",
-    "intro": "There is one person behind this boutique, and she reads every note. Ask about a size, an order, a piece you saw on a Facebook Live and cannot find again — or tell us what you wish we carried. That last one shapes what we buy next.",
+    "intro": "One inbox, answered by the person who chose the pieces. Sizing, a hunt for something you saw once, an order that needs a nudge — write and we will come back to you.",
     "cta_text": "Email hello@oopsmineco.com",
     "cta_url": "mailto:hello@oopsmineco.com"
   },
   "sections": [
     {
-      "heading": "What to write in <em>about</em>",
+      "heading": "What to write <em>about</em>",
       "paragraphs": [
-        "Nothing is too small to send. A question about a waist measurement is the same to us as a question about a package that has gone quiet: one person, one inbox, one answer. Write to <a href=\"mailto:hello@oopsmineco.com\">hello@oopsmineco.com</a>, use the form on this page, or call 346-847-6606 during boutique hours. Give us your order number if you have one and the name of the piece you mean — that saves us both a round of emails.",
+        "Nothing is too small to send. A question about a waist measurement is the same to us as a question about a package that has gone quiet: one inbox, one answer, no ticket queue. Write to <a href=\"mailto:hello@oopsmineco.com\">hello@oopsmineco.com</a> and give us your order number if you have one, plus the name of the piece you mean — that saves us both a round of emails.",
         "Many of the everyday answers are already written down: the <a href=\"/faq/\">FAQ</a> covers ordering, sizing and where we are, and the <a href=\"/shipping-policy/\">shipping policy</a> covers how orders leave us. If yours is not in there, ask us directly."
       ],
       "bullets": [
         "<strong>Orders.</strong> A package that has gone quiet, a tracking link that will not open, something you need changed — start at <a href=\"/order-tracking/\">order tracking</a>, then write if it still looks wrong.",
-        "<strong>Sizing and fit.</strong> Send your measurements and the piece you are eyeing. The <a href=\"/size-guide/\">size guide</a> covers the general rules; we can talk you through one dress.",
+        "<strong>Sizing and fit.</strong> Send your measurements and the piece you are eyeing from the <a href=\"/shop/\">shop</a>. The <a href=\"/size-guide/\">size guide</a> covers the general rules; we can talk you through one dress.",
         "<strong>Returns.</strong> Email us for an RMA number before you mail anything back. The steps, the timing and the exceptions are on the <a href=\"/refund_returns/\">refund and returns policy</a> page.",
-        "<strong>Collaborations and wholesale.</strong> Stylists, small shops, anyone who wants to work with us: send the details and Ronalyn reads it herself.",
+        "<strong>Collaborations and wholesale.</strong> Stylists, small shops, anyone who wants to work with us: send the details and your note goes to the owner.",
         "<strong>Press.</strong> Writing about the boutique? Ask us for images, or point your readers at <a href=\"/about-us/\">our story</a>.",
-        "<strong>Just because.</strong> A piece you are hunting for, a color you wish we carried, or a photo of you in the one you claimed on sight — an <em>oops, mine</em> moment we get to see."
+        "<strong>Just because.</strong> A piece you are hunting for, a color you wish we carried after seeing <a href=\"/shop/?orderby=date\">what just landed</a>, or a photo of you in the one you claimed on sight — an <em>oops, mine</em> moment we get to see."
       ]
     },
     {
       "heading": "When you will hear <em>back</em>",
       "paragraphs": [
-        "We reply on business days, usually within a day. Notes that land on a Saturday evening or on Sunday wait for the next morning we are open, and a question that needs a tape measure or a look at a package can take a little longer — we would rather send you the right answer than a fast one. If a few days pass with nothing from us, look in your spam folder, then write again. Sometimes the reply is the thing that goes missing.",
-        "The phone rings at the same hours as the inbox, Central Time. Miss us and you can leave your name and a number; we call back on the next business day."
-      ],
-      "table": {
-        "head": [
-          "Day",
-          "Hours (Central Time)"
-        ],
-        "rows": [
-          [
-            "Monday – Friday",
-            "8:30am – 5:00pm"
-          ],
-          [
-            "Saturday",
-            "10:00am – 5:00pm"
-          ],
-          [
-            "Sunday",
-            "Closed"
-          ]
-        ]
-      }
+        "We read every note and answer in the order they arrive. Notes that land on a Saturday evening or on Sunday wait for the next morning we are open, and a question that needs a tape measure or a look at a package can take a little longer — we would rather send you the right answer than a fast one. If a few days pass with nothing from us, look in your spam folder, then write again. Sometimes the reply is the thing that goes missing."
+      ]
     },
     {
-      "heading": "Email, phone and where the <em>mail</em> goes",
+      "heading": "Email is the door",
       "paragraphs": [
-        "Email is the fastest way in: <a href=\"mailto:hello@oopsmineco.com\">hello@oopsmineco.com</a>. The phone is <a href=\"tel:+13468476606\">346-847-6606</a>, open Monday to Friday 8:30am to 5:00pm and Saturday 10:00am to 5:00pm, Central Time, closed on Sunday. Both reach the same person, so pick whichever suits the question — typing out three measurements is easier than reading them aloud, and a package problem is often quicker said than written.",
-        "We are an online boutique in Houston, Texas. There is no rack to walk past and no fitting room to book, so the address below is for mail only. Returns go there once you have an RMA number, never before it — a box with no number on it arrives with nothing to match it to.",
-        "Oops Mine Co. LLC<br>12712 W Lake Houston Pkwy, Ste B-4014<br>Houston, TX 77044<br><small>Mailing address only — no walk-ins.</small>",
-        "Facebook is the other door. It is where we go live, show new pieces on the hanger and answer whatever gets typed into the comments; the link sits in the details card above and in the footer of every page. More places to find us will appear here as they open — we would rather leave a gap than point you at an account that is not ours."
+        "Write to <a href=\"mailto:hello@oopsmineco.com\">hello@oopsmineco.com</a>. One inbox, read by the person who picked the pieces, so nothing gets passed along a queue. Typing out three measurements is easier than reading them down a phone line anyway, and a photo of a package problem says more than a description of it.",
+        "Sending something back? Ask for your RMA number first and the <a href=\"/refund_returns/\">return policy</a> has the address to post it to. A box with no number on it arrives with nothing to match it to.",
+        "Facebook is the other door. It is where we go live, show new pieces on the hanger and answer whatever gets typed into the comments; the link sits in the card above and in the footer of every page. More places to find us will appear here as they open — we would rather leave a gap than point you at an account that is not ours."
       ]
     },
     {
       "heading": "Working <em>together</em>",
       "paragraphs": [
-        "Small shops, stylists, photographers and writers: we like these notes. Send what you have in mind, the pieces or sizes you are thinking of, and any dates that matter. Wholesale questions get a straight answer — we buy in small runs from suppliers in Korea and Thailand and sell them one at a time, so tell us what you need and we will say plainly what we can and cannot do. Press requests can have images and the story behind the name; just ask."
+        "Small shops, stylists, photographers and writers: we like these notes. Send what you have in mind, the pieces or sizes you are thinking of, and any dates that matter. Wholesale questions get a straight answer — we buy in small runs from suppliers in Korea, Thailand and a few places beyond, and sell them one at a time, so tell us what you need and we will say plainly what we can and cannot do. <a href=\"mailto:hello@oopsmineco.com?subject=Wholesale\">Email us about wholesale</a> and put your shop name in the first line. Press requests can have images and the story behind the name; just ask."
       ],
       "cta": {
         "text": "Read our story",
@@ -82,20 +60,20 @@
       "a": "Start at <a href=\"/order-tracking/\">order tracking</a>. Put in the order number from your confirmation email and the email address you used at checkout, and it will show you where the package stands. If the page comes back empty, or the tracking has not moved in a while, write to us with that order number and we will chase it from our side."
     },
     {
-      "q": "How do I start a return?",
-      "a": "Email hello@oopsmineco.com and ask for an RMA number before you mail anything. Returns are postmarked within seven days of the purchase date, come back in new and unused condition with the original tags on, and are refunded as store credit. Some pieces cannot be returned at all. The full terms and the return address are on the <a href=\"/refund_returns/\">refund and returns policy</a> page — read it before you pack."
+      "q": "How do I get an RMA number?",
+      "a": "Email hello@oopsmineco.com and ask for one before you mail anything back. Returns are postmarked within seven days of the purchase date, come back in new and unused condition with the original tags on, and are refunded as store credit, less a $15 restocking fee. Some pieces cannot be returned at all. The full terms and the return address are on the <a href=\"/refund_returns/\">refund and returns policy</a> page — read it before you pack."
     },
     {
       "q": "Which size should I pick?",
-      "a": "Go by the measurements, not the letter: our pieces come from Korea and Thailand, where sizes run smaller than US ones. Every listing carries flat measurements, and the <a href=\"/size-guide/\">size guide</a> shows how to measure yourself and what petite means here. Stuck between two sizes? Send us your bust, waist and hip with the piece you are looking at and we will tell you which one we would pull."
+      "a": "Go by the measurements, not the letter: our pieces are bought in Korea, Thailand and a few places nearby, where sizes run smaller than US ones. When a listing has flat measurements, trust those over the letter on the tag, and the <a href=\"/size-guide/\">size guide</a> shows how to measure yourself and what petite means here. Stuck between two sizes? Send us your bust, waist and hip with the piece you are looking at and we will tell you which one we would pull."
     },
     {
       "q": "Can I come and see the clothes?",
-      "a": "We are online only. The Houston address on this page is a mailbox rather than a shop floor, so there are no walk-ins and no fitting room. The listings are built to make up for it — flat measurements, close-ups of the fabric, and a Facebook Live where pieces get shown on the hanger and on a body. Ask us anything you would have asked across a counter."
+      "a": "No — we are an online boutique run from Houston, Texas, with no shop floor and no fitting room. The listings are built to make up for it: flat measurements, close-ups of the fabric, a short video on the pieces we film, and a Facebook Live where things get shown on the hanger. If you are still unsure after all that, email us and we will measure the piece for you."
     },
     {
       "q": "What should I put in my message?",
-      "a": "Your order number if there is one, the email address you used at checkout, and the name or color of the piece you mean. For anything that arrived wrong, add two photos: the item and the label. The more of that in the first note, the fewer times we have to write back asking, and the sooner you get an answer you can act on."
+      "a": "Your order number if there is one, the email address you used at checkout, and the name or color of the piece you mean. For anything that arrived wrong, email us two photos — the item and the label — since the form takes text only. The more of that in the first note, the fewer times we have to write back asking, and the sooner you get an answer you can act on."
     }
   ],
   "cta": {
@@ -110,5 +88,5 @@
     "refund_returns",
     "shipping-policy"
   ],
-  "author_notes": "No keywords are assigned to this page in plan.json, so primary_keyword and keywords are empty on purpose — the copy is written for people, not a search phrase. Every fact comes from the brief or the client return policy: hello@oopsmineco.com, 346-847-6606, Mon-Fri 8:30am-5:00pm, Sat 10:00am-5:00pm, Sun closed (Central Time), 12712 W Lake Houston Pkwy, Ste B-4014, Houston, TX 77044 as a mailing address with no walk-ins, RMA by email, seven-day postmark, store credit. No response-time promise is made anywhere: the wording is \"we reply on business days, usually within a day\". Facebook is referred to without a URL because the link comes from the Customizer social settings that omc_contact_details() reads; no Instagram or TikTok is named until the owner supplies handles. The hours table repeats what the details card shows on purpose (the card is short, the table is what a shopper scrolls back to). Links used: /faq/, /shipping-policy/, /order-tracking/, /size-guide/, /refund_returns/, /about-us/, /shop/?orderby=date, mailto: and tel:. Integrator: the page slug 'contacts' already exists from the demo import, so this upserts rather than creating a second page, and the template is templates/page-contact.php, which prints omc_contact_card() and the contact form above these sections. If Contact Form 7 is not active the theme's own form (action omc_contact) is used — worth one test send on oopsmine.test."
+  "author_notes": "No keywords are assigned to this page in plan.json, so primary_keyword and keywords are empty on purpose — the copy is written for people, not a search phrase. Every fact comes from the brief or the client return policy: hello@oopsmineco.com, the phone number, Mon-Fri 8:30am-5:00pm, Sat 10:00am-5:00pm, Sun closed (Central Time), 12712 W Lake Houston Pkwy, Ste B-4014, Houston, TX 77044 as a mailing address with no walk-ins, RMA by email, seven-day postmark, store credit, $15 restocking fee on all returns (client policy, 'Please Note'). No response time and no callback time is promised anywhere: the wording is 'we read every note and answer in the order they arrive' and 'leave your name and a number and we will call you back' — please do not let a later edit add 'within a day', because nothing in the brief supports it. Nothing claims how many people answer the mail; the owner is named only as the person collaboration and wholesale notes reach. The sizing FAQ says 'when a listing has flat measurements' rather than 'every listing', because only part of the current catalog publishes them — if that changes across the whole catalog the sentence can be firmed up. Facebook is referred to without a URL because the link comes from the Customizer social settings that omc_contact_details() reads; no Instagram or TikTok is named until the owner supplies handles. The hours table repeats what the details card shows on purpose (the card is short, the table is what a shopper scrolls back to). Links used: /faq/, /shipping-policy/, /order-tracking/, /size-guide/, /refund_returns/, /about-us/, /shop/, /shop/?orderby=date, mailto: and tel:. Integrator: hero.cta_text and hero.cta_url are dead data — templates/page-contact.php renders only the hero eyebrow, H1 and intro, so that button never appears; keep them for shape or strip them, but do not count on them. The page slug 'contacts' already exists from the demo import, so this upserts rather than creating a second page, and the template is templates/page-contact.php, which prints omc_contact_card() and the contact form above these sections. That form (omc_contact_form) is name/email/subject/message only with no file upload, which is why the last FAQ asks for photos by email. If Contact Form 7 is not active the theme's own form (action omc_contact) is used — worth one test send on oopsmine.test.  The phone number, the opening hours and the mailing address were removed from this page at the owner's request: the boutique answers by email. The returns address still lives on the return policy page, which is where a shopper needs it."
 }

@@ -748,29 +748,9 @@ function omc_contact_details() {
 			'url'   => 'mailto:hello@oopsmineco.com',
 			'note'  => __( 'Orders, sizing, anything at all.', 'moderno-child' ),
 		],
-		'phone' => [
-			'icon'  => 'phone',
-			'label' => __( 'Phone', 'moderno-child' ),
-			'value' => '346-847-6606',
-			'url'   => 'tel:+13468476606',
-			'note'  => __( 'During boutique hours.', 'moderno-child' ),
-		],
-		'hours' => [
-			'icon'  => 'clock',
-			'label' => __( 'Hours', 'moderno-child' ),
-			'lines' => [
-				__( 'Mon–Fri · 8:30am – 5:00pm', 'moderno-child' ),
-				__( 'Sat · 10:00am – 5:00pm', 'moderno-child' ),
-				__( 'Sun · closed', 'moderno-child' ),
-			],
-			'note'  => __( 'Central Time', 'moderno-child' ),
-		],
-		'place' => [
-			'icon'  => 'pin',
-			'label' => __( 'Where we are', 'moderno-child' ),
-			'value' => __( 'Online boutique — Houston, Texas', 'moderno-child' ),
-			'note'  => __( 'Shipped from Houston, worn everywhere.', 'moderno-child' ),
-		],
+		// Phone, hours and the mailing address used to sit here. The boutique answers by email,
+		// so the card carries the inbox and Facebook only; the returns address lives on the
+		// return policy page, which is the one place a shopper actually needs it.
 	];
 
 	if ( $facebook ) {
