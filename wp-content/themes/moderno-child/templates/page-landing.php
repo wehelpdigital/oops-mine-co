@@ -35,6 +35,21 @@ while ( have_posts() ) :
 	// The category grid: only when the document names a category that has products.
 	$omc_term = $omc_data['category']['slug'] ? get_term_by( 'slug', $omc_data['category']['slug'], 'product_cat' ) : null;
 	$omc_term = ( $omc_term && ! is_wp_error( $omc_term ) ) ? $omc_term : null;
+
+	/*
+	 * These pages were written against a style taxonomy (Korean Fashion, Petite, Chic & Boho…) that
+	 * the shop no longer uses — the browse tree is by garment type now. Rather than leave fourteen
+	 * pages with a hole where the products were, fall back to a category that does exist.
+	 *
+	 * @param string $slug Fallback product category. Return '' to hide the grid instead.
+	 */
+	if ( ! $omc_term ) {
+		$omc_fallback = apply_filters( 'omc_landing_category_fallback', 'clothing', $omc_data['slug'] );
+		if ( $omc_fallback ) {
+			$omc_term = get_term_by( 'slug', $omc_fallback, 'product_cat' );
+			$omc_term = ( $omc_term && ! is_wp_error( $omc_term ) ) ? $omc_term : null;
+		}
+	}
 	$omc_grid = '';
 	if ( $omc_term && $omc_term->count > 0 && shortcode_exists( 'products' ) ) {
 		$omc_grid  = do_shortcode( '[products limit="8" columns="4" category="' . esc_attr( $omc_term->slug ) . '" orderby="date" order="DESC" visibility="visible"]' );

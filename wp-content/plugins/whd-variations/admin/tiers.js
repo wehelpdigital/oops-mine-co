@@ -63,6 +63,21 @@
 	var state = normalise(D.state || {});
 	var loadedCount = Object.keys(state.combos).filter(function (k) { return state.combos[k].id; }).length;
 
+	/*
+	 * A brand-new product opens with the levels its category normally uses (Dresses -> Colour,
+	 * Size, Length) instead of an empty grid. Options are left unticked: the preset says which
+	 * questions to ask, not which answers this piece has. Nothing is marked dirty, so a product
+	 * saved without touching this tab still does not re-sync its variations.
+	 */
+	if (!state.levels.length && Array.isArray(D.preset) && D.preset.length) {
+		D.preset.forEach(function (taxonomy) {
+			if (state.levels.length >= MAX) { return; }
+			var known = (D.catalog || []).filter(function (c) { return c.taxonomy === taxonomy; })[0];
+			if (!known) { return; }
+			state.levels.push({ taxonomy: known.taxonomy, label: known.label, type: known.type, isNew: false, options: [] });
+		});
+	}
+
 	function sync() {
 		hidden.value = JSON.stringify({
 			levels: state.levels.map(function (l) { return { taxonomy: l.taxonomy, label: l.label, type: l.type, new: l.isNew, options: l.options }; }),

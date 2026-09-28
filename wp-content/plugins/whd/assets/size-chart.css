@@ -1,0 +1,68 @@
+/* Size chart: the product-page link and the dialog it opens.
+   Neutral by design — it inherits the active theme's fonts and picks up the brand tokens the
+   child theme defines when they are there, so it does not fight a future theme change. */
+
+.whd-sc__open {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	margin: 0 0 14px;
+	padding: 0;
+	border: 0;
+	background: none;
+	cursor: pointer;
+	font: inherit;
+	font-size: 13px;
+	letter-spacing: .02em;
+	color: var(--omc-rose-dark, #8a6a5e);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+.whd-sc__open:hover { color: var(--omc-ink, #3a2b26); }
+.whd-sc__open:focus-visible { outline: 2px solid var(--omc-rose, #b98b7e); outline-offset: 3px; }
+.whd-sc__open svg { flex: 0 0 auto; opacity: .75; }
+
+.whd-sc { position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.whd-sc[hidden] { display: none; }
+.whd-sc__backdrop { position: absolute; inset: 0; background: rgba(28, 22, 20, .55); }
+.whd-sc__panel {
+	position: relative;
+	width: min(720px, 100%);
+	max-height: min(86vh, 900px);
+	overflow: auto;
+	padding: clamp(22px, 3vw, 34px);
+	background: var(--omc-cream, #fdfaf6);
+	border: 1px solid var(--omc-line, #e9e1da);
+	box-shadow: 0 30px 80px rgba(28, 22, 20, .28);
+}
+.whd-sc__close {
+	position: absolute;
+	top: 8px;
+	right: 12px;
+	border: 0;
+	background: none;
+	font-size: 28px;
+	line-height: 1;
+	cursor: pointer;
+	color: var(--omc-muted, #8a7d76);
+}
+.whd-sc__close:hover { color: var(--omc-ink, #3a2b26); }
+.whd-sc__title {
+	margin: 0 0 10px;
+	font-family: var(--omc-serif, Georgia, serif);
+	font-weight: 500;
+	font-size: clamp(22px, 2.2vw, 28px);
+	line-height: 1.2;
+	color: var(--omc-ink, #3a2b26);
+}
+.whd-sc__text { font-size: 15px; line-height: 1.7; color: var(--omc-text, #4a3f3a); }
+.whd-sc__text p { margin: 0 0 1em; }
+.whd-sc__figure { margin: 18px 0 0; }
+.whd-sc__img { display: block; width: 100%; height: auto; border: 1px solid var(--omc-line, #e9e1da); background: #fff; }
+.whd-sc__figure figcaption { margin-top: 10px; font-size: 13px; }
+.whd-sc__figure figcaption a { color: var(--omc-rose-dark, #8a6a5e); }
+
+@media (max-width: 560px) {
+	.whd-sc { padding: 12px; }
+	.whd-sc__panel { padding: 20px 16px; max-height: 92vh; }
+}

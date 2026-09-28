@@ -57,6 +57,9 @@ final class WHDV_Admin {
 			'catalog'   => WHDV_Model::catalog(),
 			'types'     => wc_get_attribute_types(),
 			'maxLevels' => WHDV_MAX_LEVELS,
+			// Suggested levels for this product's category, so a new product opens with the right
+			// tiers already chosen. Only offered when the grid is still empty — never overwrites work.
+			'preset'    => ( $post && empty( $state['levels'] ) ) ? WHDV_Model::preset_for_product( $post->ID ) : null,
 			'currency'  => get_woocommerce_currency_symbol(),
 			'i18n'      => [
 				'level'         => __( 'Level %d', 'whd-variations' ),

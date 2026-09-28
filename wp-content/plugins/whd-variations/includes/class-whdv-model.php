@@ -35,6 +35,38 @@ final class WHDV_Model {
 		return $out;
 	}
 
+	/**
+	 * The variant levels a product in this category normally uses, as taxonomy names.
+	 *
+	 * Set by the publish script from catalog.json (option `whdv_presets`, category slug =>
+	 * attribute slugs). The tiers tab uses it to pre-fill a brand-new product, so adding a dress
+	 * starts with Colour, Size and Length instead of a blank grid. An explicit empty list means a
+	 * one-of-a-kind piece: no variants at all.
+	 *
+	 * @param int $product_id Product to look at.
+	 * @return array|null Taxonomy names in order, or null when nothing applies.
+	 */
+	public static function preset_for_product( $product_id ) {
+		$presets = (array) get_option( 'whdv_presets', [] );
+		if ( ! $presets ) {
+			return null;
+		}
+		$terms = wp_get_object_terms( (int) $product_id, 'product_cat', [ 'orderby' => 'term_id', 'order' => 'DESC' ] );
+		if ( is_wp_error( $terms ) ) {
+			return null;
+		}
+		// Most specific first: a child category beats the parent it sits under.
+		usort( $terms, static function ( $a, $b ) {
+			return ( $b->parent <=> $a->parent );
+		} );
+		foreach ( $terms as $term ) {
+			if ( array_key_exists( $term->slug, $presets ) ) {
+				return array_map( 'wc_attribute_taxonomy_name', (array) $presets[ $term->slug ] );
+			}
+		}
+		return isset( $presets['_default'] ) ? array_map( 'wc_attribute_taxonomy_name', (array) $presets['_default'] ) : null;
+	}
+
 	/** A term + the swatch meta the theme / Variation Swatches plugin read. */
 	public static function term_data( WP_Term $t ) {
 		$image = (int) get_term_meta( $t->term_id, 'product_attribute_image', true );

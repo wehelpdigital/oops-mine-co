@@ -60,6 +60,10 @@ $log = [
 
 /* ────────────────────────────── helpers ────────────────────────────── */
 
+/* Shop categories, variant attributes and presets live in catalog.json; loaded early so the
+   content step can tell that the taxonomy is owned elsewhere. */
+require_once __DIR__ . '/lib/catalog.php';
+
 /** True when --dry-run was passed: every helper below then only reports. */
 function omc_pub_dry() {
 	return ! empty( $GLOBALS['omc_pub_dry'] );
@@ -787,8 +791,13 @@ foreach ( $files as $file ) {
 	}
 	$status = in_array( ( $doc['status'] ?? 'publish' ), [ 'publish', 'draft', 'pending', 'private' ], true ) ? $doc['status'] : 'publish';
 
-	/* 4a ── the product category a landing page fronts */
-	$category = ( isset( $doc['category'] ) && is_array( $doc['category'] ) && ! empty( $doc['category']['slug'] ) ) ? $doc['category'] : null;
+	/* 4a ── the product category a landing page fronts.
+	   Skipped once catalog.json exists: that file is the single source of truth for the shop's
+	   taxonomy, and the style categories these pages were written against have been retired from
+	   it. Creating them here as well would have the two steps undo each other on every run — the
+	   landing template falls back to a category that does exist. */
+	$catalog_owns_taxonomy = function_exists( 'omc_cat_config' ) && omc_cat_config();
+	$category = ( ! $catalog_owns_taxonomy && isset( $doc['category'] ) && is_array( $doc['category'] ) && ! empty( $doc['category']['slug'] ) ) ? $doc['category'] : null;
 	$term_id  = 0;
 	if ( $category ) {
 		$term_id = omc_pub_upsert_term( [
@@ -894,6 +903,12 @@ if ( ! $occasions ) {
 	}
 }
 $occasion_terms = [];
+/* The occasion categories (Casual, Workwear, Evening, Wedding Guest) belong to the retired style
+   taxonomy. catalog.json owns the shop tree now, so stop recreating them — otherwise this step and
+   the retire step delete and rebuild the same four terms on every run. */
+if ( function_exists( 'omc_cat_config' ) && omc_cat_config() ) {
+	$occasions = [];
+}
 foreach ( $occasions as $slug => $occasion ) {
 	$term_id = omc_pub_upsert_term( [
 		'taxonomy'    => 'product_cat',
@@ -993,16 +1008,33 @@ $new_arrivals_url = function_exists( 'omc_new_arrivals_url' ) ? omc_new_arrivals
 $blog_page        = (int) get_option( 'page_for_posts' );
 $journal_item     = $blog_page ? [ 'type' => 'post_type', 'object' => 'page', 'object_id' => $blog_page, 'title' => 'Journal' ] : $menu_link( 'Journal', home_url( '/blog/' ) );
 
-/* Column 1 — the catalogue itself */
-$column_category = array_values( array_filter( [
-	$menu_term( 'dresses' ),
-	$menu_term( 'skirts' ),
-	$menu_term( 'jeans_and_denim', 'Jeans & Denim' ),
-	$menu_term( 'lingerie' ),
-	$menu_term( 'shoes_and_accessories', 'Shoes & Accessories' ),
-	$menu_link( 'New arrivals', $new_arrivals_url ) + [ 'meta' => [ '_menu_item_badge_text' => 'New', '_menu_item_badge_color' => '#b98b7e' ] ],
-	$menu_link( 'Shop all', $shop_url ),
-] ) );
+/* Column 1 — the catalogue itself, straight from catalog.json so the menu and the taxonomy
+   cannot drift apart. Groups flagged `menu` become columns, their children the links. */
+$catalog_cfg  = function_exists( 'omc_cat_config' ) ? omc_cat_config() : null;
+$catalog_cols = [];
+foreach ( (array) ( $catalog_cfg['categories'] ?? [] ) as $catalog_group ) {
+	if ( empty( $catalog_group['menu'] ) ) {
+		continue;
+	}
+	$catalog_links = [];
+	foreach ( (array) ( $catalog_group['children'] ?? [] ) as $catalog_child ) {
+		$catalog_item = $menu_term( $catalog_child['slug'], $catalog_child['name'] );
+		if ( $catalog_item ) {
+			$catalog_links[] = $catalog_item;
+		}
+	}
+	if ( $catalog_links ) {
+		$catalog_cols[ $catalog_group['name'] ] = $catalog_links;
+	}
+}
+
+$column_category = $catalog_cols['Clothing'] ?? [];
+$column_category[] = $menu_link( 'Shop all', $shop_url );
+$column_category = array_values( array_filter( $column_category ) );
+
+/* Column 0 — what just landed */
+$column_new = $catalog_cols['New & Now'] ?? [];
+$column_new = array_values( array_filter( $column_new ) );
 
 /* Column 2 — the style landing pages written from the keyword plan (only the ones that exist) */
 $style_order = [
@@ -1051,6 +1083,7 @@ foreach ( (array) ( $plan['pages'] ?? [] ) as $planned ) {
 
 $tree = [];
 $shop_children = array_values( array_filter( [
+	$column_new ? $menu_link( 'New & Now', '#' ) + [ 'children' => $column_new ] : null,
 	$column_category ? $menu_link( 'Shop by category', '#' ) + [ 'children' => $column_category ] : null,
 	$column_style ? $menu_link( 'Shop by style', '#' ) + [ 'children' => $column_style ] : null,
 	$column_occasion ? $menu_link( 'Shop by occasion', '#' ) + [ 'children' => $column_occasion ] : null,
@@ -1331,6 +1364,8 @@ if ( ! omc_pub_dry() ) {
 	omc_pub_note( "theme css cache: $omc_busted hash option(s) cleared; min.css rebuilds on the next request" );
 	$log['css_cache_busted'] = $omc_busted;
 }
+
+$log['catalog'] = omc_cat_apply();
 
 omc_pub_post_thumbnails();
 $log['journal_thumbnails'] = $GLOBALS['omc_pub_log_thumbs'] ?? 0;

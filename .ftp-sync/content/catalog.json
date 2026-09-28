@@ -1,0 +1,355 @@
+{
+  "_readme": [
+    "The shop's categories and variant options, in one place. Edit this file, run",
+    "`php .ftp-sync/publish-site.php` (add OMC_DB=live for the live store) and the store matches it.",
+    "",
+    "categories  — the browse tree. `menu` decides whether a group shows in the Shop mega menu.",
+    "attributes  — the variant types. Each becomes a WooCommerce global attribute (pa_<slug>).",
+    "              `type` is how the option is picked on the product page: color | button | select.",
+    "              Color terms carry a swatch hex the theme and the Variation Swatches plugin read.",
+    "presets     — which variant types a product in that category normally uses, in order.",
+    "              The Variation tiers tab pre-fills these, so a new product starts with the right",
+    "              levels instead of a blank grid. An empty list means a one-of-a-kind piece:",
+    "              no variants, just the stock count.",
+    "retire      — categories to delete. Products are never deleted, they only lose the term.",
+    "              Anything not listed here is left alone.",
+    "retire_attributes — global attributes (pa_<slug>) to delete. Their terms go with them;",
+    "              products keep existing and simply lose that attribute."
+  ],
+  "categories": [
+    {
+      "slug": "new-now",
+      "name": "New & Now",
+      "menu": true,
+      "description": "The pieces that just landed, the ones coming back, and the ones there is only one of.",
+      "children": [
+        {
+          "slug": "new-arrivals",
+          "name": "New Arrivals",
+          "description": "Everything from the newest rack, newest first."
+        },
+        {
+          "slug": "just-dropped",
+          "name": "Just Dropped",
+          "description": "Added in the last few days."
+        },
+        {
+          "slug": "best-sellers",
+          "name": "Best Sellers",
+          "description": "The pieces that keep leaving."
+        },
+        {
+          "slug": "restocks",
+          "name": "Restocks",
+          "description": "Back after selling through."
+        },
+        {
+          "slug": "limited-finds",
+          "name": "Limited Finds",
+          "description": "One or two of each, and then they are gone."
+        }
+      ]
+    },
+    {
+      "slug": "clothing",
+      "name": "Clothing",
+      "menu": true,
+      "description": "Everything on the rack, by what it is.",
+      "children": [
+        {
+          "slug": "tops",
+          "name": "Tops",
+          "description": "Everyday tops, camis and shells."
+        },
+        {
+          "slug": "blouses",
+          "name": "Blouses",
+          "description": "Softer shirting: sleeves, ties, a collar that does something."
+        },
+        {
+          "slug": "tees",
+          "name": "Tees",
+          "description": "Plain, printed and the ones you reach for first."
+        },
+        {
+          "slug": "sweaters-knits",
+          "name": "Sweaters & Knits",
+          "description": "Knitwear, cardigans and the sweater dresses that live in between."
+        },
+        {
+          "slug": "dresses",
+          "name": "Dresses",
+          "description": "Mini, midi and maxi, for a Tuesday or a wedding."
+        },
+        {
+          "slug": "skirts",
+          "name": "Skirts",
+          "description": "Ruffles, pleats and the midi lengths we keep going back for."
+        },
+        {
+          "slug": "pants-trousers",
+          "name": "Pants & Trousers",
+          "description": "Wide legs, tailored lines and the pull-on pairs."
+        },
+        {
+          "slug": "jeans",
+          "name": "Jeans",
+          "description": "Denim by rise and leg, washed light to dark."
+        },
+        {
+          "slug": "shorts",
+          "name": "Shorts",
+          "description": "Tailored, denim and the soft pairs for hot days."
+        },
+        {
+          "slug": "jackets-outerwear",
+          "name": "Jackets & Outerwear",
+          "description": "Layers for the walk between the car and the door."
+        },
+        {
+          "slug": "matching-sets",
+          "name": "Matching Sets",
+          "description": "Two pieces bought together, worn apart just as happily."
+        },
+        {
+          "slug": "rompers-jumpsuits",
+          "name": "Rompers & Jumpsuits",
+          "description": "One piece, whole outfit, no decisions."
+        }
+      ]
+    }
+  ],
+  "attributes": [
+    {
+      "slug": "size",
+      "label": "Size",
+      "type": "button",
+      "terms": [
+        "XS",
+        "S",
+        "M",
+        "L",
+        "XL",
+        "2XL"
+      ]
+    },
+    {
+      "slug": "color",
+      "label": "Color",
+      "type": "color",
+      "terms": [
+        {
+          "name": "Black",
+          "color": "#1c1917"
+        },
+        {
+          "name": "Cream",
+          "color": "#f2ebe1"
+        },
+        {
+          "name": "Mocha",
+          "color": "#8b6f5e"
+        },
+        {
+          "name": "Olive",
+          "color": "#6b7255"
+        }
+      ]
+    },
+    {
+      "slug": "pattern",
+      "label": "Pattern",
+      "type": "button",
+      "terms": [
+        "Floral",
+        "Stripe",
+        "Polka Dot",
+        "Solid"
+      ]
+    },
+    {
+      "slug": "cut",
+      "label": "Style",
+      "type": "button",
+      "terms": [
+        "Regular",
+        "Petite",
+        "Oversized"
+      ]
+    },
+    {
+      "slug": "length",
+      "label": "Length",
+      "type": "button",
+      "terms": [
+        "Short",
+        "Regular",
+        "Long"
+      ]
+    },
+    {
+      "slug": "fit",
+      "label": "Fit",
+      "type": "button",
+      "terms": [
+        "Relaxed",
+        "Slim",
+        "Oversized"
+      ]
+    },
+    {
+      "slug": "material",
+      "label": "Material",
+      "type": "button",
+      "terms": [
+        "Linen",
+        "Cotton",
+        "Denim",
+        "Knit"
+      ]
+    },
+    {
+      "slug": "set-option",
+      "label": "Set Option",
+      "type": "button",
+      "terms": [
+        "Top only",
+        "Pants only",
+        "Full Set"
+      ]
+    },
+    {
+      "slug": "bundle",
+      "label": "Bundle",
+      "type": "button",
+      "terms": [
+        "Single",
+        "2-piece set",
+        "3-piece set"
+      ]
+    },
+    {
+      "slug": "shoe-size",
+      "label": "Shoe Size",
+      "type": "button",
+      "terms": [
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    }
+  ],
+  "presets": {
+    "_default": [
+      "color",
+      "size"
+    ],
+    "dresses": [
+      "color",
+      "size",
+      "length"
+    ],
+    "skirts": [
+      "color",
+      "size",
+      "length"
+    ],
+    "pants-trousers": [
+      "color",
+      "size",
+      "length"
+    ],
+    "jeans": [
+      "color",
+      "size",
+      "length"
+    ],
+    "shorts": [
+      "color",
+      "size"
+    ],
+    "tops": [
+      "color",
+      "size"
+    ],
+    "blouses": [
+      "color",
+      "size"
+    ],
+    "tees": [
+      "color",
+      "size"
+    ],
+    "sweaters-knits": [
+      "color",
+      "size"
+    ],
+    "jackets-outerwear": [
+      "color",
+      "size"
+    ],
+    "rompers-jumpsuits": [
+      "color",
+      "size"
+    ],
+    "matching-sets": [
+      "color",
+      "size",
+      "set-option"
+    ],
+    "limited-finds": [],
+    "shoes": [
+      "color",
+      "shoe-size"
+    ],
+    "jewelry": [
+      "color",
+      "length"
+    ]
+  },
+  "retire": [
+    "suits_and_separates",
+    "shirts_and_polos",
+    "jeans_and_denim-men",
+    "activewear-men",
+    "shoes_and_accessories-men",
+    "men",
+    "girls_clothing",
+    "boys_clothing",
+    "kids",
+    "lingerie",
+    "jeans_and_denim",
+    "shoes_and_accessories",
+    "handbags",
+    "hats",
+    "sunglasses",
+    "accessories",
+    "affordable-luxury",
+    "asian-fashion",
+    "casual",
+    "chic-boho",
+    "chic-style",
+    "cute-fashion",
+    "evening",
+    "kpop-fashion",
+    "korean-fashion",
+    "korean-winter-fashion",
+    "petite-clothing",
+    "petite-dresses",
+    "statement-pieces",
+    "thai-fashion",
+    "wedding-guest",
+    "workwear",
+    "women"
+  ],
+  "retire_attributes": [
+    "brand",
+    "sizes",
+    "style",
+    "textile"
+  ]
+}

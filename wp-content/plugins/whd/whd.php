@@ -24,6 +24,7 @@ require_once WHD_DIR . 'includes/class-whd-cart.php';
 require_once WHD_DIR . 'includes/class-whd-scripts.php';
 require_once WHD_DIR . 'includes/class-whd-subscribers.php';
 require_once WHD_DIR . 'includes/class-whd-integrations.php';
+require_once WHD_DIR . 'includes/class-whd-size-charts.php';
 require_once WHD_DIR . 'includes/class-whd-admin.php';
 
 final class WHD_Plugin {
@@ -48,6 +49,7 @@ final class WHD_Plugin {
 		WHD_Popups::init();
 		WHD_Subscribers::init();
 		WHD_Integrations::init();
+		WHD_Size_Charts::init();
 		WHD_Emails::init();
 		if ( class_exists( 'WooCommerce' ) ) {
 			WHD_Cart::init();
