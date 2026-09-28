@@ -482,3 +482,42 @@ a.omc-contact__value:hover { color: var(--omc-rose-dark); border-bottom-color: v
 	.omc-lp-table { overflow: visible; }
 	.omc-lp-prose a:not(.omc-btn)::after { content: " (" attr(href) ")"; font-size: 9pt; color: #555; }
 }
+
+
+/* ─── Header band: the same photo-and-scrim treatment the rest of the site uses ───
+   Lives here rather than in omc-pages.css because this sheet loads after it and would
+   otherwise win. Contrast note is in omc-pages.css above the matching block. */
+.omc-lp-head,
+.omc-lp-hero {
+	position: relative;
+	isolation: isolate;
+	background-color: var(--omc-ink);
+	background-image: var(--omc-head-bg, none);
+	background-size: cover;
+	background-position: 50% 42%;
+	background-repeat: no-repeat;
+	overflow: hidden;
+}
+.omc-lp-head::before,
+.omc-lp-hero::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background:
+		linear-gradient(180deg, rgba(38, 28, 24, .62) 0%, rgba(38, 28, 24, .78) 100%),
+		rgba(38, 28, 24, .12);
+}
+.omc-lp-head > *,
+.omc-lp-hero > * { position: relative; }
+.omc-lp-head__title,
+.omc-lp-hero__title { color: #fff; }
+.omc-lp-head__intro,
+.omc-lp-hero__intro { color: rgba(255, 255, 255, .88); }
+.omc-lp-head .omc-eyebrow,
+.omc-lp-hero .omc-eyebrow { color: var(--omc-rose-light, #e9d3ca); }
+.omc-lp-hero__bg { display: none; }   /* the band carries the photo now */
+.omc-lp-hero .omc-btn--outline,
+.omc-lp-head .omc-btn--outline { border-color: rgba(255, 255, 255, .55); color: #fff; }
+.omc-lp-hero .omc-btn--outline:hover,
+.omc-lp-head .omc-btn--outline:hover { background: #fff; color: var(--omc-ink); border-color: #fff; }

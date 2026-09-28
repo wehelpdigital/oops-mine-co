@@ -212,3 +212,27 @@
 @media (prefers-reduced-motion: reduce) {
 	.omc-video-card__media img, .omc-video-card__play, .omc-faq summary::after { transition: none; }
 }
+
+
+/* ─── Hub header: the site's photo-and-scrim band ─── */
+.omc-videos__hero {
+	position: relative;
+	isolation: isolate;
+	background-color: var(--omc-ink);
+	background-image: var(--omc-head-bg, none);
+	background-size: cover;
+	background-position: 50% 42%;
+	overflow: hidden;
+	padding: clamp(40px, 5.5vw, 76px) 0 clamp(36px, 5vw, 66px);
+}
+.omc-videos__hero::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background: linear-gradient(180deg, rgba(38, 28, 24, .62) 0%, rgba(38, 28, 24, .78) 100%);
+}
+.omc-videos__hero > * { position: relative; }
+.omc-videos__title { color: #fff; }
+.omc-videos__lede { color: rgba(255, 255, 255, .88); }
+.omc-videos__hero .omc-eyebrow { color: var(--omc-rose-light, #e9d3ca); }

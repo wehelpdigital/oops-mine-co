@@ -29,4 +29,17 @@ foreach ( $omc_own_hero as $omc_tpl ) {
 	}
 }
 
+/*
+ * The parent suppresses the title on an empty cart and on a logged-out account screen, which leaves
+ * those pages opening on an empty band. Both are real pages with real titles, so say what they are.
+ */
+$omc_untitled = function_exists( 'is_cart' )
+	&& ( ( is_cart() && WC()->cart && WC()->cart->is_empty() )
+		|| ( function_exists( 'is_account_page' ) && is_account_page() && ! is_user_logged_in() ) );
+
+if ( $omc_untitled && function_exists( 'omc_bare_header_band' ) ) {
+	omc_bare_header_band( get_the_title( get_queried_object_id() ) );
+	return;
+}
+
 require get_template_directory() . '/templates/page-header.php';

@@ -241,3 +241,86 @@
 		padding-right: 20px;
 	}
 }
+
+
+/* ==========================================================================
+   One header band, every page
+   --------------------------------------------------------------------------
+   Three different headers used to greet people depending on where they landed:
+   the landing pages had a photo washed out under a cream veil, the FAQ and
+   policy pages a plain cream strip, and the shop, blog and cart the theme's
+   thin white line. They now share one treatment — the page's own photograph,
+   darkened enough to carry light text.
+
+   The photograph arrives as --omc-head-bg, set per page by
+   omc_page_header_bg() (a featured image when the page has one, otherwise a
+   picture chosen for that kind of page).
+
+   Contrast: the overlay bottoms out at .78 alpha over the deep brown ink, which
+   keeps white body copy above 7:1 even over a pale photograph. Never lighten it
+   past .62 without re-checking the copy on the lightest image in the set.
+   ========================================================================== */
+
+.c-page-header {
+	position: relative;
+	isolation: isolate;
+	background-color: var(--omc-ink);
+	background-image: var(--omc-head-bg, none);
+	background-size: cover;
+	background-position: 50% 42%;
+	background-repeat: no-repeat;
+	overflow: hidden;
+}
+
+/* The scrim. A touch darker at the foot so the divider and any breadcrumbs stay legible. */
+.c-page-header::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background:
+		linear-gradient(180deg, rgba(38, 28, 24, .62) 0%, rgba(38, 28, 24, .78) 100%),
+		rgba(38, 28, 24, .12);
+}
+
+.c-page-header > * { position: relative; }
+
+/* Type and furniture on the dark band. */
+.c-page-header__title,
+.c-page-header__title--center { color: #fff; }
+
+
+
+.c-page-header .omc-eyebrow { color: var(--omc-rose-light, #e9d3ca); }
+
+.c-page-header .c-breadcrumbs,
+.c-page-header .c-breadcrumbs a,
+.c-page-header .c-page-header__count,
+.c-page-header .woocommerce-result-count,
+.c-page-header .c-page-header__row-1,
+.c-page-header .c-page-header__row-1 a { color: rgba(255, 255, 255, .78); }
+.c-page-header .c-breadcrumbs a:hover,
+.c-page-header .c-page-header__row-1 a:hover { color: #fff; }
+
+.c-page-header__row-1 { border-bottom-color: rgba(255, 255, 255, .18); }
+.c-page-header__line { background: rgba(255, 255, 255, .18); }
+
+/* The sorting select and filter button sit in the band on shop screens. */
+.c-page-header .c-sorting__current,
+.c-page-header .c-sorting__label,
+.c-page-header .ip-icon-filter { color: rgba(255, 255, 255, .88); }
+
+/* Give the band some height: a title alone on a photograph needs room to breathe. */
+.c-page-header__row-2 { padding-top: clamp(30px, 4.5vw, 62px); padding-bottom: clamp(30px, 4.5vw, 62px); }
+
+
+
+/* Buttons sitting on the dark band. */
+
+
+/* The bare band rendered for an empty cart or a logged-out account. */
+.omc-head-bare .c-page-header__row-2 { padding-top: clamp(34px, 5vw, 70px); padding-bottom: clamp(34px, 5vw, 70px); }
+
+@media (prefers-reduced-motion: no-preference) {
+	.c-page-header { background-attachment: scroll; }
+}

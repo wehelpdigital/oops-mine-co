@@ -755,6 +755,111 @@ function omc_footer_badges() {
 	] );
 }
 
+/**
+ * The photograph behind a page's header band.
+ *
+ * Every page gets one so the headers read as a set rather than three different treatments. The
+ * picture is chosen by what the page is about; a page with a featured image uses that instead,
+ * which is how a journal post ends up behind its own headline.
+ *
+ * @return string Uploads-relative path or an attachment id. Empty hides the photo and the band
+ *                falls back to the flat brand colour.
+ */
+function omc_page_header_bg() {
+	$images = omc_images();
+	$bg     = $images['hero'];
+
+	if ( is_singular() && has_post_thumbnail() ) {
+		$bg = (int) get_post_thumbnail_id();
+	} elseif ( function_exists( 'is_product_category' ) && is_product_category() ) {
+		$term  = get_queried_object();
+		$thumb = $term ? (int) get_term_meta( $term->term_id, 'thumbnail_id', true ) : 0;
+		$bg    = $thumb ?: $images['edit_a'];
+	} elseif ( function_exists( 'is_shop' ) && is_shop() ) {
+		$bg = $images['edit_a'];
+	} elseif ( is_home() || is_archive() ) {
+		$bg = $images['quotes'];
+	} elseif ( function_exists( 'is_cart' ) && ( is_cart() || is_checkout() ) ) {
+		$bg = $images['newsletter'];
+	} elseif ( function_exists( 'is_account_page' ) && is_account_page() ) {
+		$bg = $images['live'];
+	}
+
+	/**
+	 * Filter the header photograph for the current view.
+	 *
+	 * @param string|int $bg Uploads-relative path or attachment id.
+	 */
+	return apply_filters( 'omc_page_header_bg', $bg );
+}
+
+/**
+ * Hand the header photograph to CSS as a custom property.
+ *
+ * A custom property rather than an inline background so the band's gradient, blur and text colour
+ * all stay in the stylesheet where they can be read together.
+ */
+function omc_page_header_bg_css() {
+	if ( is_front_page() ) {
+		return; // the home page has its own full-bleed hero
+	}
+	$id = omc_attachment_id( omc_page_header_bg() );
+	if ( ! $id ) {
+		return;
+	}
+	$url = wp_get_attachment_image_url( $id, 'full' );
+	if ( ! $url ) {
+		return;
+	}
+	printf(
+		'<style id="omc-header-bg">:root{--omc-head-bg:url(%s);}</style>' . "\n",
+		esc_url( $url )
+	);
+}
+add_action( 'wp_head', 'omc_page_header_bg_css', 7 );
+
+/**
+ * "New Arrivals" is a real destination in the menu, but it points at the shop sorted by date, so
+ * the shop's own title greeted people with "Shop". Name the page after what they clicked.
+ *
+ * @param string $title The title WooCommerce built.
+ */
+function omc_shop_sorted_title( $title, $id = 0 ) {
+	if ( ! function_exists( 'is_shop' ) || ! is_shop() || is_admin() ) {
+		return $title;
+	}
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- a sort link, not a form submission
+	$orderby = isset( $_GET['orderby'] ) ? sanitize_key( wp_unslash( $_GET['orderby'] ) ) : '';
+	if ( 'date' !== $orderby ) {
+		return $title;
+	}
+	// The theme titles the shop with get_the_title( shop page id ), so that is what to intercept.
+	return ( (int) $id === (int) wc_get_page_id( 'shop' ) ) ? __( 'New Arrivals', 'moderno-child' ) : $title;
+}
+add_filter( 'the_title', 'omc_shop_sorted_title', 10, 2 );
+
+/**
+ * The header band for a screen the parent theme leaves untitled.
+ *
+ * The parent prints nothing at all on an empty cart or a logged-out account, so there is no title
+ * to filter — the band has to be rendered here. Same classes as the parent's, so it picks up the
+ * photo treatment with it.
+ *
+ * @param string $title Title to show.
+ */
+function omc_bare_header_band( $title ) {
+	?>
+	<header class="l-section c-page-header c-page-header--header-type-1 c-page-header--low omc-head-bare">
+		<div class="c-page-header__row-2 c-page-header__row-2--1-columns l-section__container">
+			<div class="c-page-header__row-2-col c-page-header__row-2-col--title-breadcrumbs">
+				<h1 class="c-page-header__title c-page-header__title--center"><?php echo esc_html( $title ); ?></h1>
+			</div>
+		</div>
+		<div class="c-page-header__line"></div>
+	</header>
+	<?php
+}
+
 /** Newsletter form (progressively enhanced by assets/js/omc.js). */
 function omc_newsletter_form( $args = [] ) {
 	static $count = 0;
