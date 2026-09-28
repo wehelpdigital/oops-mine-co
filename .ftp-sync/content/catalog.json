@@ -14,7 +14,9 @@
     "retire      — categories to delete. Products are never deleted, they only lose the term.",
     "              Anything not listed here is left alone.",
     "retire_attributes — global attributes (pa_<slug>) to delete. Their terms go with them;",
-    "              products keep existing and simply lose that attribute."
+    "              products keep existing and simply lose that attribute.",
+    "unpublish_products — demo products to set to draft (never deleted).",
+    "sort_skip — words meaning \"not a garment\", so shoes and bags are not filed as clothing types."
   ],
   "categories": [
     {
@@ -351,5 +353,49 @@
     "sizes",
     "style",
     "textile"
-  ]
+  ],
+  "unpublish_products": {
+    "_why": "Menswear and kidswear from the theme's demo import. The Men and Kids categories were retired, but the products stayed and were re-filed into womenswear categories, so the home page showed a man's shirt under Blouses and a boy's tee under Tees. Set to draft rather than deleted: nothing is lost, and re-publishing one is a click. Identified by looking at the product photographs, not by guessing from titles.",
+    "ids": [
+      89,
+      102,
+      104,
+      106,
+      116,
+      120,
+      128,
+      130,
+      134,
+      146,
+      148,
+      150,
+      159,
+      161,
+      163,
+      174
+    ]
+  },
+  "sort_skip": {
+    "_why": "Titles that are footwear or an accessory, not a garment type. Without this, \"Ethyl Low Top Sneaker\" matched the Tops rule and a shoe became the Tops category tile.",
+    "words": [
+      "sneaker",
+      "oxford",
+      "pump",
+      "sandal",
+      "slide",
+      "flat",
+      "boot",
+      "loafer",
+      "mule",
+      "sunglasses",
+      "fedora",
+      "hat",
+      "satchel",
+      "handbag",
+      "clutch",
+      "tote",
+      "belt",
+      "tights"
+    ]
+  }
 }

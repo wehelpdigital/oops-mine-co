@@ -181,6 +181,10 @@
 	max-width: none;
 	padding-left: 30px;
 	padding-right: 30px;
+	/* The theme runs the grid straight into the title band's divider, so the first row of cards sits
+	   on the line with nothing between them. Same breathing room the landing pages give their
+	   product section. */
+	padding-top: clamp(28px, 3.4vw, 48px);
 }
 
 /* 2. Single journal posts.

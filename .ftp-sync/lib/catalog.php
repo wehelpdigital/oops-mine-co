@@ -229,8 +229,17 @@ function omc_cat_sort_products( array $terms ) {
 	$products = get_posts( [ 'post_type' => 'product', 'numberposts' => -1, 'post_status' => 'publish' ] );
 	$sorted   = 0;
 	$fallback = isset( $terms['clothing'] ) ? (int) $terms['clothing'] : 0;
+	$skip = array_map( 'strtolower', (array) ( $GLOBALS['omc_cat_skip_words'] ?? [] ) );
 	foreach ( $products as $product ) {
 		$title = strtolower( $product->post_title );
+
+		// Footwear and accessories are not garment types. Without this a "Low Top Sneaker"
+		// matches the Tops rule and a shoe becomes the Tops category tile.
+		foreach ( $skip as $word ) {
+			if ( false !== strpos( $title, $word ) ) {
+				continue 2;
+			}
+		}
 		foreach ( $rules as $slug => $needles ) {
 			if ( empty( $terms[ $slug ] ) ) {
 				continue;
@@ -299,12 +308,37 @@ function omc_cat_retire_attributes( array $cfg ) {
 	return $gone;
 }
 
+/**
+ * Set the demo products named in `unpublish_products` to draft.
+ *
+ * Draft, never delete: the owner may want one back, and a deleted product takes its images and its
+ * variations with it. Already-drafted ones are left alone, so re-running is quiet.
+ */
+function omc_cat_unpublish( array $cfg ) {
+	$ids  = (array) ( $cfg['unpublish_products']['ids'] ?? [] );
+	$gone = 0;
+	foreach ( $ids as $id ) {
+		$post = get_post( (int) $id );
+		if ( ! $post || 'product' !== $post->post_type || 'publish' !== $post->post_status ) {
+			continue;
+		}
+		omc_pub_note( "product #{$id} \"{$post->post_title}\": set to draft (menswear/kidswear demo item)" );
+		if ( ! omc_pub_dry() ) {
+			wp_update_post( [ 'ID' => (int) $id, 'post_status' => 'draft' ] );
+		}
+		$gone++;
+	}
+	return $gone;
+}
+
 /** Run the whole thing. Returns a short summary for the publish log. */
 function omc_cat_apply() {
 	$cfg = omc_cat_config();
 	if ( ! $cfg ) {
 		return [ 'skipped' => 'no catalog.json' ];
 	}
+	$GLOBALS['omc_cat_skip_words'] = (array) ( $cfg['sort_skip']['words'] ?? [] );
+	$unpublished = omc_cat_unpublish( $cfg );
 	$terms = omc_cat_categories( $cfg );
 	$attrs = omc_cat_attributes( $cfg );
 	return [
@@ -314,5 +348,6 @@ function omc_cat_apply() {
 		'sorted'     => omc_cat_sort_products( $terms ),
 		'retired'    => omc_cat_retire( $cfg ),
 		'attrs_gone' => omc_cat_retire_attributes( $cfg ),
+		'unpublished' => $unpublished,
 	];
 }

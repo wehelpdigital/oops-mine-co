@@ -171,10 +171,34 @@ function omc_image( $file_or_id, $size = 'full', $attrs = [] ) {
 
 /** Product categories shown as cards on the home page (slugs, in order; 4 per row). */
 function omc_home_categories() {
-	return apply_filters( 'omc_home_categories', [
-		'dresses', 'skirts', 'jeans_and_denim', 'handbags',            // row 1
-		'shoes_and_accessories', 'sunglasses', 'hats', 'lingerie',   // row 2
-	] );
+	/*
+	 * Follows the shop tree rather than naming slugs, so retiring or adding a category in
+	 * catalog.json does not quietly leave this section half empty — which is exactly what happened
+	 * when the demo categories went and only two of the eight hard-coded slugs still existed.
+	 *
+	 * Categories with no products are skipped: a tile takes its photo from the first product in the
+	 * category, so an empty one renders as a grey box.
+	 */
+	$slugs  = [];
+	$parent = get_term_by( 'slug', 'clothing', 'product_cat' );
+	if ( $parent && ! is_wp_error( $parent ) ) {
+		$children = get_terms( [
+			'taxonomy'   => 'product_cat',
+			'parent'     => $parent->term_id,
+			'hide_empty' => true,
+			'orderby'    => 'term_id',   // the order catalog.json created them in
+			'order'      => 'ASC',
+		] );
+		if ( ! is_wp_error( $children ) ) {
+			$slugs = wp_list_pluck( $children, 'slug' );
+		}
+	}
+	if ( ! $slugs ) {
+		$slugs = [ 'dresses', 'skirts', 'tops', 'sweaters-knits' ];
+	}
+
+	// Eight fills two rows of four; a ninth would leave an orphan.
+	return apply_filters( 'omc_home_categories', array_slice( $slugs, 0, 8 ) );
 }
 
 /** Trust strip under the hero. Edit via the `omc_usp_items` filter. */
