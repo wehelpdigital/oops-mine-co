@@ -74,6 +74,27 @@ get_header();
 		</ul>
 	</section>
 
+	<!-- ───────────── As seen on (placeholder names — see omc_press_logos()) ───────────── -->
+	<?php $omc_press = function_exists( 'omc_press_logos' ) ? omc_press_logos() : []; ?>
+	<?php if ( $omc_press ) : ?>
+		<section class="omc-press omc-reveal" aria-labelledby="omc-press-title">
+			<div class="l-section__container omc-press__inner">
+				<p class="omc-eyebrow" id="omc-press-title"><?php esc_html_e( 'As seen on', 'moderno-child' ); ?></p>
+				<ul class="omc-press__list">
+					<?php foreach ( $omc_press as $omc_p ) : ?>
+						<li class="omc-press__item">
+							<?php if ( ! empty( $omc_p['url'] ) ) : ?>
+								<a href="<?php echo esc_url( $omc_p['url'] ); ?>" target="_blank" rel="noopener"><?php echo esc_html( $omc_p['name'] ); ?></a>
+							<?php else : ?>
+								<span><?php echo esc_html( $omc_p['name'] ); ?></span>
+							<?php endif; ?>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+			</div>
+		</section>
+	<?php endif; ?>
+
 	<!-- ───────────── Next Facebook Live (Customizer → Facebook Live) ───────────── -->
 	<?php $omc_live = omc_fb_live(); ?>
 	<?php if ( ! empty( $omc_live['enabled'] ) && ! empty( $omc_live['when'] ) ) : ?>
@@ -252,27 +273,6 @@ get_header();
 			<a class="omc-btn omc-btn--ghost" href="<?php echo esc_url( omc_page_url( 'about-us' ) ); ?>"><?php esc_html_e( 'Read our story', 'moderno-child' ); ?></a>
 		</div>
 	</section>
-
-	<!-- ───────────── As seen on (placeholder names — see omc_press_logos()) ───────────── -->
-	<?php $omc_press = function_exists( 'omc_press_logos' ) ? omc_press_logos() : []; ?>
-	<?php if ( $omc_press ) : ?>
-		<section class="omc-press omc-reveal" aria-labelledby="omc-press-title">
-			<div class="l-section__container omc-press__inner">
-				<p class="omc-eyebrow" id="omc-press-title"><?php esc_html_e( 'As seen on', 'moderno-child' ); ?></p>
-				<ul class="omc-press__list">
-					<?php foreach ( $omc_press as $omc_p ) : ?>
-						<li class="omc-press__item">
-							<?php if ( ! empty( $omc_p['url'] ) ) : ?>
-								<a href="<?php echo esc_url( $omc_p['url'] ); ?>" target="_blank" rel="noopener"><?php echo esc_html( $omc_p['name'] ); ?></a>
-							<?php else : ?>
-								<span><?php echo esc_html( $omc_p['name'] ); ?></span>
-							<?php endif; ?>
-						</li>
-					<?php endforeach; ?>
-				</ul>
-			</div>
-		</section>
-	<?php endif; ?>
 
 	<!-- ───────────── New arrivals ───────────── -->
 	<section class="omc-section omc-products omc-reveal" aria-labelledby="omc-new-title">
