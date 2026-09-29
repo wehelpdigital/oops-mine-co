@@ -1367,6 +1367,23 @@ if ( ! omc_pub_dry() ) {
 
 $log['catalog'] = omc_cat_apply();
 
+/* Post authors: the admin account's display name is its email address, so every journal post
+   carried "by gowebdevhero@gmail.com" in an author link crawlers could read. The byline strip is
+   hidden in CSS, but the address should not be in the markup at all. The login is untouched. */
+foreach ( get_users( [ 'role' => 'administrator' ] ) as $omc_user ) {
+	if ( ! is_email( $omc_user->display_name ) ) {
+		continue;
+	}
+	omc_pub_note( "user #{$omc_user->ID}: display name changed from an email address to the shop name" );
+	if ( ! omc_pub_dry() ) {
+		wp_update_user( [
+			'ID'           => $omc_user->ID,
+			'display_name' => 'Oops, Mine Co.',
+			'nickname'     => 'Oops, Mine Co.',
+		] );
+	}
+}
+
 omc_pub_post_thumbnails();
 $log['journal_thumbnails'] = $GLOBALS['omc_pub_log_thumbs'] ?? 0;
 omc_pub_tidy_categories();

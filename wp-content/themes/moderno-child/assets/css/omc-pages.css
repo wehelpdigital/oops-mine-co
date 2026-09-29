@@ -302,7 +302,17 @@
 .c-page-header .c-breadcrumbs a:hover,
 .c-page-header .c-page-header__row-1 a:hover { color: #fff; }
 
-.c-page-header__row-1 { border-bottom-color: rgba(255, 255, 255, .18); }
+/* The breadcrumb row sits on the photograph, and a light busy image swallowed it. Give that strip
+   its own darker backing so it reads over anything, and lift the text off half-opacity. */
+.c-page-header__row-1 {
+	border-bottom-color: rgba(255, 255, 255, .16);
+	background: rgba(28, 20, 17, .58);
+	backdrop-filter: saturate(.9) blur(2px);
+}
+.c-page-header .c-breadcrumbs,
+.c-page-header .c-breadcrumbs a,
+.c-page-header .c-breadcrumbs span { color: rgba(255, 255, 255, .92); }
+.c-page-header .c-breadcrumbs a:hover { color: #fff; text-decoration: underline; }
 .c-page-header__line { background: rgba(255, 255, 255, .18); }
 
 /* The sorting select and filter button sit in the band on shop screens. */
@@ -324,3 +334,22 @@
 @media (prefers-reduced-motion: no-preference) {
 	.c-page-header { background-attachment: scroll; }
 }
+
+
+/* ─── Single journal post: a wider column, and no byline ───
+   The article was a 640px measure on an otherwise empty page, which read as cramped next to the
+   landing pages and their full-width bands. 760 is still a comfortable line length and fills the
+   page properly.
+
+   The byline strip said "by gowebdevhero@gmail.com" with a posted date — an admin address and a
+   timestamp, neither of which a shopper reading a style guide needs. */
+.single-post .l-section__content,
+.single-post .l-section__content--with-sidebar { max-width: 900px; }
+
+/* The theme caps the article itself at 768px, which overrode the column above it. */
+.single-post .c-post,
+.single-post .c-post--sidebar { max-width: none; }
+
+.single-post .c-post__content > * { max-width: 760px; }
+
+.single-post .c-page__meta { display: none; }
