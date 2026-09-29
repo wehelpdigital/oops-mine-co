@@ -295,6 +295,85 @@ function omc_pub_attachment_by_file( $file ) {
 	return $id ? (int) $id : 0;
 }
 
+
+/**
+ * Site icon: the QMC monogram on a rose tile.
+ *
+ * The demo content left one of the theme's stock photographs as the favicon. The square PNG is
+ * generated from the brand logo by .ftp-sync/tools/make-favicon.php and committed with the child
+ * theme; WordPress will only accept an attachment as the site icon, so this copies the file into
+ * uploads, registers it and points `site_icon` at it.
+ *
+ * The file lands in a fixed uploads/omc/ folder rather than a dated one, so the same relative path
+ * resolves in both databases. Running this with OMC_DB=live writes the rows but not the image —
+ * uploads travel separately, so run `node .ftp-sync/server.mjs sync` before the live publish.
+ *
+ * @return int Attachment id, or 0 when the source PNG is missing.
+ */
+function omc_pub_site_icon() {
+	$source = dirname( __DIR__ ) . '/wp-content/themes/moderno-child/assets/img/oops-favicon.png';
+	if ( ! file_exists( $source ) ) {
+		omc_pub_note( 'site icon: assets/img/oops-favicon.png is missing — run .ftp-sync/tools/make-favicon.php' );
+		return 0;
+	}
+
+	$rel     = 'omc/oops-favicon.png';
+	$uploads = wp_upload_dir();
+	$target  = $uploads['basedir'] . '/' . $rel;
+	$id      = omc_pub_attachment_by_file( $rel );
+	$stale   = ! file_exists( $target ) || md5_file( $target ) !== md5_file( $source );
+
+	if ( $stale ) {
+		omc_pub_note( "site icon: copying the favicon to uploads/$rel" );
+		if ( ! omc_pub_dry() ) {
+			wp_mkdir_p( dirname( $target ) );
+			copy( $source, $target );
+		}
+	}
+	if ( omc_pub_dry() ) {
+		omc_pub_option( 'site_icon', $id ?: '(a new attachment)' );
+		return $id;
+	}
+
+	if ( ! $id ) {
+		$id = (int) wp_insert_attachment(
+			[
+				'post_mime_type' => 'image/png',
+				'post_title'     => 'Oops, Mine Co. site icon',
+				'post_status'    => 'inherit',
+			],
+			$target
+		);
+		omc_pub_note( "site icon: attachment #$id created" );
+	}
+	if ( ! $id ) {
+		return 0;
+	}
+
+	/* The site_icon-* sizes are registered by WP_Site_Icon, which only loads in wp-admin. Without
+	   them get_site_icon_url() serves the 512px original into a 32px browser tab. */
+	if ( $stale || ! wp_get_attachment_metadata( $id ) ) {
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+		$omc_icon_sizes = function ( $sizes ) {
+			foreach ( [ 270, 192, 180, 32 ] as $px ) {
+				$sizes[ 'site_icon-' . $px ] = [
+					'width'  => $px,
+					'height' => $px,
+					'crop'   => true,
+				];
+			}
+			return $sizes;
+		};
+		add_filter( 'intermediate_image_sizes_advanced', $omc_icon_sizes );
+		wp_update_attachment_metadata( $id, wp_generate_attachment_metadata( $id, $target ) );
+		remove_filter( 'intermediate_image_sizes_advanced', $omc_icon_sizes );
+		omc_pub_note( "site icon: sizes rendered for attachment #$id" );
+	}
+
+	omc_pub_option( 'site_icon', $id );
+	return $id;
+}
+
 /**
  * Create or update a post/page by slug. Only writes when a field really differs, so
  * post_modified does not churn on a second run.
@@ -1365,7 +1444,8 @@ if ( ! omc_pub_dry() ) {
 	$log['css_cache_busted'] = $omc_busted;
 }
 
-$log['catalog'] = omc_cat_apply();
+$log['catalog']   = omc_cat_apply();
+$log['site_icon'] = omc_pub_site_icon();
 
 /* Post authors: the admin account's display name is its email address, so every journal post
    carried "by gowebdevhero@gmail.com" in an author link crawlers could read. The byline strip is
