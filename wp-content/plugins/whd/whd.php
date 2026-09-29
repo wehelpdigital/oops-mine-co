@@ -30,6 +30,7 @@ require_once WHD_DIR . 'includes/class-whd-story-comments.php';
 require_once WHD_DIR . 'includes/class-whd-ai.php';
 require_once WHD_DIR . 'includes/class-whd-ai-keywords.php';
 require_once WHD_DIR . 'includes/class-whd-ai-admin.php';
+require_once WHD_DIR . 'includes/class-whd-product-admin.php';
 require_once WHD_DIR . 'includes/class-whd-admin.php';
 
 final class WHD_Plugin {
@@ -63,6 +64,9 @@ final class WHD_Plugin {
 		}
 		WHD_Admin::init();
 		WHD_AI_Admin::init();
+		if ( class_exists( 'WooCommerce' ) ) {
+			WHD_Product_Admin::init();
+		}
 	}
 
 	public static function activate() {

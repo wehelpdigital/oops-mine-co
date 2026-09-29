@@ -1,0 +1,92 @@
+/**
+ * The readiness checklist on the product screen, and the Ready column on the list.
+ * Built on admin.css, which already defines the pills.
+ */
+
+.whd-ready__score {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 0 0 10px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+.whd-ready__bar {
+	flex: 1;
+	height: 6px;
+	border-radius: 999px;
+	background: #e6e6e8;
+	overflow: hidden;
+}
+.whd-ready__bar > span {
+	display: block;
+	height: 100%;
+	border-radius: 999px;
+	background: #9c6f63;
+	transition: width .3s ease;
+}
+
+.whd-ready__list {
+	margin: 0 0 10px;
+	padding: 0;
+	list-style: none;
+}
+.whd-ready__item {
+	display: flex;
+	align-items: flex-start;
+	gap: 7px;
+	padding: 3px 0;
+	line-height: 1.45;
+}
+.whd-ready__mark {
+	flex: 0 0 auto;
+	width: 14px;
+	text-align: center;
+	font-weight: 700;
+}
+.whd-ready__item.is-done { color: #646970; }
+.whd-ready__item.is-done .whd-ready__mark { color: #007017; }
+.whd-ready__item.is-todo .whd-ready__mark { color: #b32d2e; }
+.whd-ready__jump { text-decoration: none; }
+
+/* The panel the checklist sent you to, so the jump is visible on a long screen. */
+.whd-flash {
+	animation: whd-flash 1.6s ease-out;
+}
+@keyframes whd-flash {
+	0%, 60% { box-shadow: 0 0 0 3px #9c6f63; }
+	100%    { box-shadow: 0 0 0 3px rgba(156, 111, 99, 0); }
+}
+
+/* Products list */
+.whd-attention {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	margin: 0 8px 0 4px;
+	vertical-align: middle;
+}
+.column-whd_ready { width: 8em; }
+
+@media (prefers-reduced-motion: reduce) {
+	.whd-flash { animation: none; }
+	.whd-ready__bar > span { transition: none; }
+}
+
+/* Recommended extras: present, but visibly not the same class of thing as a missing price. */
+.whd-ready__heading {
+	margin: 12px 0 4px;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+	color: #646970;
+}
+.whd-ready__list--extra .whd-ready__item.is-extra { color: #50575e; }
+.whd-ready__list--extra .whd-ready__item.is-extra .whd-ready__mark { color: #9c6f63; font-weight: 400; }
+.whd-ready__extra-note {
+	margin-left: 6px;
+	font-size: 11px;
+	color: #9c6f63;
+	cursor: help;
+}
