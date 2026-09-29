@@ -894,11 +894,13 @@ function omc_advert_bar_live( $bar ) {
 		return $bar;
 	}
 
+	// Single letters, set in the bar's own face at the bar's own size. The three-letter labels
+	// introduced a second typographic system into a strip 46 pixels tall.
 	$units = [
-		'd' => _x( 'days', 'countdown unit', 'moderno-child' ),
-		'h' => _x( 'hrs', 'countdown unit', 'moderno-child' ),
-		'm' => _x( 'min', 'countdown unit', 'moderno-child' ),
-		's' => _x( 'sec', 'countdown unit', 'moderno-child' ),
+		'd' => _x( 'd', 'countdown unit, short', 'moderno-child' ),
+		'h' => _x( 'h', 'countdown unit, short', 'moderno-child' ),
+		'm' => _x( 'm', 'countdown unit, short', 'moderno-child' ),
+		's' => _x( 's', 'countdown unit, short', 'moderno-child' ),
 	];
 
 	$html  = '<div class="omc-livebar js-omc-countdown" data-until="' . esc_attr( $live['when']->format( DATE_ATOM ) ) . '" data-live-window="' . esc_attr( (string) $window ) . '">';
@@ -963,6 +965,102 @@ function omc_live_reminder_modal() {
 // Priority 5: footer scripts print at 20, and omc.js binds the newsletter form by querying the
 // DOM at load. A dialog printed after that would submit natively and reload the page.
 add_action( 'wp_footer', 'omc_live_reminder_modal', 5 );
+
+/**
+ * The welcome discount a newsletter sign-up earns.
+ *
+ * Read from WHD → Settings so the code the site promises is the code the plugin actually created.
+ * Returning an empty string turns the offer into a plain sign-up with no code.
+ */
+function omc_welcome_coupon() {
+	$code = '';
+	if ( class_exists( 'WHD_Plugin' ) && method_exists( 'WHD_Plugin', 'settings' ) ) {
+		$settings = WHD_Plugin::settings();
+		$code     = (string) ( $settings['exit_coupon'] ?? '' );
+	}
+	if ( $code && function_exists( 'wc_get_coupon_id_by_code' ) && ! wc_get_coupon_id_by_code( $code ) ) {
+		$code = ''; // the code was renamed or deleted; do not promise one that will not work
+	}
+	return (string) apply_filters( 'omc_welcome_coupon', $code );
+}
+
+/** How much that coupon is worth, as a string like "15%". Empty when there is no coupon. */
+function omc_welcome_coupon_amount() {
+	$code = omc_welcome_coupon();
+	if ( ! $code || ! function_exists( 'wc_get_coupon_id_by_code' ) ) {
+		return '';
+	}
+	$id = wc_get_coupon_id_by_code( $code );
+	if ( ! $id ) {
+		return '';
+	}
+	$coupon = new WC_Coupon( $id );
+	return 'percent' === $coupon->get_discount_type() ? rtrim( rtrim( (string) $coupon->get_amount(), '0' ), '.' ) . '%' : '';
+}
+
+/**
+ * The floating tab down the side of every page, and the dialog it opens.
+ *
+ * One job: trade a discount for an email address. The code shown afterwards is a real WooCommerce
+ * coupon, so the promise on the button is one checkout can actually keep — if the coupon is ever
+ * deleted the offer quietly becomes a plain sign-up rather than a broken code.
+ *
+ * The form is the site's own newsletter form, source `discount`, so it lands in the WHD subscriber
+ * table and syncs to whatever provider is connected in WHD → Integrations.
+ */
+function omc_discount_tab() {
+	if ( is_admin() || ! apply_filters( 'omc_discount_tab', true ) ) {
+		return;
+	}
+	$code   = omc_welcome_coupon();
+	$amount = omc_welcome_coupon_amount();
+	$label  = $amount
+		/* translators: %s: discount amount, e.g. 15% */
+		? sprintf( __( 'Get %s off', 'moderno-child' ), $amount )
+		: __( 'Get discount', 'moderno-child' );
+	?>
+	<button type="button" class="omc-disctab" data-omc-modal="omc-discount" aria-haspopup="dialog" aria-controls="omc-discount">
+		<span class="omc-disctab__label"><?php echo esc_html( $label ); ?></span>
+	</button>
+
+	<div class="omc-modal omc-modal--discount" id="omc-discount" role="dialog" aria-modal="true" aria-labelledby="omc-discount-title" hidden>
+		<div class="omc-modal__backdrop" data-omc-modal-close></div>
+		<div class="omc-modal__panel" role="document">
+			<button type="button" class="omc-modal__close" data-omc-modal-close aria-label="<?php esc_attr_e( 'Close', 'moderno-child' ); ?>">&times;</button>
+			<p class="omc-eyebrow"><?php esc_html_e( 'For the list', 'moderno-child' ); ?></p>
+			<h2 class="omc-modal__title" id="omc-discount-title">
+				<?php
+				echo $amount
+					/* translators: %s: discount amount, e.g. 15% */
+					? esc_html( sprintf( __( 'Take %s off your first order', 'moderno-child' ), $amount ) )
+					: esc_html__( 'Join the list', 'moderno-child' );
+				?>
+			</h2>
+			<p class="omc-modal__text">
+				<?php esc_html_e( 'One email when a new rack goes up, one before we go live, and the code below to use whenever you are ready. Nothing else.', 'moderno-child' ); ?>
+			</p>
+			<?php
+			omc_newsletter_form( [
+				'source' => 'discount',
+				'button' => $code ? __( 'Send me the code', 'moderno-child' ) : __( 'Join the list', 'moderno-child' ),
+				'after'  => '#omc-discount .omc-modal__reveal',
+			] );
+			?>
+			<?php if ( $code ) : ?>
+				<div class="omc-modal__reveal" hidden>
+					<p class="omc-modal__code-label"><?php esc_html_e( 'Your code', 'moderno-child' ); ?></p>
+					<p class="omc-modal__code"><?php echo esc_html( $code ); ?></p>
+					<p class="omc-modal__code-note"><?php esc_html_e( 'Enter it at checkout. It is in your inbox too.', 'moderno-child' ); ?></p>
+					<a class="omc-btn omc-btn--solid" href="<?php echo esc_url( omc_shop_url() ); ?>"><?php esc_html_e( 'Start shopping', 'moderno-child' ); ?></a>
+				</div>
+			<?php endif; ?>
+			<p class="omc-modal__small"><?php esc_html_e( 'Unsubscribe from any email, any time.', 'moderno-child' ); ?></p>
+		</div>
+	</div>
+	<?php
+}
+// Priority 5: footer scripts print at 20, and omc.js binds the newsletter form by querying the DOM.
+add_action( 'wp_footer', 'omc_discount_tab', 5 );
 
 /** Newsletter form (progressively enhanced by assets/js/omc.js). */
 function omc_newsletter_form( $args = [] ) {

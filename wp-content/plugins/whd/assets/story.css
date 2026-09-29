@@ -3,6 +3,12 @@
    separate it from the gallery above and the related products below. Falls back to sane values so
    it still looks composed if the child theme's tokens are not there. */
 
+/* Moderno caps anything inside .c-product__after-summary at the boxed product width and centres
+   it, so the band sat 1170 wide with 135px of white down each side — a stripe, not a band. Both
+   sections take the full row back; the content inside them is what gets the gutter. */
+.whd-story,
+.whd-talk { max-width: none !important; width: 100%; }
+
 .whd-story {
 	margin: clamp(34px, 5vw, 70px) 0 0;
 	padding: clamp(34px, 5vw, 66px) 0;
@@ -135,25 +141,37 @@
 }
 
 /* ─── Notes from the community ─────────────────────────────────────────────
-   Sits under the story. Deliberately quieter than the story above it: this is
-   conversation, not copy the shop wrote. ─────────────────────────────────── */
-.whd-talk { padding: clamp(34px, 5vw, 64px) 0; border-bottom: 1px solid var(--omc-line, #e9e1da); }
+   Laid out like the story above it: a column that explains and invites on one
+   side, the notes themselves on the other. As one centred 820px block it read
+   as an afterthought floating in the middle of the page. ─────────────────── */
+.whd-talk { padding: clamp(36px, 5vw, 70px) 0; border-bottom: 1px solid var(--omc-line, #e9e1da); }
 .whd-talk__inner {
 	width: 100%;
-	max-width: 820px;
+	max-width: 1380px;
 	margin: 0 auto;
 	padding: 0 30px;
 	box-sizing: border-box;
 }
+
+@media (min-width: 1024px) {
+	.whd-talk__inner {
+		display: grid;
+		grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+		gap: clamp(40px, 5vw, 80px);
+		align-items: start;
+	}
+	.whd-talk__aside { position: sticky; top: 96px; }
+}
+
 .whd-talk__title {
 	margin: 0;
 	font-family: var(--omc-serif, Georgia, serif);
 	font-weight: 500;
-	font-size: clamp(22px, 2.1vw, 28px);
-	line-height: 1.2;
+	font-size: clamp(24px, 2.3vw, 31px);
+	line-height: 1.15;
 	color: var(--omc-ink, #3a2b26);
-	/* Same fight as the story headings: Moderno uppercases, tracks out and centres everything
-	   directly inside .c-product__after-summary, from its compiled min.css. */
+	/* Moderno uppercases, tracks out and centres everything directly inside
+	   .c-product__after-summary, from its compiled min.css. */
 	text-transform: none !important;
 	letter-spacing: 0 !important;
 	word-spacing: normal !important;
@@ -161,13 +179,24 @@
 }
 .whd-talk,
 .whd-talk__inner,
+.whd-talk__aside,
+.whd-talk__main,
 .whd-talk__lede,
 .whd-talk__text { text-align: left !important; word-spacing: normal !important; }
+
+.whd-talk__count {
+	margin: 10px 0 0;
+	font: 600 11px/1 var(--omc-sans, system-ui, sans-serif);
+	letter-spacing: .16em;
+	text-transform: uppercase;
+	color: var(--omc-rose-dark, #8a6a5e);
+}
 .whd-talk__lede {
-	margin: 8px 0 clamp(22px, 2.6vw, 30px);
+	margin: 12px 0 clamp(20px, 2.4vw, 26px);
 	font: 400 15px/1.7 var(--omc-sans, system-ui, sans-serif);
 	color: var(--omc-muted, #8a7d76);
 }
+
 .whd-talk__flag {
 	margin: 0 0 20px;
 	padding: 11px 15px;
@@ -180,26 +209,40 @@
 .whd-talk__flag--error,
 .whd-talk__flag--login { border-left-color: #b32d2e; }
 
-.whd-talk__list { list-style: none; margin: 0 0 clamp(26px, 3vw, 38px); padding: 0; display: grid; gap: clamp(18px, 2.2vw, 26px); }
-.whd-talk__item { display: flex; gap: 14px; align-items: flex-start; }
+/* Each note is a card, so one on its own still looks placed rather than stranded. */
+.whd-talk__list { list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(14px, 1.6vw, 18px); }
+.whd-talk__item {
+	display: flex;
+	gap: 15px;
+	align-items: flex-start;
+	padding: clamp(18px, 2vw, 24px);
+	background: var(--omc-cream, #fdfaf6);
+	border: 1px solid var(--omc-line, #e9e1da);
+}
 .whd-talk__avatar {
 	flex: 0 0 auto;
-	width: 38px;
-	height: 38px;
+	width: 40px;
+	height: 40px;
 	display: grid;
 	place-items: center;
 	border-radius: 50%;
-	background: var(--omc-cream, #f3eae2);
+	background: #fff;
 	border: 1px solid var(--omc-line, #e9e1da);
-	font: 600 14px/1 var(--omc-sans, system-ui, sans-serif);
+	font: 600 15px/1 var(--omc-sans, system-ui, sans-serif);
 	color: var(--omc-rose-dark, #8a6a5e);
 }
 .whd-talk__body { min-width: 0; }
-.whd-talk__meta { margin: 0 0 4px; font: 400 13px/1.4 var(--omc-sans, system-ui, sans-serif); color: var(--omc-muted, #8a7d76); }
-.whd-talk__meta strong { color: var(--omc-ink, #3a2b26); font-weight: 600; margin-right: 8px; }
+.whd-talk__meta { margin: 0 0 5px; font: 400 13px/1.4 var(--omc-sans, system-ui, sans-serif); color: var(--omc-muted, #8a7d76); }
+.whd-talk__meta strong { color: var(--omc-ink, #3a2b26); font-weight: 600; margin-right: 10px; }
 .whd-talk__text p { margin: 0 0 .6em; font: 400 15px/1.75 var(--omc-sans, system-ui, sans-serif); color: var(--omc-text, #4a3f3a); }
 .whd-talk__text p:last-child { margin-bottom: 0; }
-.whd-talk__empty { margin: 0 0 24px; font: 400 15px/1.7 var(--omc-sans, system-ui, sans-serif); color: var(--omc-muted, #8a7d76); }
+.whd-talk__empty {
+	margin: 0;
+	padding: clamp(22px, 2.6vw, 30px);
+	border: 1px dashed var(--omc-line, #e9e1da);
+	font: 400 15px/1.7 var(--omc-sans, system-ui, sans-serif);
+	color: var(--omc-muted, #8a7d76);
+}
 
 .whd-talk__label { display: block; margin: 0 0 8px; font: 600 11px/1.4 var(--omc-sans, system-ui, sans-serif); letter-spacing: .14em; text-transform: uppercase; color: var(--omc-rose-dark, #8a6a5e); }
 .whd-talk__field {
@@ -217,7 +260,7 @@
 .whd-talk__submit {
 	display: inline-block;
 	margin-top: 12px;
-	padding: 13px 26px;
+	padding: 13px 24px;
 	border: 1px solid var(--omc-ink, #3a2b26);
 	background: var(--omc-ink, #3a2b26);
 	color: #fff;
@@ -230,12 +273,16 @@
 }
 .whd-talk__submit:hover { background: transparent; color: var(--omc-ink, #3a2b26); }
 
-.whd-talk__gate { padding: clamp(20px, 2.6vw, 28px); background: var(--omc-cream, #fdfaf6); border: 1px solid var(--omc-line, #e9e1da); }
-.whd-talk__gate-text { margin: 0; font: 400 15px/1.7 var(--omc-sans, system-ui, sans-serif); color: var(--omc-text, #4a3f3a); }
-.whd-talk__gate-actions { margin: 14px 0 0; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.whd-talk__gate { padding: clamp(20px, 2.4vw, 26px); background: var(--omc-cream, #fdfaf6); border: 1px solid var(--omc-line, #e9e1da); }
+.whd-talk__gate-text { margin: 0; font: 400 14px/1.7 var(--omc-sans, system-ui, sans-serif); color: var(--omc-text, #4a3f3a); }
+.whd-talk__gate-actions { margin: 12px 0 0; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .whd-talk__gate-actions .whd-talk__submit { margin-top: 0; }
 .whd-talk__signin { font: 400 14px/1 var(--omc-sans, system-ui, sans-serif); color: var(--omc-rose-dark, #8a6a5e); text-underline-offset: 3px; }
 
+@media (max-width: 1023px) {
+	.whd-talk__aside { margin-bottom: clamp(24px, 3vw, 32px); }
+}
 @media (max-width: 767px) {
 	.whd-talk__inner { padding: 0 20px; }
+	.whd-talk__item { padding: 16px; gap: 12px; }
 }

@@ -121,69 +121,76 @@ class WHD_Story_Comments {
 		?>
 		<section class="whd-talk" id="whd-talk" aria-labelledby="whd-talk-title">
 			<div class="whd-talk__inner">
-				<h2 class="whd-talk__title" id="whd-talk-title">
-					<?php
-					printf(
-						/* translators: %d: number of comments */
-						esc_html( _n( '%d note from the community', '%d notes from the community', count( $comments ), 'whd' ) ),
-						count( $comments )
-					);
-					?>
-				</h2>
-				<p class="whd-talk__lede"><?php esc_html_e( 'How people styled it, what size they took, what they would tell someone thinking about it.', 'whd' ); ?></p>
 
-				<?php if ( $flag ) : ?>
-					<p class="whd-talk__flag whd-talk__flag--<?php echo esc_attr( $flag ); ?>" role="status">
+				<div class="whd-talk__aside">
+					<h2 class="whd-talk__title" id="whd-talk-title"><?php esc_html_e( 'Notes from the community', 'whd' ); ?></h2>
+					<p class="whd-talk__count">
 						<?php
-						$messages = [
-							'ok'      => __( 'Posted. Thank you for adding it.', 'whd' ),
-							'pending' => __( 'Thank you — your note is waiting to be approved.', 'whd' ),
-							'empty'   => __( 'Write something first and then post it.', 'whd' ),
-							'login'   => __( 'You need an account to post. Sign in and try again.', 'whd' ),
-							'error'   => __( 'Something went wrong saving that. Please try again.', 'whd' ),
-						];
-						echo esc_html( $messages[ $flag ] ?? '' );
+						printf(
+							/* translators: %d: number of notes */
+							esc_html( _n( '%d note', '%d notes', count( $comments ), 'whd' ) ),
+							count( $comments )
+						);
 						?>
 					</p>
-				<?php endif; ?>
+					<p class="whd-talk__lede"><?php esc_html_e( 'How people styled it, what size they took, what they would tell someone thinking about it.', 'whd' ); ?></p>
 
-				<?php if ( $comments ) : ?>
-					<ol class="whd-talk__list">
-						<?php foreach ( $comments as $c ) : ?>
-							<li class="whd-talk__item">
-								<div class="whd-talk__avatar" aria-hidden="true"><?php echo esc_html( mb_strtoupper( mb_substr( $c->comment_author, 0, 1 ) ) ); ?></div>
-								<div class="whd-talk__body">
-									<p class="whd-talk__meta">
-										<strong><?php echo esc_html( $c->comment_author ); ?></strong>
-										<time datetime="<?php echo esc_attr( mysql2date( 'c', $c->comment_date ) ); ?>"><?php echo esc_html( mysql2date( get_option( 'date_format' ), $c->comment_date ) ); ?></time>
-									</p>
-									<div class="whd-talk__text"><?php echo wp_kses_post( wpautop( $c->comment_content ) ); ?></div>
-								</div>
-							</li>
-						<?php endforeach; ?>
-					</ol>
-				<?php else : ?>
-					<p class="whd-talk__empty"><?php esc_html_e( 'Nobody has written about this one yet.', 'whd' ); ?></p>
-				<?php endif; ?>
+					<?php if ( is_user_logged_in() ) : ?>
+						<form class="whd-talk__form" method="post" action="<?php echo esc_url( get_permalink( $id ) ); ?>#whd-talk">
+							<?php wp_nonce_field( 'whd_story_comment_' . $id, 'whd_story_comment_nonce' ); ?>
+							<input type="hidden" name="whd_story_post_id" value="<?php echo esc_attr( $id ); ?>">
+							<label class="whd-talk__label" for="whd-story-comment"><?php esc_html_e( 'Add your note', 'whd' ); ?></label>
+							<textarea class="whd-talk__field" id="whd-story-comment" name="whd_story_comment" rows="4" required
+								placeholder="<?php esc_attr_e( 'What size did you take? What did you wear it with?', 'whd' ); ?>"></textarea>
+							<button type="submit" class="whd-talk__submit"><?php esc_html_e( 'Post my note', 'whd' ); ?></button>
+						</form>
+					<?php else : ?>
+						<div class="whd-talk__gate">
+							<p class="whd-talk__gate-text"><?php esc_html_e( 'Notes come from people with an account, so you always know who is talking. It takes a moment.', 'whd' ); ?></p>
+							<p class="whd-talk__gate-actions">
+								<a class="whd-talk__submit" href="<?php echo esc_url( wp_registration_url() ); ?>"><?php esc_html_e( 'Create an account', 'whd' ); ?></a>
+								<a class="whd-talk__signin" href="<?php echo esc_url( wp_login_url( get_permalink( $id ) . '#whd-talk' ) ); ?>"><?php esc_html_e( 'or sign in', 'whd' ); ?></a>
+							</p>
+						</div>
+					<?php endif; ?>
+				</div>
 
-				<?php if ( is_user_logged_in() ) : ?>
-					<form class="whd-talk__form" method="post" action="<?php echo esc_url( get_permalink( $id ) ); ?>#whd-talk">
-						<?php wp_nonce_field( 'whd_story_comment_' . $id, 'whd_story_comment_nonce' ); ?>
-						<input type="hidden" name="whd_story_post_id" value="<?php echo esc_attr( $id ); ?>">
-						<label class="whd-talk__label" for="whd-story-comment"><?php esc_html_e( 'Add your note', 'whd' ); ?></label>
-						<textarea class="whd-talk__field" id="whd-story-comment" name="whd_story_comment" rows="4" required
-							placeholder="<?php esc_attr_e( 'What size did you take? What did you wear it with?', 'whd' ); ?>"></textarea>
-						<button type="submit" class="whd-talk__submit"><?php esc_html_e( 'Post my note', 'whd' ); ?></button>
-					</form>
-				<?php else : ?>
-					<div class="whd-talk__gate">
-						<p class="whd-talk__gate-text"><?php esc_html_e( 'Notes come from people with an account, so you always know who is talking. It takes a moment.', 'whd' ); ?></p>
-						<p class="whd-talk__gate-actions">
-							<a class="whd-talk__submit" href="<?php echo esc_url( wp_registration_url() ); ?>"><?php esc_html_e( 'Create an account', 'whd' ); ?></a>
-							<a class="whd-talk__signin" href="<?php echo esc_url( wp_login_url( get_permalink( $id ) . '#whd-talk' ) ); ?>"><?php esc_html_e( 'or sign in', 'whd' ); ?></a>
+				<div class="whd-talk__main">
+					<?php if ( $flag ) : ?>
+						<p class="whd-talk__flag whd-talk__flag--<?php echo esc_attr( $flag ); ?>" role="status">
+							<?php
+							$messages = [
+								'ok'      => __( 'Posted. Thank you for adding it.', 'whd' ),
+								'pending' => __( 'Thank you — your note is waiting to be approved.', 'whd' ),
+								'empty'   => __( 'Write something first and then post it.', 'whd' ),
+								'login'   => __( 'You need an account to post. Sign in and try again.', 'whd' ),
+								'error'   => __( 'Something went wrong saving that. Please try again.', 'whd' ),
+							];
+							echo esc_html( $messages[ $flag ] ?? '' );
+							?>
 						</p>
-					</div>
-				<?php endif; ?>
+					<?php endif; ?>
+
+					<?php if ( $comments ) : ?>
+						<ol class="whd-talk__list">
+							<?php foreach ( $comments as $c ) : ?>
+								<li class="whd-talk__item">
+									<div class="whd-talk__avatar" aria-hidden="true"><?php echo esc_html( mb_strtoupper( mb_substr( $c->comment_author, 0, 1 ) ) ); ?></div>
+									<div class="whd-talk__body">
+										<p class="whd-talk__meta">
+											<strong><?php echo esc_html( $c->comment_author ); ?></strong>
+											<time datetime="<?php echo esc_attr( mysql2date( 'c', $c->comment_date ) ); ?>"><?php echo esc_html( mysql2date( get_option( 'date_format' ), $c->comment_date ) ); ?></time>
+										</p>
+										<div class="whd-talk__text"><?php echo wp_kses_post( wpautop( $c->comment_content ) ); ?></div>
+									</div>
+								</li>
+							<?php endforeach; ?>
+						</ol>
+					<?php else : ?>
+						<p class="whd-talk__empty"><?php esc_html_e( 'Nobody has written about this one yet. Yours would be the first.', 'whd' ); ?></p>
+					<?php endif; ?>
+				</div>
+
 			</div>
 		</section>
 		<?php

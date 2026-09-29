@@ -1261,13 +1261,23 @@
 	70% { box-shadow: 0 0 0 7px rgba(233, 211, 202, 0); }
 	100% { box-shadow: 0 0 0 0 rgba(233, 211, 202, 0); }
 }
-.omc-livebar__lead {
-	font-weight: 600;
+/* Everything on the bar is one face at one size with one tracking. The countdown used to arrive
+   in a second style — big serif numerals, tiny caps labels — inside a 46px strip. */
+.omc-livebar,
+.omc-livebar__lead,
+.omc-livebar__clock,
+.omc-livebar__tag,
+.omc-livebar__cta,
+.omc-livebar__watch,
+.omc-livebar__now {
+	font-family: var(--omc-sans);
+	font-size: 11px;
 	letter-spacing: .14em;
 	text-transform: uppercase;
 }
-.omc-livebar__clock { display: inline-flex; align-items: baseline; gap: 9px; }
-.omc-livebar__unit { display: inline-flex; align-items: baseline; gap: 3px; }
+.omc-livebar__lead { font-weight: 600; opacity: .92; }
+.omc-livebar__clock { display: inline-flex; align-items: baseline; gap: 7px; font-weight: 600; }
+.omc-livebar__unit { display: inline-flex; align-items: baseline; gap: 1px; }
 /* .omc-live__num is shared with the home page's live card, where it is a 32px serif numeral in
    deep brown. On a dark bar that is invisible and four times too big, so the bar takes it back. */
 .omc-livebar .omc-live__num,
@@ -1281,14 +1291,26 @@
 	font-variant-numeric: tabular-nums lining-nums;
 	letter-spacing: .02em;
 }
+/* The unit letter rides with its number rather than sitting under it as a caption. */
 .omc-livebar__unit i {
 	font-style: normal;
-	font-size: .78em;
-	letter-spacing: .08em;
-	text-transform: uppercase;
-	opacity: .62;
+	font-size: inherit;
+	letter-spacing: 0;
+	text-transform: lowercase;
+	opacity: .55;
 }
-.omc-livebar__tag { opacity: .8; }
+.omc-livebar__tag { opacity: .72; font-weight: 400; letter-spacing: .1em; }
+.omc-livebar__clock::before,
+.omc-livebar__tag::before {
+	content: "";
+	display: inline-block;
+	width: 1px;
+	height: 11px;
+	margin-right: 14px;
+	background: currentColor;
+	opacity: .28;
+	vertical-align: -1px;
+}
 .omc-livebar__now,
 .omc-livebar__watch { display: none; }
 
@@ -1316,19 +1338,33 @@
 	cursor: pointer;
 	transition: background .25s var(--omc-ease), color .25s var(--omc-ease), border-color .25s var(--omc-ease);
 }
-.omc-livebar__cta:hover,
 .omc-livebar__watch:hover { background: #fff; color: var(--omc-ink); border-color: #fff; }
-.omc-livebar__cta:focus-visible,
 .omc-livebar__watch:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* The one thing on the bar we want clicked, so it stops looking like the text around it.
+   A warm gold rather than a lemon: it carries black at about 12:1 and sits with the rose and
+   cream instead of shouting over them. Note this is outside the stated brand palette. */
+.omc-livebar__cta {
+	--omc-livebar-cta: #f2c14e;
+	background: var(--omc-livebar-cta);
+	border-color: var(--omc-livebar-cta);
+	color: #1c1917;
+}
+.omc-livebar__cta:hover {
+	background: #ffd671;
+	border-color: #ffd671;
+	color: #1c1917;
+}
+.omc-livebar__cta:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
 @media (max-width: 767px) {
 	/* The countdown takes the strip; the icons are in the footer and the logo row. */
 	.omc-announce__social--compact { display: none; }
 	.omc-livebar { gap: 6px 10px; font-size: 11px; min-height: 42px; padding: 8px 14px; }
 	.omc-livebar__tag { display: none; }          /* the button already says what it is for */
-	.omc-livebar__unit i { display: none; }        /* 05 14 42 reads fine without the labels */
+	.omc-livebar__tag::before, .omc-livebar__clock::before { display: none; }
 	.omc-livebar__clock { gap: 6px; }
-	.omc-livebar__unit:not(:last-child)::after { content: ":"; opacity: .5; margin-left: 3px; }
+	.omc-livebar { font-size: 10px; letter-spacing: .1em; }
 }
 
 /* ─── Reminder dialog ─── */
@@ -1391,3 +1427,107 @@
 @media (prefers-reduced-motion: reduce) {
 	.omc-livebar__dot { animation: none; }
 }
+
+/* ─── Floating discount tab ────────────────────────────────────────────────
+   A tab down the right edge on desktop, a pill above the thumb on phones. It
+   trades a real coupon for an email, so it earns being permanently on screen —
+   but it stays small and stays out of the way of the cart and the content. ── */
+.omc-disctab {
+	position: fixed;
+	z-index: 99998;
+	right: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	appearance: none;
+	border: 0;
+	cursor: pointer;
+	background: var(--omc-livebar-cta, #f2c14e);
+	color: #1c1917;
+	font: 600 11px/1 var(--omc-sans);
+	letter-spacing: .16em;
+	text-transform: uppercase;
+	padding: 18px 11px;
+	writing-mode: vertical-rl;
+	box-shadow: -2px 0 18px rgba(28, 20, 17, .18);
+	transition: background .25s var(--omc-ease), padding .25s var(--omc-ease);
+}
+.omc-disctab:hover { background: #ffd671; padding-right: 15px; }
+.omc-disctab:focus-visible { outline: 2px solid var(--omc-ink); outline-offset: -4px; }
+
+@media (max-width: 767px) {
+	.omc-disctab {
+		top: auto;
+		bottom: 16px;
+		right: 16px;
+		transform: none;
+		writing-mode: horizontal-tb;
+		padding: 12px 18px;
+		border-radius: 999px;
+		box-shadow: 0 6px 22px rgba(28, 20, 17, .26);
+	}
+}
+@media print { .omc-disctab { display: none; } }
+
+/* ─── Shared dialog shell (discount, and anything added later) ─── */
+.omc-modal {
+	position: fixed;
+	inset: 0;
+	z-index: 100002;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+}
+.omc-modal[hidden] { display: none; }
+.omc-modal__backdrop { position: absolute; inset: 0; background: rgba(28, 20, 17, .62); }
+.omc-modal__panel {
+	position: relative;
+	width: min(470px, 100%);
+	max-height: 90vh;
+	overflow: auto;
+	padding: clamp(28px, 4vw, 42px);
+	background: var(--omc-cream);
+	border: 1px solid var(--omc-line);
+	box-shadow: 0 30px 80px rgba(28, 20, 17, .32);
+	text-align: center;
+}
+.omc-modal__close {
+	position: absolute;
+	top: 8px;
+	right: 12px;
+	border: 0;
+	background: none;
+	font-size: 28px;
+	line-height: 1;
+	cursor: pointer;
+	color: var(--omc-muted);
+}
+.omc-modal__close:hover { color: var(--omc-ink); }
+.omc-modal__title {
+	font-family: var(--omc-serif);
+	font-weight: 500;
+	font-size: clamp(25px, 2.8vw, 34px);
+	line-height: 1.12;
+	color: var(--omc-ink);
+	margin: 8px 0 0;
+	text-wrap: balance;
+}
+.omc-modal__text {
+	margin: 12px 0 clamp(18px, 2.4vw, 24px);
+	font: 400 15px/1.7 var(--omc-sans);
+	color: var(--omc-text);
+}
+.omc-modal__small { margin: 14px 0 0; font: 400 12px/1.5 var(--omc-sans); color: var(--omc-muted); }
+
+.omc-modal__reveal { margin: clamp(18px, 2.4vw, 24px) 0 0; }
+.omc-modal__code-label { margin: 0; font: 600 10px/1 var(--omc-sans); letter-spacing: .18em; text-transform: uppercase; color: var(--omc-rose-dark); }
+.omc-modal__code {
+	margin: 8px 0 0;
+	padding: 13px 16px;
+	border: 1px dashed var(--omc-rose);
+	background: #fff;
+	font: 600 20px/1 var(--omc-sans);
+	letter-spacing: .22em;
+	color: var(--omc-ink);
+}
+.omc-modal__code-note { margin: 8px 0 14px; font: 400 13px/1.5 var(--omc-sans); color: var(--omc-muted); }
