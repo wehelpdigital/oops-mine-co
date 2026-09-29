@@ -85,14 +85,16 @@ $reviews = [
 	[ 4, 'Good weight, holds its shape after a wash. The hem sits lower on me at 5 foot 2.' ],
 ];
 
-/* Story notes: styling talk rather than verdicts, which is what that section is for. */
+/* Story notes: styling talk rather than verdicts, which is what that section is for.
+   The score is the note's own rating, kept under WHD_Story_Comments::RATING and never counted
+   into the product's star average. A couple are left at 0 — a note without a score is normal. */
 $notes = [
-	'Wore this with flat sandals for a lunch and then swapped to a heel for dinner. Same outfit, completely different evening.',
-	'Sizing note for anyone shorter: I took the smaller size and had the hem taken up an inch. Worth the twelve dollars.',
-	'Goes with the cream knit from here almost too well. I have worn the pair three times this month.',
-	'I asked about the measurements before ordering and got a reply the same morning with the actual numbers. That is why I bought it.',
-	'Packs completely flat, which is why it came on holiday with me and half my closet did not.',
-	'Second one of these I have bought. The first is still going after a year of proper wear.',
+	[ 5, 'Wore this with flat sandals for a lunch and then swapped to a heel for dinner. Same outfit, completely different evening.' ],
+	[ 4, 'Sizing note for anyone shorter: I took the smaller size and had the hem taken up an inch. Worth the twelve dollars.' ],
+	[ 5, 'Goes with the cream knit from here almost too well. I have worn the pair three times this month.' ],
+	[ 0, 'I asked about the measurements before ordering and got a reply the same morning with the actual numbers. That is why I bought it.' ],
+	[ 4, 'Packs completely flat, which is why it came on holiday with me and half my closet did not.' ],
+	[ 5, 'Second one of these I have bought. The first is still going after a year of proper wear.' ],
 ];
 
 $products = get_posts( [ 'post_type' => 'product', 'numberposts' => -1, 'post_status' => 'publish', 'orderby' => 'ID', 'order' => 'ASC' ] );
@@ -158,7 +160,7 @@ foreach ( $products as $i => $post ) {
 			'comment_post_ID'      => $post->ID,
 			'comment_author'       => $who[0],
 			'comment_author_email' => $who[1],
-			'comment_content'      => $note,
+			'comment_content'      => $note[1],
 			'comment_type'         => WHD_Story_Comments::TYPE,
 			'comment_approved'     => 1,
 			'comment_date'         => wp_date( 'Y-m-d H:i:s', $when ),
@@ -166,6 +168,9 @@ foreach ( $products as $i => $post ) {
 		] );
 		if ( $id ) {
 			add_comment_meta( $id, OMC_DEMO_FLAG, 1 );
+			if ( $note[0] ) {
+				add_comment_meta( $id, WHD_Story_Comments::RATING, $note[0], true );
+			}
 			$log['notes']++;
 		}
 	}

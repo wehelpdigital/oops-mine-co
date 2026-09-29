@@ -22,6 +22,17 @@ class WHD_Story_Comments {
 
 	const TYPE = 'whd_story';
 
+	/**
+	 * Not 'rating'.
+	 *
+	 * WooCommerce works out a product's star average with a raw SQL query over comment meta with
+	 * meta_key = 'rating', and that query does not filter by comment_type — the comments_clauses
+	 * filter this class uses to keep notes out of review queries never sees it. A note written
+	 * under the review key would quietly move the product's rating, which is the one thing this
+	 * section exists to stay out of.
+	 */
+	const RATING = 'whd_rating';
+
 	public static function init() {
 		// Just after the story, which itself sits at 15.
 		add_action( 'woocommerce_after_single_product_summary', [ __CLASS__, 'render' ], 16 );
@@ -87,6 +98,9 @@ class WHD_Story_Comments {
 			exit;
 		}
 
+		$rating = isset( $_POST['whd_story_rating'] ) ? (int) $_POST['whd_story_rating'] : 0;
+		$rating = ( $rating >= 1 && $rating <= 5 ) ? $rating : 0;
+
 		$user = wp_get_current_user();
 		$id   = wp_insert_comment( [
 			'comment_post_ID'      => $post_id,
@@ -98,9 +112,49 @@ class WHD_Story_Comments {
 			'comment_approved'     => (int) ! get_option( 'comment_moderation' ),
 		] );
 
+		if ( $id && $rating ) {
+			add_comment_meta( $id, self::RATING, $rating, true );
+		}
+
 		$flag = $id ? ( get_option( 'comment_moderation' ) ? 'pending' : 'ok' ) : 'error';
 		wp_safe_redirect( add_query_arg( 'whd_comment', $flag, get_permalink( $post_id ) ) . '#whd-talk' );
 		exit;
+	}
+
+	/* ─────────────────────────── Ratings ─────────────────────────── */
+
+	/** The rating on one note, or 0 when it was left blank. */
+	public static function rating( $comment_id ) {
+		return (int) get_comment_meta( (int) $comment_id, self::RATING, true );
+	}
+
+	/**
+	 * The average across the notes that carried a rating, and how many did.
+	 *
+	 * Its own number, shown under its own label. Not the product's star rating, and never mixed
+	 * into it — a note is a styling remark, a review is a verdict.
+	 *
+	 * @param array $comments Comment objects.
+	 * @return array [ average (float, one decimal), count (int) ]
+	 */
+	public static function average( array $comments ) {
+		$scores = [];
+		foreach ( $comments as $c ) {
+			$score = self::rating( $c->comment_ID );
+			if ( $score ) {
+				$scores[] = $score;
+			}
+		}
+		return $scores ? [ round( array_sum( $scores ) / count( $scores ), 1 ), count( $scores ) ] : [ 0, 0 ];
+	}
+
+	/** Five stars, filled to $score. Decorative — the number beside it is what gets read out. */
+	private static function stars( $score ) {
+		$out = '<span class="whd-stars" aria-hidden="true">';
+		for ( $i = 1; $i <= 5; $i++ ) {
+			$out .= '<span class="whd-stars__s' . ( $i <= round( $score ) ? ' is-on' : '' ) . '">&#9733;</span>';
+		}
+		return $out . '</span>';
 	}
 
 	/* ─────────────────────────── Output ─────────────────────────── */
@@ -133,12 +187,59 @@ class WHD_Story_Comments {
 						);
 						?>
 					</p>
+					<?php
+					[ $whd_avg, $whd_rated ] = self::average( $comments );
+					if ( $whd_rated ) :
+						?>
+						<p class="whd-talk__avg">
+							<?php echo self::stars( $whd_avg ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- markup built above from an integer ?>
+							<span class="whd-talk__avg-num"><?php echo esc_html( number_format_i18n( $whd_avg, 1 ) ); ?></span>
+							<span class="whd-talk__avg-of">
+								<?php
+								printf(
+									/* translators: %d: how many notes carried a rating */
+									esc_html( _n( 'from %d note', 'from %d notes', $whd_rated, 'whd' ) ),
+									(int) $whd_rated
+								);
+								?>
+							</span>
+						</p>
+					<?php endif; ?>
 					<p class="whd-talk__lede"><?php esc_html_e( 'How people styled it, what size they took, what they would tell someone thinking about it.', 'whd' ); ?></p>
 
 					<?php if ( is_user_logged_in() ) : ?>
 						<form class="whd-talk__form" method="post" action="<?php echo esc_url( get_permalink( $id ) ); ?>#whd-talk">
 							<?php wp_nonce_field( 'whd_story_comment_' . $id, 'whd_story_comment_nonce' ); ?>
 							<input type="hidden" name="whd_story_post_id" value="<?php echo esc_attr( $id ); ?>">
+							<fieldset class="whd-rate">
+								<legend class="whd-talk__label"><?php esc_html_e( 'How did it work out?', 'whd' ); ?></legend>
+								<div class="whd-rate__stars">
+									<?php
+									/*
+									 * Radios in reverse order, so the CSS sibling selector can light up
+									 * every star to the left of the one being hovered without any script.
+									 * Optional on purpose: a note about sizing is worth reading with or
+									 * without a score attached.
+									 */
+									for ( $whd_i = 5; $whd_i >= 1; $whd_i-- ) :
+										?>
+										<input type="radio" class="whd-rate__input" id="whd-rate-<?php echo (int) $whd_i; ?>" name="whd_story_rating" value="<?php echo (int) $whd_i; ?>">
+										<label class="whd-rate__star" for="whd-rate-<?php echo (int) $whd_i; ?>">
+											<span aria-hidden="true">&#9733;</span>
+											<span class="screen-reader-text">
+												<?php
+												printf(
+													/* translators: %d: a star rating out of five */
+													esc_html( _n( '%d star', '%d stars', $whd_i, 'whd' ) ),
+													(int) $whd_i
+												);
+												?>
+											</span>
+										</label>
+									<?php endfor; ?>
+								</div>
+								<p class="whd-rate__hint"><?php esc_html_e( 'Optional.', 'whd' ); ?></p>
+							</fieldset>
 							<label class="whd-talk__label" for="whd-story-comment"><?php esc_html_e( 'Add your note', 'whd' ); ?></label>
 							<textarea class="whd-talk__field" id="whd-story-comment" name="whd_story_comment" rows="4" required
 								placeholder="<?php esc_attr_e( 'What size did you take? What did you wear it with?', 'whd' ); ?>"></textarea>
@@ -179,6 +280,21 @@ class WHD_Story_Comments {
 									<div class="whd-talk__body">
 										<p class="whd-talk__meta">
 											<strong><?php echo esc_html( $c->comment_author ); ?></strong>
+											<?php $whd_score = self::rating( $c->comment_ID ); ?>
+											<?php if ( $whd_score ) : ?>
+												<span class="whd-talk__rating">
+													<?php echo self::stars( $whd_score ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from an integer above ?>
+													<span class="screen-reader-text">
+														<?php
+														printf(
+															/* translators: %d: a star rating out of five */
+															esc_html__( '%d out of 5', 'whd' ),
+															(int) $whd_score
+														);
+														?>
+													</span>
+												</span>
+											<?php endif; ?>
 											<time datetime="<?php echo esc_attr( mysql2date( 'c', $c->comment_date ) ); ?>"><?php echo esc_html( mysql2date( get_option( 'date_format' ), $c->comment_date ) ); ?></time>
 										</p>
 										<div class="whd-talk__text"><?php echo wp_kses_post( wpautop( $c->comment_content ) ); ?></div>
