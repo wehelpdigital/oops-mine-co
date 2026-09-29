@@ -18,9 +18,10 @@ defined( 'ABSPATH' ) || exit;
 
 $omc_images = omc_images();
 $omc_shop   = omc_shop_url();
-// Product grids are scoped to one category tree (default: Women — this is a womenswear boutique).
+// Product grids are scoped to one category tree, resolved from the shop rather than hard-coded —
+// a slug with no term behind it renders an empty grid and says nothing about why.
 // Change with: add_filter( 'omc_home_product_category', fn() => 'your-slug' ); return '' for all products.
-$omc_cat    = apply_filters( 'omc_home_product_category', 'women' );
+$omc_cat    = apply_filters( 'omc_home_product_category', omc_shop_root_category() );
 $omc_cat_at = $omc_cat ? ' category="' . esc_attr( $omc_cat ) . '"' : '';
 
 get_header();
@@ -141,7 +142,7 @@ get_header();
 	<?php if ( count( $omc_tiles ) >= 4 ) : ?>
 		<section class="omc-section omc-mosaic-section omc-reveal" aria-labelledby="omc-mosaic-title">
 			<div class="l-section__container-wide">
-				<?php omc_section_head( __( 'Shop the look', 'moderno-child' ), __( 'Pieces we can’t stop <em>styling</em>', 'moderno-child' ), $omc_shop, __( 'Shop all', 'moderno-child' ) ); ?>
+				<?php omc_section_head( __( 'Shop the look', 'moderno-child' ), __( 'Pieces we can’t stop <em>styling</em>', 'moderno-child' ), $omc_shop, __( 'Shop all', 'moderno-child' ), 'omc-mosaic-title' ); ?>
 				<div class="omc-mosaic">
 					<?php foreach ( $omc_tiles as $omc_t ) :
 						$omc_t   = wp_parse_args( $omc_t, [ 'image' => '', 'label' => '', 'url' => $omc_shop, 'size' => '1x1', 'focus' => '' ] );
@@ -224,7 +225,8 @@ get_header();
 					__( 'Shop by category', 'moderno-child' ),
 					sprintf( __( 'Find your next %s', 'moderno-child' ), '<span class="omc-type js-omc-type" data-words="' . esc_attr( implode( '|', $omc_type_words ) ) . '">' . esc_html__( 'favourite', 'moderno-child' ) . '</span>' ),
 					$omc_shop,
-					__( 'View all', 'moderno-child' )
+					__( 'View all', 'moderno-child' ),
+					'omc-cats-title'
 				);
 				?>
 				<div class="omc-cats__grid">
@@ -277,7 +279,7 @@ get_header();
 	<!-- ───────────── New arrivals ───────────── -->
 	<section class="omc-section omc-products omc-reveal" aria-labelledby="omc-new-title">
 		<div class="l-section__container-wide">
-			<?php omc_section_head( __( 'Just landed', 'moderno-child' ), __( 'New <em>arrivals</em>', 'moderno-child' ), omc_new_arrivals_url(), __( 'Shop all new', 'moderno-child' ) ); ?>
+			<?php omc_section_head( __( 'Just landed', 'moderno-child' ), __( 'New <em>arrivals</em>', 'moderno-child' ), omc_new_arrivals_url(), __( 'Shop all new', 'moderno-child' ), 'omc-new-title' ); ?>
 			<div class="omc-products__grid">
 				<?php echo do_shortcode( '[products limit="8" columns="4" orderby="date" order="DESC" visibility="visible"' . $omc_cat_at . ']' ); ?>
 			</div>
@@ -310,7 +312,7 @@ get_header();
 	<!-- ───────────── Most loved ───────────── -->
 	<section class="omc-section omc-products omc-reveal" aria-labelledby="omc-loved-title">
 		<div class="l-section__container-wide">
-			<?php omc_section_head( __( 'Most loved', 'moderno-child' ), __( 'The pieces everyone keeps <em>reaching for</em>', 'moderno-child' ), omc_shop_url( [ 'orderby' => 'popularity' ] ), __( 'Shop best sellers', 'moderno-child' ) ); ?>
+			<?php omc_section_head( __( 'Most loved', 'moderno-child' ), __( 'The pieces everyone keeps <em>reaching for</em>', 'moderno-child' ), omc_shop_url( [ 'orderby' => 'popularity' ] ), __( 'Shop best sellers', 'moderno-child' ), 'omc-loved-title' ); ?>
 			<div class="omc-products__grid">
 				<?php echo do_shortcode( '[products limit="4" columns="4" best_selling="true" visibility="visible"' . $omc_cat_at . ']' ); ?>
 			</div>
@@ -330,7 +332,8 @@ get_header();
 					__( 'Watch', 'moderno-child' ),
 					__( 'See how it <em>moves</em>', 'moderno-child' ),
 					$omc_vid_hub ? get_permalink( $omc_vid_hub ) : '',
-					$omc_vid_hub ? __( 'All videos', 'moderno-child' ) : ''
+					$omc_vid_hub ? __( 'All videos', 'moderno-child' ) : '',
+					'omc-vidrow-title'
 				);
 				?>
 				<p class="omc-vidrow__lede">
@@ -359,7 +362,7 @@ get_header();
 		?>
 		<section class="omc-section omc-journal omc-reveal" aria-labelledby="omc-journal-title">
 			<div class="l-section__container-wide">
-				<?php omc_section_head( __( 'Styling notes', 'moderno-child' ), __( 'From the <em>journal</em>', 'moderno-child' ), omc_page_url( 'blog', '/blog/' ), __( 'All stories', 'moderno-child' ) ); ?>
+				<?php omc_section_head( __( 'Styling notes', 'moderno-child' ), __( 'From the <em>journal</em>', 'moderno-child' ), omc_page_url( 'blog', '/blog/' ), __( 'All stories', 'moderno-child' ), 'omc-journal-title' ); ?>
 				<div class="omc-journal__grid">
 					<?php foreach ( $omc_posts as $omc_post ) : ?>
 						<article class="omc-card">

@@ -169,6 +169,34 @@ function omc_image( $file_or_id, $size = 'full', $attrs = [] ) {
 	return $id ? wp_get_attachment_image( $id, $size, false, $attrs ) : '';
 }
 
+/**
+ * The category every shop grid is scoped to.
+ *
+ * Resolved, not named. The demo tree's root was "women"; catalog.json replaced it with "clothing",
+ * and a [products category="…"] pointing at a slug with no term behind it returns an empty grid
+ * with no warning of any kind — which is how two whole rows of the home page went blank without
+ * anything in a log to say so. Anything that scopes a grid should ask this rather than guess.
+ *
+ * @return string A product_cat slug that exists and has products, or '' meaning the whole shop.
+ */
+function omc_shop_root_category() {
+	$found = '';
+	foreach ( [ 'clothing', 'women' ] as $slug ) {
+		$term = get_term_by( 'slug', $slug, 'product_cat' );
+		if ( $term && ! is_wp_error( $term ) && $term->count > 0 ) {
+			$found = $slug;
+			break;
+		}
+	}
+
+	/**
+	 * Filter the category the shop grids are scoped to.
+	 *
+	 * @param string $found Slug, or '' for every product.
+	 */
+	return (string) apply_filters( 'omc_shop_root_category', $found );
+}
+
 /** Product categories shown as cards on the home page (slugs, in order; 4 per row). */
 function omc_home_categories() {
 	/*
@@ -772,13 +800,15 @@ function omc_banner( $b, $size = 'tile' ) {
 }
 
 /** Section header used by every home section. */
-function omc_section_head( $eyebrow, $title, $link_url = '', $link_text = '' ) {
+function omc_section_head( $eyebrow, $title, $link_url = '', $link_text = '', $id = '' ) {
 	echo '<header class="omc-section__head">';
 	echo '<div>';
 	if ( $eyebrow ) {
 		echo '<p class="omc-eyebrow">' . esc_html( $eyebrow ) . '</p>';
 	}
-	echo '<h2 class="omc-section__title">' . wp_kses( $title, [ 'em' => [], 'br' => [], 'span' => [ 'class' => [], 'data-words' => [] ] ] ) . '</h2>';
+	// The id the surrounding <section> names in aria-labelledby. Without it that reference points
+	// at nothing and the section reaches a screen reader with no name at all.
+	echo '<h2 class="omc-section__title"' . ( $id ? ' id="' . esc_attr( $id ) . '"' : '' ) . '>' . wp_kses( $title, [ 'em' => [], 'br' => [], 'span' => [ 'class' => [], 'data-words' => [] ] ] ) . '</h2>';
 	echo '</div>';
 	if ( $link_url ) {
 		echo '<a class="omc-link" href="' . esc_url( $link_url ) . '">' . esc_html( $link_text ) . omc_icon( 'arrow' ) . '</a>';

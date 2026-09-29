@@ -1144,10 +1144,12 @@
 /* ─── Style videos on the home page ─────────────────────────────────────────
    The cards themselves come from omc-video.css, which is enqueued here too.
    This only adds the lede paragraph and the row spacing. ─────────────────── */
+/* Full width of the section, like the heading above it and the cards below — a 640px column
+   under a full-width head read as a mistake. The type steps up with the measure so the line
+   length stays something a person can follow back to the left edge. */
 .omc-vidrow__lede {
-	max-width: 640px;
 	margin: clamp(10px, 1.4vw, 18px) 0 clamp(22px, 2.6vw, 34px);
-	font: 400 clamp(15px, 1.15vw, 17px)/1.75 var(--omc-sans);
+	font: 400 clamp(16px, 1.35vw, 20px)/1.7 var(--omc-sans);
 	color: var(--omc-text);
 	text-wrap: pretty;
 }
