@@ -1469,15 +1469,17 @@
 	cursor: pointer;
 	background: var(--omc-livebar-cta, #f2c14e);
 	color: #1c1917;
-	font: 600 11px/1 var(--omc-sans);
-	letter-spacing: .16em;
+	font: 700 14px/1 var(--omc-sans);
+	letter-spacing: .14em;
 	text-transform: uppercase;
-	padding: 18px 11px;
+	padding: 26px 15px;
 	writing-mode: vertical-rl;
-	box-shadow: -2px 0 18px rgba(28, 20, 17, .18);
+	/* Rounded on the side that meets the page, square against the edge it is stuck to. */
+	border-radius: 6px 0 0 6px;
+	box-shadow: -3px 0 22px rgba(28, 20, 17, .22);
 	transition: background .25s var(--omc-ease), padding .25s var(--omc-ease);
 }
-.omc-disctab:hover { background: #ffd671; padding-right: 15px; }
+.omc-disctab:hover { background: #ffd671; padding-right: 20px; }
 .omc-disctab:focus-visible { outline: 2px solid var(--omc-ink); outline-offset: -4px; }
 
 @media (max-width: 767px) {
@@ -1487,7 +1489,9 @@
 		right: 16px;
 		transform: none;
 		writing-mode: horizontal-tb;
-		padding: 12px 18px;
+		font-size: 13px;
+		letter-spacing: .1em;
+		padding: 15px 22px;
 		border-radius: 999px;
 		box-shadow: 0 6px 22px rgba(28, 20, 17, .26);
 	}
