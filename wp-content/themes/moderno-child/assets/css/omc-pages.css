@@ -75,7 +75,22 @@
 	text-transform: none;
 	color: var(--omc-ink);
 	margin: 6px 0 0;
+	/* Two lines whether the name needs them or not. The price then sits at the same height on
+	   every card, which is the whole reason a row of them looks level. */
+	min-height: 2.3em;
+	align-items: flex-start;
 }
+/* The name is one flex child and the rating badge the other; min-width lets the name wrap
+   instead of pushing the badge out, and the clamp keeps a third line from moving the price. */
+.c-product-grid__item .c-product-grid__title {
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+	overflow: hidden;
+	min-width: 0;
+}
+.c-product-grid__item .c-product-grid__rating { flex: 0 0 auto; }
 .c-product-grid__price-wrap { margin-top: 8px; font: 500 13px/1.4 var(--omc-sans); letter-spacing: .02em; color: var(--omc-ink); }
 .c-product-grid__price-wrap ins { color: var(--omc-rose-dark); }
 .woocommerce-pagination { padding-top: clamp(24px, 3vw, 44px); }
@@ -404,10 +419,13 @@
 	width: auto !important;
 	max-width: none;
 }
-/* The theme's per-row selector out-ranks a plain descendant rule, so this has to beat it. */
+/* The theme's per-row selector out-ranks a plain descendant rule, so this has to beat it.
+   100%, not auto: the card is an inline-block, and `auto` makes it shrink to its own content —
+   which left one card in four narrower than its column, with a smaller photograph than its
+   neighbours and its text starting higher. */
 .c-product__products--related .c-product-grid__list .c-product-grid__item,
 .c-product__products--recently .c-product-grid__list .c-product-grid__item {
-	width: auto !important;
+	width: 100% !important;
 	margin-left: 0 !important;
 	margin-right: 0 !important;
 }
