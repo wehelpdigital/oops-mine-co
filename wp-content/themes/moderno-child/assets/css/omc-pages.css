@@ -476,3 +476,53 @@
 	color: var(--omc-ink);
 }
 
+
+/* ─── Phones: reach and legibility ─────────────────────────────────────────
+   Measured rather than guessed: at 390px the site had 43–79 controls smaller
+   than 32px and 22–35 runs of text under 12px on each page.
+
+   The controls keep their drawn size — an 18px dot that becomes a 40px button
+   looks wrong — and gain the reach through a pseudo-element. Nothing moves;
+   the finger just stops missing. ───────────────────────────────────────── */
+@media (max-width: 767px) {
+
+	/* The tagline under the logo was 8px, which is decoration rather than text. */
+	.omc-tagline { font-size: 10px; letter-spacing: .12em; text-indent: .12em; }
+
+	/* The journal list's date and category line. */
+	.c-post-list__meta-date,
+	.c-post-list__categories-item-link,
+	.c-post-list__continue { font-size: 12px; }
+
+	/* Hit areas. inset is negative, so the box grows outwards from the control.
+	   Horizontal growth is kept smaller than vertical: these sit in rows, and a
+	   target that swallows its neighbour is worse than one that is small. */
+	.c-product-grid__thumb-button,
+	.js-wishlist-btn,
+	.c-header__button-link,
+	.js-search-clear,
+	.h-cb--svg,
+	.c-post-list__continue,
+	.c-post-list__categories-item-link {
+		position: relative;
+	}
+	.c-product-grid__thumb-button::after,
+	.js-wishlist-btn::after,
+	.c-header__button-link::after,
+	.js-search-clear::after,
+	.h-cb--svg::after,
+	.c-post-list__continue::after,
+	.c-post-list__categories-item-link::after {
+		content: "";
+		position: absolute;
+		inset: -11px -6px;
+		/* Behind the control's own content, in front of nothing else. */
+		z-index: 0;
+	}
+	/* The header icons have room around them, so they can grow both ways. */
+	.c-header__button-link::after { inset: -8px; }
+
+	/* An 18px dot on a photograph is hard to see before it is hard to press. */
+	.c-product-grid__thumb-button,
+	.js-wishlist-btn { opacity: 1; }
+}

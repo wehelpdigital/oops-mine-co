@@ -57,7 +57,7 @@
 	bottom: var(--omc-wm-inset, 12px);
 	width: var(--omc-wm, 56px);
 	aspect-ratio: 1071 / 729;
-	background: url(../img/oops-logo-white.png) center / contain no-repeat;
+	background: url(../img/oops-logo-white-400.png) center / contain no-repeat;
 	opacity: var(--omc-wm-opacity, .55);
 	filter: drop-shadow(0 1px 6px rgba(58, 43, 38, .28));
 	z-index: 2;
@@ -75,7 +75,7 @@
 .omc-live__media { --omc-wm: 64px; --omc-wm-inset: 14px; }
 .omc-card__media { --omc-wm: 56px; --omc-wm-inset: 12px; }
 .omc-cat__media, .c-product-grid__thumb-wrap { --omc-wm: 40px; --omc-wm-inset: 8px; --omc-wm-opacity: .34; }
-.omc-cat__media::after, .c-product-grid__thumb-wrap::after { background-image: url(../img/oops-logo-rose.png); filter: none; }
+.omc-cat__media::after, .c-product-grid__thumb-wrap::after { background-image: url(../img/oops-logo-rose-400.png); filter: none; }
 .c-product-grid__thumb-wrap::after { right: auto; left: var(--omc-wm-inset, 8px); } /* the cart icon sits bottom-right on phones */
 .c-product-grid__item:hover .c-product-grid__thumb-wrap::after { opacity: 0; }   /* the add-to-cart bar slides over that corner */
 
@@ -1621,4 +1621,55 @@
 
 @media (prefers-reduced-motion: reduce) {
 	.omc-tagline__item { transition: none; transform: none; }
+}
+
+
+/* ─── Page transitions ─────────────────────────────────────────────────────
+   The content cross-fades; the header, the countdown bar and the footer stay
+   put, so moving between pages reads as the page changing rather than the
+   whole site being rebuilt.
+
+   Opacity only, and only on <main>. A transform would create a containing
+   block for the fixed elements that live inside it — the shop's filter drawer
+   among them — and put them in the wrong place. `backwards` holds the start
+   state before the animation runs, so there is no flash of content first, and
+   leaves nothing applied once it has finished: no lingering stacking context
+   over the drawer or the dialogs. ─────────────────────────────────────── */
+.js main.l-inner {
+	animation: omc-page-in .5s var(--omc-ease) backwards;
+}
+@keyframes omc-page-in {
+	from { opacity: 0; }
+	to   { opacity: 1; }
+}
+.js.is-leaving main.l-inner {
+	opacity: 0;
+	transition: opacity .2s var(--omc-ease);
+	animation: none;
+}
+
+/* Something has to happen in the moment between the click and the new page. */
+.omc-progress {
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 2px;
+	width: 0;
+	z-index: 100002;
+	background: linear-gradient(90deg, var(--omc-rose), var(--omc-rose-light));
+	opacity: 0;
+	pointer-events: none;
+	transition: width .25s ease-out, opacity .2s;
+}
+.is-leaving .omc-progress {
+	width: 82%;
+	opacity: 1;
+	/* Creeps rather than completes: it cannot know how long the server will take. */
+	transition: width 1.6s cubic-bezier(.1, .8, .3, 1), opacity .12s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.js main.l-inner,
+	.js.is-leaving main.l-inner { animation: none; opacity: 1; transition: none; }
+	.omc-progress { display: none; }
 }

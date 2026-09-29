@@ -19,7 +19,7 @@ define( 'OMC_DIR', get_stylesheet_directory() );
 define( 'OMC_URI', get_stylesheet_directory_uri() );
 
 /* Feature modules (each file is self-contained and hooks itself). */
-foreach ( [ 'video', 'landing', 'pdp', 'cart', 'social' ] as $omc_module ) {
+foreach ( [ 'video', 'landing', 'pdp', 'cart', 'social', 'perf' ] as $omc_module ) {
 	$omc_module_file = OMC_DIR . '/inc/' . $omc_module . '.php';
 	if ( file_exists( $omc_module_file ) ) {
 		require_once $omc_module_file;
@@ -541,7 +541,25 @@ function omc_logo( $variant = 'rose' ) {
 	if ( in_array( $variant, [ 'rose', 'black' ], true ) && $custom ) {
 		return [ 'url' => $custom, 'width' => (int) ideapark_mod( 'logo__width' ), 'height' => (int) ideapark_mod( 'logo__height' ), 'custom' => true ];
 	}
-	return apply_filters( 'omc_logo', [ 'url' => OMC_URI . '/assets/img/oops-logo-' . $variant . '.png', 'width' => 1071, 'height' => 729, 'custom' => false ], $variant );
+	/*
+	 * The 400px copy, not the 1071px master. The header draws the mark between 78 and 132 pixels
+	 * wide, so the master was about 48 kB of PNG per page — twice on the home page — to paint
+	 * something smaller than a thumbnail. 400px is still 3x for the largest of those slots.
+	 * Regenerate with .ftp-sync/tools/make-logo-small.php after changing the palette.
+	 */
+	$file = OMC_DIR . '/assets/img/oops-logo-' . $variant . '-400.png';
+	$url  = OMC_URI . '/assets/img/oops-logo-' . $variant . ( file_exists( $file ) ? '-400' : '' ) . '.png';
+
+	return apply_filters(
+		'omc_logo',
+		[
+			'url'    => $url,
+			'width'  => 1071,   // the intrinsic ratio the browser should reserve, not the file's pixels
+			'height' => 729,
+			'custom' => false,
+		],
+		$variant
+	);
 }
 
 /** <img> for omc_logo(): intrinsic width/height (no layout shift), alt = site name, any extra attributes. */

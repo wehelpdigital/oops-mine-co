@@ -260,6 +260,69 @@
 	});
 })();
 
+/* Page transitions: fade the content out, creep a progress bar, then navigate.
+
+   Deliberately conservative about what it will intercept. Anything that is not a plain left-click
+   on a same-origin document link is left to the browser: new tabs, downloads, modifier-clicks,
+   anchors, mailto and tel, and anything a script has already handled. */
+(function () {
+	'use strict';
+	if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { return; }
+
+	var bar = document.createElement('div');
+	bar.className = 'omc-progress';
+	bar.setAttribute('aria-hidden', 'true');
+	document.body.appendChild(bar);
+
+	var root = document.documentElement;
+	var timer = null;
+
+	function stop() {
+		root.classList.remove('is-leaving');
+		clearTimeout(timer);
+		timer = null;
+	}
+
+	/* Coming back through the bfcache restores the faded-out page exactly as it was left. Without
+	   this the visitor presses Back and lands on an invisible page. */
+	window.addEventListener('pageshow', stop);
+	window.addEventListener('popstate', stop);
+
+	/* Anchors that are really buttons: WooCommerce's ajax add-to-cart and remove-from-cart, the
+	   theme's quick view and filters, our own dialog triggers. Most of them call preventDefault and
+	   would be caught by the check below anyway, but not all of them do it on every code path. */
+	var NOT_A_LINK = '.add_to_cart_button, .ajax_add_to_cart, .remove_from_cart_button,' +
+		' .js-quick-view, .js-product-quick-view, [data-omc-modal], [data-omc-live-open],' +
+		' [data-omc-modal-close], .js-filter, .js-menu-item > a[href="#"], .owl-nav a';
+
+	/* On window, not document: a click bubbles to window last, so by the time this runs every
+	   other handler on the page has had its turn and any preventDefault is visible here. */
+	window.addEventListener('click', function (e) {
+		if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) { return; }
+		var a = e.target.closest && e.target.closest('a[href]');
+		if (!a || a.target && a.target !== '_self') { return; }
+		if (a.hasAttribute('download') || a.getAttribute('rel') === 'external') { return; }
+		if (a.matches && a.matches(NOT_A_LINK)) { return; }
+
+		var href = a.getAttribute('href') || '';
+		if (!href || href.charAt(0) === '#' || /^(mailto:|tel:|javascript:)/i.test(href)) { return; }
+
+		var url;
+		try { url = new URL(a.href, location.href); } catch (err) { return; }
+		if (url.origin !== location.origin) { return; }
+		/* Same page, different hash — that is a jump, not a navigation. */
+		if (url.pathname === location.pathname && url.search === location.search && url.hash) { return; }
+
+		e.preventDefault();
+		root.classList.add('is-leaving');
+		/* Long enough to read as a transition, short enough not to feel like lag. */
+		setTimeout(function () { location.href = url.href; }, 180);
+		/* If the navigation never happens — a download the server decided to send, a blocked
+		   request — put the page back rather than leaving it blank. */
+		timer = setTimeout(stop, 2500);
+	});
+})();
+
 /* Header tagline: cross-fade the phrases stacked under the logo.
    One phrase, or a reduced-motion preference, means the first line simply stays. */
 (function () {
