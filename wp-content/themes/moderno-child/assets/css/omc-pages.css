@@ -355,18 +355,98 @@
 .single-post .c-page__meta { display: none; }
 
 
-/* ─── Recently viewed ───
-   The theme gives this row the "boxed" product width while the related-products row directly above
-   it runs full width, so the two sat at different widths and different left edges on the same
-   screen — 1104 starting at 168 against 1380 starting at 30. Match them. */
+/* ─── Recently viewed and You might also like ───
+   The theme gave these two rows different widths and different left edges on the same screen —
+   1104 starting at 168 against 1380 starting at 30. Both are now the full section width.
+
+   No gutter here: .c-product__products--boxed already carries one, and adding a second pushed the
+   cards 30px in on each side while the carousel stage kept the outer width, which is what put the
+   right-hand card against the container edge. The row's own negative margin then does what it does
+   on the shop archive and the first and last cards sit flush with the heading above them. */
 .c-product__products--recently .c-product-grid__wrap {
 	width: auto;
 	max-width: none;
 	margin-left: 0;
 	margin-right: 0;
-	padding-left: 30px;
-	padding-right: 30px;
+	padding-left: 0;
+	padding-right: 0;
 	box-sizing: border-box;
+}
+
+/* ─── Both rows are the shop grid, not a carousel ───
+   The theme ships these as an owl carousel that puts each card in a fixed-width slot and then lets
+   the card's own 11.5px margin push it 23px past that slot — so cards overlapped their neighbour
+   and the last one was clipped by the end of the row. That is the card "sticking to the right
+   container".
+
+   Rather than argue with the carousel's arithmetic, the rows become what every other product
+   listing on this site already is: a four-column grid, flush with the heading above it, same card
+   width as the shop and the home page. display:contents lifts the owl wrappers out of the way so
+   the slides themselves are the grid cells — which also makes the transform and the inline widths
+   owl keeps writing irrelevant, including after a resize. */
+.c-product__products--related .c-product-grid__list.owl-loaded,
+.c-product__products--recently .c-product-grid__list.owl-loaded {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	column-gap: 24px;
+	row-gap: clamp(28px, 3vw, 44px);
+	width: auto;
+	margin: 0;
+}
+.c-product__products--related .owl-stage-outer,
+.c-product__products--related .owl-stage,
+.c-product__products--recently .owl-stage-outer,
+.c-product__products--recently .owl-stage {
+	display: contents;
+}
+.c-product__products--related .owl-item,
+.c-product__products--recently .owl-item {
+	width: auto !important;
+	max-width: none;
+}
+/* The theme's per-row selector out-ranks a plain descendant rule, so this has to beat it. */
+.c-product__products--related .c-product-grid__list .c-product-grid__item,
+.c-product__products--recently .c-product-grid__list .c-product-grid__item {
+	width: auto !important;
+	margin-left: 0 !important;
+	margin-right: 0 !important;
+}
+/* A grid has no slides to page through. */
+.c-product__products--related .owl-nav,
+.c-product__products--related .owl-dots,
+.c-product__products--recently .owl-nav,
+.c-product__products--recently .owl-dots,
+.c-product__products--related .owl-item.cloned,
+.c-product__products--recently .owl-item.cloned {
+	display: none;
+}
+/* One clean row. The related query is capped at four in inc/pdp.php; recently viewed is filled by
+   the theme's own AJAX, so this is the backstop that keeps it from spilling into a ragged second
+   row of one. */
+.c-product__products--related .owl-item:nth-child(n+5),
+.c-product__products--recently .owl-item:nth-child(n+5) {
+	display: none;
+}
+
+/* A range, not a ceiling: an open-ended max-width here would keep hiding the fourth card on
+   phones, where two columns want four of them. */
+@media (min-width: 768px) and (max-width: 1024px) {
+	.c-product__products--related .c-product-grid__list.owl-loaded,
+	.c-product__products--recently .c-product-grid__list.owl-loaded {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+	.c-product__products--related .owl-item:nth-child(n+4),
+	.c-product__products--recently .owl-item:nth-child(n+4) { display: none; }
+}
+@media (max-width: 767px) {
+	.c-product__products--related .c-product-grid__list.owl-loaded,
+	.c-product__products--recently .c-product-grid__list.owl-loaded {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		column-gap: 14px;
+	}
+	/* Two columns, so four cards is two full rows. Three would leave one card alone on the second. */
+	.c-product__products--related .owl-item:nth-child(n+5),
+	.c-product__products--recently .owl-item:nth-child(n+5) { display: none; }
 }
 
 /* Its heading was set apart from "You might also like" for no reason. */
@@ -378,20 +458,14 @@
 	color: var(--omc-ink);
 }
 
-@media (max-width: 767px) {
-	.c-product__products--recently .c-product-grid__wrap { padding-left: 20px; padding-right: 20px; }
-}
 
-
-/* Related products sits directly above Recently viewed, and the theme settles it at 1104 centred
-   while everything else on the site runs full width inside a 30px gutter. Match the pair. */
 .c-product__products--related .c-product-grid__wrap {
 	width: auto;
 	max-width: none;
 	margin-left: 0;
 	margin-right: 0;
-	padding-left: 30px;
-	padding-right: 30px;
+	padding-left: 0;
+	padding-right: 0;
 	box-sizing: border-box;
 }
 .c-product__products--related .c-product__products-title {
@@ -401,6 +475,4 @@
 	text-transform: none;
 	color: var(--omc-ink);
 }
-@media (max-width: 767px) {
-	.c-product__products--related .c-product-grid__wrap { padding-left: 20px; padding-right: 20px; }
-}
+

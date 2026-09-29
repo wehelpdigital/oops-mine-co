@@ -873,3 +873,46 @@ function omc_pdp_related_heading( $heading ) {
 	return $text ? $text : $heading;
 }
 add_filter( 'woocommerce_product_related_products_heading', 'omc_pdp_related_heading', 5 );
+
+/**
+ * "You might also like" and "Recently viewed" use the same four-up grid as the rest of the shop.
+ *
+ * The demo left both rows at five per row inside a container sized for four. The cards came out
+ * 264px against the 326px used everywhere else, and the row sat 41px in on the left and 19px past
+ * the container on the right — which is the right-hand card pressing against the edge. Four per row
+ * makes the carousel stage exactly the container width: the same card as the home page and the
+ * shop, flush at both ends. A fifth product is still reachable through the arrows.
+ *
+ * ideapark_mod_set_temp() rather than the `theme_mod_*` filter: the theme preloads its settings
+ * into a global that ideapark_mod() checks first, so the WordPress filter never runs for these.
+ * Override with `add_filter( 'omc_pdp_row_layout', fn() => '5-per-row' );`.
+ */
+function omc_pdp_row_layout() {
+	if ( ! function_exists( 'ideapark_mod_set_temp' ) ) {
+		return;
+	}
+	$layout = (string) apply_filters( 'omc_pdp_row_layout', '4-per-row' );
+	if ( ! $layout ) {
+		return; // empty means "leave the theme alone"
+	}
+	ideapark_mod_set_temp( 'related_grid_layout', $layout );
+	ideapark_mod_set_temp( 'recently_grid_layout', $layout );
+}
+// Before anything renders, and after the theme has loaded its own settings.
+add_action( 'template_redirect', 'omc_pdp_row_layout' );
+
+/**
+ * Four related products, so the row is exactly one row.
+ *
+ * WooCommerce asks for more than fit across, and the extras used to live behind the carousel
+ * arrows. The rows are a plain grid now, so a fifth product would start a second row holding one
+ * card. The theme's own "Number of related products" wins if it has been set to something else.
+ */
+function omc_pdp_related_count( $args ) {
+	$theme = function_exists( 'ideapark_mod' ) ? (int) ideapark_mod( 'related_product_number' ) : 0;
+	$args['posts_per_page'] = $theme > 0 ? $theme : 4;
+	$args['columns']        = 4;
+
+	return $args;
+}
+add_filter( 'woocommerce_output_related_products_args', 'omc_pdp_related_count', 20 );
