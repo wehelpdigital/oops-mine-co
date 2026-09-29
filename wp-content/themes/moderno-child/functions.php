@@ -406,13 +406,21 @@ function omc_advert_bar_social() {
 	if ( '' === $bar || false !== strpos( $bar, 'omc-announce__social' ) ) {
 		return;
 	}
-	$html = '<div class="omc-announce__social" aria-label="' . esc_attr__( 'Follow Oops, Mine Co.', 'moderno-child' ) . '">';
+	/*
+	 * On a phone the icons and the countdown share one strip and collide. The countdown is the
+	 * thing worth the space, so the icons step aside — they are in the footer too, and on desktop
+	 * they live in the logo row rather than here.
+	 */
+	$live_bar = omc_advert_bar_live( $bar );
+	$compact  = ( $live_bar !== $bar ) ? ' omc-announce__social--compact' : '';
+
+	$html = '<div class="omc-announce__social' . $compact . '" aria-label="' . esc_attr__( 'Follow Oops, Mine Co.', 'moderno-child' ) . '">';
 	foreach ( omc_social_links() as $key => $l ) {
 		$external = 0 !== strpos( $l['url'], 'mailto:' );
 		$html    .= '<a href="' . esc_url( $l['url'] ) . '" aria-label="' . esc_attr( $l['label'] ) . '" title="' . esc_attr( $l['label'] ) . '"' . ( $external ? ' target="_blank" rel="noopener"' : '' ) . '>' . omc_icon( $key ) . '</a>';
 	}
 	$html .= '</div>';
-	ideapark_mod_set_temp( '_advert_bar', $html . $bar );
+	ideapark_mod_set_temp( '_advert_bar', $html . $live_bar );
 }
 add_action( 'wp_head', 'omc_advert_bar_social', 2 );
 
@@ -859,6 +867,102 @@ function omc_bare_header_band( $title ) {
 	</header>
 	<?php
 }
+
+/**
+ * The announcement bar counts down to the next Facebook Live.
+ *
+ * The bar used to carry three fixed lines of copy. A countdown earns its place better: it is the
+ * one thing on the page that changes, it gives a reason to come back, and the reminder button next
+ * to it captures an email at the moment someone is interested rather than on the way out.
+ *
+ * Date, copy and the Facebook link all come from Customizer → "Facebook Live (home banner)", the
+ * same settings the home page card reads, so the two never disagree. Once the live has been and
+ * gone the bar falls back to whatever the announcement block says.
+ *
+ * @param string $bar The bar HTML the parent theme built.
+ * @return string
+ */
+function omc_advert_bar_live( $bar ) {
+	$live = omc_fb_live();
+	if ( empty( $live['enabled'] ) ) {
+		return $bar;
+	}
+
+	// An hour of "live now", then the bar goes back to the ordinary announcement.
+	$window = (int) apply_filters( 'omc_live_window', 2 * HOUR_IN_SECONDS );
+	if ( $live['when']->getTimestamp() + $window < time() ) {
+		return $bar;
+	}
+
+	$units = [
+		'd' => _x( 'days', 'countdown unit', 'moderno-child' ),
+		'h' => _x( 'hrs', 'countdown unit', 'moderno-child' ),
+		'm' => _x( 'min', 'countdown unit', 'moderno-child' ),
+		's' => _x( 'sec', 'countdown unit', 'moderno-child' ),
+	];
+
+	$html  = '<div class="omc-livebar js-omc-countdown" data-until="' . esc_attr( $live['when']->format( DATE_ATOM ) ) . '" data-live-window="' . esc_attr( (string) $window ) . '">';
+	$html .= '<span class="omc-livebar__dot" aria-hidden="true"></span>';
+	$html .= '<span class="omc-livebar__lead">' . esc_html__( 'Next live', 'moderno-child' ) . '</span>';
+
+	$html .= '<span class="omc-livebar__clock">';
+	foreach ( $units as $key => $label ) {
+		$html .= '<span class="omc-livebar__unit"><b class="omc-live__num" data-unit="' . esc_attr( $key ) . '">--</b><i>' . esc_html( $label ) . '</i></span>';
+	}
+	$html .= '</span>';
+
+	// Swapped in by CSS once the countdown hits zero.
+	$html .= '<span class="omc-livebar__now">' . esc_html__( 'We are live now', 'moderno-child' ) . '</span>';
+	$html .= '<span class="omc-livebar__tag">' . esc_html__( 'Be the first to get it', 'moderno-child' ) . '</span>';
+	$html .= '<button type="button" class="omc-livebar__cta" data-omc-live-open>' . esc_html__( 'Remind me', 'moderno-child' ) . '</button>';
+	$html .= '<a class="omc-livebar__watch" href="' . esc_url( $live['url'] ) . '" target="_blank" rel="noopener">' . esc_html__( 'Watch now', 'moderno-child' ) . '</a>';
+	$html .= '</div>';
+
+	return $html;
+}
+
+/**
+ * The reminder dialog the bar's button opens.
+ *
+ * The form is the site's own newsletter form with source `fb_live`, so a sign-up here lands in the
+ * WHD subscriber table and goes out to whichever provider is connected in WHD → Integrations,
+ * exactly as the home page live card does. No second list, no second integration to configure.
+ */
+function omc_live_reminder_modal() {
+	$live = omc_fb_live();
+	if ( empty( $live['enabled'] ) ) {
+		return;
+	}
+	$window = (int) apply_filters( 'omc_live_window', 2 * HOUR_IN_SECONDS );
+	if ( $live['when']->getTimestamp() + $window < time() ) {
+		return;
+	}
+	?>
+	<div class="omc-livemodal" id="omc-live-reminder" role="dialog" aria-modal="true" aria-labelledby="omc-live-reminder-title" hidden>
+		<div class="omc-livemodal__backdrop" data-omc-live-close></div>
+		<div class="omc-livemodal__panel" role="document">
+			<button type="button" class="omc-livemodal__close" data-omc-live-close aria-label="<?php esc_attr_e( 'Close', 'moderno-child' ); ?>">&times;</button>
+			<p class="omc-eyebrow"><?php esc_html_e( 'Next live', 'moderno-child' ); ?></p>
+			<h2 class="omc-livemodal__title" id="omc-live-reminder-title"><?php echo esc_html( $live['title'] ); ?></h2>
+			<p class="omc-livemodal__when"><?php echo esc_html( wp_date( 'l j F, g:i a', $live['when']->getTimestamp() ) ); ?></p>
+			<p class="omc-livemodal__text"><?php echo esc_html( $live['text'] ); ?></p>
+			<?php
+			omc_newsletter_form( [
+				'source' => 'fb_live',
+				'button' => $live['button'],
+				'after'  => '#omc-live-reminder .omc-livemodal__link',
+			] );
+			?>
+			<p class="omc-livemodal__link" hidden>
+				<a class="omc-btn omc-btn--outline" href="<?php echo esc_url( $live['url'] ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Open the Facebook page', 'moderno-child' ); ?></a>
+			</p>
+		</div>
+	</div>
+	<?php
+}
+// Priority 5: footer scripts print at 20, and omc.js binds the newsletter form by querying the
+// DOM at load. A dialog printed after that would submit natively and reload the page.
+add_action( 'wp_footer', 'omc_live_reminder_modal', 5 );
 
 /** Newsletter form (progressively enhanced by assets/js/omc.js). */
 function omc_newsletter_form( $args = [] ) {

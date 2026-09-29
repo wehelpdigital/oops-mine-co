@@ -259,3 +259,46 @@
 		});
 	});
 })();
+
+/* The announcement bar's "Remind me" button and its dialog. The countdown itself is handled by the
+   .js-omc-countdown block above — the bar reuses those classes, so it ticks for free.
+   The dialog is printed at wp_footer alongside the scripts, so it may not exist when this runs:
+   everything is delegated off document and the dialog is looked up at click time. */
+(function () {
+	'use strict';
+	var opener = null;
+	function dialog() { return document.getElementById('omc-live-reminder'); }
+
+	function open(trigger) {
+		var d = dialog();
+		if (!d) { return; }
+		opener = trigger || null;
+		d.hidden = false;
+		document.body.style.overflow = 'hidden';
+		var field = d.querySelector('input[type="email"]');
+		if (field) { field.focus(); }
+	}
+	function close() {
+		var d = dialog();
+		if (!d) { return; }
+		d.hidden = true;
+		document.body.style.overflow = '';
+		if (opener) { opener.focus(); opener = null; }
+	}
+
+	document.addEventListener('click', function (e) {
+		var openBtn = e.target.closest('[data-omc-live-open]');
+		if (openBtn) { e.preventDefault(); open(openBtn); return; }
+		if (e.target.closest('[data-omc-live-close]')) { e.preventDefault(); close(); }
+	});
+	document.addEventListener('keydown', function (e) {
+		var d = dialog();
+		if (e.key === 'Escape' && d && !d.hidden) { close(); return; }
+		if (e.key !== 'Tab' || !d || d.hidden) { return; }
+		var f = d.querySelectorAll('button, a[href], input:not([type="hidden"])');
+		if (!f.length) { return; }
+		var first = f[0], last = f[f.length - 1];
+		if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+		else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+	});
+}());
