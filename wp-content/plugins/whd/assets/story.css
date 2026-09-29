@@ -11,20 +11,32 @@
 	border-bottom: 1px solid var(--omc-line, #e9e1da);
 }
 
+/* Full width row, like every other row on the site. The copy inside still caps at a readable
+   measure — a 1300px line of body copy is unreadable — but the picture takes a column of its own,
+   which is what makes this read as an editorial spread rather than a text box. */
 .whd-story__inner {
 	width: 100%;
-	max-width: 760px;
+	max-width: 1380px;
 	margin: 0 auto;
-	padding: 0 24px;
+	padding: 0 30px;
 	box-sizing: border-box;
 }
+.whd-story__copy { max-width: 760px; margin-inline: auto; }
 
-.whd-story__eyebrow {
-	margin: 0 0 clamp(14px, 1.8vw, 22px);
-	font: 500 11px/1.4 var(--omc-sans, system-ui, sans-serif);
-	letter-spacing: .18em;
-	text-transform: uppercase;
-	color: var(--omc-rose-dark, #8a6a5e);
+/* Two columns once there is room. PHP puts the copy and the picture in their own containers, so
+   the grid has two children and nothing stretches to match the image. */
+@media (min-width: 1024px) {
+	.whd-story--split .whd-story__inner {
+		display: grid;
+		grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+		gap: clamp(36px, 4.5vw, 72px);
+		align-items: start;
+	}
+	.whd-story--split .whd-story__copy { max-width: none; margin-inline: 0; }
+	.whd-story--split .whd-story__media { position: sticky; top: 96px; }
+	.whd-story--split .whd-story__media .whd-b { margin: 0; }
+	/* A tall portrait shot would otherwise set the height of the whole spread. */
+	.whd-story--split .whd-story__media img { max-height: 640px; object-fit: cover; object-position: 50% 26%; }
 }
 
 /* The blocks themselves, as WHD_Blocks emits them in div mode. */
@@ -120,4 +132,110 @@
 
 @media (max-width: 767px) {
 	.whd-story__inner { padding: 0 20px; }
+}
+
+/* ─── Notes from the community ─────────────────────────────────────────────
+   Sits under the story. Deliberately quieter than the story above it: this is
+   conversation, not copy the shop wrote. ─────────────────────────────────── */
+.whd-talk { padding: clamp(34px, 5vw, 64px) 0; border-bottom: 1px solid var(--omc-line, #e9e1da); }
+.whd-talk__inner {
+	width: 100%;
+	max-width: 820px;
+	margin: 0 auto;
+	padding: 0 30px;
+	box-sizing: border-box;
+}
+.whd-talk__title {
+	margin: 0;
+	font-family: var(--omc-serif, Georgia, serif);
+	font-weight: 500;
+	font-size: clamp(22px, 2.1vw, 28px);
+	line-height: 1.2;
+	color: var(--omc-ink, #3a2b26);
+	/* Same fight as the story headings: Moderno uppercases, tracks out and centres everything
+	   directly inside .c-product__after-summary, from its compiled min.css. */
+	text-transform: none !important;
+	letter-spacing: 0 !important;
+	word-spacing: normal !important;
+	text-align: left !important;
+}
+.whd-talk,
+.whd-talk__inner,
+.whd-talk__lede,
+.whd-talk__text { text-align: left !important; word-spacing: normal !important; }
+.whd-talk__lede {
+	margin: 8px 0 clamp(22px, 2.6vw, 30px);
+	font: 400 15px/1.7 var(--omc-sans, system-ui, sans-serif);
+	color: var(--omc-muted, #8a7d76);
+}
+.whd-talk__flag {
+	margin: 0 0 20px;
+	padding: 11px 15px;
+	background: var(--omc-cream, #fdfaf6);
+	border-left: 2px solid var(--omc-rose, #b98b7e);
+	font: 400 14px/1.6 var(--omc-sans, system-ui, sans-serif);
+	color: var(--omc-text, #4a3f3a);
+}
+.whd-talk__flag--empty,
+.whd-talk__flag--error,
+.whd-talk__flag--login { border-left-color: #b32d2e; }
+
+.whd-talk__list { list-style: none; margin: 0 0 clamp(26px, 3vw, 38px); padding: 0; display: grid; gap: clamp(18px, 2.2vw, 26px); }
+.whd-talk__item { display: flex; gap: 14px; align-items: flex-start; }
+.whd-talk__avatar {
+	flex: 0 0 auto;
+	width: 38px;
+	height: 38px;
+	display: grid;
+	place-items: center;
+	border-radius: 50%;
+	background: var(--omc-cream, #f3eae2);
+	border: 1px solid var(--omc-line, #e9e1da);
+	font: 600 14px/1 var(--omc-sans, system-ui, sans-serif);
+	color: var(--omc-rose-dark, #8a6a5e);
+}
+.whd-talk__body { min-width: 0; }
+.whd-talk__meta { margin: 0 0 4px; font: 400 13px/1.4 var(--omc-sans, system-ui, sans-serif); color: var(--omc-muted, #8a7d76); }
+.whd-talk__meta strong { color: var(--omc-ink, #3a2b26); font-weight: 600; margin-right: 8px; }
+.whd-talk__text p { margin: 0 0 .6em; font: 400 15px/1.75 var(--omc-sans, system-ui, sans-serif); color: var(--omc-text, #4a3f3a); }
+.whd-talk__text p:last-child { margin-bottom: 0; }
+.whd-talk__empty { margin: 0 0 24px; font: 400 15px/1.7 var(--omc-sans, system-ui, sans-serif); color: var(--omc-muted, #8a7d76); }
+
+.whd-talk__label { display: block; margin: 0 0 8px; font: 600 11px/1.4 var(--omc-sans, system-ui, sans-serif); letter-spacing: .14em; text-transform: uppercase; color: var(--omc-rose-dark, #8a6a5e); }
+.whd-talk__field {
+	width: 100%;
+	box-sizing: border-box;
+	padding: 13px 15px;
+	border: 1px solid var(--omc-line, #e9e1da);
+	background: #fff;
+	font: 400 15px/1.6 var(--omc-sans, system-ui, sans-serif);
+	color: var(--omc-text, #4a3f3a);
+	resize: vertical;
+}
+.whd-talk__field:focus { outline: 2px solid var(--omc-rose, #b98b7e); outline-offset: 1px; }
+
+.whd-talk__submit {
+	display: inline-block;
+	margin-top: 12px;
+	padding: 13px 26px;
+	border: 1px solid var(--omc-ink, #3a2b26);
+	background: var(--omc-ink, #3a2b26);
+	color: #fff;
+	font: 600 11px/1 var(--omc-sans, system-ui, sans-serif);
+	letter-spacing: .14em;
+	text-transform: uppercase;
+	text-decoration: none;
+	cursor: pointer;
+	transition: background .25s ease, color .25s ease;
+}
+.whd-talk__submit:hover { background: transparent; color: var(--omc-ink, #3a2b26); }
+
+.whd-talk__gate { padding: clamp(20px, 2.6vw, 28px); background: var(--omc-cream, #fdfaf6); border: 1px solid var(--omc-line, #e9e1da); }
+.whd-talk__gate-text { margin: 0; font: 400 15px/1.7 var(--omc-sans, system-ui, sans-serif); color: var(--omc-text, #4a3f3a); }
+.whd-talk__gate-actions { margin: 14px 0 0; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.whd-talk__gate-actions .whd-talk__submit { margin-top: 0; }
+.whd-talk__signin { font: 400 14px/1 var(--omc-sans, system-ui, sans-serif); color: var(--omc-rose-dark, #8a6a5e); text-underline-offset: 3px; }
+
+@media (max-width: 767px) {
+	.whd-talk__inner { padding: 0 20px; }
 }

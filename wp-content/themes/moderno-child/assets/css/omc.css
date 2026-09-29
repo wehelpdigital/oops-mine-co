@@ -1240,7 +1240,15 @@
 	justify-content: center;
 	gap: 8px 14px;
 	line-height: 1;
+	/* The parent's strip is a 26px line with no padding, so a bordered button sat taller than the
+	   bar it was in. Give the row real height and centre everything in it. */
+	min-height: 46px;
+	padding: 9px 20px;
+	box-sizing: border-box;
 }
+/* The strip itself has to stop constraining the row it now contains. */
+.c-header__advert_bar { min-height: 0; height: auto; line-height: 1; }
+.c-header__advert_bar .omc-announce__social { align-self: center; }
 .omc-livebar__dot {
 	width: 7px;
 	height: 7px;
@@ -1316,7 +1324,7 @@
 @media (max-width: 767px) {
 	/* The countdown takes the strip; the icons are in the footer and the logo row. */
 	.omc-announce__social--compact { display: none; }
-	.omc-livebar { gap: 6px 10px; font-size: 11px; }
+	.omc-livebar { gap: 6px 10px; font-size: 11px; min-height: 42px; padding: 8px 14px; }
 	.omc-livebar__tag { display: none; }          /* the button already says what it is for */
 	.omc-livebar__unit i { display: none; }        /* 05 14 42 reads fine without the labels */
 	.omc-livebar__clock { gap: 6px; }

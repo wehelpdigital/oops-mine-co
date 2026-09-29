@@ -137,7 +137,25 @@ class WHD_Product_Story {
 			return;
 		}
 		$design = self::get( $id );
-		$body   = WHD_Blocks::render( $design, 'popup', self::context( $id ) );
+		$ctx    = self::context( $id );
+
+		/*
+		 * Split the blocks into a copy column and a media column before rendering, rather than
+		 * asking CSS grid to do it. Leaving them as one flat list meant the image defined the
+		 * height of the row it sat in, and every paragraph beside it floated in its own stretched
+		 * row — a spread with holes in it. Two containers, two columns, no gymnastics.
+		 */
+		$copy  = '';
+		$media = '';
+		foreach ( $design['blocks'] as $i => $block ) {
+			$html = WHD_Blocks::render_block( $block, 'popup', $ctx, $i );
+			if ( 'image' === ( $block['type'] ?? '' ) ) {
+				$media .= $html;
+			} else {
+				$copy .= $html;
+			}
+		}
+		$body = $copy . $media;
 		if ( ! trim( wp_strip_all_tags( $body ) ) ) {
 			return;
 		}
@@ -147,9 +165,16 @@ class WHD_Product_Story {
 		 * able to change every word of this from the drag-and-drop canvas.
 		 */
 		?>
-		<section class="whd-story" aria-label="<?php esc_attr_e( 'About this piece', 'whd' ); ?>">
+		<section class="whd-story<?php echo $media ? ' whd-story--split' : ''; ?>" aria-label="<?php esc_attr_e( 'About this piece', 'whd' ); ?>">
 			<div class="whd-story__inner">
-				<?php echo $body; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- WHD_Blocks sanitises every block on save and on render. ?>
+				<div class="whd-story__copy">
+					<?php echo $copy; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- WHD_Blocks sanitises every block on save and on render. ?>
+				</div>
+				<?php if ( $media ) : ?>
+					<div class="whd-story__media">
+						<?php echo $media; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- sanitised the same way. ?>
+					</div>
+				<?php endif; ?>
 			</div>
 		</section>
 		<?php

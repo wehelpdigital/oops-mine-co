@@ -248,6 +248,21 @@ foreach ( $products as $post ) {
 	}
 	$notes .= '</ul>';
 
+	/*
+	 * A picture from the product's own gallery, so the spread has something to look at. The second
+	 * gallery shot where there is one — the first is usually the same photograph as the main
+	 * image at the top of the page.
+	 */
+	$product  = wc_get_product( $post->ID );
+	$gallery  = $product ? $product->get_gallery_image_ids() : [];
+	$image_id = 0;
+	if ( $gallery ) {
+		$image_id = (int) ( $gallery[1] ?? $gallery[0] );
+	} elseif ( $product ) {
+		$image_id = (int) $product->get_image_id();
+	}
+	$image_url = $image_id ? wp_get_attachment_image_url( $image_id, 'large' ) : '';
+
 	$blocks = [
 		[
 			'type'  => 'heading',
@@ -270,6 +285,20 @@ foreach ( $products as $post ) {
 			'props' => [ 'text' => $notes, 'align' => 'left', 'size' => 16, 'color' => '#4a3f3a' ],
 		],
 	];
+
+	if ( $image_url ) {
+		// Second in the list so it lands beside the opening paragraph in the two-column layout.
+		array_splice( $blocks, 1, 0, [ [
+			'type'  => 'image',
+			'props' => [
+				'url'   => $image_url,
+				'alt'   => sprintf( __( '%s, photographed on the rail', 'whd' ), $name ),
+				'width' => 100,
+				'align' => 'center',
+				'link'  => '',
+			],
+		] ] );
+	}
 
 	$design = [ 'settings' => [], 'blocks' => $blocks ];
 
