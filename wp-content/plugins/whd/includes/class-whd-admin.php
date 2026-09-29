@@ -33,6 +33,8 @@ final class WHD_Admin {
 		add_submenu_page( 'whd', __( 'Subscribers', 'whd' ), __( 'Subscribers', 'whd' ), $cap, 'whd-subscribers', [ __CLASS__, 'page_subscribers' ] );
 		add_submenu_page( 'whd', __( 'Integrations', 'whd' ), __( 'Integrations', 'whd' ), $cap, 'whd-integrations', [ 'WHD_Integrations', 'page' ] );
 		add_submenu_page( 'whd', __( 'Tracking scripts', 'whd' ), __( 'Tracking scripts', 'whd' ), $cap, 'whd-scripts', [ __CLASS__, 'page_scripts' ] );
+		// Registered here rather than from WHD_AI_Admin so the parent menu is guaranteed to exist first.
+		add_submenu_page( 'whd', __( 'AI content', 'whd' ), __( 'AI content', 'whd' ), $cap, WHD_AI_Admin::PAGE, [ 'WHD_AI_Admin', 'page' ] );
 		add_submenu_page( 'whd', __( 'Settings', 'whd' ), __( 'Settings', 'whd' ), $cap, 'whd-settings', [ __CLASS__, 'page_settings' ] );
 		// The editor is a hidden page: registered with an empty parent so its hook resolves as
 		// admin_page_whd-editor. (Registering it under 'whd' and then remove_submenu_page() leaves a hook

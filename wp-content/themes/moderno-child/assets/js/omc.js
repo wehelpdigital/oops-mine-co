@@ -260,6 +260,37 @@
 	});
 })();
 
+/* Header tagline: cross-fade the phrases stacked under the logo.
+   One phrase, or a reduced-motion preference, means the first line simply stays. */
+(function () {
+	'use strict';
+	var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	if (reduce) { return; }
+
+	document.querySelectorAll('.js-omc-tagline').forEach(function (strip) {
+		var items = strip.querySelectorAll('.omc-tagline__item');
+		if (items.length < 2) { return; }
+		var speed = Math.max(1200, parseInt(strip.getAttribute('data-speed'), 10) || 3600);
+		var at = 0, timer = null;
+
+		var step = function () {
+			items[at].classList.remove('is-on');
+			items[at].setAttribute('aria-hidden', 'true');
+			at = (at + 1) % items.length;
+			items[at].classList.add('is-on');
+			items[at].removeAttribute('aria-hidden');
+		};
+		var start = function () { if (!timer) { timer = setInterval(step, speed); } };
+		var stop = function () { clearInterval(timer); timer = null; };
+
+		/* Nothing should tick in a background tab. */
+		document.addEventListener('visibilitychange', function () {
+			if (document.hidden) { stop(); } else { start(); }
+		});
+		start();
+	});
+})();
+
 /* Dialogs: the bar's "Remind me", the floating discount tab, and anything else that opens one.
    A trigger carries data-omc-modal="<dialog id>"; the old data-omc-live-open still works. Every
    handler is delegated off document because these dialogs print alongside the scripts and may not

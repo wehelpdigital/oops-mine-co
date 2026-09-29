@@ -374,6 +374,46 @@ function omc_pub_site_icon() {
 	return $id;
 }
 
+
+/**
+ * The keyword list the AI copywriter writes against.
+ *
+ * .ftp-sync/content/keywords.csv is the researched set with the deliberately excluded terms
+ * already taken out (pet clothing, game items, other retailers' names, children's sizing — the
+ * reasons are recorded in plan.json), each tagged with the page it was assigned to.
+ *
+ * Import is an upsert, so re-running refreshes volumes without resetting how often a keyword has
+ * already been used. Keywords added by hand in the admin are never touched.
+ *
+ * @return array|int What the importer reported, or 0 when there is nothing to do.
+ */
+function omc_pub_ai_keywords() {
+	$csv = __DIR__ . '/content/keywords.csv';
+	if ( ! class_exists( 'WHD_AI_Keywords' ) || ! file_exists( $csv ) ) {
+		return 0;
+	}
+	WHD_AI_Keywords::maybe_install();
+
+	$before = WHD_AI_Keywords::count();
+	$lines  = max( 0, count( file( $csv ) ) - 1 );
+	if ( omc_pub_dry() ) {
+		omc_pub_note( "ai keywords: would import $lines rows (the list holds $before)" );
+		return [ 'in_file' => $lines, 'in_list' => $before ];
+	}
+
+	$result = WHD_AI_Keywords::import_csv( $csv, '' );
+	if ( is_wp_error( $result ) ) {
+		omc_pub_note( 'ai keywords: ' . $result->get_error_message() );
+		return 0;
+	}
+	$after = WHD_AI_Keywords::count();
+	if ( $after !== $before ) {
+		omc_pub_note( "ai keywords: list went from $before to $after" );
+	}
+	$result['in_list'] = $after;
+	return $result;
+}
+
 /**
  * Create or update a post/page by slug. Only writes when a field really differs, so
  * post_modified does not churn on a second run.
@@ -1161,6 +1201,9 @@ foreach ( (array) ( $plan['pages'] ?? [] ) as $planned ) {
 }
 
 $tree = [];
+/* Home first. The logo links there too, but a shopper three pages deep looks for the word, and on
+   a phone the logo is a monogram rather than something that reads as "go back to the start". */
+$tree[] = $menu_link( 'Home', home_url( '/' ) );
 $shop_children = array_values( array_filter( [
 	$column_new ? $menu_link( 'New & Now', '#' ) + [ 'children' => $column_new ] : null,
 	$column_category ? $menu_link( 'Shop by category', '#' ) + [ 'children' => $column_category ] : null,
@@ -1445,7 +1488,8 @@ if ( ! omc_pub_dry() ) {
 }
 
 $log['catalog']   = omc_cat_apply();
-$log['site_icon'] = omc_pub_site_icon();
+$log['site_icon']    = omc_pub_site_icon();
+$log['ai_keywords']  = omc_pub_ai_keywords();
 
 /* Post authors: the admin account's display name is its email address, so every journal post
    carried "by gowebdevhero@gmail.com" in an author link crawlers could read. The byline strip is

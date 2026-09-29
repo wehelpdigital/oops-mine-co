@@ -30,8 +30,10 @@
 .c-header {
 	--logo-size: 124px;          /* desktop: 124×84 */
 	--logo-size-sticky: 96px;    /* sticky header: 96×65 */
-	--logo-size-mobile: 92px;    /* phones: capped by the row below → 76×52 */
-	--header-height-mobile: 72px;        /* parent default 60px: the logo box is the row minus 20px, so 52px tall */
+	--logo-size-mobile: 78px;    /* phones: capped by the row below → 64×44 */
+	/* The parent's default is 60px. 72px held the mark alone; the tagline underneath needs the
+	   rest, and the mark gives some of it back so the bar does not become a third of the screen. */
+	--header-height-mobile: 88px;
 	--sticky-header-height-mobile: 64px; /* 44px logo while scrolled */
 }
 .c-header__logo-img { display: block; }
@@ -1242,16 +1244,16 @@
 	line-height: 1;
 	/* The parent's strip is a 26px line with no padding, so a bordered button sat taller than the
 	   bar it was in. Give the row real height and centre everything in it. */
-	min-height: 46px;
-	padding: 9px 20px;
+	min-height: 56px;
+	padding: 11px 20px;
 	box-sizing: border-box;
 }
 /* The strip itself has to stop constraining the row it now contains. */
 .c-header__advert_bar { min-height: 0; height: auto; line-height: 1; }
 .c-header__advert_bar .omc-announce__social { align-self: center; }
 .omc-livebar__dot {
-	width: 7px;
-	height: 7px;
+	width: 8px;
+	height: 8px;
 	border-radius: 50%;
 	background: var(--omc-rose-light, #e9d3ca);
 	box-shadow: 0 0 0 0 rgba(233, 211, 202, .7);
@@ -1261,23 +1263,37 @@
 	70% { box-shadow: 0 0 0 7px rgba(233, 211, 202, 0); }
 	100% { box-shadow: 0 0 0 0 rgba(233, 211, 202, 0); }
 }
-/* Everything on the bar is one face at one size with one tracking. The countdown used to arrive
-   in a second style — big serif numerals, tiny caps labels — inside a 46px strip. */
+/* One face, one tracking, one set of relationships — but sized to be read rather than admired.
+   Everything steps off --omc-livebar-size, so the whole strip scales from one number. */
+.omc-livebar {
+	--omc-livebar-size: 13px;
+	--omc-livebar-clock: 18px;
+}
 .omc-livebar,
 .omc-livebar__lead,
-.omc-livebar__clock,
 .omc-livebar__tag,
 .omc-livebar__cta,
 .omc-livebar__watch,
 .omc-livebar__now {
 	font-family: var(--omc-sans);
-	font-size: 11px;
-	letter-spacing: .14em;
+	font-size: var(--omc-livebar-size);
+	letter-spacing: .12em;
 	text-transform: uppercase;
 }
-.omc-livebar__lead { font-weight: 600; opacity: .92; }
-.omc-livebar__clock { display: inline-flex; align-items: baseline; gap: 7px; font-weight: 600; }
-.omc-livebar__unit { display: inline-flex; align-items: baseline; gap: 1px; }
+.omc-livebar__lead { font-weight: 600; opacity: 1; }
+/* The clock is the reason the bar exists, so it is the one thing allowed to be bigger. Same face,
+   same tracking, same case — a size step, not a second typographic system. */
+.omc-livebar__clock {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 9px;
+	font-family: var(--omc-sans);
+	font-size: var(--omc-livebar-clock);
+	font-weight: 700;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+}
+.omc-livebar__unit { display: inline-flex; align-items: baseline; gap: 2px; }
 /* .omc-live__num is shared with the home page's live card, where it is a 32px serif numeral in
    deep brown. On a dark bar that is invisible and four times too big, so the bar takes it back. */
 .omc-livebar .omc-live__num,
@@ -1287,29 +1303,30 @@
 	font-size: inherit;
 	line-height: inherit;
 	color: inherit;
-	font-weight: 600;
+	font-weight: 700;
 	font-variant-numeric: tabular-nums lining-nums;
-	letter-spacing: .02em;
+	letter-spacing: .01em;
 }
 /* The unit letter rides with its number rather than sitting under it as a caption. */
 .omc-livebar__unit i {
 	font-style: normal;
-	font-size: inherit;
+	font-size: .66em;
+	font-weight: 600;
 	letter-spacing: 0;
 	text-transform: lowercase;
-	opacity: .55;
+	opacity: .72;
 }
-.omc-livebar__tag { opacity: .72; font-weight: 400; letter-spacing: .1em; }
+.omc-livebar__tag { opacity: .85; font-weight: 500; letter-spacing: .1em; }
 .omc-livebar__clock::before,
 .omc-livebar__tag::before {
 	content: "";
 	display: inline-block;
 	width: 1px;
-	height: 11px;
-	margin-right: 14px;
+	height: 16px;
+	margin-right: 16px;
 	background: currentColor;
-	opacity: .28;
-	vertical-align: -1px;
+	opacity: .3;
+	vertical-align: -3px;
 }
 .omc-livebar__now,
 .omc-livebar__watch { display: none; }
@@ -1334,7 +1351,7 @@
 	letter-spacing: .1em;
 	text-transform: uppercase;
 	text-decoration: none;
-	padding: 5px 13px;
+	padding: 7px 16px;
 	cursor: pointer;
 	transition: background .25s var(--omc-ease), color .25s var(--omc-ease), border-color .25s var(--omc-ease);
 }
@@ -1360,11 +1377,18 @@
 @media (max-width: 767px) {
 	/* The countdown takes the strip; the icons are in the footer and the logo row. */
 	.omc-announce__social--compact { display: none; }
-	.omc-livebar { gap: 6px 10px; font-size: 11px; min-height: 42px; padding: 8px 14px; }
+	.omc-livebar {
+		--omc-livebar-size: 11px;
+		--omc-livebar-clock: 15px;
+		gap: 7px 12px;
+		min-height: 50px;
+		padding: 9px 14px;
+		letter-spacing: .08em;
+	}
 	.omc-livebar__tag { display: none; }          /* the button already says what it is for */
 	.omc-livebar__tag::before, .omc-livebar__clock::before { display: none; }
-	.omc-livebar__clock { gap: 6px; }
-	.omc-livebar { font-size: 10px; letter-spacing: .1em; }
+	.omc-livebar__clock { gap: 7px; }
+	.omc-livebar__cta { padding: 6px 13px; }
 }
 
 /* ─── Reminder dialog ─── */
@@ -1531,3 +1555,64 @@
 	color: var(--omc-ink);
 }
 .omc-modal__code-note { margin: 8px 0 14px; font: 400 13px/1.5 var(--omc-sans); color: var(--omc-muted); }
+
+
+/* ─── Header tagline ───────────────────────────────────────────────────────
+   The line that cycles under the logo. Every phrase is in the markup and they
+   all share one grid cell, so the strip is as tall as the tallest of them and
+   the header height never moves as they swap. ──────────────────────────── */
+.omc-tagline {
+	display: grid;
+	margin: 7px 0 0;
+	font-family: var(--omc-sans);
+	font-size: 10px;
+	font-weight: 600;
+	line-height: 1.4;
+	letter-spacing: .22em;
+	text-transform: uppercase;
+	color: var(--omc-rose);
+	text-align: center;
+	/* Tracking leaves a gap after the last letter; pull it back so the line looks centred. */
+	text-indent: .22em;
+	pointer-events: none;
+	user-select: none;
+}
+.omc-tagline__item {
+	grid-area: 1 / 1;
+	opacity: 0;
+	transform: translateY(3px);
+	transition: opacity .5s var(--omc-ease), transform .5s var(--omc-ease);
+}
+.omc-tagline__item.is-on {
+	opacity: 1;
+	transform: none;
+}
+
+/* The mark and the line become one centred block. */
+.c-header__logo { flex-direction: column; }
+.c-header__logo .c-header__logo-link { display: inline-block; }
+
+@media (max-width: 767px) {
+	/* The mobile header is a tight bar, so the line is there but quieter. */
+	.omc-tagline {
+		font-size: 8px;
+		letter-spacing: .14em;
+		text-indent: .14em;
+		margin-top: 3px;
+		line-height: 1.3;
+		/* One line only: a phrase that would wrap is cut rather than pushing the bar taller. */
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		max-width: 46vw;
+	}
+	/* The logo cell is centred between the burger and the cart; it has to hold two things now. */
+	.c-header__logo--mobile { justify-content: center; }
+	/* Scrolled, the bar tightens back up and the line steps out of the way. */
+	.c-header.is-sticky .omc-tagline,
+	.c-header--sticky .omc-tagline { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.omc-tagline__item { transition: none; transform: none; }
+}

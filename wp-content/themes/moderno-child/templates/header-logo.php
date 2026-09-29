@@ -25,4 +25,5 @@ $omc_link   = ! is_front_page() || ! ideapark_mod( 'remove_frontpage_logo_link' 
 			<span class="c-header__logo-empty c-header__logo-hidden"><?php echo esc_html( trim( ideapark_mod( 'sticky_logo_desktop_hide_text' ) ) ); ?></span>
 		<?php } ?>
 	<?php if ( $omc_link ) { ?></a><?php } ?>
+	<?php omc_header_tagline(); ?>
 </div>

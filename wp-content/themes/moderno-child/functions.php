@@ -329,6 +329,67 @@ function omc_sanitize_datetime_local( $value ) {
 	return $value && DateTimeImmutable::createFromFormat( '!Y-m-d\TH:i', $value ) ? $value : '';
 }
 
+/**
+ * The line of brand copy that cycles under the header logo.
+ *
+ * Positioning, not a promise — what kind of shop this is, said four words at a time. Edited in
+ * Customizer → "Header tagline"; one phrase per line there, and the list below is what shows until
+ * someone writes their own.
+ *
+ * @return array Phrases, already trimmed and de-duplicated.
+ */
+function omc_header_taglines() {
+	$saved = trim( (string) get_theme_mod( 'omc_tagline_lines', '' ) );
+	$lines = $saved
+		? preg_split( '/\R/', $saved )
+		: [
+			__( 'Claimed on instinct', 'moderno-child' ),
+			__( 'Curated by designers', 'moderno-child' ),
+			__( 'Limited stock, limited edition', 'moderno-child' ),
+			__( 'Selected by real people', 'moderno-child' ),
+			__( 'Found, not mass produced', 'moderno-child' ),
+			__( 'Chosen piece by piece', 'moderno-child' ),
+			__( 'One small run at a time', 'moderno-child' ),
+			__( 'Picked for the way it wears', 'moderno-child' ),
+		];
+
+	$lines = array_values( array_unique( array_filter( array_map( 'trim', (array) $lines ) ) ) );
+
+	/**
+	 * Filter the header taglines.
+	 *
+	 * @param array $lines Phrases in rotation order.
+	 */
+	return (array) apply_filters( 'omc_header_taglines', $lines );
+}
+
+/**
+ * Print that line under the logo.
+ *
+ * Every phrase is in the markup, stacked in one grid cell so the strip is as tall as its tallest
+ * line and the header never jumps mid-rotation. Without JavaScript the first one simply stays —
+ * which is also what happens for anyone who has asked for reduced motion.
+ *
+ * Called from templates/header-logo.php and header-logo-mobile.php, inside the logo block.
+ */
+function omc_header_tagline() {
+	if ( ! get_theme_mod( 'omc_tagline_enabled', true ) ) {
+		return;
+	}
+	$lines = omc_header_taglines();
+	if ( ! $lines ) {
+		return;
+	}
+	$speed = max( 1200, (int) get_theme_mod( 'omc_tagline_speed', 3600 ) );
+	?>
+	<p class="omc-tagline js-omc-tagline" data-speed="<?php echo esc_attr( $speed ); ?>">
+		<?php foreach ( $lines as $i => $line ) : ?>
+			<span class="omc-tagline__item<?php echo 0 === $i ? ' is-on' : ''; ?>"<?php echo 0 === $i ? '' : ' aria-hidden="true"'; ?>><?php echo esc_html( $line ); ?></span>
+		<?php endforeach; ?>
+	</p>
+	<?php
+}
+
 function omc_customize_register( WP_Customize_Manager $wp_customize ) {
 	$wp_customize->add_section( 'omc_live', [
 		'title'       => __( 'Facebook Live (home banner)', 'moderno-child' ),
@@ -346,6 +407,21 @@ function omc_customize_register( WP_Customize_Manager $wp_customize ) {
 	foreach ( $fields as $id => $f ) {
 		$wp_customize->add_setting( $id, [ 'default' => $f['default'], 'sanitize_callback' => $f['sanitize'], 'transport' => 'refresh' ] );
 		$wp_customize->add_control( $id, [ 'section' => 'omc_live', 'label' => $f['label'], 'type' => $f['type'], 'description' => $f['description'] ?? '' ] );
+	}
+
+	$wp_customize->add_section( 'omc_tagline', [
+		'title'       => __( 'Header tagline', 'moderno-child' ),
+		'priority'    => 34,
+		'description' => __( 'The short line that cycles under the logo. Leave the phrases empty to use the built-in set.', 'moderno-child' ),
+	] );
+	$tagline = [
+		'omc_tagline_enabled' => [ 'label' => __( 'Show the line under the logo', 'moderno-child' ), 'type' => 'checkbox', 'default' => true, 'sanitize' => 'rest_sanitize_boolean' ],
+		'omc_tagline_lines'   => [ 'label' => __( 'Phrases', 'moderno-child' ), 'type' => 'textarea', 'default' => '', 'sanitize' => 'sanitize_textarea_field', 'description' => __( 'One per line, in the order they appear. Three or four words each reads best; anything much longer wraps on a phone.', 'moderno-child' ) ],
+		'omc_tagline_speed'   => [ 'label' => __( 'Seconds on each phrase', 'moderno-child' ), 'type' => 'number', 'default' => 3600, 'sanitize' => 'absint', 'description' => __( 'In milliseconds. 3600 is a comfortable read; below 1200 it is ignored.', 'moderno-child' ) ],
+	];
+	foreach ( $tagline as $id => $f ) {
+		$wp_customize->add_setting( $id, [ 'default' => $f['default'], 'sanitize_callback' => $f['sanitize'], 'transport' => 'refresh' ] );
+		$wp_customize->add_control( $id, [ 'section' => 'omc_tagline', 'label' => $f['label'], 'type' => $f['type'], 'description' => $f['description'] ?? '' ] );
 	}
 }
 add_action( 'customize_register', 'omc_customize_register' );
@@ -1130,6 +1206,46 @@ function omc_default_description() {
 		get_bloginfo( 'description' ) ?: __( 'Oops, Mine Co. is a curated boutique of Korean and Thai fashion — dresses, skirts, denim and accessories chosen with intention, for the moment you see something and think: oops, mine.', 'moderno-child' )
 	);
 }
+
+/**
+ * A per-post search snippet, stored as meta.
+ *
+ * The landing and video templates already carry their own descriptions inside their JSON documents.
+ * This is for everything else — an ordinary page, a product, a journal post — so a description
+ * written on the edit screen (by hand, or by the WHD AI panel) reaches the head. The landing filter
+ * runs later and still wins on the pages it owns.
+ *
+ * Both values are optional and absent on almost every post; get_post_meta on a single query is
+ * already in the object cache by the time the head is built.
+ */
+add_filter( 'omc_meta_description', function ( $desc ) {
+	if ( ! is_singular() ) {
+		return $desc;
+	}
+	$own = trim( (string) get_post_meta( get_queried_object_id(), '_omc_meta_description', true ) );
+	return $own ?: $desc;
+}, 5 );
+
+add_filter( 'document_title_parts', function ( $parts ) {
+	if ( ! is_singular() ) {
+		return $parts;
+	}
+	$title = trim( (string) get_post_meta( get_queried_object_id(), '_omc_seo_title', true ) );
+	if ( ! $title ) {
+		return $parts;
+	}
+	$parts['title'] = $title;
+
+	// A title that already names the shop does not need the suffix saying it again.
+	$flat = static function ( $value ) {
+		return preg_replace( '/[^a-z0-9]+/', '', strtolower( (string) $value ) );
+	};
+	$site = $flat( get_bloginfo( 'name' ) );
+	if ( $site && false !== strpos( $flat( $title ), $site ) ) {
+		unset( $parts['site'], $parts['tagline'] );
+	}
+	return $parts;
+}, 5 );
 
 /** Meta description + Open Graph for the main templates when no SEO plugin is active. */
 function omc_seo_head() {

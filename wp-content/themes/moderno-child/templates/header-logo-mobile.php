@@ -24,4 +24,5 @@ $omc_link   = ! is_front_page() || ! ideapark_mod( 'remove_frontpage_logo_link' 
 			<img src="<?php echo esc_url( $omc_sticky ); ?>" alt="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>" class="c-header__logo-img c-header__logo-img--sticky <?php ideapark_svg_logo_class( $omc_sticky ); ?>"/>
 		<?php } ?>
 	<?php if ( $omc_link ) { ?></a><?php } ?>
+	<?php omc_header_tagline(); ?>
 </div>

@@ -2,8 +2,8 @@
 /**
  * Plugin Name: WHD — Popups, Emails & Tracking
  * Plugin URI:  https://wehelpdigital.com
- * Description: Marketing toolkit for Oops, Mine Co.: exit-intent and welcome popups with a drag-and-drop editor and cookie-based countdowns, a drag-and-drop email builder for every WooCommerce trigger (including abandoned-cart recovery), a newsletter list with phone capture, integrations that push subscribers to Mailchimp, Klaviyo or a webhook and send SMS through Twilio, and a tracking-scripts module (GA4, Search Console, Meta Pixel).
- * Version:     1.1.0
+ * Description: Marketing toolkit for Oops, Mine Co.: exit-intent and welcome popups with a drag-and-drop editor and cookie-based countdowns, a drag-and-drop email builder for every WooCommerce trigger (including abandoned-cart recovery), a newsletter list with phone capture, integrations that push subscribers to Mailchimp, Klaviyo or a webhook and send SMS through Twilio, a tracking-scripts module (GA4, Search Console, Meta Pixel), size charts, product stories, and an AI copywriter that writes against your own brief, rules and keyword list.
+ * Version:     1.2.0
  * Author:      We Help Digital
  * Text Domain: whd
  * Requires at least: 6.4
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'WHD_VERSION', '1.1.0' );
+define( 'WHD_VERSION', '1.2.0' );
 define( 'WHD_FILE', __FILE__ );
 define( 'WHD_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WHD_URL', plugin_dir_url( __FILE__ ) );
@@ -27,6 +27,9 @@ require_once WHD_DIR . 'includes/class-whd-integrations.php';
 require_once WHD_DIR . 'includes/class-whd-size-charts.php';
 require_once WHD_DIR . 'includes/class-whd-product-story.php';
 require_once WHD_DIR . 'includes/class-whd-story-comments.php';
+require_once WHD_DIR . 'includes/class-whd-ai.php';
+require_once WHD_DIR . 'includes/class-whd-ai-keywords.php';
+require_once WHD_DIR . 'includes/class-whd-ai-admin.php';
 require_once WHD_DIR . 'includes/class-whd-admin.php';
 
 final class WHD_Plugin {
@@ -59,11 +62,13 @@ final class WHD_Plugin {
 			WHD_Cart::init();
 		}
 		WHD_Admin::init();
+		WHD_AI_Admin::init();
 	}
 
 	public static function activate() {
 		WHD_Cart::install();
 		WHD_Subscribers::install();
+		WHD_AI_Keywords::install();
 		WHD_Popups::ensure_defaults();
 		WHD_Emails::ensure_defaults();
 		if ( ! wp_next_scheduled( 'whd_cart_cron' ) ) {
