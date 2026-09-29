@@ -353,3 +353,54 @@
 .single-post .c-post__content > * { max-width: 760px; }
 
 .single-post .c-page__meta { display: none; }
+
+
+/* ─── Recently viewed ───
+   The theme gives this row the "boxed" product width while the related-products row directly above
+   it runs full width, so the two sat at different widths and different left edges on the same
+   screen — 1104 starting at 168 against 1380 starting at 30. Match them. */
+.c-product__products--recently .c-product-grid__wrap {
+	width: auto;
+	max-width: none;
+	margin-left: 0;
+	margin-right: 0;
+	padding-left: 30px;
+	padding-right: 30px;
+	box-sizing: border-box;
+}
+
+/* Its heading was set apart from "You might also like" for no reason. */
+.c-product__products--recently .c-product__products-title {
+	font-family: var(--omc-serif);
+	font-weight: 500;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--omc-ink);
+}
+
+@media (max-width: 767px) {
+	.c-product__products--recently .c-product-grid__wrap { padding-left: 20px; padding-right: 20px; }
+}
+
+
+/* Related products sits directly above Recently viewed, and the theme settles it at 1104 centred
+   while everything else on the site runs full width inside a 30px gutter. Match the pair. */
+.c-product__products--related .c-product-grid__wrap {
+	width: auto;
+	max-width: none;
+	margin-left: 0;
+	margin-right: 0;
+	padding-left: 30px;
+	padding-right: 30px;
+	box-sizing: border-box;
+}
+.c-product__products--related .c-product__products-title {
+	font-family: var(--omc-serif);
+	font-weight: 500;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--omc-ink);
+}
+@media (max-width: 767px) {
+	.c-product__products--related .c-product-grid__wrap { padding-left: 20px; padding-right: 20px; }
+}

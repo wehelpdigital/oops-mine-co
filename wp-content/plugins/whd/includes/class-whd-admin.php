@@ -78,12 +78,13 @@ final class WHD_Admin {
 		if ( 'admin_page_whd-editor' !== $hook ) { // hidden page (empty parent) → admin_page_ prefix
 			return;
 		}
-		$type = isset( $_GET['type'] ) && 'email' === $_GET['type'] ? 'email' : 'popup';
-		$id   = isset( $_GET['id'] ) ? sanitize_key( $_GET['id'] ) : '';
-		$meta = 'email' === $type ? ( WHD_Emails::triggers()[ $id ] ?? null ) : ( WHD_Popups::ids()[ $id ] ?? null );
-		if ( ! $meta ) {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- reading which design to open
+		$req = self::resolve_design( isset( $_GET['type'] ) ? sanitize_key( wp_unslash( $_GET['type'] ) ) : '', isset( $_GET['id'] ) ? wp_unslash( $_GET['id'] ) : '' );
+		// phpcs:enable
+		if ( ! $req ) {
 			return;
 		}
+		[ $type, $id, $meta ] = $req;
 		wp_enqueue_media();
 		wp_enqueue_style( 'whd-editor', WHD_URL . 'admin/editor.css', [ 'whd-admin' ], WHD_VERSION );
 		wp_enqueue_script( 'whd-editor', WHD_URL . 'admin/editor.js', [], WHD_VERSION, true );
@@ -92,11 +93,13 @@ final class WHD_Admin {
 			'id'        => $id,
 			'label'     => $meta['label'],
 			'desc'      => $meta['description'] ?? '',
-			'design'    => 'email' === $type ? WHD_Emails::get( $id ) : WHD_Popups::get( $id ),
-			'types'     => WHD_Blocks::types( $type ),
+			'design'    => self::design_get( $type, $id ),
+			'types'     => WHD_Blocks::types( 'product' === $type ? 'popup' : $type ),
 			'tags'      => WHD_Blocks::merge_tags(),
 			'rest'      => [ 'root' => esc_url_raw( rest_url( 'whd/v1/' ) ), 'nonce' => wp_create_nonce( 'wp_rest' ) ],
-			'backUrl'   => admin_url( 'admin.php?page=' . ( 'email' === $type ? 'whd-emails' : 'whd-popups' ) ),
+			'backUrl'   => 'product' === $type
+				? get_edit_post_link( (int) $id, 'raw' )
+				: admin_url( 'admin.php?page=' . ( 'email' === $type ? 'whd-emails' : 'whd-popups' ) ),
 			'siteUrl'   => home_url( '/' ),
 			'previewUrl'=> 'popup' === $type ? add_query_arg( 'whd_preview', $id, home_url( '/' ) ) : '',
 			'userEmail' => wp_get_current_user()->user_email,
@@ -298,11 +301,54 @@ final class WHD_Admin {
 		echo '</form></div>';
 	}
 
-	public static function page_editor() {
-		$type = isset( $_GET['type'] ) && 'email' === $_GET['type'] ? 'email' : 'popup';
-		$id   = isset( $_GET['id'] ) ? sanitize_key( $_GET['id'] ) : '';
+	/**
+	 * Resolve the design a screen or request is about.
+	 *
+	 * Three kinds now: a popup, an email, or one product's story. A story is identified by the
+	 * product id, so it is the only one whose id is numeric and whose permission is per-post.
+	 *
+	 * @return array|null [ type, id, meta ] or null when it is not a design we know.
+	 */
+	private static function resolve_design( $type, $id ) {
+		if ( 'product' === $type ) {
+			$pid = (int) $id;
+			$post = $pid ? get_post( $pid ) : null;
+			if ( ! $post || 'product' !== $post->post_type || ! current_user_can( 'edit_post', $pid ) ) {
+				return null;
+			}
+			return [ 'product', (string) $pid, [
+				'label'       => get_the_title( $pid ),
+				'description' => __( 'The written part of this product page: how it wears, what it goes with, when to size up. Shows below the gallery and above “You might also like”.', 'whd' ),
+			] ];
+		}
+		$type = 'email' === $type ? 'email' : 'popup';
+		$id   = sanitize_key( (string) $id );
 		$meta = 'email' === $type ? ( WHD_Emails::triggers()[ $id ] ?? null ) : ( WHD_Popups::ids()[ $id ] ?? null );
-		if ( ! $meta ) {
+		return $meta ? [ $type, $id, $meta ] : null;
+	}
+
+	/** Read one design, whichever kind it is. */
+	private static function design_get( $type, $id ) {
+		if ( 'product' === $type ) {
+			return WHD_Product_Story::get( (int) $id );
+		}
+		return 'email' === $type ? WHD_Emails::get( $id ) : WHD_Popups::get( $id );
+	}
+
+	/** Write one design, whichever kind it is. */
+	private static function design_save( $type, $id, $design ) {
+		if ( 'product' === $type ) {
+			return WHD_Product_Story::save( (int) $id, $design );
+		}
+		return 'email' === $type ? WHD_Emails::save( $id, $design ) : WHD_Popups::save( $id, $design );
+	}
+
+	public static function page_editor() {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- reading which design to open
+		$req  = self::resolve_design( isset( $_GET['type'] ) ? sanitize_key( wp_unslash( $_GET['type'] ) ) : '', isset( $_GET['id'] ) ? wp_unslash( $_GET['id'] ) : '' );
+		// phpcs:enable
+		$type = $req[0] ?? '';
+		if ( ! $req ) {
 			self::header( __( 'Editor', 'whd' ) );
 			echo '<p>' . esc_html__( 'Unknown design.', 'whd' ) . '</p></div>';
 			return;
@@ -323,10 +369,8 @@ final class WHD_Admin {
 	}
 
 	private static function rest_args( WP_REST_Request $r ) {
-		$type = 'email' === $r->get_param( 'type' ) ? 'email' : 'popup';
-		$id   = sanitize_key( (string) $r->get_param( 'id' ) );
-		$ok   = 'email' === $type ? isset( WHD_Emails::triggers()[ $id ] ) : isset( WHD_Popups::ids()[ $id ] );
-		return $ok ? [ $type, $id ] : null;
+		$req = self::resolve_design( (string) $r->get_param( 'type' ), (string) $r->get_param( 'id' ) );
+		return $req ? [ $req[0], $req[1] ] : null;
 	}
 
 	public static function rest_get_design( WP_REST_Request $r ) {
@@ -335,7 +379,7 @@ final class WHD_Admin {
 			return new WP_Error( 'whd_unknown', 'Unknown design', [ 'status' => 404 ] );
 		}
 		[ $type, $id ] = $a;
-		return [ 'design' => 'email' === $type ? WHD_Emails::get( $id ) : WHD_Popups::get( $id ) ];
+		return [ 'design' => self::design_get( $type, $id ) ];
 	}
 
 	public static function rest_save_design( WP_REST_Request $r ) {
@@ -344,9 +388,8 @@ final class WHD_Admin {
 			return new WP_Error( 'whd_unknown', 'Unknown design', [ 'status' => 404 ] );
 		}
 		[ $type, $id ] = $a;
-		$design = $r->get_param( 'design' );
-		$saved  = 'email' === $type ? WHD_Emails::save( $id, $design ) : WHD_Popups::save( $id, $design );
-		return [ 'saved' => true, 'design' => WHD_Blocks::with_defaults( $saved, $type ) ];
+		$saved = self::design_save( $type, $id, $r->get_param( 'design' ) );
+		return [ 'saved' => true, 'design' => WHD_Blocks::with_defaults( $saved, 'product' === $type ? 'popup' : $type ) ];
 	}
 
 	public static function rest_render( WP_REST_Request $r ) {
@@ -355,6 +398,23 @@ final class WHD_Admin {
 			return new WP_Error( 'whd_unknown', 'Unknown design', [ 'status' => 404 ] );
 		}
 		[ $type, $id ] = $a;
+
+		if ( 'product' === $type ) {
+			// Preview the story the way the product page shows it: same markup, same stylesheet.
+			$design = WHD_Blocks::sanitize_design( $r->get_param( 'design' ), 'popup' );
+			$body   = WHD_Blocks::render( $design, 'popup', WHD_Product_Story::context( (int) $id ) );
+			$eyebrow = trim( (string) ( $design['settings']['subject'] ?? '' ) );
+			$html   = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+				. '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Manrope:wght@400;500;600;700&display=swap">'
+				. '<link rel="stylesheet" href="' . esc_url( WHD_URL . 'assets/story.css?v=' . WHD_VERSION ) . '">'
+				. '<style>body{margin:0;background:#fff}</style></head><body>'
+				. '<section class="whd-story"><div class="whd-story__inner">'
+				. ( $eyebrow ? '<p class="whd-story__eyebrow">' . esc_html( $eyebrow ) . '</p>' : '' )
+				. $body
+				. '</div></section></body></html>';
+			return [ 'html' => $html ];
+		}
+
 		$design = WHD_Blocks::sanitize_design( $r->get_param( 'design' ), $type );
 		if ( 'email' === $type ) {
 			return [ 'html' => WHD_Blocks::render( $design, 'email', WHD_Emails::preview_context( $id ) ) ];

@@ -256,7 +256,8 @@ final class WHD_Blocks {
 				$raw = isset( $block['props'][ $name ] ) ? $block['props'][ $name ] : $field['default'];
 				switch ( $field['type'] ) {
 					case 'textarea':
-						$props[ $name ] = wp_kses( (string) $raw, [ 'br' => [], 'strong' => [], 'b' => [], 'em' => [], 'i' => [], 'u' => [], 'a' => [ 'href' => [], 'target' => [] ], 'span' => [ 'style' => [] ], 'p' => [] ] );
+						// Lists belong here: a product story is prose, and prose has bullet points.
+						$props[ $name ] = wp_kses( (string) $raw, [ 'br' => [], 'strong' => [], 'b' => [], 'em' => [], 'i' => [], 'u' => [], 'a' => [ 'href' => [], 'target' => [], 'rel' => [] ], 'span' => [ 'style' => [] ], 'p' => [], 'ul' => [], 'ol' => [], 'li' => [] ] );
 						break;
 					case 'url':
 					case 'image':
