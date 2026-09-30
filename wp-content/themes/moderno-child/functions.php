@@ -866,6 +866,25 @@ function omc_press_logos() {
 }
 
 /**
+ * The line under the press logos: how many outlets, and who counted them.
+ *
+ * Separate from the logos because it is a different kind of statement. A logo says "this outlet";
+ * a number says "this many", and a number wants a source next to it — which is what `verifier` is
+ * for. Point `url` at the report and the attribution becomes something a visitor can check.
+ *
+ * Empty either string to drop that line; empty both and the whole block goes.
+ *
+ * @return array [ count, verifier, url ].
+ */
+function omc_press_note() {
+	return (array) apply_filters( 'omc_press_note', [
+		'count'    => __( '+ Over 250 News Outlets', 'moderno-child' ),
+		'verifier' => __( 'Verified By The Buzz Blast', 'moderno-child' ),
+		'url'      => '',
+	] );
+}
+
+/**
  * One press entry: its logo if it has one, otherwise its name set as type.
  *
  * The image carries the outlet name as alt text, so the row reads the same to a screen reader
