@@ -69,15 +69,23 @@ function omc_perf_strip_elementor( $handles ) {
 	if ( is_admin() || omc_perf_needs_elementor() ) {
 		return $handles;
 	}
+	// Whichever queue is printing: the handles are only meaningful next to their sources.
+	$queue = 'print_scripts_array' === current_filter() ? wp_scripts() : wp_styles();
+
 	return array_values( array_filter(
 		(array) $handles,
-		static function ( $handle ) {
-			// Its own handles, the per-widget sheets it registers unprefixed, and the Google faces.
-			return ! (
-				0 === strpos( $handle, 'elementor' )
-				|| 0 === strpos( $handle, 'widget-' )
-				|| 0 === strpos( $handle, 'google-fonts' )
-			);
+		static function ( $handle ) use ( $queue ) {
+			if ( 0 === strpos( $handle, 'elementor' ) || 0 === strpos( $handle, 'google-fonts' ) ) {
+				return false; // its own handles, and the Roboto pair it names google-fonts-1/2
+			}
+			/*
+			 * Elementor registers its per-widget sheets under bare names — widget-heading,
+			 * widget-image, widget-icon-list. Matching that prefix alone would take any other
+			 * plugin's widget stylesheet with it, so the source has to agree.
+			 */
+			$src = isset( $queue->registered[ $handle ] ) ? (string) $queue->registered[ $handle ]->src : '';
+
+			return false === strpos( $src, '/elementor/' );
 		}
 	) );
 }

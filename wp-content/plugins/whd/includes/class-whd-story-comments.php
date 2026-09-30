@@ -40,9 +40,8 @@ class WHD_Story_Comments {
 
 		add_action( 'init', [ __CLASS__, 'handle_post' ] );
 
-		// Keep these out of the review count and the star average.
+		// Keep these out of any comment query that did not ask for them.
 		add_filter( 'comments_clauses', [ __CLASS__, 'exclude_from_reviews' ], 10, 2 );
-		add_filter( 'woocommerce_product_get_review_count', [ __CLASS__, 'review_count' ], 10, 2 );
 	}
 
 	public static function assets() {
@@ -67,16 +66,17 @@ class WHD_Story_Comments {
 		return $clauses;
 	}
 
-	/** The product's review count, with story comments taken out. */
-	public static function review_count( $count, $product ) {
-		$ours = (int) get_comments( [
-			'post_id' => $product->get_id(),
-			'type'    => self::TYPE,
-			'status'  => 'approve',
-			'count'   => true,
-		] );
-		return max( 0, (int) $count - $ours );
-	}
+	/*
+	 * There is deliberately no filter on woocommerce_product_get_review_count.
+	 *
+	 * WooCommerce counts reviews with its own SQL —
+	 *   WHERE comment_approved = '1' AND comment_type IN ( 'review', '', 'comment' )
+	 * — which already leaves `whd_story` out. Subtracting the notes from that number as well
+	 * counted them twice: a product with three reviews and two notes reported one review.
+	 *
+	 * The rating average is safe for a different reason: that query keys on meta_key = 'rating',
+	 * and notes store theirs under self::RATING. Neither number needs help from us.
+	 */
 
 	/* ─────────────────────────── Posting ─────────────────────────── */
 

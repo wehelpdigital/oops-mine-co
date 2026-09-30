@@ -56,12 +56,21 @@ final class WHD_AI {
 	}
 
 	public static function get() {
-		$o = wp_parse_args( get_option( self::OPTION, [] ), self::defaults() );
-		// First run: seed the lists so the module is useful before anyone opens the settings.
-		if ( ! $o['rules'] ) {
+		$stored = get_option( self::OPTION, null );
+		$stored = is_array( $stored ) ? $stored : [];
+		$o      = wp_parse_args( $stored, self::defaults() );
+
+		/*
+		 * Seed the lists only when they have never been saved — checked by whether the key exists
+		 * in what is stored, not by whether it is empty. Seeding on "empty" meant an owner who
+		 * deliberately deleted every rule, or cleared the banned list to publish one of those
+		 * words, got the whole default set back on the next page load with no way to refuse it.
+		 * The sanitiser always writes both keys, so one save is enough to make a choice stick.
+		 */
+		if ( ! array_key_exists( 'rules', $stored ) ) {
 			$o['rules'] = self::default_rules();
 		}
-		if ( '' === trim( $o['banned_words'] ) ) {
+		if ( ! array_key_exists( 'banned_words', $stored ) ) {
 			$o['banned_words'] = implode( "\n", self::default_banned_words() );
 		}
 		return $o;
@@ -92,9 +101,12 @@ final class WHD_AI {
 		return 'anthropic' === $provider ? 'claude-sonnet-5' : 'gpt-4o';
 	}
 
-	/** The model actually used for a call. */
+	/** The model a call would use, or '' when nothing is connected to call. */
 	public static function model() {
 		$o = self::get();
+		if ( 'none' === $o['provider'] ) {
+			return '';
+		}
 		return trim( $o['model'] ) ?: self::default_model( $o['provider'] );
 	}
 

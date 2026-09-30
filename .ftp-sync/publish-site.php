@@ -397,7 +397,12 @@ function omc_pub_ai_keywords() {
 	$before = WHD_AI_Keywords::count();
 	$lines  = max( 0, count( file( $csv ) ) - 1 );
 	if ( omc_pub_dry() ) {
-		omc_pub_note( "ai keywords: would import $lines rows (the list holds $before)" );
+		// Only speak up when something would move. The import is an upsert, so a list that already
+		// holds every row in the file is finished, and saying otherwise made every dry run look
+		// like there was work outstanding.
+		if ( $before < $lines ) {
+			omc_pub_note( "ai keywords: would import $lines rows (the list holds $before)" );
+		}
 		return [ 'in_file' => $lines, 'in_list' => $before ];
 	}
 

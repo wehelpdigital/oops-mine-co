@@ -59,6 +59,17 @@ final class WHD_Product_Admin {
 	 * @return array
 	 */
 	public static function checklist( $product_id ) {
+		/*
+		 * Remembered per request. Drawing one row of the products list asks for the checklist three
+		 * times — the score, the missing labels, the suggestions — and each build loads the
+		 * product and its terms. On a screen of twenty rows that was sixty of them.
+		 */
+		static $cache = [];
+		$product_id   = (int) $product_id;
+		if ( isset( $cache[ $product_id ] ) ) {
+			return $cache[ $product_id ];
+		}
+
 		$product = function_exists( 'wc_get_product' ) ? wc_get_product( $product_id ) : null;
 		if ( ! $product ) {
 			return [];
@@ -125,7 +136,9 @@ final class WHD_Product_Admin {
 		 * @param array $list       Entries of [ done, label, anchor ].
 		 * @param int   $product_id Product being checked.
 		 */
-		return (array) apply_filters( 'whd_product_checklist', $list, $product_id );
+		$cache[ $product_id ] = (array) apply_filters( 'whd_product_checklist', $list, $product_id );
+
+		return $cache[ $product_id ];
 	}
 
 	/** How many of the required checks a product passes, and how many there are. */
