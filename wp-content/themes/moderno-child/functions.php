@@ -861,7 +861,7 @@ function omc_press_logos() {
 		[ 'name' => 'FOX', 'logo' => 'press/fox.png', 'scale' => 1, 'url' => '' ],
 		[ 'name' => 'NBC', 'logo' => 'press/nbc.png', 'scale' => 1.6, 'url' => '' ],
 		[ 'name' => 'CBS', 'logo' => 'press/cbs.png', 'scale' => 0.95, 'url' => '' ],
-		[ 'name' => 'ABC', 'logo' => '', 'url' => '' ],
+		[ 'name' => 'ABC', 'logo' => 'press/abc.png', 'scale' => 1.5, 'url' => '' ],
 	] );
 }
 
