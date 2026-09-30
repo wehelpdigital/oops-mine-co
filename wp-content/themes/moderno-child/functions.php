@@ -233,7 +233,7 @@ function omc_home_categories() {
 function omc_usp_items() {
 	return apply_filters( 'omc_usp_items', [
 		[ 'icon' => 'sparkle', 'text' => __( 'New pieces every week', 'moderno-child' ) ],
-		[ 'icon' => 'hand',    'text' => __( 'Curated in small batches', 'moderno-child' ) ],
+		[ 'icon' => 'hand',    'text' => __( 'Small batches', 'moderno-child' ) ],
 		[ 'icon' => 'return',  'text' => __( 'Easy returns', 'moderno-child' ) ],
 		[ 'icon' => 'lock',    'text' => __( 'Secure checkout', 'moderno-child' ) ],
 	] );

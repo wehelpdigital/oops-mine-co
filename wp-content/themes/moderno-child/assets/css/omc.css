@@ -1075,7 +1075,9 @@
 	.omc-hero__lede { font-size: 15px; }
 	.omc-section__head { flex-direction: column; align-items: flex-start; gap: 14px; }
 	.omc-usp__list { grid-template-columns: 1fr 1fr; gap: 10px 14px; padding-top: 14px; padding-bottom: 14px; }
-	.omc-usp__item { justify-content: flex-start; font-size: 10px; letter-spacing: .1em; gap: 8px; }
+	/* Tighter tracking on a phone buys about two characters a line, which is the difference
+	   between four items on one line each and one of them wrapping. */
+	.omc-usp__item { justify-content: flex-start; font-size: 10px; letter-spacing: .05em; gap: 7px; }
 	.omc-usp__item .omc-icon { width: 18px; height: 18px; }
 	.omc-journal__grid { grid-template-columns: 1fr; }
 	.omc-prose .omc-values { grid-template-columns: 1fr; }
