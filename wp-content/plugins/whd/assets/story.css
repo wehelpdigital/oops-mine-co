@@ -29,20 +29,101 @@
 }
 .whd-story__copy { max-width: 760px; margin-inline: auto; }
 
-/* Two columns once there is room. PHP puts the copy and the picture in their own containers, so
-   the grid has two children and nothing stretches to match the image. */
-@media (min-width: 1024px) {
-	.whd-story--split .whd-story__inner {
+/* ─── Alternating spreads ──────────────────────────────────────────────────
+   Each section of the story is a row: copy on one side, its photograph on the
+   other, and every other row reversed. Reading down the page the eye crosses
+   from left to right and back, which is what stops three sections of body copy
+   reading as one long column. ──────────────────────────────────────────── */
+.whd-story--rows .whd-story__row + .whd-story__row {
+	margin-top: clamp(40px, 6vw, 96px);
+}
+
+@media (min-width: 900px) {
+	.whd-story--rows .whd-story__row {
 		display: grid;
-		grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-		gap: clamp(36px, 4.5vw, 72px);
-		align-items: start;
+		/* The copy takes the larger share. An even split made the photograph the loudest thing in
+		   a section whose job is to be read. */
+		grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+		gap: clamp(40px, 5vw, 80px);
+		align-items: center;
 	}
-	.whd-story--split .whd-story__copy { max-width: none; margin-inline: 0; }
-	.whd-story--split .whd-story__media { position: sticky; top: 96px; }
-	.whd-story--split .whd-story__media .whd-b { margin: 0; }
-	/* A tall portrait shot would otherwise set the height of the whole spread. */
-	.whd-story--split .whd-story__media img { max-height: 640px; object-fit: cover; object-position: 50% 26%; }
+	.whd-story--rows .whd-story__copy {
+		max-width: 620px;
+		margin-inline: 0;
+	}
+	/* A hairline above each heading, the length of a word or two — the mark of a spread rather
+	   than a paragraph that happens to sit next to a picture. */
+	.whd-story--rows .whd-story__copy::before {
+		content: "";
+		display: block;
+		width: 48px;
+		height: 1px;
+		margin-bottom: clamp(16px, 2vw, 26px);
+		background: var(--omc-rose, #b98b7e);
+	}
+	.whd-story--rows .whd-story__row--flip .whd-story__copy::before { margin-left: 0; }
+	/* Order, not markup: the copy stays first in the document so it is read first,
+	   however the row happens to be arranged. */
+	.whd-story--rows .whd-story__row--flip .whd-story__copy { order: 2; }
+	.whd-story--rows .whd-story__row--flip .whd-story__figure { order: 1; }
+	.whd-story--rows .whd-story__row--flip .whd-story__copy { justify-self: end; }
+
+	/* A section with no photograph of its own is a single centred column rather
+	   than a half-width one with a hole beside it. */
+	.whd-story--rows .whd-story__row--solo {
+		grid-template-columns: minmax(0, 1fr);
+		text-align: center;
+	}
+	.whd-story--rows .whd-story__row--solo .whd-story__copy {
+		max-width: 720px;
+		margin-inline: auto;
+	}
+	.whd-story--rows .whd-story__row--solo .whd-b-heading,
+	.whd-story--rows .whd-story__row--solo .whd-b-text { text-align: center; }
+	.whd-story--rows .whd-story__row--solo .whd-b-text ul { display: inline-block; text-align: left; }
+}
+
+/* The picture. One portrait frame whatever shape the photograph is, so the rows keep a rhythm,
+   capped in height so a tall frame cannot set the height of a row of four lines of text. The sand
+   sits behind it for the white-background product shots that do not fill their frame. */
+.whd-story__figure {
+	position: relative;
+	margin: 0;
+	aspect-ratio: 4 / 5;
+	max-height: 600px;
+	background: var(--omc-sand, #f3ece6);
+	overflow: hidden;
+}
+/* The block wrapper WHD_Blocks puts round the image has to stop taking part in layout, or the
+   absolute image below has nothing to fill. */
+.whd-story__figure .whd-b {
+	margin: 0;
+	position: absolute;
+	inset: 0;
+}
+.whd-story__figure img {
+	position: absolute;
+	inset: 0;
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: 50% 28%;
+	transition: transform 1.2s cubic-bezier(.22, .61, .36, 1);
+}
+.whd-story__row:hover .whd-story__figure img { transform: scale(1.03); }
+
+@media (max-width: 899px) {
+	/* Stacked: the photograph leads, then the words about it. */
+	.whd-story--rows .whd-story__row { display: flex; flex-direction: column; }
+	.whd-story--rows .whd-story__figure { order: -1; margin-bottom: clamp(18px, 3vw, 26px); }
+	.whd-story--rows .whd-story__copy { max-width: none; margin-inline: 0; }
+	.whd-story__figure { aspect-ratio: 3 / 2; max-height: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.whd-story__figure img,
+	.whd-story__row:hover .whd-story__figure img { transition: none; transform: none; }
 }
 
 /* The blocks themselves, as WHD_Blocks emits them in div mode. */

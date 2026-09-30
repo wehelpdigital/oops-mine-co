@@ -53,6 +53,7 @@ $copy = [
 	'dresses' => [
 		'eyebrow' => 'Why we picked it',
 		'heading' => 'One piece, <em>whole outfit</em>',
+		'heading2' => 'It changes with the <em>shoes</em>',
 		'p1'      => 'A dress is the shortest route to dressed. %s asks nothing of the rest of your closet — no pairing, no tucking, no standing in front of a drawer at eight in the morning. You put it on and the deciding is done.',
 		'p2'      => 'Where it goes depends entirely on your feet. Flat sandals and it is a Saturday. A heel and the same dress is the reason someone asks where you got it. That is the whole trick of a good dress: it does not change, the evening around it does.',
 		'notes'   => [
@@ -65,6 +66,7 @@ $copy = [
 	'skirts' => [
 		'eyebrow' => 'How it wears',
 		'heading' => 'The piece that makes a <em>plain top</em> look deliberate',
+		'heading2' => 'Check the <em>length</em> first',
 		'p1'      => 'A skirt does the work so the rest of you does not have to. %s beside a plain tee reads as an outfit; the same tee with jeans reads as a Tuesday. Nothing else in a closet shifts the register that cheaply.',
 		'p2'      => 'Tuck the top if the waist is the point, leave it out if it is not. Both are right. The length is the thing to check before you buy — a midi that lands mid-calf on one person lands at the ankle on another, and where it stops changes the whole line.',
 		'notes'   => [
@@ -77,6 +79,7 @@ $copy = [
 	'tops' => [
 		'eyebrow' => 'How it wears',
 		'heading' => 'The one you reach for <em>without thinking</em>',
+		'heading2' => 'Buy it for the <em>shoulder</em>',
 		'p1'      => 'Every closet has three or four pieces doing most of the work, and they are almost never the exciting ones. %s is built to be one of those: the top that goes under a blazer on Monday and over a swimsuit in July without either feeling like a stretch.',
 		'p2'      => 'Buy it for the neckline and the shoulder seam. Those two decide whether something looks chosen or borrowed, and no amount of styling fixes a shoulder seam sitting halfway down your arm.',
 		'notes'   => [
@@ -89,6 +92,7 @@ $copy = [
 	'blouses' => [
 		'eyebrow' => 'How it wears',
 		'heading' => 'Smart without <em>trying hard</em>',
+		'heading2' => 'The detail is <em>the point</em>',
 		'p1'      => 'A blouse is what you wear when jeans need backup. %s sits in that gap between a tee and a shirt: soft enough for a weekend, considered enough that nobody asks whether you made an effort.',
 		'p2'      => 'The detail is the point — a sleeve that gathers, a collar that sits open, a button placement that is not quite where you expect. Those are the things you notice on the second look, which is the only kind of detail worth paying for.',
 		'notes'   => [
@@ -101,6 +105,7 @@ $copy = [
 	'tees' => [
 		'eyebrow' => 'How it wears',
 		'heading' => 'A plain tee is <em>never really plain</em>',
+		'heading2' => 'The layer <em>under everything</em>',
 		'p1'      => 'The difference between a tee you wear once and one you wear weekly is about four measurements: where the shoulder lands, how far the sleeve goes, where the hem stops, and how much room there is through the body. %s is chosen on those, not on the print.',
 		'p2'      => 'It is the base layer for most of what else is here. Under a blazer, over a slip skirt, tucked into denim on the days nothing else appeals. Buy the one that fits and you will reach past three others to get to it.',
 		'notes'   => [
@@ -113,6 +118,7 @@ $copy = [
 	'sweaters-knits' => [
 		'eyebrow' => 'How it wears',
 		'heading' => 'The layer you keep <em>reaching for</em>',
+		'heading2' => 'Fold it, <em>never hang it</em>',
 		'p1'      => 'Knitwear is the one category where people forgive almost anything if it feels right. %s is here because the hand and the weight are worth the rail space, and because it goes over almost everything else on it.',
 		'p2'      => 'Fold it rather than hang it and the shoulders keep their shape. Beyond that it asks very little: over a dress when the evening turns, over a tee when the office runs cold, on its own with denim when nothing else appeals.',
 		'notes'   => [
@@ -125,6 +131,7 @@ $copy = [
 	'jackets-outerwear' => [
 		'eyebrow' => 'How it wears',
 		'heading' => 'The piece everyone <em>actually sees</em>',
+		'heading2' => 'Buy it around <em>what goes under</em>',
 		'p1'      => 'Outerwear is the part of an outfit most people see most of the time — on the walk in, at the table, on the way back out. %s is worth choosing carefully for that reason alone.',
 		'p2'      => 'Buy it around what goes underneath. A coat that fits over a tee and nothing else spends winter in a cupboard. Check the shoulder and the sleeve with a knit already on, not in a summer fitting room.',
 		'notes'   => [
@@ -137,6 +144,7 @@ $copy = [
 	'pants-trousers' => [
 		'eyebrow' => 'How it wears',
 		'heading' => 'Trousers that go <em>past the office</em>',
+		'heading2' => 'The rise decides <em>the rest</em>',
 		'p1'      => 'A good pair of trousers has a second life. %s works on a weekday and then again on a Friday evening with the top swapped and the shoes changed, which is a much better return than a pair that only does one of those.',
 		'p2'      => 'The rise decides everything else. Where the waistband sits sets where the leg starts, which sets what tops work. Check that before the length — a hem is an easy fix and a rise is not.',
 		'notes'   => [
@@ -149,6 +157,7 @@ $copy = [
 	'jeans' => [
 		'eyebrow' => 'How it wears',
 		'heading' => 'Denim you stop <em>thinking about</em>',
+		'heading2' => 'Judge them <em>sitting down</em>',
 		'p1'      => 'Everyone owns jeans. Almost nobody owns jeans they actually like. %s is here because the rise and the leg are right, which is the whole of it — wash is taste, fit is not.',
 		'p2'      => 'They settle after an hour of wearing, so judge them standing up and sitting down rather than in the first thirty seconds. If the waist gaps at the back but the hip is right, that is a tailor job, not a size change.',
 		'notes'   => [
@@ -161,6 +170,7 @@ $copy = [
 	'shorts' => [
 		'eyebrow' => 'How it wears',
 		'heading' => 'Shorts that are not <em>only for holiday</em>',
+		'heading2' => 'The inseam is <em>the decision</em>',
 		'p1'      => 'Most shorts are bought for one week a year and then forgotten. %s is cut to do more than that: with a knit and flat sandals it reads as an outfit rather than as a swimsuit cover-up.',
 		'p2'      => 'The inseam is the decision. An inch either way changes what they go with and how they feel to sit down in, and it is the measurement most listings bury. Check it before the waist.',
 		'notes'   => [
@@ -173,6 +183,7 @@ $copy = [
 	'matching-sets' => [
 		'eyebrow' => 'Why we picked it',
 		'heading' => 'Two pieces, <em>three outfits</em>',
+		'heading2' => 'Together, or <em>split up</em>',
 		'p1'      => 'A set is the quiet bargain of a closet. %s is one outfit worn together and two more worn apart, which is why the set option is worth picking carefully — the top and the bottom each need to survive on their own.',
 		'p2'      => 'Worn together it looks deliberate in a way separates rarely manage. Split up, the top goes with denim and the bottom goes with whatever plain thing is nearest. Three outfits from one decision.',
 		'notes'   => [
@@ -185,6 +196,7 @@ $copy = [
 	'rompers-jumpsuits' => [
 		'eyebrow' => 'How it wears',
 		'heading' => 'Getting dressed in <em>one move</em>',
+		'heading2' => 'Check the <em>torso</em>, not the waist',
 		'p1'      => 'A jumpsuit is a whole outfit that arrives as one garment. %s removes the part of the morning where two things have to agree with each other.',
 		'p2'      => 'The fit to check is the torso, not the waist. A jumpsuit that is an inch short through the body pulls at the shoulder no matter what the waist measurement says, and no belt fixes that.',
 		'notes'   => [
@@ -199,6 +211,7 @@ $copy = [
 $fallback = [
 	'eyebrow' => 'Why we picked it',
 	'heading' => 'Chosen one piece <em>at a time</em>',
+	'heading2' => 'How it <em>wears</em>',
 	'p1'      => 'Nothing here was bought by the crate. %s is on the rail because someone saw it, looked twice, and thought it was worth the space.',
 	'p2'      => 'That is the whole buying policy. Small numbers of each thing, a wide spread of sizes where we can get them, and a restock only when a piece earns it.',
 	'notes'   => [
@@ -249,55 +262,66 @@ foreach ( $products as $post ) {
 	$notes .= '</ul>';
 
 	/*
-	 * A picture from the product's own gallery, so the spread has something to look at. The second
-	 * gallery shot where there is one — the first is usually the same photograph as the main
-	 * image at the top of the page.
+	 * One picture per section, drawn only from this product's own photography — the gallery first,
+	 * because the featured image is already the large one at the top of the page, then the featured
+	 * image to fill a gap. Nothing borrowed from elsewhere in the catalogue: a lifestyle shot of a
+	 * different garment inside this garment's story would be a small lie told in pictures.
+	 *
+	 * A product with two photographs gets two picture rows and a full-width third. That is the
+	 * layout working as intended, not a shortfall.
 	 */
-	$product  = wc_get_product( $post->ID );
-	$gallery  = $product ? $product->get_gallery_image_ids() : [];
-	$image_id = 0;
-	if ( $gallery ) {
-		$image_id = (int) ( $gallery[1] ?? $gallery[0] );
-	} elseif ( $product ) {
-		$image_id = (int) $product->get_image_id();
+	$product = wc_get_product( $post->ID );
+	$pool    = [];
+	foreach ( array_merge( $product ? $product->get_gallery_image_ids() : [], [ $product ? $product->get_image_id() : 0 ] ) as $img_id ) {
+		$img_id = (int) $img_id;
+		$url    = $img_id ? wp_get_attachment_image_url( $img_id, 'large' ) : '';
+		if ( $url && ! in_array( $url, $pool, true ) ) {
+			$pool[] = $url;
+		}
 	}
-	$image_url = $image_id ? wp_get_attachment_image_url( $image_id, 'large' ) : '';
-
-	$blocks = [
-		[
-			'type'  => 'heading',
-			'props' => [ 'text' => $c['heading'], 'level' => 'h2', 'align' => 'left', 'color' => '#3a2b26' ],
-		],
-		[
-			'type'  => 'text',
-			'props' => [ 'text' => '<p>' . sprintf( $c['p1'], $name ) . '</p>', 'align' => 'left', 'size' => 17, 'color' => '#4a3f3a' ],
-		],
-		[
-			'type'  => 'text',
-			'props' => [ 'text' => '<p>' . $c['p2'] . '</p>', 'align' => 'left', 'size' => 17, 'color' => '#4a3f3a' ],
-		],
-		[
-			'type'  => 'heading',
-			'props' => [ 'text' => 'Worth knowing', 'level' => 'h3', 'align' => 'left', 'color' => '#3a2b26' ],
-		],
-		[
-			'type'  => 'text',
-			'props' => [ 'text' => $notes, 'align' => 'left', 'size' => 16, 'color' => '#4a3f3a' ],
-		],
-	];
-
-	if ( $image_url ) {
-		// Second in the list so it lands beside the opening paragraph in the two-column layout.
-		array_splice( $blocks, 1, 0, [ [
+	$shot = static function ( $n ) use ( $pool, $name ) {
+		if ( empty( $pool[ $n ] ) ) {
+			return null;
+		}
+		return [
 			'type'  => 'image',
 			'props' => [
-				'url'   => $image_url,
+				'url'   => $pool[ $n ],
+				/* translators: %s: product name */
 				'alt'   => sprintf( __( '%s, photographed on the rail', 'whd' ), $name ),
 				'width' => 100,
 				'align' => 'center',
 				'link'  => '',
 			],
-		] ] );
+		];
+	};
+
+	/*
+	 * Three sections, each opening with a heading. The renderer groups blocks at their headings and
+	 * lays the groups out as alternating rows, so this order is what puts copy and picture on
+	 * opposite sides down the page.
+	 */
+	$sections = [
+		[
+			[ 'type' => 'heading', 'props' => [ 'text' => $c['heading'], 'level' => 'h2', 'align' => 'left', 'color' => '#3a2b26' ] ],
+			[ 'type' => 'text', 'props' => [ 'text' => '<p>' . sprintf( $c['p1'], $name ) . '</p>', 'align' => 'left', 'size' => 17, 'color' => '#4a3f3a' ] ],
+		],
+		[
+			[ 'type' => 'heading', 'props' => [ 'text' => $c['heading2'] ?? 'How it <em>wears</em>', 'level' => 'h2', 'align' => 'left', 'color' => '#3a2b26' ] ],
+			[ 'type' => 'text', 'props' => [ 'text' => '<p>' . $c['p2'] . '</p>', 'align' => 'left', 'size' => 17, 'color' => '#4a3f3a' ] ],
+		],
+		[
+			[ 'type' => 'heading', 'props' => [ 'text' => 'Worth <em>knowing</em>', 'level' => 'h2', 'align' => 'left', 'color' => '#3a2b26' ] ],
+			[ 'type' => 'text', 'props' => [ 'text' => $notes, 'align' => 'left', 'size' => 16, 'color' => '#4a3f3a' ] ],
+		],
+	];
+
+	$blocks = [];
+	foreach ( $sections as $n => $section ) {
+		$picture = $shot( $n );
+		// Straight after the heading: the builder reads top to bottom, and so does the row.
+		array_splice( $section, 1, 0, $picture ? [ $picture ] : [] );
+		$blocks = array_merge( $blocks, $section );
 	}
 
 	$design = [ 'settings' => [], 'blocks' => $blocks ];

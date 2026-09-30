@@ -138,46 +138,103 @@ class WHD_Product_Story {
 		}
 		$design = self::get( $id );
 		$ctx    = self::context( $id );
-
-		/*
-		 * Split the blocks into a copy column and a media column before rendering, rather than
-		 * asking CSS grid to do it. Leaving them as one flat list meant the image defined the
-		 * height of the row it sat in, and every paragraph beside it floated in its own stretched
-		 * row — a spread with holes in it. Two containers, two columns, no gymnastics.
-		 */
-		$copy  = '';
-		$media = '';
-		foreach ( $design['blocks'] as $i => $block ) {
-			$html = WHD_Blocks::render_block( $block, 'popup', $ctx, $i );
-			if ( 'image' === ( $block['type'] ?? '' ) ) {
-				$media .= $html;
-			} else {
-				$copy .= $html;
-			}
-		}
-		$body = $copy . $media;
-		if ( ! trim( wp_strip_all_tags( $body ) ) ) {
+		$rows   = self::rows( $design['blocks'], $ctx );
+		if ( ! $rows ) {
 			return;
 		}
-		/*
-		 * No separate eyebrow field. A popup design has no free-text setting to keep one in, and
-		 * inventing one would put a piece of the story outside the builder — the owner should be
-		 * able to change every word of this from the drag-and-drop canvas.
-		 */
 		?>
-		<section class="whd-story<?php echo $media ? ' whd-story--split' : ''; ?>" aria-label="<?php esc_attr_e( 'About this piece', 'whd' ); ?>">
+		<section class="whd-story whd-story--rows" aria-label="<?php esc_attr_e( 'About this piece', 'whd' ); ?>">
 			<div class="whd-story__inner">
-				<div class="whd-story__copy">
-					<?php echo $copy; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- WHD_Blocks sanitises every block on save and on render. ?>
-				</div>
-				<?php if ( $media ) : ?>
-					<div class="whd-story__media">
-						<?php echo $media; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- sanitised the same way. ?>
+				<?php foreach ( $rows as $i => $row ) : ?>
+					<?php
+					$classes = [ 'whd-story__row' ];
+					// Odd rows put the photograph on the left. CSS order, not markup order, so the
+					// copy stays first in the document and a screen reader reads it first every time.
+					if ( $i % 2 ) {
+						$classes[] = 'whd-story__row--flip';
+					}
+					if ( ! $row['media'] ) {
+						$classes[] = 'whd-story__row--solo';
+					}
+					?>
+					<div class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
+						<div class="whd-story__copy">
+							<?php echo $row['copy']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- WHD_Blocks sanitises every block on save and on render. ?>
+						</div>
+						<?php if ( $row['media'] ) : ?>
+							<figure class="whd-story__figure">
+								<?php echo $row['media']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- sanitised the same way. ?>
+							</figure>
+						<?php endif; ?>
 					</div>
-				<?php endif; ?>
+				<?php endforeach; ?>
 			</div>
 		</section>
 		<?php
+	}
+
+	/**
+	 * Group a flat list of blocks into rows of copy and picture.
+	 *
+	 * A heading starts a row; everything after it belongs to that row until the next heading. The
+	 * pictures in a row go to its figure, the rest to its copy. Rows then alternate sides, so the
+	 * page reads as a series of spreads rather than one long column with images dropped into it.
+	 *
+	 * The grouping is the block list's own structure rather than a fixed count, so a story with
+	 * two sections gets two rows and one with five gets five — and a section with no picture is
+	 * still a row, just a full-width one. Nothing in the builder is dropped.
+	 *
+	 * @param array $blocks Sanitised blocks.
+	 * @param array $ctx    Merge-tag context.
+	 * @return array Rows of [ copy, media ] with at least one of them filled.
+	 */
+	private static function rows( array $blocks, array $ctx ) {
+		$rows    = [];
+		$current = [ 'copy' => '', 'media' => '' ];
+		$started = false;
+
+		foreach ( $blocks as $i => $block ) {
+			$type = $block['type'] ?? '';
+			$html = WHD_Blocks::render_block( $block, 'popup', $ctx, $i );
+
+			// A heading opens the next row, unless nothing has been put in this one yet.
+			if ( 'heading' === $type && $started ) {
+				$rows[]  = $current;
+				$current = [ 'copy' => '', 'media' => '' ];
+			}
+
+			if ( 'image' === $type ) {
+				$current['media'] .= $html;
+			} else {
+				$current['copy'] .= $html;
+			}
+			$started = true;
+		}
+		if ( $started ) {
+			$rows[] = $current;
+		}
+
+		// A row holding only a picture has nothing to sit beside; give it to the row before.
+		$merged = [];
+		foreach ( $rows as $row ) {
+			$empty_copy = '' === trim( wp_strip_all_tags( $row['copy'] ) );
+			if ( $empty_copy && $row['media'] && $merged ) {
+				$merged[ count( $merged ) - 1 ]['media'] .= $row['media'];
+				continue;
+			}
+			if ( $empty_copy && ! $row['media'] ) {
+				continue;
+			}
+			$merged[] = $row;
+		}
+
+		/**
+		 * Filter the rows a product story is laid out in.
+		 *
+		 * @param array $merged Rows of [ copy, media ].
+		 * @param array $blocks The blocks they came from.
+		 */
+		return (array) apply_filters( 'whd_story_rows', $merged, $blocks );
 	}
 
 	/**

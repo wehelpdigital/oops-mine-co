@@ -50,6 +50,7 @@
 .omc-live__media::after,
 .omc-cat__media::after,
 .omc-card__media::after,
+.whd-story__figure::after,
 .c-product-grid__thumb-wrap::after {
 	content: "";
 	position: absolute;
@@ -76,6 +77,18 @@
 .omc-card__media { --omc-wm: 56px; --omc-wm-inset: 12px; }
 .omc-cat__media, .c-product-grid__thumb-wrap { --omc-wm: 40px; --omc-wm-inset: 8px; --omc-wm-opacity: .34; }
 .omc-cat__media::after, .c-product-grid__thumb-wrap::after { background-image: url(../img/oops-logo-rose-400.png); filter: none; }
+/* The story spreads: the same product photography as the cards, so the same rose mark — but these
+   are half-page pictures, so it is sized to them rather than to a thumbnail. */
+/* A halo rather than a shadow. These frames are white studio backgrounds with a dark garment in
+   them, so the corner the mark sits in is sometimes paper and sometimes black fabric; a pale glow
+   separates it from the dark without turning into a smudge on the white. */
+.whd-story__figure::after {
+	background-image: url(../img/oops-logo-rose-400.png);
+	filter: drop-shadow(0 0 3px rgba(255, 255, 255, .85)) drop-shadow(0 1px 2px rgba(58, 43, 38, .2));
+}
+.whd-story__figure { --omc-wm: clamp(56px, 6vw, 88px); --omc-wm-inset: clamp(14px, 1.8vw, 24px); --omc-wm-opacity: .62; }
+/* Flipped rows put the picture on the left, where the copy no longer crowds its bottom-right. */
+.whd-story__row--flip .whd-story__figure::after { right: auto; left: var(--omc-wm-inset, 12px); }
 .c-product-grid__thumb-wrap::after { right: auto; left: var(--omc-wm-inset, 8px); } /* the cart icon sits bottom-right on phones */
 .c-product-grid__item:hover .c-product-grid__thumb-wrap::after { opacity: 0; }   /* the add-to-cart bar slides over that corner */
 
