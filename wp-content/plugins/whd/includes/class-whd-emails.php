@@ -14,6 +14,9 @@ final class WHD_Emails {
 
 	const OPTION = 'whd_emails';
 
+	/** Named here too, so the preview can fabricate the tags this one uses. */
+	const TRIGGER_STOCK = 'back_in_stock';
+
 	/** Every trigger the builder can customise. `template` = the WooCommerce HTML template it replaces. */
 	public static function triggers() {
 		return [
@@ -29,6 +32,7 @@ final class WHD_Emails {
 			'abandoned_cart_2'          => [ 'label' => __( 'Abandoned cart — 24 h: still available + social proof', 'whd' ), 'group' => 'automation', 'template' => '' ],
 			'abandoned_cart_3'          => [ 'label' => __( 'Abandoned cart — 48 h: 10% incentive', 'whd' ), 'group' => 'automation', 'template' => '' ],
 			'welcome_subscriber'        => [ 'label' => __( 'Newsletter welcome', 'whd' ), 'group' => 'automation', 'template' => '' ],
+			'back_in_stock'             => [ 'label' => __( 'Back in stock — the size someone waited for', 'whd' ), 'group' => 'automation', 'template' => '' ],
 			'new_order'                 => [ 'label' => __( 'New order (to admin)', 'whd' ), 'group' => 'admin', 'template' => 'emails/admin-new-order.php' ],
 			'cancelled_order'           => [ 'label' => __( 'Cancelled order (to admin)', 'whd' ), 'group' => 'admin', 'template' => 'emails/admin-cancelled-order.php' ],
 			'failed_order'              => [ 'label' => __( 'Failed order (to admin)', 'whd' ), 'group' => 'admin', 'template' => 'emails/admin-failed-order.php' ],
@@ -74,7 +78,9 @@ final class WHD_Emails {
 		// Step 1 has to be on with steps 2 and 3. The sequence advances one step per send, so a
 		// disabled first email parks every cart at step 0: the send returns false, the row is
 		// written back as 'failed', and steps 2 and 3 are never reached.
-		$auto_on  = [ 'abandoned_cart', 'abandoned_cart_2', 'abandoned_cart_3' ];
+		// Back-in-stock is a reply to something a shopper asked for, so it ships enabled: an alert
+		// nobody receives is worse than no alert button at all.
+		$auto_on  = [ 'abandoned_cart', 'abandoned_cart_2', 'abandoned_cart_3', 'back_in_stock' ];
 		foreach ( self::triggers() as $id => $t ) {
 			if ( empty( $stored[ $id ] ) ) {
 				$stored[ $id ] = self::default_design( $id );
@@ -130,6 +136,7 @@ final class WHD_Emails {
 			'abandoned_cart'            => [ 'Oops — did you forget something?', [ $brand, $heading( 'Your bag is still here, {first_name}.' ), $text( 'You picked, then life happened. We kept everything exactly where you left it — one tap and you are back to it.' ), $b( 'cart_items', [ 'show_images' => 1 ] ), $button( 'Back to my bag', '{recovery_url}' ), $text( 'Oops, mine? We thought so.<br>— {site_name}' ) ] ],
 			'abandoned_cart_2'          => [ 'Still thinking it over? These don’t come back', [ $brand, $heading( 'Still on your mind?' ), $text( 'Your picks are waiting, {first_name}. Take another look while your size is still there.' ), $b( 'cart_items', [ 'show_images' => 1 ] ), $note( 'Small batches. When a size sells through, it’s gone.' ), $button( 'Take another look', '{recovery_url}' ), $text( 'Find something yours.<br>— {site_name}' ) ] ],
 			'abandoned_cart_3'          => [ '10% off to finish the look', [ $brand, $heading( 'Here’s 10% off to finish the look.' ), $text( 'Last note about your bag, {first_name}. Use the code below at checkout and make it yours.' ), $b( 'coupon', [ 'code' => '{coupon_code}', 'note' => '10% off your order', 'color' => '#9c6f63' ] ), $b( 'cart_items', [ 'show_images' => 1 ] ), $button( 'Finish my order', '{recovery_url}' ), $text( 'One unexpected find at a time.<br>— {site_name}' ) ] ],
+			'back_in_stock'             => [ '{product_name} is back — the size you wanted', [ $brand, $heading( 'It came back, {first_name}.' ), $text( 'You asked to hear when <strong>{product_name}</strong> returned in <strong>{variation}</strong>. It has, and these go out in small runs — so this is worth opening now rather than later.' ), $button( 'Take another look', '{product_url}' ), $text( 'If you have already found something else, <a href="{cancel_url}">let us know</a> and we will stop watching this one for you.' ), $signoff ] ],
 			'welcome_subscriber'        => [ 'Welcome to Oops, Mine Co.', [ $brand, $heading( 'Found with intention. Claimed on instinct.' ), $text( 'Thanks for joining the list. Expect new arrivals, quiet restocks and the occasional note — never noise.' ), $b( 'coupon', [ 'code' => '{coupon_code}', 'note' => '10% off your first order', 'color' => '#b98b7e' ] ), $button( 'Shop new arrivals', '{shop_url}' ), $signoff ] ],
 			'new_order'                 => [ '[{site_name}] New order #{order_number} from {customer_name}', [ $brand, $heading( 'New order #{order_number}' ), $text( '{customer_name} ({email}) placed an order on {order_date}. Status: {order_status}.' ), $items, $summary, $button( 'Open in WooCommerce', '{admin_order_url}' ) ] ],
 			'cancelled_order'           => [ '[{site_name}] Order #{order_number} cancelled', [ $brand, $heading( 'Order #{order_number} was cancelled' ), $text( 'Order from {customer_name} ({email}) has been cancelled.' ), $items, $summary ] ],
@@ -324,6 +331,15 @@ final class WHD_Emails {
 		}
 		if ( in_array( $id, [ 'abandoned_cart', 'abandoned_cart_2', 'abandoned_cart_3', 'welcome_subscriber' ], true ) ) {
 			$args['cart'] = self::sample_cart();
+		}
+		if ( self::TRIGGER_STOCK === $id ) {
+			$sample = self::sample_cart()['items'][0] ?? [];
+			$args['data'] = [
+				'product_name' => $sample['name'] ?? 'Pleated satin midi skirt',
+				'product_url'  => $sample['url'] ?? home_url( '/' ),
+				'variation'    => 'Black / M',
+				'cancel_url'   => home_url( '/?whd_stock_cancel=sample' ),
+			];
 		}
 		$ctx = self::context( $args );
 		if ( empty( $ctx['items'] ) ) { // no orders yet: fake a couple of lines so item blocks preview

@@ -31,6 +31,9 @@ final class WHD_Admin {
 		add_submenu_page( 'whd', __( 'Emails', 'whd' ), __( 'Emails', 'whd' ), $cap, 'whd-emails', [ __CLASS__, 'page_emails' ] );
 		add_submenu_page( 'whd', __( 'Abandoned carts', 'whd' ), __( 'Abandoned carts', 'whd' ), $cap, 'whd-carts', [ __CLASS__, 'page_carts' ] );
 		add_submenu_page( 'whd', __( 'Subscribers', 'whd' ), __( 'Subscribers', 'whd' ), $cap, 'whd-subscribers', [ __CLASS__, 'page_subscribers' ] );
+		if ( class_exists( 'WHD_Stock_Alerts' ) ) {
+			add_submenu_page( 'whd', __( 'Stock alerts', 'whd' ), __( 'Stock alerts', 'whd' ), $cap, 'whd-stock-alerts', [ __CLASS__, 'page_stock_alerts' ] );
+		}
 		add_submenu_page( 'whd', __( 'Integrations', 'whd' ), __( 'Integrations', 'whd' ), $cap, 'whd-integrations', [ 'WHD_Integrations', 'page' ] );
 		add_submenu_page( 'whd', __( 'Tracking scripts', 'whd' ), __( 'Tracking scripts', 'whd' ), $cap, 'whd-scripts', [ __CLASS__, 'page_scripts' ] );
 		// Registered here rather than from WHD_AI_Admin so the parent menu is guaranteed to exist first.
@@ -262,6 +265,71 @@ final class WHD_Admin {
 				. '<td>' . ( $synced
 					? '<span class="whd-pill whd-pill--on">' . esc_html( mysql2date( get_option( 'date_format' ), $r->synced_at ) ) . '</span>'
 					: '<span class="whd-pill whd-pill--off">' . ( $connected ? esc_html__( 'Waiting', 'whd' ) : esc_html__( 'Not sent', 'whd' ) ) . '</span>' ) . '</td></tr>';
+		}
+		echo '</tbody></table></div>';
+	}
+
+	/**
+	 * Who is waiting for what.
+	 *
+	 * The top table is the reason the feature exists: a list of sizes people have asked for,
+	 * heaviest demand first, which is the closest thing a shop this size has to a reorder report.
+	 */
+	public static function page_stock_alerts() {
+		$counts = WHD_Stock_Alerts::counts();
+		self::header(
+			__( 'Stock alerts', 'whd' ),
+			__( 'Everyone who asked to hear when a sold-out size comes back. The email goes out on its own — within a minute of the stock changing, and on a sweep every fifteen minutes for stock that changed quietly.', 'whd' )
+		);
+
+		echo '<div class="whd-grid">';
+		self::card( __( 'Waiting', 'whd' ), sprintf( _n( '%d request', '%d requests', $counts['waiting'], 'whd' ), $counts['waiting'] ), '#whd-demand' );
+		self::card( __( 'Told', 'whd' ), sprintf( _n( '%d email sent', '%d emails sent', $counts['sent'], 'whd' ), $counts['sent'] ), admin_url( 'admin.php?page=whd-emails' ) );
+		self::card( __( 'Withdrawn', 'whd' ), sprintf( _n( '%d cancelled', '%d cancelled', $counts['cancelled'], 'whd' ), $counts['cancelled'] ), '#whd-recent' );
+		echo '</div>';
+
+		$demand = WHD_Stock_Alerts::demand();
+		echo '<h2 class="whd-h2" id="whd-demand">' . esc_html__( 'What people are waiting for', 'whd' ) . '</h2>';
+		echo '<p class="whd-intro">' . esc_html__( 'Heaviest demand first. A row marked back in stock has had its emails sent, or will on the next sweep.', 'whd' ) . '</p>';
+		echo '<table class="widefat striped whd-table"><thead><tr>'
+			. '<th>' . esc_html__( 'Piece', 'whd' ) . '</th><th>' . esc_html__( 'Size', 'whd' ) . '</th>'
+			. '<th>' . esc_html__( 'Waiting', 'whd' ) . '</th><th>' . esc_html__( 'Stock', 'whd' ) . '</th>'
+			. '<th>' . esc_html__( 'Last asked', 'whd' ) . '</th></tr></thead><tbody>';
+		if ( ! $demand ) {
+			echo '<tr><td colspan="5">' . esc_html__( 'Nobody is waiting yet. The form appears on a product page the moment a size sells out.', 'whd' ) . '</td></tr>';
+		}
+		foreach ( $demand as $d ) {
+			echo '<tr><td><strong>' . ( $d['url'] ? '<a href="' . esc_url( $d['url'] ) . '">' . esc_html( $d['name'] ) . '</a>' : esc_html( $d['name'] ) ) . '</strong></td>'
+				. '<td>' . esc_html( $d['variation_id'] ? $d['label'] : '—' ) . '</td>'
+				. '<td><strong>' . esc_html( number_format_i18n( $d['waiting'] ) ) . '</strong></td>'
+				. '<td><span class="whd-pill ' . ( $d['in_stock'] ? 'whd-pill--on' : 'whd-pill--off' ) . '">'
+				. esc_html( $d['in_stock'] ? __( 'Back in stock', 'whd' ) : __( 'Sold out', 'whd' ) ) . '</span></td>'
+				. '<td class="whd-muted">' . esc_html( mysql2date( get_option( 'date_format' ) . ' H:i', $d['latest'] ) ) . '</td></tr>';
+		}
+		echo '</tbody></table>';
+
+		echo '<h2 class="whd-h2" id="whd-recent">' . esc_html__( 'Latest requests', 'whd' ) . '</h2>';
+		echo '<table class="widefat striped whd-table"><thead><tr>'
+			. '<th>' . esc_html__( 'When', 'whd' ) . '</th><th>' . esc_html__( 'Email', 'whd' ) . '</th>'
+			. '<th>' . esc_html__( 'Piece', 'whd' ) . '</th><th>' . esc_html__( 'Size', 'whd' ) . '</th>'
+			. '<th>' . esc_html__( 'State', 'whd' ) . '</th></tr></thead><tbody>';
+		$recent = WHD_Stock_Alerts::recent( 50 );
+		if ( ! $recent ) {
+			echo '<tr><td colspan="5">' . esc_html__( 'Nothing yet.', 'whd' ) . '</td></tr>';
+		}
+		$states = [
+			'waiting'   => __( 'Waiting', 'whd' ),
+			'sent'      => __( 'Told', 'whd' ),
+			'cancelled' => __( 'Withdrawn', 'whd' ),
+		];
+		foreach ( $recent as $r ) {
+			$product = wc_get_product( (int) $r->product_id );
+			echo '<tr><td class="whd-muted">' . esc_html( mysql2date( get_option( 'date_format' ) . ' H:i', $r->created ) ) . '</td>'
+				. '<td>' . esc_html( $r->email ) . '</td>'
+				. '<td>' . esc_html( $product ? $product->get_name() : __( '(deleted)', 'whd' ) ) . '</td>'
+				. '<td>' . esc_html( $r->variation_id ? $r->label : '—' ) . '</td>'
+				. '<td><span class="whd-pill ' . ( 'waiting' === $r->status ? 'whd-pill--off' : 'whd-pill--on' ) . '">'
+				. esc_html( $states[ $r->status ] ?? $r->status ) . '</span></td></tr>';
 		}
 		echo '</tbody></table></div>';
 	}

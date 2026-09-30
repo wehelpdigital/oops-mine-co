@@ -1,0 +1,108 @@
+/**
+ * The back-in-stock form on the product page.
+ *
+ * Sand rather than red: a sold-out size is disappointing, not an error, and the point of the panel
+ * is the offer underneath it. It stays out of the document until it applies — a variable product
+ * shows it only once a shopper has chosen a combination that is gone.
+ */
+
+.whd-stock {
+	display: none;
+	margin: clamp(18px, 2.5vw, 26px) 0 0;
+	padding: clamp(16px, 2.2vw, 22px);
+	background: var(--omc-sand, #f3ece6);
+	border: 1px solid var(--omc-line, #e7ded6);
+}
+.whd-stock.is-open { display: block; }
+
+.whd-stock__head {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 0 0 6px;
+	font: 600 12px/1.4 var(--omc-sans, sans-serif);
+	letter-spacing: .12em;
+	text-transform: uppercase;
+	color: var(--omc-ink, #3a2b26);
+}
+.whd-stock__dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--omc-rose-dark, #9c6f63);
+	flex: 0 0 auto;
+}
+.whd-stock__which {
+	letter-spacing: .06em;
+	text-transform: none;
+	color: var(--omc-muted, #7a6a63);
+	font-weight: 500;
+}
+
+.whd-stock__lede {
+	margin: 0 0 14px;
+	font: 400 14px/1.65 var(--omc-sans, sans-serif);
+	color: var(--omc-text, #4a3f3a);
+	text-transform: none !important;
+	word-spacing: normal !important;
+}
+
+.whd-stock__form {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+.whd-stock__form input[type="email"] {
+	flex: 1 1 200px;
+	min-width: 0;
+	padding: 11px 14px;
+	border: 1px solid var(--omc-line, #e7ded6);
+	background: #fff;
+	font: 400 14px/1.4 var(--omc-sans, sans-serif);
+	color: var(--omc-ink, #3a2b26);
+	border-radius: 0;
+}
+.whd-stock__form input[type="email"]:focus {
+	outline: none;
+	border-color: var(--omc-rose, #b98b7e);
+}
+.whd-stock__submit {
+	flex: 0 0 auto;
+	appearance: none;
+	border: 1px solid var(--omc-ink, #3a2b26);
+	background: var(--omc-ink, #3a2b26);
+	color: var(--omc-cream, #f7f2ed);
+	font: 600 12px/1 var(--omc-sans, sans-serif);
+	letter-spacing: .12em;
+	text-transform: uppercase;
+	padding: 13px 22px;
+	cursor: pointer;
+	transition: background .25s ease, border-color .25s ease;
+}
+.whd-stock__submit:hover:not(:disabled) {
+	background: var(--omc-rose-dark, #9c6f63);
+	border-color: var(--omc-rose-dark, #9c6f63);
+}
+.whd-stock__submit:disabled { opacity: .6; cursor: default; }
+
+.whd-stock__note {
+	margin: 10px 0 0;
+	font: 400 14px/1.55 var(--omc-sans, sans-serif);
+	text-transform: none !important;
+}
+.whd-stock__note:empty { display: none; }
+.whd-stock__note.is-ok { color: #14602a; }
+.whd-stock__note.is-bad { color: #8a2424; }
+
+.whd-stock__small {
+	margin: 10px 0 0;
+	font: 400 12px/1.5 var(--omc-sans, sans-serif);
+	color: var(--omc-muted, #7a6a63);
+	text-transform: none !important;
+}
+
+@media (max-width: 480px) {
+	.whd-stock__form input[type="email"] { flex: 1 1 100%; }
+	.whd-stock__submit { width: 100%; }
+}
