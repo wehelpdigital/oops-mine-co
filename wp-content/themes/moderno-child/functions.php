@@ -859,9 +859,9 @@ function omc_press_logos() {
 	 */
 	return apply_filters( 'omc_press_logos', [
 		[ 'name' => 'FOX', 'logo' => 'press/fox.png', 'scale' => 1, 'url' => '' ],
-		[ 'name' => 'NBC', 'logo' => 'press/nbc.png', 'scale' => 1.6, 'url' => '' ],
+		[ 'name' => 'NBC', 'logo' => 'press/nbc.png', 'scale' => 1.45, 'url' => '' ],
 		[ 'name' => 'CBS', 'logo' => 'press/cbs.png', 'scale' => 0.95, 'url' => '' ],
-		[ 'name' => 'ABC', 'logo' => 'press/abc.png', 'scale' => 1.5, 'url' => '' ],
+		[ 'name' => 'ABC', 'logo' => 'press/abc.png', 'scale' => 1.35, 'url' => '' ],
 	] );
 }
 
