@@ -845,13 +845,53 @@ function omc_section_head( $eyebrow, $title, $link_url = '', $link_text = '', $i
  * @return array List of [ name, url ]. An empty list hides the section.
  */
 function omc_press_logos() {
+	/*
+	 * `logo` is a path under assets/img/, and the entry falls back to its name when there is none —
+	 * so a set-name placeholder and a real mark can sit in the same row while the others are
+	 * replaced one at a time. `url` links the entry to the coverage itself where there is a page
+	 * to link to, which is the thing that turns a logo into a citation.
+	 *
+	 * `scale` multiplies the row's logo height for that one mark. A single-line wordmark is 1; a
+	 * stacked mark like the peacock spends most of its height on the symbol, so at 1 its letters
+	 * come out half the size of the wordmarks beside it. Prepare a file and get a suggested number
+	 * with .ftp-sync/tools/make-press-logo.php, which also trims each mark to its own ink so the
+	 * heights mean the same thing.
+	 */
 	return apply_filters( 'omc_press_logos', [
-		[ 'name' => 'FOX', 'url' => '' ],
-		[ 'name' => 'NBC', 'url' => '' ],
-		[ 'name' => 'CBS', 'url' => '' ],
-		[ 'name' => 'USA TODAY', 'url' => '' ],
-		[ 'name' => 'ABC', 'url' => '' ],
+		[ 'name' => 'FOX', 'logo' => 'press/fox.png', 'scale' => 1, 'url' => '' ],
+		[ 'name' => 'NBC', 'logo' => 'press/nbc.png', 'scale' => 1.6, 'url' => '' ],
+		[ 'name' => 'CBS', 'logo' => 'press/cbs.png', 'scale' => 0.95, 'url' => '' ],
+		[ 'name' => 'USA TODAY', 'logo' => '', 'url' => '' ],
+		[ 'name' => 'ABC', 'logo' => '', 'url' => '' ],
 	] );
+}
+
+/**
+ * One press entry: its logo if it has one, otherwise its name set as type.
+ *
+ * The image carries the outlet name as alt text, so the row reads the same to a screen reader
+ * whether an entry is a picture or a word.
+ *
+ * @param array $entry [ name, logo, url ].
+ * @return string
+ */
+function omc_press_mark( array $entry ) {
+	$name = (string) ( $entry['name'] ?? '' );
+	$logo = (string) ( $entry['logo'] ?? '' );
+	if ( ! $logo || ! file_exists( OMC_DIR . '/assets/img/' . $logo ) ) {
+		return '<span class="omc-press__name">' . esc_html( $name ) . '</span>';
+	}
+	$size  = @getimagesize( OMC_DIR . '/assets/img/' . $logo );
+	$scale = (float) ( $entry['scale'] ?? 1 );
+	$scale = $scale > 0 ? min( 2.5, max( 0.5, $scale ) ) : 1;
+
+	return sprintf(
+		'<img class="omc-press__logo" src="%s" alt="%s" %s style="--omc-press-scale:%s" loading="lazy" decoding="async">',
+		esc_url( OMC_URI . '/assets/img/' . $logo ),
+		esc_attr( $name ),
+		$size ? sprintf( 'width="%d" height="%d"', (int) $size[0], (int) $size[1] ) : '',
+		esc_attr( rtrim( rtrim( number_format( $scale, 2, '.', '' ), '0' ), '.' ) )
+	);
 }
 
 /**

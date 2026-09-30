@@ -1198,7 +1198,25 @@
 	transition: opacity .3s var(--omc-ease);
 }
 .omc-press__item:hover { opacity: 1; }
-.omc-press__item a { color: inherit; text-decoration: none; }
+.omc-press__item a { color: inherit; text-decoration: none; display: block; }
+/* A logo has to sit at the same optical weight as the words beside it, so it is matched to their
+   cap height rather than given a box of its own — then multiplied by the entry's own scale, since
+   a stacked mark needs more height than a wordmark to read at the same size. */
+.omc-press__list { --omc-press-h: clamp(20px, 2vw, 27px); }
+.omc-press__logo {
+	display: block;
+	height: calc(var(--omc-press-h) * var(--omc-press-scale, 1));
+	width: auto;
+	max-width: 170px;
+	object-fit: contain;
+}
+/* The names are set to the same cap height, so a row of mixed marks and words lines up. */
+.omc-press__name { display: block; }
+
+@media (max-width: 767px) {
+	.omc-press__list { --omc-press-h: 18px; }
+	.omc-press__logo { max-width: 104px; }
+}
 
 /* ─── Footer: what is true about paying here ─────────────────────────────── */
 .omc-footer__badges {

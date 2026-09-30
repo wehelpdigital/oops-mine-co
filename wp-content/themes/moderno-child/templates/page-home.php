@@ -83,11 +83,13 @@ get_header();
 				<p class="omc-eyebrow" id="omc-press-title"><?php esc_html_e( 'As seen on', 'moderno-child' ); ?></p>
 				<ul class="omc-press__list">
 					<?php foreach ( $omc_press as $omc_p ) : ?>
-						<li class="omc-press__item">
+						<li class="omc-press__item<?php echo empty( $omc_p['logo'] ) ? '' : ' omc-press__item--logo'; ?>">
 							<?php if ( ! empty( $omc_p['url'] ) ) : ?>
-								<a href="<?php echo esc_url( $omc_p['url'] ); ?>" target="_blank" rel="noopener"><?php echo esc_html( $omc_p['name'] ); ?></a>
+								<a href="<?php echo esc_url( $omc_p['url'] ); ?>" target="_blank" rel="noopener">
+									<?php echo omc_press_mark( $omc_p ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside. ?>
+								</a>
 							<?php else : ?>
-								<span><?php echo esc_html( $omc_p['name'] ); ?></span>
+								<?php echo omc_press_mark( $omc_p ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside. ?>
 							<?php endif; ?>
 						</li>
 					<?php endforeach; ?>
