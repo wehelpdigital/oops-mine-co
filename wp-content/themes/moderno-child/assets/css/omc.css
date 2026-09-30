@@ -1735,3 +1735,25 @@
 	.js.is-leaving main.l-inner { animation: none; opacity: 1; transition: none; }
 	.omc-progress { display: none; }
 }
+
+/* ─── The stylist band ─────────────────────────────────────────────────────
+   A quiet invitation rather than a banner: the same sand as the rest of the
+   page, centred, one button. The wizard it opens does the talking. ─────── */
+.omc-stylist {
+	padding: clamp(46px, 6vw, 88px) 0;
+	background: var(--omc-sand);
+	border-top: 1px solid var(--omc-line);
+	border-bottom: 1px solid var(--omc-line);
+	text-align: center;
+}
+.omc-stylist__inner { max-width: 760px; }
+.omc-stylist__eyebrow { margin-bottom: 10px; }
+.omc-stylist .omc-section__title { margin: 0 0 14px; }
+.omc-stylist__text {
+	margin: 0 auto clamp(22px, 2.6vw, 30px);
+	max-width: 58ch;
+	font: 400 clamp(15px, 1.2vw, 17px)/1.75 var(--omc-sans);
+	color: var(--omc-text);
+	text-wrap: pretty;
+}
+.omc-stylist__go { cursor: pointer; }

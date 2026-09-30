@@ -34,6 +34,9 @@ final class WHD_Admin {
 		if ( class_exists( 'WHD_Stock_Alerts' ) ) {
 			add_submenu_page( 'whd', __( 'Stock alerts', 'whd' ), __( 'Stock alerts', 'whd' ), $cap, 'whd-stock-alerts', [ __CLASS__, 'page_stock_alerts' ] );
 		}
+		if ( class_exists( 'WHD_Stylist' ) ) {
+			add_submenu_page( 'whd', __( 'AI stylist', 'whd' ), __( 'AI stylist', 'whd' ), $cap, 'whd-stylist', [ __CLASS__, 'page_stylist' ] );
+		}
 		add_submenu_page( 'whd', __( 'Integrations', 'whd' ), __( 'Integrations', 'whd' ), $cap, 'whd-integrations', [ 'WHD_Integrations', 'page' ] );
 		add_submenu_page( 'whd', __( 'Tracking scripts', 'whd' ), __( 'Tracking scripts', 'whd' ), $cap, 'whd-scripts', [ __CLASS__, 'page_scripts' ] );
 		// Registered here rather than from WHD_AI_Admin so the parent menu is guaranteed to exist first.
@@ -330,6 +333,85 @@ final class WHD_Admin {
 				. '<td>' . esc_html( $r->variation_id ? $r->label : '—' ) . '</td>'
 				. '<td><span class="whd-pill ' . ( 'waiting' === $r->status ? 'whd-pill--off' : 'whd-pill--on' ) . '">'
 				. esc_html( $states[ $r->status ] ?? $r->status ) . '</span></td></tr>';
+		}
+		echo '</tbody></table></div>';
+	}
+
+	/**
+	 * What the stylist has been told.
+	 *
+	 * The totals are the point: six questions answered a few hundred times is a description of the
+	 * customer this shop actually has, which is worth more than any one session.
+	 */
+	public static function page_stylist() {
+		self::header(
+			__( 'AI stylist', 'whd' ),
+			__( 'A short wizard that asks a few things and answers with pieces from the rail. Everyone who starts it joins the newsletter list first, with source “stylist”.', 'whd' )
+		);
+
+		$total  = WHD_Stylist::count();
+		$totals = WHD_Stylist::answer_totals();
+
+		echo '<div class="whd-grid">';
+		self::card( __( 'Sessions', 'whd' ), sprintf( _n( '%d finished', '%d finished', $total, 'whd' ), $total ), '#whd-sty-recent' );
+		self::card( __( 'Model', 'whd' ), WHD_AI::ready() ? esc_html( WHD_AI::model() ) : __( 'Not connected — matching only', 'whd' ), admin_url( 'admin.php?page=whd-ai' ) );
+		self::card( __( 'Robot check', 'whd' ), WHD_AI::recaptcha_ready() ? __( 'reCAPTCHA on', 'whd' ) : __( 'Built-in checks only', 'whd' ), admin_url( 'admin.php?page=whd-ai' ) );
+		echo '</div>';
+
+		if ( $totals ) {
+			echo '<h2 class="whd-h2">' . esc_html__( 'What people are telling you', 'whd' ) . '</h2>';
+			echo '<div class="whd-sty-totals">';
+			foreach ( WHD_Stylist::questions() as $q ) {
+				if ( empty( $totals[ $q['key'] ] ) ) {
+					continue;
+				}
+				$rows = $totals[ $q['key'] ];
+				arsort( $rows );
+				$max = max( $rows );
+				echo '<div class="whd-sty-total"><h3>' . esc_html( wp_strip_all_tags( $q['question'] ) ) . '</h3><ul>';
+				foreach ( $rows as $value => $n ) {
+					$label = $q['options'][ $value ] ?? $value;
+					printf(
+						'<li><span class="whd-sty-total__bar" style="width:%d%%"></span><span class="whd-sty-total__label">%s</span><span class="whd-sty-total__n">%d</span></li>',
+						$max ? (int) round( $n / $max * 100 ) : 0,
+						esc_html( $label ),
+						(int) $n
+					);
+				}
+				echo '</ul></div>';
+			}
+			echo '</div>';
+		}
+
+		echo '<h2 class="whd-h2" id="whd-sty-recent">' . esc_html__( 'Latest sessions', 'whd' ) . '</h2>';
+		echo '<table class="widefat striped whd-table"><thead><tr>'
+			. '<th>' . esc_html__( 'When', 'whd' ) . '</th><th>' . esc_html__( 'Who', 'whd' ) . '</th>'
+			. '<th>' . esc_html__( 'Said', 'whd' ) . '</th><th>' . esc_html__( 'Shown', 'whd' ) . '</th>'
+			. '<th>' . esc_html__( 'By', 'whd' ) . '</th></tr></thead><tbody>';
+		$rows = WHD_Stylist::sessions( 50 );
+		if ( ! $rows ) {
+			echo '<tr><td colspan="5">' . esc_html__( 'Nobody has been through it yet.', 'whd' ) . '</td></tr>';
+		}
+		foreach ( $rows as $r ) {
+			$answers = json_decode( (string) $r->answers, true );
+			$said    = [];
+			foreach ( (array) $answers as $k => $v ) {
+				$said[] = $k . ': ' . implode( '/', (array) $v );
+			}
+			$picks = json_decode( (string) $r->picks, true );
+			$names = [];
+			foreach ( array_slice( (array) $picks, 0, 3 ) as $pid ) {
+				$p = wc_get_product( (int) $pid );
+				if ( $p ) {
+					$names[] = $p->get_name();
+				}
+			}
+			echo '<tr><td class="whd-muted">' . esc_html( mysql2date( get_option( 'date_format' ) . ' H:i', $r->created ) ) . '</td>'
+				. '<td>' . esc_html( $r->name ? $r->name . ' · ' . $r->email : $r->email ) . '</td>'
+				. '<td class="whd-muted">' . esc_html( implode( ', ', $said ) ) . '</td>'
+				. '<td>' . esc_html( implode( ', ', $names ) ) . '</td>'
+				. '<td><span class="whd-pill ' . ( $r->used_ai ? 'whd-pill--on' : 'whd-pill--off' ) . '">'
+				. esc_html( $r->used_ai ? __( 'Model', 'whd' ) : __( 'Matching', 'whd' ) ) . '</span></td></tr>';
 		}
 		echo '</tbody></table></div>';
 	}

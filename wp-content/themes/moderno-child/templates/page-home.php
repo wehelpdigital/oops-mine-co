@@ -75,6 +75,21 @@ get_header();
 		</ul>
 	</section>
 
+	<!-- ───────────── The stylist ───────────── -->
+	<?php $omc_sty = function_exists( 'omc_stylist_band' ) ? omc_stylist_band() : null; ?>
+	<?php if ( $omc_sty ) : ?>
+		<section class="omc-stylist omc-reveal" aria-labelledby="omc-stylist-title">
+			<div class="l-section__container omc-stylist__inner">
+				<p class="omc-eyebrow omc-stylist__eyebrow"><?php echo esc_html( $omc_sty['eyebrow'] ); ?></p>
+				<h2 class="omc-section__title" id="omc-stylist-title"><?php echo wp_kses( $omc_sty['title'], [ 'em' => [] ] ); ?></h2>
+				<p class="omc-stylist__text"><?php echo esc_html( $omc_sty['text'] ); ?></p>
+				<button type="button" class="omc-btn omc-btn--solid omc-stylist__go" data-whd-stylist>
+					<?php echo esc_html( $omc_sty['button'] ); ?>
+				</button>
+			</div>
+		</section>
+	<?php endif; ?>
+
 	<!-- ───────────── As seen on (placeholder names — see omc_press_logos()) ───────────── -->
 	<?php $omc_press = function_exists( 'omc_press_logos' ) ? omc_press_logos() : []; ?>
 	<?php if ( $omc_press ) : ?>

@@ -33,7 +33,7 @@ final class WHD_AI {
 
 	/** Fields holding a credential: password box, blank means "keep what is stored". */
 	public static function secret_fields() {
-		return [ 'anthropic_key', 'openai_key' ];
+		return [ 'anthropic_key', 'openai_key', 'google_key', 'recaptcha_secret' ];
 	}
 
 	public static function defaults() {
@@ -41,6 +41,9 @@ final class WHD_AI {
 			'provider'        => 'none',
 			'anthropic_key'   => '',
 			'openai_key'      => '',
+			'google_key'      => '',
+			'recaptcha_site'  => '',
+			'recaptcha_secret'=> '',
 			'model'           => '',
 			'max_tokens'      => 1600,
 			'temperature'     => 0.7,
@@ -81,7 +84,41 @@ final class WHD_AI {
 			'none'      => __( 'Off — no AI calls are made', 'whd' ),
 			'anthropic' => __( 'Anthropic (Claude)', 'whd' ),
 			'openai'    => __( 'OpenAI', 'whd' ),
+			'google'    => __( 'Google (Gemini)', 'whd' ),
 		];
+	}
+
+	/** Is reCAPTCHA configured? Both halves are needed: the site key renders it, the secret checks it. */
+	public static function recaptcha_ready(): bool {
+		$o = self::get();
+		return '' !== trim( $o['recaptcha_site'] ) && '' !== trim( $o['recaptcha_secret'] );
+	}
+
+	/**
+	 * Ask Google whether a token is genuine.
+	 *
+	 * Returns true when reCAPTCHA is not configured at all: the wizard has its own defences and
+	 * refusing every visitor because a key is missing would be worse than the thing it prevents.
+	 */
+	public static function recaptcha_verify( $token ) {
+		if ( ! self::recaptcha_ready() ) {
+			return true;
+		}
+		$o = self::get();
+		$r = wp_remote_post( 'https://www.google.com/recaptcha/api/siteverify', [
+			'timeout' => 10,
+			'body'    => [
+				'secret'   => $o['recaptcha_secret'],
+				'response' => (string) $token,
+				'remoteip' => isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '',
+			],
+		] );
+		if ( is_wp_error( $r ) ) {
+			return true; // Google unreachable is not the visitor's fault
+		}
+		$body = json_decode( wp_remote_retrieve_body( $r ), true );
+
+		return ! empty( $body['success'] );
 	}
 
 	/** Suggested models per provider. The field is free text, so a newer one can always be typed. */
@@ -93,12 +130,22 @@ final class WHD_AI {
 				'claude-haiku-4-5-20251001' => 'Claude Haiku 4.5 — quick and cheap, for short fields',
 			],
 			'openai'    => [],
+			'google'    => [
+				'gemini-3.8-flash' => 'Gemini 3.8 Flash — quick, and enough for shop copy',
+				'gemini-3.8-pro'   => 'Gemini 3.8 Pro — slower, stronger',
+			],
 		];
 		return $lists[ $provider ] ?? [];
 	}
 
 	public static function default_model( $provider ) {
-		return 'anthropic' === $provider ? 'claude-sonnet-5' : 'gpt-4o';
+		$defaults = [
+			'anthropic' => 'claude-sonnet-5',
+			'openai'    => 'gpt-4o',
+			'google'    => 'gemini-3.8-flash',
+		];
+
+		return $defaults[ $provider ] ?? '';
 	}
 
 	/** The model a call would use, or '' when nothing is connected to call. */
@@ -118,6 +165,9 @@ final class WHD_AI {
 		if ( 'openai' === $o['provider'] ) {
 			return '' !== $o['openai_key'];
 		}
+		if ( 'google' === $o['provider'] ) {
+			return '' !== $o['google_key'];
+		}
 		return false;
 	}
 
@@ -135,7 +185,8 @@ final class WHD_AI {
 			$out[ $key ] = ! empty( $clear[ $key ] ) ? '' : ( '' === $new ? (string) $old[ $key ] : sanitize_text_field( $new ) );
 		}
 
-		$out['model']       = sanitize_text_field( $input['model'] ?? '' );
+		$out['model']          = sanitize_text_field( $input['model'] ?? '' );
+		$out['recaptcha_site'] = sanitize_text_field( $input['recaptcha_site'] ?? '' );
 		$out['max_tokens']  = min( 8000, max( 200, (int) ( $input['max_tokens'] ?? 1600 ) ) );
 		$out['temperature'] = min( 1, max( 0, round( (float) ( $input['temperature'] ?? 0.7 ), 2 ) ) );
 
@@ -586,10 +637,19 @@ final class WHD_AI {
 		];
 	}
 
-	/** Ask a provider for text. Returns the reply or a WP_Error with something a human can act on. */
-	public static function call( $system, $user ) {
+	/**
+	 * Ask a provider for text.
+	 *
+	 * @param string $system  Instructions.
+	 * @param string $user    The request.
+	 * @param array  $options 'json' => true asks the provider for JSON rather than prose, where it
+	 *                        supports it. Callers that parse the reply should set it.
+	 * @return string|WP_Error The reply, or an error with something a human can act on.
+	 */
+	public static function call( $system, $user, array $options = [] ) {
 		$o     = self::get();
 		$model = self::model();
+		$json  = ! empty( $options['json'] );
 
 		if ( 'anthropic' === $o['provider'] ) {
 			$url  = 'https://api.anthropic.com/v1/messages';
@@ -614,14 +674,41 @@ final class WHD_AI {
 					'Authorization' => 'Bearer ' . $o['openai_key'],
 					'Content-Type'  => 'application/json',
 				],
-				'body'    => wp_json_encode( [
-					'model'       => $model,
-					'max_tokens'  => (int) $o['max_tokens'],
-					'temperature' => (float) $o['temperature'],
-					'messages'    => [
+				'body'    => wp_json_encode( array_filter( [
+					'model'           => $model,
+					'max_tokens'      => (int) $o['max_tokens'],
+					'temperature'     => (float) $o['temperature'],
+					'response_format' => $json ? [ 'type' => 'json_object' ] : null,
+					'messages'        => [
 						[ 'role' => 'system', 'content' => $system ],
 						[ 'role' => 'user', 'content' => $user ],
 					],
+				] ) ),
+			];
+		} elseif ( 'google' === $o['provider'] ) {
+			/*
+			 * Gemini takes the key on the query string and has no system role — the instructions go
+			 * in systemInstruction instead, which is the same idea under another name.
+			 */
+			$url    = add_query_arg( 'key', rawurlencode( $o['google_key'] ), 'https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode( $model ) . ':generateContent' );
+			$config = [
+				/*
+				 * A floor of 4,096 whatever the setting says. These models reason before they
+				 * answer and the reasoning is drawn from the same allowance, so a budget sized for
+				 * the reply alone comes back cut off part way through a sentence.
+				 */
+				'maxOutputTokens' => max( 4096, (int) $o['max_tokens'] ),
+				'temperature'     => (float) $o['temperature'],
+			];
+			if ( $json ) {
+				$config['responseMimeType'] = 'application/json';
+			}
+			$args = [
+				'headers' => [ 'Content-Type' => 'application/json' ],
+				'body'    => wp_json_encode( [
+					'systemInstruction' => [ 'parts' => [ [ 'text' => $system ] ] ],
+					'contents'          => [ [ 'role' => 'user', 'parts' => [ [ 'text' => $user ] ] ] ],
+					'generationConfig'  => $config,
 				] ),
 			];
 		} else {
@@ -645,18 +732,26 @@ final class WHD_AI {
 			return new WP_Error( 'whd_ai_http', sprintf( '%d — %s', $code, $message ) );
 		}
 
-		$text = 'anthropic' === $o['provider']
-			? ( $body['content'][0]['text'] ?? '' )
-			: ( $body['choices'][0]['message']['content'] ?? '' );
+		if ( 'anthropic' === $o['provider'] ) {
+			$text = $body['content'][0]['text'] ?? '';
+		} elseif ( 'google' === $o['provider'] ) {
+			$text = $body['candidates'][0]['content']['parts'][0]['text'] ?? '';
+		} else {
+			$text = $body['choices'][0]['message']['content'] ?? '';
+		}
 
 		if ( '' === trim( (string) $text ) ) {
 			self::log( $o['provider'], $code, __( 'The model returned nothing.', 'whd' ), $model );
 			return new WP_Error( 'whd_ai_empty', __( 'The model returned nothing. Try again, or raise the token limit.', 'whd' ) );
 		}
 
-		$used = 'anthropic' === $o['provider']
-			? (int) ( $body['usage']['output_tokens'] ?? 0 )
-			: (int) ( $body['usage']['completion_tokens'] ?? 0 );
+		if ( 'anthropic' === $o['provider'] ) {
+			$used = (int) ( $body['usage']['output_tokens'] ?? 0 );
+		} elseif ( 'google' === $o['provider'] ) {
+			$used = (int) ( $body['usageMetadata']['candidatesTokenCount'] ?? 0 );
+		} else {
+			$used = (int) ( $body['usage']['completion_tokens'] ?? 0 );
+		}
 		self::log( $o['provider'], $code, sprintf( /* translators: %d: number of tokens */ __( 'ok, %d tokens out', 'whd' ), $used ), $model );
 
 		return (string) $text;

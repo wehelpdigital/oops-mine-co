@@ -229,6 +229,28 @@ function omc_home_categories() {
 	return apply_filters( 'omc_home_categories', array_slice( $slugs, 0, 8 ) );
 }
 
+/**
+ * The band that promotes the stylist on the home page.
+ *
+ * The wizard itself belongs to the WHD plugin and prints its own overlay in the footer on every
+ * page; this is only the invitation to open it. With the plugin switched off the band disappears
+ * rather than advertising something that will not open.
+ *
+ * @return array|null [ eyebrow, title, text, button ] or null to show nothing.
+ */
+function omc_stylist_band() {
+	if ( ! class_exists( 'WHD_Stylist' ) || ! WHD_Stylist::enabled() ) {
+		return null;
+	}
+
+	return apply_filters( 'omc_stylist_band', [
+		'eyebrow' => __( 'New', 'moderno-child' ),
+		'title'   => __( 'Let us pick, <em>for once</em>', 'moderno-child' ),
+		'text'    => __( 'Six questions — how tall you are, what you actually wear, what you are dressing for — and we come back with a handful of pieces from today\'s rail and a line on why each one is for you. Two minutes, no scrolling.', 'moderno-child' ),
+		'button'  => __( 'Start the stylist', 'moderno-child' ),
+	] );
+}
+
 /** Trust strip under the hero. Edit via the `omc_usp_items` filter. */
 function omc_usp_items() {
 	return apply_filters( 'omc_usp_items', [

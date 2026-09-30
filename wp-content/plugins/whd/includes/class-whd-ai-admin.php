@@ -202,6 +202,7 @@ final class WHD_AI_Admin {
 
 		self::secret_row( 'anthropic_key', __( 'Anthropic API key', 'whd' ), $o['anthropic_key'], __( 'console.anthropic.com → API keys. Starts with sk-ant-.', 'whd' ), 'anthropic' );
 		self::secret_row( 'openai_key', __( 'OpenAI API key', 'whd' ), $o['openai_key'], __( 'platform.openai.com → API keys. Starts with sk-.', 'whd' ), 'openai' );
+		self::secret_row( 'google_key', __( 'Google API key', 'whd' ), $o['google_key'], __( 'aistudio.google.com → Get API key. Starts with AIza. The Generative Language API has to be enabled on the project.', 'whd' ), 'google' );
 
 		echo '<tr><th><label for="whd-ai-model">' . esc_html__( 'Model', 'whd' ) . '</label></th><td>';
 		echo '<input class="regular-text" id="whd-ai-model" list="whd-ai-models" name="' . esc_attr( self::field( 'model' ) ) . '" value="' . esc_attr( $o['model'] ) . '" placeholder="' . esc_attr( WHD_AI::default_model( $o['provider'] ) ) . '">';
@@ -238,6 +239,19 @@ final class WHD_AI_Admin {
 		echo '</td></tr>';
 
 		echo '</tbody></table>';
+
+		echo '<h2 class="whd-h2">' . esc_html__( 'reCAPTCHA', 'whd' ) . ' '
+			. '<span class="whd-pill ' . ( WHD_AI::recaptcha_ready() ? 'whd-pill--on' : 'whd-pill--off' ) . '">'
+			. ( WHD_AI::recaptcha_ready() ? esc_html__( 'Protecting forms', 'whd' ) : esc_html__( 'Not set up', 'whd' ) )
+			. '</span></h2>';
+		echo '<p class="whd-intro">' . esc_html__( 'Used by the AI stylist, which asks for an email address and would otherwise be worth a bot\'s time. These are a different pair from the model key above — get them at google.com/recaptcha, choosing reCAPTCHA v2 "I\'m not a robot". Without them the wizard still refuses obvious bots on its own, but a real key is better.', 'whd' ) . '</p>';
+		echo '<table class="form-table whd-table-settings"><tbody>';
+		echo '<tr><th><label for="recaptcha_site">' . esc_html__( 'Site key', 'whd' ) . '</label></th><td>'
+			. '<input class="regular-text" id="recaptcha_site" name="' . esc_attr( self::field( 'recaptcha_site' ) ) . '" value="' . esc_attr( $o['recaptcha_site'] ) . '" placeholder="6L…">'
+			. '<p class="description">' . esc_html__( 'Public — it appears in the page, so it is not a secret.', 'whd' ) . '</p></td></tr>';
+		self::secret_row( 'recaptcha_secret', __( 'Secret key', 'whd' ), $o['recaptcha_secret'], __( 'Never leaves the server. Paste it once; it is stored masked.', 'whd' ), '' );
+		echo '</tbody></table>';
+
 		submit_button( __( 'Save settings', 'whd' ) );
 		echo '</form>';
 
@@ -245,17 +259,37 @@ final class WHD_AI_Admin {
 		self::provider_toggle_script();
 	}
 
-	/** Password box that never prints the stored value back to the browser. */
+	/**
+	 * A key box that never prints the stored value back to the browser.
+	 *
+	 * A saved key is shown as dots with only its first and last few characters, which is enough to
+	 * tell two keys apart without putting one in the page — the value itself is never sent to the
+	 * browser at all, so there is nothing in the markup to read.
+	 *
+	 * $provider empty means the row is not tied to a model provider and is always shown.
+	 */
 	private static function secret_row( $key, $label, $stored, $help, $provider ) {
-		$hidden = WHD_AI::get()['provider'] === $provider ? '' : ' hidden';
-		echo '<tr data-whd-ai-provider="' . esc_attr( $provider ) . '"' . $hidden . '>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		$scoped = '' !== $provider;
+		$hidden = ( $scoped && WHD_AI::get()['provider'] !== $provider ) ? ' hidden' : '';
+		echo '<tr' . ( $scoped ? ' data-whd-ai-provider="' . esc_attr( $provider ) . '"' : '' ) . $hidden . '>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo '<th><label for="' . esc_attr( $key ) . '">' . esc_html( $label ) . '</label></th><td>';
 		echo '<input class="regular-text" type="password" autocomplete="new-password" id="' . esc_attr( $key ) . '" name="' . esc_attr( self::field( $key ) ) . '" value="" placeholder="'
 			. esc_attr( '' !== $stored ? __( 'Saved — leave blank to keep it', 'whd' ) : __( 'Paste your key', 'whd' ) ) . '">';
 		if ( '' !== $stored ) {
+			echo ' <code class="whd-secret">' . esc_html( self::mask( $stored ) ) . '</code>';
 			echo ' <label class="whd-clear"><input type="checkbox" name="' . esc_attr( WHD_AI::OPTION . '[clear][' . $key . ']' ) . '" value="1"> ' . esc_html__( 'Remove the saved key', 'whd' ) . '</label>';
 		}
 		echo '<p class="description">' . esc_html( $help ) . '</p></td></tr>';
+	}
+
+	/** "AIza••••••••••••••RzE" — enough to recognise, not enough to use. */
+	private static function mask( $secret ) {
+		$secret = (string) $secret;
+		$len    = strlen( $secret );
+		if ( $len <= 8 ) {
+			return str_repeat( '•', max( 6, $len ) );
+		}
+		return substr( $secret, 0, 4 ) . str_repeat( '•', min( 18, max( 6, $len - 7 ) ) ) . substr( $secret, -3 );
 	}
 
 	private static function provider_toggle_script() {

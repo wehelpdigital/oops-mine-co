@@ -3,7 +3,7 @@
  * Plugin Name: WHD — Popups, Emails & Tracking
  * Plugin URI:  https://wehelpdigital.com
  * Description: Marketing toolkit for Oops, Mine Co.: exit-intent and welcome popups with a drag-and-drop editor and cookie-based countdowns, a drag-and-drop email builder for every WooCommerce trigger (including abandoned-cart recovery), a newsletter list with phone capture, integrations that push subscribers to Mailchimp, Klaviyo or a webhook and send SMS through Twilio, a tracking-scripts module (GA4, Search Console, Meta Pixel), size charts, product stories, and an AI copywriter that writes against your own brief, rules and keyword list.
- * Version:     1.3.0
+ * Version:     1.4.0
  * Author:      We Help Digital
  * Text Domain: whd
  * Requires at least: 6.4
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'WHD_VERSION', '1.3.0' );
+define( 'WHD_VERSION', '1.4.0' );
 define( 'WHD_FILE', __FILE__ );
 define( 'WHD_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WHD_URL', plugin_dir_url( __FILE__ ) );
@@ -28,6 +28,7 @@ require_once WHD_DIR . 'includes/class-whd-size-charts.php';
 require_once WHD_DIR . 'includes/class-whd-product-story.php';
 require_once WHD_DIR . 'includes/class-whd-story-comments.php';
 require_once WHD_DIR . 'includes/class-whd-stock-alerts.php';
+require_once WHD_DIR . 'includes/class-whd-stylist.php';
 require_once WHD_DIR . 'includes/class-whd-ai.php';
 require_once WHD_DIR . 'includes/class-whd-ai-keywords.php';
 require_once WHD_DIR . 'includes/class-whd-ai-admin.php';
@@ -50,8 +51,13 @@ final class WHD_Plugin {
 	}
 
 	public static function init() {
-		load_plugin_textdomain( 'whd', false, dirname( plugin_basename( WHD_FILE ) ) . '/languages' );
-		self::maybe_upgrade();
+		/*
+		 * Both of these on `init`, not here. This runs on plugins_loaded, and since WordPress 6.7
+		 * a translation used before `init` is a doing-it-wrong notice — which the upgrade routine
+		 * triggers, because the default email designs it seeds are written with __().
+		 */
+		add_action( 'init', [ __CLASS__, 'load_textdomain' ], 1 );
+		add_action( 'init', [ __CLASS__, 'maybe_upgrade' ], 5 );
 
 		WHD_Scripts::init();
 		WHD_Popups::init();
@@ -62,6 +68,7 @@ final class WHD_Plugin {
 		WHD_Story_Comments::init();
 		if ( class_exists( 'WooCommerce' ) ) {
 			WHD_Stock_Alerts::init();
+			WHD_Stylist::init();
 		}
 		WHD_Emails::init();
 		if ( class_exists( 'WooCommerce' ) ) {
@@ -72,6 +79,10 @@ final class WHD_Plugin {
 		if ( class_exists( 'WooCommerce' ) ) {
 			WHD_Product_Admin::init();
 		}
+	}
+
+	public static function load_textdomain() {
+		load_plugin_textdomain( 'whd', false, dirname( plugin_basename( WHD_FILE ) ) . '/languages' );
 	}
 
 	/**
@@ -98,6 +109,9 @@ final class WHD_Plugin {
 		WHD_AI_Keywords::install();
 		if ( class_exists( 'WHD_Stock_Alerts' ) ) {
 			WHD_Stock_Alerts::install();
+		}
+		if ( class_exists( 'WHD_Stylist' ) ) {
+			WHD_Stylist::install();
 		}
 		WHD_Popups::ensure_defaults();
 		WHD_Emails::ensure_defaults();
