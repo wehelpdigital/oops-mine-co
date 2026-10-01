@@ -44,6 +44,8 @@ final class WHD_AI {
 			'google_key'      => '',
 			'recaptcha_site'  => '',
 			'recaptcha_secret'=> '',
+			'recaptcha_version' => 'v2',
+			'recaptcha_score' => 0.5,
 			'model'           => '',
 			'max_tokens'      => 1600,
 			'temperature'     => 0.7,
@@ -88,6 +90,26 @@ final class WHD_AI {
 		];
 	}
 
+	/** The two flavours. They are not interchangeable: a key issued for one is rejected by the other. */
+	public static function recaptcha_versions() {
+		return [
+			'v2' => __( 'v2 — the "I am not a robot" tickbox', 'whd' ),
+			'v3' => __( 'v3 — invisible, scores each visitor', 'whd' ),
+		];
+	}
+
+	/** Which flavour the saved keys belong to. */
+	public static function recaptcha_version(): string {
+		$v = sanitize_key( self::get()['recaptcha_version'] ?? 'v2' );
+
+		return isset( self::recaptcha_versions()[ $v ] ) ? $v : 'v2';
+	}
+
+	/** Is there a site key at all? That alone decides whether the page draws anything. */
+	public static function recaptcha_shown(): bool {
+		return '' !== trim( self::get()['recaptcha_site'] );
+	}
+
 	/** Is reCAPTCHA configured? Both halves are needed: the site key renders it, the secret checks it. */
 	public static function recaptcha_ready(): bool {
 		$o = self::get();
@@ -99,8 +121,12 @@ final class WHD_AI {
 	 *
 	 * Returns true when reCAPTCHA is not configured at all: the wizard has its own defences and
 	 * refusing every visitor because a key is missing would be worse than the thing it prevents.
+	 *
+	 * v2 answers yes or no. v3 answers with a score between 0 and 1 and the action the token was
+	 * minted for; both are checked, because a token lifted from another form on the site would
+	 * otherwise pass here.
 	 */
-	public static function recaptcha_verify( $token ) {
+	public static function recaptcha_verify( $token, $action = '' ) {
 		if ( ! self::recaptcha_ready() ) {
 			return true;
 		}
@@ -118,7 +144,18 @@ final class WHD_AI {
 		}
 		$body = json_decode( wp_remote_retrieve_body( $r ), true );
 
-		return ! empty( $body['success'] );
+		if ( empty( $body['success'] ) ) {
+			return false;
+		}
+		if ( 'v3' !== self::recaptcha_version() ) {
+			return true;
+		}
+		if ( '' !== $action && isset( $body['action'] ) && $body['action'] !== $action ) {
+			return false;
+		}
+		$min = (float) ( $o['recaptcha_score'] ?? 0.5 );
+
+		return (float) ( $body['score'] ?? 0 ) >= $min;
 	}
 
 	/** Suggested models per provider. The field is free text, so a newer one can always be typed. */
@@ -187,6 +224,10 @@ final class WHD_AI {
 
 		$out['model']          = sanitize_text_field( $input['model'] ?? '' );
 		$out['recaptcha_site'] = sanitize_text_field( $input['recaptcha_site'] ?? '' );
+
+		$version                    = sanitize_key( $input['recaptcha_version'] ?? 'v2' );
+		$out['recaptcha_version']   = isset( self::recaptcha_versions()[ $version ] ) ? $version : 'v2';
+		$out['recaptcha_score']     = min( 0.9, max( 0.1, round( (float) ( $input['recaptcha_score'] ?? 0.5 ), 1 ) ) );
 		$out['max_tokens']  = min( 8000, max( 200, (int) ( $input['max_tokens'] ?? 1600 ) ) );
 		$out['temperature'] = min( 1, max( 0, round( (float) ( $input['temperature'] ?? 0.7 ), 2 ) ) );
 

@@ -244,10 +244,16 @@ function omc_stylist_band() {
 	}
 
 	return apply_filters( 'omc_stylist_band', [
-		'eyebrow' => __( 'New', 'moderno-child' ),
+		'eyebrow' => __( 'Free · two minutes', 'moderno-child' ),
 		'title'   => __( 'Let us pick, <em>for once</em>', 'moderno-child' ),
-		'text'    => __( 'Six questions — how tall you are, what you actually wear, what you are dressing for — and we come back with a handful of pieces from today\'s rail and a line on why each one is for you. Two minutes, no scrolling.', 'moderno-child' ),
+		'text'    => __( 'Answer six questions about your height, your colours and what you are dressing for. We read the rail and send back a handful of pieces chosen for you, with a line on why each one — here on the page, and by email to keep.', 'moderno-child' ),
+		'steps'   => [
+			__( 'Six quick questions', 'moderno-child' ),
+			__( 'Tell us where to send it', 'moderno-child' ),
+			__( 'Your edit, on screen and by email', 'moderno-child' ),
+		],
 		'button'  => __( 'Start the stylist', 'moderno-child' ),
+		'note'    => __( 'No account needed. We only email you about the shop, and you can leave any time.', 'moderno-child' ),
 	] );
 }
 

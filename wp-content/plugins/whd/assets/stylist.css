@@ -152,6 +152,19 @@
 }
 .whd-sty__captcha { margin: 18px 0 0; }
 
+/*
+ * v3 has no tickbox — only a floating badge, which lands on top of the sticky offer tab. Google
+ * allows hiding it as long as the page says what is protecting it, which .whd-sty__legal does.
+ */
+.grecaptcha-badge { visibility: hidden; }
+.whd-sty__legal {
+	margin: 16px 0 0;
+	font: 400 11px/1.6 var(--omc-sans, sans-serif);
+	letter-spacing: .02em;
+	color: var(--omc-muted, #7a6a63);
+	text-transform: none !important;
+}
+
 .whd-sty__go,
 .whd-sty__next {
 	display: inline-block;
@@ -375,4 +388,67 @@ html.whd-sty-open { overflow: hidden; }
 	.whd-sty__pick,
 	.whd-sty__bar-fill { transition: none; animation: none; transform: none; opacity: 1; }
 	.whd-sty__spin { animation: none; }
+}
+
+/* ─── How it works, on the intro ─── */
+.whd-sty__how {
+	list-style: none;
+	margin: 0 0 26px;
+	padding: 0;
+	display: grid;
+	gap: 10px;
+	max-width: 480px;
+}
+.whd-sty__how li {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	font: 400 15px/1.5 var(--omc-sans, sans-serif);
+	color: var(--omc-text, #4a3f3a);
+}
+.whd-sty__how span {
+	flex: 0 0 auto;
+	width: 26px;
+	height: 26px;
+	display: grid;
+	place-items: center;
+	border-radius: 50%;
+	background: var(--omc-sand, #f3ece6);
+	border: 1px solid var(--omc-line, #e7ded6);
+	font: 600 12px/1 var(--omc-sans, sans-serif);
+	color: var(--omc-rose-dark, #9c6f63);
+}
+
+/* ─── The details form ─── */
+.whd-sty__row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 14px;
+}
+.whd-sty__field { display: block; }
+.whd-sty__field input { max-width: none !important; width: 100%; }
+.whd-sty__err {
+	display: block;
+	min-height: 17px;
+	margin-top: 5px;
+	font: 400 12.5px/1.4 var(--omc-sans, sans-serif);
+	color: #8a2424;
+}
+.whd-sty__err:empty { min-height: 6px; }
+.whd-sty__form input.is-bad { border-color: #b32d2e; }
+.whd-sty__captcha { margin: 14px 0 0; min-height: 0; }
+.whd-sty__captcha:empty { margin: 0; }
+
+.whd-sty__mailed {
+	margin: 0 0 18px;
+	padding: 10px 14px;
+	background: var(--omc-sand, #f3ece6);
+	border-left: 2px solid var(--omc-rose, #b98b7e);
+	font: 400 14px/1.6 var(--omc-sans, sans-serif);
+	color: var(--omc-text, #4a3f3a);
+}
+.whd-sty__mailed.is-bad { border-left-color: #b32d2e; }
+
+@media (max-width: 600px) {
+	.whd-sty__row { grid-template-columns: 1fr; gap: 0; }
 }

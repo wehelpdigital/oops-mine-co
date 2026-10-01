@@ -184,7 +184,7 @@ final class WHD_AI_Admin {
 		$o = WHD_AI::get();
 		echo '<form method="post" action="options.php" class="whd-form">';
 		settings_fields( 'whd_ai_group' );
-		self::carry_over( [ 'provider', 'model', 'max_tokens', 'temperature', 'post_types' ] );
+		self::carry_over( [ 'provider', 'model', 'max_tokens', 'temperature', 'post_types', 'recaptcha_site', 'recaptcha_version', 'recaptcha_score' ] );
 
 		echo '<h2 class="whd-h2">' . esc_html__( 'Provider', 'whd' ) . ' '
 			. '<span class="whd-pill ' . ( WHD_AI::ready() ? 'whd-pill--on' : 'whd-pill--off' ) . '">'
@@ -244,12 +244,23 @@ final class WHD_AI_Admin {
 			. '<span class="whd-pill ' . ( WHD_AI::recaptcha_ready() ? 'whd-pill--on' : 'whd-pill--off' ) . '">'
 			. ( WHD_AI::recaptcha_ready() ? esc_html__( 'Protecting forms', 'whd' ) : esc_html__( 'Not set up', 'whd' ) )
 			. '</span></h2>';
-		echo '<p class="whd-intro">' . esc_html__( 'Used by the AI stylist, which asks for an email address and would otherwise be worth a bot\'s time. These are a different pair from the model key above — get them at google.com/recaptcha, choosing reCAPTCHA v2 "I\'m not a robot". Without them the wizard still refuses obvious bots on its own, but a real key is better.', 'whd' ) . '</p>';
+		echo '<p class="whd-intro">' . esc_html__( 'Used by the AI stylist, which asks for an email address and would otherwise be worth a bot\'s time. These are a different pair from the model key above — get them at google.com/recaptcha. Both halves come from the same page there: the site key goes in the page, the secret key stays here. Without the secret nothing can actually be checked, and the wizard falls back to its own defences.', 'whd' ) . '</p>';
 		echo '<table class="form-table whd-table-settings"><tbody>';
+
+		echo '<tr><th><label for="recaptcha_version">' . esc_html__( 'Which reCAPTCHA', 'whd' ) . '</label></th><td><select id="recaptcha_version" name="' . esc_attr( self::field( 'recaptcha_version' ) ) . '">';
+		foreach ( WHD_AI::recaptcha_versions() as $key => $label ) {
+			printf( '<option value="%s"%s>%s</option>', esc_attr( $key ), selected( WHD_AI::recaptcha_version(), $key, false ), esc_html( $label ) );
+		}
+		echo '</select><p class="description">' . esc_html__( 'Google shows this when you create the keys, and the two kinds are not interchangeable — a v3 key asked to draw a tickbox answers "Invalid key type" and nobody can get past it. If the stylist shows that message, it is this setting that is wrong.', 'whd' ) . '</p></td></tr>';
+
 		echo '<tr><th><label for="recaptcha_site">' . esc_html__( 'Site key', 'whd' ) . '</label></th><td>'
 			. '<input class="regular-text" id="recaptcha_site" name="' . esc_attr( self::field( 'recaptcha_site' ) ) . '" value="' . esc_attr( $o['recaptcha_site'] ) . '" placeholder="6L…">'
 			. '<p class="description">' . esc_html__( 'Public — it appears in the page, so it is not a secret.', 'whd' ) . '</p></td></tr>';
-		self::secret_row( 'recaptcha_secret', __( 'Secret key', 'whd' ), $o['recaptcha_secret'], __( 'Never leaves the server. Paste it once; it is stored masked.', 'whd' ), '' );
+		self::secret_row( 'recaptcha_secret', __( 'Secret key', 'whd' ), $o['recaptcha_secret'], __( 'Never leaves the server. Paste it once; it is stored masked. Until it is here, no token is checked with Google.', 'whd' ), '' );
+
+		echo '<tr data-whd-recaptcha="v3"' . ( 'v3' === WHD_AI::recaptcha_version() ? '' : ' hidden' ) . '><th><label for="recaptcha_score">' . esc_html__( 'Lowest score to let through', 'whd' ) . '</label></th><td>'
+			. '<input type="number" class="small-text" step="0.1" min="0.1" max="0.9" id="recaptcha_score" name="' . esc_attr( self::field( 'recaptcha_score' ) ) . '" value="' . esc_attr( (string) $o['recaptcha_score'] ) . '">'
+			. '<p class="description">' . esc_html__( 'v3 scores every visitor from 0 (certainly a bot) to 1 (certainly a person). 0.5 is Google\'s suggestion. Raise it if spam gets through; lower it if real people are being turned away.', 'whd' ) . '</p></td></tr>';
 		echo '</tbody></table>';
 
 		submit_button( __( 'Save settings', 'whd' ) );
@@ -293,7 +304,7 @@ final class WHD_AI_Admin {
 	}
 
 	private static function provider_toggle_script() {
-		echo '<script>(function(){var s=document.getElementById("whd-ai-provider");if(!s){return;}function paint(){var r=document.querySelectorAll("[data-whd-ai-provider]");for(var i=0;i<r.length;i++){r[i].hidden=r[i].getAttribute("data-whd-ai-provider")!==s.value;}}s.addEventListener("change",paint);paint();})();</script>';
+		echo '<script>(function(){var s=document.getElementById("whd-ai-provider");if(s){var paint=function(){var r=document.querySelectorAll("[data-whd-ai-provider]");for(var i=0;i<r.length;i++){r[i].hidden=r[i].getAttribute("data-whd-ai-provider")!==s.value;}};s.addEventListener("change",paint);paint();}var v=document.getElementById("recaptcha_version");if(v){var show=function(){var r=document.querySelectorAll("[data-whd-recaptcha]");for(var i=0;i<r.length;i++){r[i].hidden=r[i].getAttribute("data-whd-recaptcha")!==v.value;}};v.addEventListener("change",show);show();}})();</script>';
 	}
 
 	private static function log_section() {

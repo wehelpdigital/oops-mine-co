@@ -32,6 +32,9 @@ final class WHD_Stylist {
 	/** How many pieces a session is shown. */
 	const PICKS = 6;
 
+	/** What v3 tokens are minted for, so one lifted from another form on the site does not pass here. */
+	const CAPTCHA_ACTION = 'whd_stylist';
+
 	/** Nobody fills in a name, an email and a captcha in under this. A bot does. */
 	const MIN_SECONDS = 3;
 
@@ -76,8 +79,6 @@ final class WHD_Stylist {
 		add_action( 'admin_init', [ __CLASS__, 'maybe_install' ] );
 		add_action( 'wp_enqueue_scripts', [ __CLASS__, 'assets' ] );
 		add_action( 'wp_footer', [ __CLASS__, 'render' ], 6 );
-		add_action( 'wp_ajax_whd_stylist_start', [ __CLASS__, 'ajax_start' ] );
-		add_action( 'wp_ajax_nopriv_whd_stylist_start', [ __CLASS__, 'ajax_start' ] );
 		add_action( 'wp_ajax_whd_stylist_finish', [ __CLASS__, 'ajax_finish' ] );
 		add_action( 'wp_ajax_nopriv_whd_stylist_finish', [ __CLASS__, 'ajax_finish' ] );
 	}
@@ -171,117 +172,95 @@ final class WHD_Stylist {
 		] );
 	}
 
-	/* ─────────────────────────── step one ─────────────────────────── */
+	/* ─────────────────────────── the one call ─────────────────────────── */
 
-	public static function ajax_start() {
-		check_ajax_referer( 'whd_stylist', 'nonce' );
-		self::maybe_install();
-
-		// A field a person never sees and a bot always fills.
-		if ( ! empty( $_POST['website'] ) ) {
-			wp_send_json_error( [ 'message' => __( 'Something went wrong. Please try again.', 'whd' ) ] );
-		}
-		$elapsed = isset( $_POST['elapsed'] ) ? (int) $_POST['elapsed'] : 0;
-		if ( $elapsed < self::MIN_SECONDS ) {
-			wp_send_json_error( [ 'message' => __( 'Take a moment longer over that and try again.', 'whd' ) ] );
-		}
-		if ( ! WHD_AI::recaptcha_verify( isset( $_POST['captcha'] ) ? wp_unslash( $_POST['captcha'] ) : '' ) ) {
-			wp_send_json_error( [ 'message' => __( 'The robot check did not pass. Refresh and try once more.', 'whd' ) ] );
-		}
-
-		$name  = sanitize_text_field( wp_unslash( $_POST['name'] ?? '' ) );
-		$email = sanitize_email( wp_unslash( $_POST['email'] ?? '' ) );
-		if ( ! is_email( $email ) ) {
-			wp_send_json_error( [ 'message' => __( 'That does not look like an email address.', 'whd' ) ] );
-		}
-		if ( self::too_many( $email ) ) {
-			wp_send_json_error( [ 'message' => __( 'You have had a few of these today. Try again tomorrow.', 'whd' ) ] );
-		}
-
-		// Onto the list before a single question is asked: it is what the email was given for.
-		WHD_Subscribers::add( $email, $name, 'stylist' );
-
-		wp_send_json_success( [
-			'token'     => self::token( $email ),
-			'questions' => self::questions(),
-			'greeting'  => $name
-				/* translators: %s: the visitor's first name */
-				? sprintf( __( 'Good to meet you, %s.', 'whd' ), self::first_name( $name ) )
-				: __( 'Good to meet you.', 'whd' ),
-		] );
-	}
-
-	private static function first_name( $name ) {
-		$bits = preg_split( '/\s+/', trim( $name ) );
-		return $bits ? $bits[0] : $name;
-	}
-
-	/** A signed handle for the session, so the answers step cannot be called for a stranger. */
-	private static function token( $email ) {
-		return wp_hash( 'whd-stylist|' . strtolower( $email ) . '|' . gmdate( 'Y-m-d' ) ) . '|' . base64_encode( $email ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
-	}
-
-	private static function email_from_token( $token ) {
-		$parts = explode( '|', (string) $token, 2 );
-		if ( 2 !== count( $parts ) ) {
-			return '';
-		}
-		$email = base64_decode( $parts[1], true ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode
-		if ( ! $email || ! is_email( $email ) ) {
-			return '';
-		}
-		return hash_equals( wp_hash( 'whd-stylist|' . strtolower( $email ) . '|' . gmdate( 'Y-m-d' ) ), $parts[0] ) ? $email : '';
-	}
-
-	/** Five sessions an address a day is generous for a person and tedious for a script. */
-	private static function too_many( $email ) {
-		global $wpdb;
-		$n = (int) $wpdb->get_var( $wpdb->prepare( // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-			'SELECT COUNT(*) FROM ' . self::table() . ' WHERE email = %s AND created > %s',
-			strtolower( $email ),
-			gmdate( 'Y-m-d H:i:s', time() - DAY_IN_SECONDS )
-		) );
-		return $n >= 5;
-	}
-
-	/* ─────────────────────────── the answer ─────────────────────────── */
-
+	/**
+	 * Answers in, an edit out.
+	 *
+	 * Everything happens here because everything depends on the same check: the details are only
+	 * worth keeping if the visitor is real, and the edit is only worth computing if the details
+	 * are. Order matters — refuse first, subscribe second, recommend third, send last, so a bot
+	 * never reaches the catalogue and a failed send never costs someone their recommendations.
+	 */
 	public static function ajax_finish() {
 		check_ajax_referer( 'whd_stylist', 'nonce' );
 		self::maybe_install();
 
-		$email = self::email_from_token( wp_unslash( $_POST['token'] ?? '' ) );
-		if ( ! $email ) {
-			wp_send_json_error( [ 'message' => __( 'That session has expired. Start again and it will only take a moment.', 'whd' ) ] );
+		// A field a person never sees and a script always fills.
+		if ( ! empty( $_POST['website'] ) ) {
+			wp_send_json_error( [ 'message' => __( 'Something went wrong. Please try again.', 'whd' ) ] );
+		}
+		if ( ( isset( $_POST['elapsed'] ) ? (int) $_POST['elapsed'] : 0 ) < self::MIN_SECONDS ) {
+			wp_send_json_error( [ 'message' => __( 'That was quick. Take another moment and try again.', 'whd' ) ] );
+		}
+		if ( ! WHD_AI::recaptcha_verify( isset( $_POST['captcha'] ) ? wp_unslash( $_POST['captcha'] ) : '', self::CAPTCHA_ACTION ) ) {
+			wp_send_json_error( [
+				'field'   => 'captcha',
+				'message' => __( 'The robot check did not pass. Tick it again and resend.', 'whd' ),
+			] );
+		}
+
+		$first = sanitize_text_field( wp_unslash( $_POST['first_name'] ?? '' ) );
+		$last  = sanitize_text_field( wp_unslash( $_POST['last_name'] ?? '' ) );
+		$email = sanitize_email( wp_unslash( $_POST['email'] ?? '' ) );
+
+		if ( mb_strlen( $first ) < 2 ) {
+			wp_send_json_error( [ 'field' => 'first_name', 'message' => __( 'Your first name, as you would like it written.', 'whd' ) ] );
+		}
+		if ( mb_strlen( $last ) < 2 ) {
+			wp_send_json_error( [ 'field' => 'last_name', 'message' => __( 'And your last name.', 'whd' ) ] );
+		}
+		if ( ! is_email( $email ) ) {
+			wp_send_json_error( [ 'field' => 'email', 'message' => __( 'That does not look like an email address.', 'whd' ) ] );
+		}
+		if ( self::too_many( $email ) ) {
+			wp_send_json_error( [ 'field' => 'email', 'message' => __( 'You have had a few of these today. Try again tomorrow.', 'whd' ) ] );
 		}
 
 		$raw     = isset( $_POST['answers'] ) ? json_decode( wp_unslash( $_POST['answers'] ), true ) : [];
 		$answers = self::clean_answers( is_array( $raw ) ? $raw : [] );
 		if ( ! $answers ) {
-			wp_send_json_error( [ 'message' => __( 'No answers came through. Try the wizard again.', 'whd' ) ] );
+			wp_send_json_error( [ 'message' => __( 'No answers came through. Start the wizard again.', 'whd' ) ] );
 		}
 
-		$picks  = self::recommend( $answers );
-		$used   = ! empty( $picks['used_ai'] );
-		$result = $picks['picks'];
+		$name = trim( $first . ' ' . $last );
+		WHD_Subscribers::add( $email, $name, 'stylist' );
+
+		$result = self::recommend( $answers );
+		$picks  = $result['picks'];
 
 		global $wpdb;
 		$wpdb->insert( self::table(), [ // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			'email'   => strtolower( $email ),
-			'name'    => sanitize_text_field( wp_unslash( $_POST['name'] ?? '' ) ),
+			'name'    => $name,
 			'answers' => wp_json_encode( $answers ),
-			'picks'   => wp_json_encode( wp_list_pluck( $result, 'id' ) ),
-			'used_ai' => $used ? 1 : 0,
+			'picks'   => wp_json_encode( wp_list_pluck( $picks, 'id' ) ),
+			'used_ai' => ! empty( $result['used_ai'] ) ? 1 : 0,
 			'created' => current_time( 'mysql' ),
 		] );
 
+		$mailed = $picks ? self::send_edit( $email, $first, $picks, $result['intro'] ) : false;
+
 		wp_send_json_success( [
-			'picks'  => $result,
-			'intro'  => $picks['intro'],
+			'picks'   => $picks,
+			'intro'   => $result['intro'],
+			'greeting' => sprintf( /* translators: %s: first name */ __( 'Here you are, %s.', 'whd' ), $first ),
+			'mailed'  => (bool) $mailed,
+			'mailNote' => $mailed
+				/* translators: %s: email address */
+				? sprintf( __( 'A copy is on its way to %s.', 'whd' ), $email )
+				: __( 'Keep this page open — we could not get the email out just now.', 'whd' ),
 			'shopUrl' => function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' ),
 		] );
 	}
 
+	/**
+	 * Send the edit.
+	 *
+	 * Uses the designable `stylist_edit` trigger, with the picks fed in as the item list so the
+	 * same block that shows an abandoned bag shows the edit — pictures, names and prices, already
+	 * styled for an inbox.
+	 */
 	private static function clean_answers( array $raw ) {
 		$out = [];
 		foreach ( self::questions() as $q ) {
@@ -298,7 +277,48 @@ final class WHD_Stylist {
 				$out[ $q['key'] ] = $given;
 			}
 		}
+
 		return $out;
+	}
+
+	/** Five sessions an address a day is generous for a person and tedious for a script. */
+	private static function too_many( $email ) {
+		global $wpdb;
+		$n = (int) $wpdb->get_var( $wpdb->prepare( // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			'SELECT COUNT(*) FROM ' . self::table() . ' WHERE email = %s AND created > %s',
+			strtolower( $email ),
+			gmdate( 'Y-m-d H:i:s', time() - DAY_IN_SECONDS )
+		) );
+
+		return $n >= 5;
+	}
+
+	public static function send_edit( $email, $first, array $picks, $intro ) {
+		$items = [];
+		foreach ( $picks as $p ) {
+			$items[] = [
+				'name'         => $p['name'] . ( $p['reason'] ? ' — ' . $p['reason'] : '' ),
+				'qty'          => 1,
+				'total'        => $p['price'],
+				'image'        => $p['image'],
+				'url'          => $p['url'],
+				'product_id'   => $p['id'],
+				'variation_id' => 0,
+			];
+		}
+
+		$ctx = WHD_Emails::context( [
+			'data' => [
+				'first_name'    => $first,
+				'customer_name' => $first,
+				'email'         => $email,
+				'stylist_intro' => $intro,
+			],
+		] );
+		$ctx['cart_items'] = $items;
+		$ctx['items']      = $items;
+
+		return (bool) WHD_Emails::send_custom( 'stylist_edit', $ctx, $email );
 	}
 
 	/* ─────────────────────────── matching ─────────────────────────── */
@@ -623,23 +643,44 @@ final class WHD_Stylist {
 		wp_enqueue_style( 'whd-stylist', WHD_URL . 'assets/stylist.css', [], WHD_VERSION );
 		wp_enqueue_script( 'whd-stylist', WHD_URL . 'assets/stylist.js', [], WHD_VERSION, true );
 
-		$o = WHD_AI::get();
-		if ( WHD_AI::recaptcha_ready() ) {
-			wp_enqueue_script( 'whd-recaptcha', 'https://www.google.com/recaptcha/api.js', [], null, true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
+		$o       = WHD_AI::get();
+		$version = WHD_AI::recaptcha_version();
+		if ( WHD_AI::recaptcha_shown() ) {
+			/*
+			 * The two flavours need different script URLs, and a key issued for one is refused by
+			 * the other — so the version the owner chose decides this, not a guess. v2 is rendered
+			 * explicitly because the tickbox is built when the visitor reaches that step; v3 draws
+			 * nothing and simply mints a token when the form is sent.
+			 */
+			$src = 'v3' === $version
+				? 'https://www.google.com/recaptcha/api.js?render=' . rawurlencode( $o['recaptcha_site'] )
+				: 'https://www.google.com/recaptcha/api.js?render=explicit';
+			wp_enqueue_script( 'whd-recaptcha', $src, [], null, true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
 		}
 
 		wp_localize_script( 'whd-stylist', 'WHD_STYLIST', [
 			'ajax'      => admin_url( 'admin-ajax.php' ),
 			'nonce'     => wp_create_nonce( 'whd_stylist' ),
-			'recaptcha' => WHD_AI::recaptcha_ready() ? $o['recaptcha_site'] : '',
+			'questions' => self::questions(),
+			'recaptcha' => WHD_AI::recaptcha_shown() ? $o['recaptcha_site'] : '',
+			'captchaV3' => 'v3' === $version,
+			'captchaAction' => self::CAPTCHA_ACTION,
 			'i18n'      => [
 				'working'  => __( 'Reading the rail…', 'whd' ),
 				'next'     => __( 'Next', 'whd' ),
-				'see'      => __( 'See what suits me', 'whd' ),
+				'see'      => __( 'Almost there', 'whd' ),
 				'again'    => __( 'Start again', 'whd' ),
+				'back'     => __( 'Back', 'whd' ),
 				'error'    => __( 'Something went wrong. Try again in a moment.', 'whd' ),
 				'pickOne'  => __( 'Choose at least one to carry on.', 'whd' ),
 				'step'     => __( 'Step %1$d of %2$d', 'whd' ),
+				'send'     => __( 'Show me my edit', 'whd' ),
+				'tick'     => __( 'Tick the box to show you are human.', 'whd' ),
+				'captchaOff' => __( 'The robot check did not load. Reload the page and try again.', 'whd' ),
+				'captchaNote' => __( 'Protected by reCAPTCHA — the Google privacy policy and terms apply.', 'whd' ),
+				'browse'   => __( 'Browse everything', 'whd' ),
+				'yourEdit' => __( 'Your edit', 'whd' ),
+				'chosen'   => __( 'Chosen <em>for you</em>', 'whd' ),
 			],
 		] );
 	}
@@ -658,30 +699,22 @@ final class WHD_Stylist {
 				<div class="whd-sty__bar" aria-hidden="true"><span class="whd-sty__bar-fill"></span></div>
 
 				<div class="whd-sty__stage">
-					<!-- Step 0: who you are -->
+					<!-- What this is -->
 					<section class="whd-sty__step is-on" data-step="intro">
 						<p class="whd-sty__eyebrow"><?php esc_html_e( 'The stylist', 'whd' ); ?></p>
-						<h2 class="whd-sty__title" id="whd-sty-title"><?php echo wp_kses( __( 'Tell us a little, and we will <em>pick for you</em>', 'whd' ), [ 'em' => [] ] ); ?></h2>
-						<p class="whd-sty__lede"><?php esc_html_e( 'Six quick questions, then a handful of pieces from what is on the rail today — with a line on why each one is for you. Two minutes, no browsing.', 'whd' ); ?></p>
-						<form class="whd-sty__form" novalidate>
-							<label class="whd-sty__label" for="whd-sty-name"><?php esc_html_e( 'Your name', 'whd' ); ?></label>
-							<input type="text" id="whd-sty-name" name="name" autocomplete="given-name" required>
-							<label class="whd-sty__label" for="whd-sty-email"><?php esc_html_e( 'Your email', 'whd' ); ?></label>
-							<input type="email" id="whd-sty-email" name="email" autocomplete="email" required>
-							<p class="whd-sty__hp" aria-hidden="true">
-								<label><?php esc_html_e( 'Leave this empty', 'whd' ); ?><input type="text" name="website" tabindex="-1" autocomplete="off"></label>
-							</p>
-							<?php if ( WHD_AI::recaptcha_ready() ) : ?>
-								<div class="g-recaptcha whd-sty__captcha" data-sitekey="<?php echo esc_attr( WHD_AI::get()['recaptcha_site'] ); ?>"></div>
-							<?php endif; ?>
-							<button type="submit" class="whd-sty__go"><?php esc_html_e( 'Start', 'whd' ); ?></button>
-							<p class="whd-sty__small"><?php esc_html_e( 'We add you to the list so we can send the edit. One email when something lands — leave any time.', 'whd' ); ?></p>
-							<p class="whd-sty__note" role="status"></p>
-						</form>
+						<h2 class="whd-sty__title" id="whd-sty-title"><?php echo wp_kses( __( 'Six questions, and we <em>pick for you</em>', 'whd' ), [ 'em' => [] ] ); ?></h2>
+						<p class="whd-sty__lede"><?php esc_html_e( 'How tall you are, what you actually wear, what you are dressing for. Then a handful of pieces from today\'s rail, with a line on why each one is for you — on screen and in your inbox.', 'whd' ); ?></p>
+						<ol class="whd-sty__how">
+							<li><span>1</span><?php esc_html_e( 'Answer six quick questions', 'whd' ); ?></li>
+							<li><span>2</span><?php esc_html_e( 'Tell us where to send it', 'whd' ); ?></li>
+							<li><span>3</span><?php esc_html_e( 'See your edit, and keep the email', 'whd' ); ?></li>
+						</ol>
+						<button type="button" class="whd-sty__go" data-sty-begin><?php esc_html_e( 'Start — it takes two minutes', 'whd' ); ?></button>
 					</section>
 
-					<!-- Questions and result are built here -->
+					<!-- Questions, details and the edit are all built by the script -->
 					<section class="whd-sty__step" data-step="q"></section>
+					<section class="whd-sty__step" data-step="details"></section>
 					<section class="whd-sty__step" data-step="result"></section>
 				</div>
 			</div>

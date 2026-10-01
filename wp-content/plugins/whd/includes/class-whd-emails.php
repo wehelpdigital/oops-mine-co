@@ -33,6 +33,7 @@ final class WHD_Emails {
 			'abandoned_cart_3'          => [ 'label' => __( 'Abandoned cart — 48 h: 10% incentive', 'whd' ), 'group' => 'automation', 'template' => '' ],
 			'welcome_subscriber'        => [ 'label' => __( 'Newsletter welcome', 'whd' ), 'group' => 'automation', 'template' => '' ],
 			'back_in_stock'             => [ 'label' => __( 'Back in stock — the size someone waited for', 'whd' ), 'group' => 'automation', 'template' => '' ],
+			'stylist_edit'              => [ 'label' => __( 'Stylist — the edit someone was picked', 'whd' ), 'group' => 'automation', 'template' => '' ],
 			'new_order'                 => [ 'label' => __( 'New order (to admin)', 'whd' ), 'group' => 'admin', 'template' => 'emails/admin-new-order.php' ],
 			'cancelled_order'           => [ 'label' => __( 'Cancelled order (to admin)', 'whd' ), 'group' => 'admin', 'template' => 'emails/admin-cancelled-order.php' ],
 			'failed_order'              => [ 'label' => __( 'Failed order (to admin)', 'whd' ), 'group' => 'admin', 'template' => 'emails/admin-failed-order.php' ],
@@ -80,7 +81,8 @@ final class WHD_Emails {
 		// written back as 'failed', and steps 2 and 3 are never reached.
 		// Back-in-stock is a reply to something a shopper asked for, so it ships enabled: an alert
 		// nobody receives is worse than no alert button at all.
-		$auto_on  = [ 'abandoned_cart', 'abandoned_cart_2', 'abandoned_cart_3', 'back_in_stock' ];
+		// Both of these answer something a visitor asked for, so they ship enabled.
+		$auto_on  = [ 'abandoned_cart', 'abandoned_cart_2', 'abandoned_cart_3', 'back_in_stock', 'stylist_edit' ];
 		foreach ( self::triggers() as $id => $t ) {
 			if ( empty( $stored[ $id ] ) ) {
 				$stored[ $id ] = self::default_design( $id );
@@ -136,6 +138,7 @@ final class WHD_Emails {
 			'abandoned_cart'            => [ 'Oops — did you forget something?', [ $brand, $heading( 'Your bag is still here, {first_name}.' ), $text( 'You picked, then life happened. We kept everything exactly where you left it — one tap and you are back to it.' ), $b( 'cart_items', [ 'show_images' => 1 ] ), $button( 'Back to my bag', '{recovery_url}' ), $text( 'Oops, mine? We thought so.<br>— {site_name}' ) ] ],
 			'abandoned_cart_2'          => [ 'Still thinking it over? These don’t come back', [ $brand, $heading( 'Still on your mind?' ), $text( 'Your picks are waiting, {first_name}. Take another look while your size is still there.' ), $b( 'cart_items', [ 'show_images' => 1 ] ), $note( 'Small batches. When a size sells through, it’s gone.' ), $button( 'Take another look', '{recovery_url}' ), $text( 'Find something yours.<br>— {site_name}' ) ] ],
 			'abandoned_cart_3'          => [ '10% off to finish the look', [ $brand, $heading( 'Here’s 10% off to finish the look.' ), $text( 'Last note about your bag, {first_name}. Use the code below at checkout and make it yours.' ), $b( 'coupon', [ 'code' => '{coupon_code}', 'note' => '10% off your order', 'color' => '#9c6f63' ] ), $b( 'cart_items', [ 'show_images' => 1 ] ), $button( 'Finish my order', '{recovery_url}' ), $text( 'One unexpected find at a time.<br>— {site_name}' ) ] ],
+			'stylist_edit'              => [ 'Your edit from Oops, Mine Co.', [ $brand, $heading( 'Chosen for you, {first_name}.' ), $text( 'Here is the edit from your answers — the pieces on the rail now that we would have put in your hands. Each one links straight through.' ), $b( 'cart_items', [ 'show_images' => 1 ] ), $button( 'See everything on the rail', '{shop_url}' ), $text( 'Runs here are small, so an edit is a snapshot of today rather than a promise about next week.<br>— {site_name}' ) ] ],
 			'back_in_stock'             => [ '{product_name} is back — the size you wanted', [ $brand, $heading( 'It came back, {first_name}.' ), $text( 'You asked to hear when <strong>{product_name}</strong> returned in <strong>{variation}</strong>. It has, and these go out in small runs — so this is worth opening now rather than later.' ), $button( 'Take another look', '{product_url}' ), $text( 'If you have already found something else, <a href="{cancel_url}">let us know</a> and we will stop watching this one for you.' ), $signoff ] ],
 			'welcome_subscriber'        => [ 'Welcome to Oops, Mine Co.', [ $brand, $heading( 'Found with intention. Claimed on instinct.' ), $text( 'Thanks for joining the list. Expect new arrivals, quiet restocks and the occasional note — never noise.' ), $b( 'coupon', [ 'code' => '{coupon_code}', 'note' => '10% off your first order', 'color' => '#b98b7e' ] ), $button( 'Shop new arrivals', '{shop_url}' ), $signoff ] ],
 			'new_order'                 => [ '[{site_name}] New order #{order_number} from {customer_name}', [ $brand, $heading( 'New order #{order_number}' ), $text( '{customer_name} ({email}) placed an order on {order_date}. Status: {order_status}.' ), $items, $summary, $button( 'Open in WooCommerce', '{admin_order_url}' ) ] ],
@@ -330,6 +333,9 @@ final class WHD_Emails {
 			$args['user'] = $user;
 		}
 		if ( in_array( $id, [ 'abandoned_cart', 'abandoned_cart_2', 'abandoned_cart_3', 'welcome_subscriber' ], true ) ) {
+			$args['cart'] = self::sample_cart();
+		}
+		if ( 'stylist_edit' === $id ) {
 			$args['cart'] = self::sample_cart();
 		}
 		if ( self::TRIGGER_STOCK === $id ) {
