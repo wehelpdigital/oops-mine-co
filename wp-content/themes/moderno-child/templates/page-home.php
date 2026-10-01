@@ -52,6 +52,58 @@ get_header();
 			?>
 		</div>
 		<div class="omc-hero__content l-section__container">
+			<?php
+			/*
+			 * "As seen on", as a credit rather than a band. One mark at a time cross-fades on the
+			 * left of the photograph, with the count and its source beneath — the logos are the
+			 * claim, those two lines are the footnote to it.
+			 */
+			$omc_press      = function_exists( 'omc_press_logos' ) ? omc_press_logos() : [];
+			$omc_press_note = function_exists( 'omc_press_note' ) ? omc_press_note() : [];
+			$omc_note_count = trim( (string) ( $omc_press_note['count'] ?? '' ) );
+			$omc_note_by    = trim( (string) ( $omc_press_note['verifier'] ?? '' ) );
+			$omc_note_url   = trim( (string) ( $omc_press_note['url'] ?? '' ) );
+			?>
+			<?php if ( $omc_press ) : ?>
+				<aside class="omc-seen" aria-label="<?php esc_attr_e( 'Press coverage', 'moderno-child' ); ?>">
+					<div class="omc-seen__head">
+						<p class="omc-seen__eyebrow"><?php esc_html_e( 'As seen on', 'moderno-child' ); ?></p>
+						<?php /* The cycle is decoration; the names are read from the line below it instead. */ ?>
+						<div class="omc-seen__stage js-omc-fade" data-fade="2600" data-fade-hover="no" aria-hidden="true">
+							<?php foreach ( $omc_press as $omc_i => $omc_p ) : ?>
+								<?php
+								echo omc_press_mark( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
+									$omc_p,
+									'omc-seen__logo' . ( 0 === $omc_i ? ' is-active' : '' ),
+									0 === $omc_i
+								);
+								?>
+							<?php endforeach; ?>
+						</div>
+					</div>
+					<p class="omc-sr">
+						<?php
+						printf(
+							/* translators: %s: list of outlet names, e.g. "FOX, NBC, CBS, ABC" */
+							esc_html__( 'As seen on %s.', 'moderno-child' ),
+							esc_html( implode( ', ', wp_list_pluck( $omc_press, 'name' ) ) )
+						);
+						?>
+					</p>
+					<?php if ( $omc_note_count ) : ?>
+						<p class="omc-seen__count"><?php echo esc_html( $omc_note_count ); ?></p>
+					<?php endif; ?>
+					<?php if ( $omc_note_by ) : ?>
+						<p class="omc-seen__by">
+							<?php if ( $omc_note_url ) : ?>
+								<a href="<?php echo esc_url( $omc_note_url ); ?>" target="_blank" rel="noopener"><?php echo esc_html( $omc_note_by ); ?></a>
+							<?php else : ?>
+								<?php echo esc_html( $omc_note_by ); ?>
+							<?php endif; ?>
+						</p>
+					<?php endif; ?>
+				</aside>
+			<?php endif; ?>
 			<?php echo omc_logo_img( 'cream', 'omc-hero__logo', [ 'loading' => 'eager' ] ); ?>
 			<?php $omc_phrases = omc_hero_phrases(); ?>
 			<h1 class="omc-hero__title" id="omc-hero-title">
@@ -95,51 +147,6 @@ get_header();
 				</button>
 				<?php if ( ! empty( $omc_sty['note'] ) ) : ?>
 					<p class="omc-stylist__note"><?php echo esc_html( $omc_sty['note'] ); ?></p>
-				<?php endif; ?>
-			</div>
-		</section>
-	<?php endif; ?>
-
-	<!-- ───────────── As seen on (placeholder names — see omc_press_logos()) ───────────── -->
-	<?php $omc_press = function_exists( 'omc_press_logos' ) ? omc_press_logos() : []; ?>
-	<?php if ( $omc_press ) : ?>
-		<section class="omc-press omc-reveal" aria-labelledby="omc-press-title">
-			<div class="l-section__container omc-press__inner">
-				<p class="omc-eyebrow" id="omc-press-title"><?php esc_html_e( 'As seen on', 'moderno-child' ); ?></p>
-				<ul class="omc-press__list">
-					<?php foreach ( $omc_press as $omc_p ) : ?>
-						<li class="omc-press__item<?php echo empty( $omc_p['logo'] ) ? '' : ' omc-press__item--logo'; ?>">
-							<?php if ( ! empty( $omc_p['url'] ) ) : ?>
-								<a href="<?php echo esc_url( $omc_p['url'] ); ?>" target="_blank" rel="noopener">
-									<?php echo omc_press_mark( $omc_p ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside. ?>
-								</a>
-							<?php else : ?>
-								<?php echo omc_press_mark( $omc_p ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside. ?>
-							<?php endif; ?>
-						</li>
-					<?php endforeach; ?>
-				</ul>
-				<?php
-				$omc_press_note = function_exists( 'omc_press_note' ) ? omc_press_note() : [];
-				$omc_note_count = trim( (string) ( $omc_press_note['count'] ?? '' ) );
-				$omc_note_by    = trim( (string) ( $omc_press_note['verifier'] ?? '' ) );
-				$omc_note_url   = trim( (string) ( $omc_press_note['url'] ?? '' ) );
-				?>
-				<?php if ( $omc_note_count || $omc_note_by ) : ?>
-					<p class="omc-press__note">
-						<?php if ( $omc_note_count ) : ?>
-							<span class="omc-press__count"><?php echo esc_html( $omc_note_count ); ?></span>
-						<?php endif; ?>
-						<?php if ( $omc_note_by ) : ?>
-							<span class="omc-press__by">
-								<?php if ( $omc_note_url ) : ?>
-									<a href="<?php echo esc_url( $omc_note_url ); ?>" target="_blank" rel="noopener"><?php echo esc_html( $omc_note_by ); ?></a>
-								<?php else : ?>
-									<?php echo esc_html( $omc_note_by ); ?>
-								<?php endif; ?>
-							</span>
-						<?php endif; ?>
-					</p>
 				<?php endif; ?>
 			</div>
 		</section>

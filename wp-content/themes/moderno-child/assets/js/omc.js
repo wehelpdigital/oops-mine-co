@@ -149,7 +149,7 @@
 	(function () {
 		var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 		document.querySelectorAll('.js-omc-fade').forEach(function (banner) {
-			var imgs = banner.querySelectorAll('.omc-banner__img, .omc-hero__img');
+			var imgs = banner.querySelectorAll('.omc-banner__img, .omc-hero__img, .omc-seen__logo');
 			if (imgs.length < 2 || reduce) { return; }
 			var delay = parseInt(banner.getAttribute('data-fade'), 10) || 4500;
 			var pauseOnHover = banner.getAttribute('data-fade-hover') !== 'no'; /* the hero keeps sliding under the cursor */

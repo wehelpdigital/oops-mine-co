@@ -918,10 +918,14 @@ function omc_press_note() {
  * The image carries the outlet name as alt text, so the row reads the same to a screen reader
  * whether an entry is a picture or a word.
  *
- * @param array $entry [ name, logo, url ].
+ * @param array  $entry [ name, logo, url ].
+ * @param string $class CSS class for the image — the hero sets its own, since its marks are
+ *                      reversed out over a photograph rather than set on cream.
+ * @param bool   $eager Load it immediately. True for the first mark in the hero, which is
+ *                      above the fold and would otherwise flash in late.
  * @return string
  */
-function omc_press_mark( array $entry ) {
+function omc_press_mark( array $entry, $class = 'omc-press__logo', $eager = false ) {
 	$name = (string) ( $entry['name'] ?? '' );
 	$logo = (string) ( $entry['logo'] ?? '' );
 	if ( ! $logo || ! file_exists( OMC_DIR . '/assets/img/' . $logo ) ) {
@@ -932,11 +936,13 @@ function omc_press_mark( array $entry ) {
 	$scale = $scale > 0 ? min( 2.5, max( 0.5, $scale ) ) : 1;
 
 	return sprintf(
-		'<img class="omc-press__logo" src="%s" alt="%s" %s style="--omc-press-scale:%s" loading="lazy" decoding="async">',
+		'<img class="%s" src="%s" alt="%s" %s style="--omc-press-scale:%s" loading="%s" decoding="async">',
+		esc_attr( $class ),
 		esc_url( OMC_URI . '/assets/img/' . $logo ),
 		esc_attr( $name ),
 		$size ? sprintf( 'width="%d" height="%d"', (int) $size[0], (int) $size[1] ) : '',
-		esc_attr( rtrim( rtrim( number_format( $scale, 2, '.', '' ), '0' ), '.' ) )
+		esc_attr( rtrim( rtrim( number_format( $scale, 2, '.', '' ), '0' ), '.' ) ),
+		$eager ? 'eager' : 'lazy'
 	);
 }
 

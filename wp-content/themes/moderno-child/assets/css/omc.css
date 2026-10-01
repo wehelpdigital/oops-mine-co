@@ -1170,83 +1170,132 @@
 }
 .omc-vidrow__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
-/* ─── As seen on ─────────────────────────────────────────────────────────────
-   A quiet band, not a billboard: the names are set in the body face at a small
-   size with wide tracking, so the strip reads as a credit line. ───────────── */
-.omc-press {
-	padding: clamp(30px, 4vw, 52px) 0;
-	border-top: 1px solid var(--omc-line);
-	border-bottom: 1px solid var(--omc-line);
-	background: var(--omc-cream);
-}
-.omc-press__inner { text-align: center; }
-.omc-press .omc-eyebrow { margin: 0 0 clamp(14px, 1.8vw, 22px); }
-.omc-press__list {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	justify-content: center;
-	gap: clamp(24px, 4.5vw, 72px);
-}
-.omc-press__item {
-	font: 600 clamp(15px, 1.7vw, 23px)/1 var(--omc-sans);
-	letter-spacing: .18em;
-	text-transform: uppercase;
-	color: var(--omc-ink);
-	/* Muted, the way a press row usually is — but not so faint that the marks look like an
-	   afterthought. They carry someone else's name; they should look deliberate. */
-	opacity: .68;
-	transition: opacity .3s var(--omc-ease);
-}
-.omc-press__item:hover { opacity: 1; }
-.omc-press__item a { color: inherit; text-decoration: none; display: block; }
-/* Each mark is set from one height, multiplied by the entry's own scale — a stacked mark spends
-   most of its height on the symbol and needs more of it to read at the same size as a wordmark.
-   The height is the row's to set, not the type's: these replaced words, but they are pictures, and
-   at a word's cap height they were four small shapes in a very wide band. */
-.omc-press__list { --omc-press-h: clamp(26px, 3vw, 42px); }
-.omc-press__logo {
-	display: block;
-	height: calc(var(--omc-press-h) * var(--omc-press-scale, 1));
-	width: auto;
-	max-width: 210px;
-	object-fit: contain;
-}
-/* The names are set to the same cap height, so a row of mixed marks and words lines up. */
-.omc-press__name { display: block; }
-
-/* The count and its source, under the row. Two steps down from the marks: the logos are the claim
-   and this is the footnote to it, which is the order they should be read in. */
-.omc-press__note {
-	margin: clamp(16px, 2vw, 24px) 0 0;
+/* ─── "As seen on", in the hero ───────────────────────────────────────────
+   A credit rather than a band: one mark at a time cross-fades (assets/js/omc.js, .js-omc-fade)
+   with the count and its source beneath it. Three layouts, because the hero has three shapes —
+   pinned to the left of the photograph where there is room beside the centred copy, a single
+   centred line above the wordmark where there is not, and tighter still on a phone. ────────── */
+.omc-seen {
+	--omc-seen-h: clamp(20px, 2vw, 27px);
+	position: relative;
+	z-index: 2;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 5px;
-	line-height: 1.4;
+	gap: 7px;
+	margin: 0 0 clamp(16px, 2.6vh, 30px);
+	text-align: center;
 }
-.omc-press__count {
-	font: 600 clamp(12px, 1.1vw, 14px)/1.4 var(--omc-sans);
-	letter-spacing: .16em;
+/* The marks are flat ink on transparency, so over a photograph they are reversed out to white —
+   one filter, rather than a second set of files to keep in step with the first. */
+.omc-seen__logo {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	height: calc(var(--omc-seen-h) * var(--omc-press-scale, 1));
+	width: auto;
+	max-width: 100%;
+	object-fit: contain;
+	opacity: 0;
+	filter: brightness(0) invert(1) drop-shadow(0 2px 10px rgba(58, 43, 38, .55));
+	transition: opacity .45s var(--omc-ease);
+}
+/* One mark leaves before the next arrives. Photographs may cross-fade through each other; two
+   wordmarks doing it read as a double exposure, so the incoming one waits out the departure. */
+.omc-seen__logo.is-active { opacity: .96; transition-delay: .45s; }
+.omc-seen__head { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.omc-seen__stage {
+	position: relative;
+	width: clamp(86px, 9vw, 118px);
+	height: calc(var(--omc-seen-h) * 1.5);
+	flex: none;
+}
+.omc-seen__eyebrow {
+	margin: 0;
+	font: 600 clamp(9.5px, .8vw, 11px)/1 var(--omc-sans);
+	letter-spacing: .24em;
 	text-transform: uppercase;
-	color: var(--omc-ink);
-	opacity: .72;
+	color: rgba(255, 255, 255, .66);
+	white-space: nowrap;
 }
-.omc-press__by {
-	font: 400 clamp(11px, .95vw, 12px)/1.4 var(--omc-sans);
+.omc-seen__count {
+	margin: 0;
+	font: 600 clamp(10.5px, .92vw, 13px)/1.35 var(--omc-sans);
+	letter-spacing: .12em;
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, .95);
+	text-wrap: balance;
+}
+.omc-seen__by {
+	margin: 0;
+	font: 400 clamp(9.5px, .8vw, 11px)/1.35 var(--omc-sans);
 	letter-spacing: .1em;
 	text-transform: uppercase;
-	color: var(--omc-muted);
+	color: rgba(255, 255, 255, .6);
+	text-wrap: balance;
 }
-.omc-press__by a { color: inherit; text-decoration: none; border-bottom: 1px solid currentColor; padding-bottom: 1px; }
-.omc-press__by a:hover { color: var(--omc-rose-dark); }
+.omc-seen__by a { color: inherit; text-decoration: none; border-bottom: 1px solid rgba(255, 255, 255, .35); padding-bottom: 1px; }
+.omc-seen__by a:hover { color: #fff; border-bottom-color: currentColor; }
 
+/* The names the cycling marks stand for, for anything that cannot see them. */
+.omc-sr {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	border: 0;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+/* Wide enough for the centred copy and a column beside it: pin the credit to the left edge of the
+   same container the rest of the page uses, so it lines up with everything below the fold. */
+@media (min-width: 1200px) {
+	.omc-seen {
+		--omc-seen-h: clamp(24px, 2.3vw, 33px);
+		position: absolute;
+		left: var(--omc-gutter);
+		top: 50%;
+		transform: translateY(-50%);
+		width: clamp(148px, 13vw, 184px);
+		margin: 0;
+		padding-left: 15px;
+		border-left: 1px solid rgba(255, 255, 255, .24);
+		align-items: flex-start;
+		text-align: left;
+		gap: 9px;
+	}
+	.omc-seen__head { flex-direction: column; align-items: flex-start; gap: 9px; }
+	.omc-seen__stage { width: 100%; height: calc(var(--omc-seen-h) * 1.6); }
+	.omc-seen__logo { left: 0; transform: translate(0, -50%); }
+}
+
+/* Phones: one tight line, then the footnote — it sits above a headline that needs the room. */
 @media (max-width: 767px) {
-	.omc-press__list { --omc-press-h: 26px; gap: 20px 24px; }
-	.omc-press__logo { max-width: 104px; }
+	.omc-seen { --omc-seen-h: 19px; gap: 6px; margin-bottom: 14px; }
+	.omc-seen__head { gap: 10px; }
+	.omc-seen__stage { width: 82px; }
+	.omc-seen__eyebrow { font-size: 9.5px; letter-spacing: .2em; }
+	.omc-seen__count { font-size: 10.5px; letter-spacing: .11em; }
+	.omc-seen__by { font-size: 9.5px; }
+}
+
+/* Nothing moves: show the marks together instead of cycling through them. */
+@media (prefers-reduced-motion: reduce) {
+	.omc-seen__stage {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		gap: 10px 14px;
+		width: auto;
+		height: auto;
+	}
+	.omc-seen__logo { position: static; transform: none; opacity: .9; }
 }
 
 /* ─── Footer: what is true about paying here ─────────────────────────────── */
@@ -1290,8 +1339,6 @@
 }
 @media (max-width: 767px) {
 	.omc-vidrow__grid { grid-template-columns: 1fr; }
-	.omc-press__list { gap: 18px 26px; }
-	.omc-press__item { font-size: 14px; letter-spacing: .14em; }
 	.omc-footer__badges { grid-template-columns: 1fr; gap: 14px; }
 }
 
