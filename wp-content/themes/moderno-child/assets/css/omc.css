@@ -1252,15 +1252,16 @@
 	white-space: nowrap;
 }
 
-/* Wide enough for the centred copy and a column beside it: pin the credit to the left edge of the
-   same container the rest of the page uses, so it lines up with everything below the fold. */
-@media (min-width: 1200px) {
+/* Wide enough for the centred copy and a column beside it: the credit sits in the bottom-left
+   corner of the photograph, inset by the same amount as the watermark in the opposite corner, and
+   on the left edge of the container the rest of the page uses — so it lines up with everything
+   below the fold and the two corner marks answer each other. */
+@media (min-width: 1024px) {
 	.omc-seen {
 		--omc-seen-h: clamp(24px, 2.3vw, 33px);
 		position: absolute;
 		left: var(--omc-gutter);
-		top: 50%;
-		transform: translateY(-50%);
+		bottom: var(--omc-wm-inset, 28px);
 		width: clamp(148px, 13vw, 184px);
 		margin: 0;
 		padding-left: 15px;
