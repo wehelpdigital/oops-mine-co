@@ -896,12 +896,17 @@ function omc_press_logos() {
  *
  * Empty either string to drop that line; empty both and the whole block goes.
  *
- * @return array [ count, verifier, url ].
+ * `prefix` is the label and `verifier` the name it introduces — two values rather than one
+ * sentence, so the name can be kept whole when the line turns, and so a `url` links the source
+ * instead of the word in front of it.
+ *
+ * @return array [ count, prefix, verifier, url ].
  */
 function omc_press_note() {
 	return (array) apply_filters( 'omc_press_note', [
 		'count'    => __( '+ Over 250 News Outlets', 'moderno-child' ),
-		'verifier' => __( 'Verified By The Buzz Blast', 'moderno-child' ),
+		'prefix'   => __( 'Verified By', 'moderno-child' ),
+		'verifier' => __( 'The Buzz Blast', 'moderno-child' ),
 		'url'      => '',
 	] );
 }

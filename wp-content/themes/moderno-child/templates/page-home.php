@@ -60,9 +60,10 @@ get_header();
 			 */
 			$omc_press      = function_exists( 'omc_press_logos' ) ? omc_press_logos() : [];
 			$omc_press_note = function_exists( 'omc_press_note' ) ? omc_press_note() : [];
-			$omc_note_count = trim( (string) ( $omc_press_note['count'] ?? '' ) );
-			$omc_note_by    = trim( (string) ( $omc_press_note['verifier'] ?? '' ) );
-			$omc_note_url   = trim( (string) ( $omc_press_note['url'] ?? '' ) );
+			$omc_note_count  = trim( (string) ( $omc_press_note['count'] ?? '' ) );
+			$omc_note_by     = trim( (string) ( $omc_press_note['verifier'] ?? '' ) );
+			$omc_note_prefix = trim( (string) ( $omc_press_note['prefix'] ?? '' ) );
+			$omc_note_url    = trim( (string) ( $omc_press_note['url'] ?? '' ) );
 			?>
 			<?php if ( $omc_press ) : ?>
 				<aside class="omc-seen" aria-label="<?php esc_attr_e( 'Press coverage', 'moderno-child' ); ?>">
@@ -95,11 +96,18 @@ get_header();
 					<?php endif; ?>
 					<?php if ( $omc_note_by ) : ?>
 						<p class="omc-seen__by">
-							<?php if ( $omc_note_url ) : ?>
-								<a href="<?php echo esc_url( $omc_note_url ); ?>" target="_blank" rel="noopener"><?php echo esc_html( $omc_note_by ); ?></a>
-							<?php else : ?>
-								<?php echo esc_html( $omc_note_by ); ?>
-							<?php endif; ?>
+							<?php
+							if ( $omc_note_prefix ) {
+								echo esc_html( $omc_note_prefix ) . ' ';
+							}
+							?>
+							<span class="omc-seen__src">
+								<?php if ( $omc_note_url ) : ?>
+									<a href="<?php echo esc_url( $omc_note_url ); ?>" target="_blank" rel="noopener"><?php echo esc_html( $omc_note_by ); ?></a>
+								<?php else : ?>
+									<?php echo esc_html( $omc_note_by ); ?>
+								<?php endif; ?>
+							</span>
 						</p>
 					<?php endif; ?>
 				</aside>
