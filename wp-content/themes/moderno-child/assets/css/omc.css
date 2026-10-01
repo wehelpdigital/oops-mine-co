@@ -1257,18 +1257,28 @@
    on the left edge of the container the rest of the page uses — so it lines up with everything
    below the fold and the two corner marks answer each other. */
 @media (min-width: 1024px) {
+	/* The hero becomes the thing the step-out below is measured against. */
+	.omc-hero { container-type: inline-size; }
 	.omc-seen {
 		--omc-seen-h: clamp(24px, 2.3vw, 33px);
 		position: absolute;
-		left: var(--omc-gutter);
+		left: 50%;
 		bottom: var(--omc-wm-inset, 28px);
 		width: clamp(148px, 13vw, 184px);
-		margin: 0;
 		padding-left: 15px;
 		border-left: 1px solid rgba(255, 255, 255, .24);
 		align-items: flex-start;
 		text-align: left;
 		gap: 9px;
+		/* The credit lives inside the 1170px column; the monogram it mirrors is pinned to the edge
+		   of the full-bleed hero. The column is centred, so its own 50% is the hero's centre, and
+		   stepping half the hero back from there lands on the hero's edge. */
+		margin: 0 0 0 calc(var(--omc-wm-inset, 28px) - 50vw);
+	}
+	/* Measured against the hero itself rather than the viewport, because 100vw counts a scrollbar
+	   the hero does not have, and the mirror would sit that half-scrollbar too far out. */
+	@supports (width: 1cqi) {
+		.omc-seen { margin-left: calc(var(--omc-wm-inset, 28px) - 50cqi); }
 	}
 	.omc-seen__head { flex-direction: column; align-items: flex-start; gap: 9px; }
 	.omc-seen__stage { width: 100%; height: calc(var(--omc-seen-h) * 1.6); }
@@ -1806,34 +1816,6 @@
 }
 .omc-stylist__go { cursor: pointer; }
 
-/* The three steps on the stylist band, so the offer is understood before it is clicked. */
-.omc-stylist__steps {
-	list-style: none;
-	margin: 0 auto clamp(22px, 2.6vw, 30px);
-	padding: 0;
-	display: flex;
-	flex-wrap: wrap;
-	justify-content: center;
-	gap: 10px 28px;
-}
-.omc-stylist__steps li {
-	display: flex;
-	align-items: center;
-	gap: 9px;
-	font: 500 13px/1.4 var(--omc-sans);
-	color: var(--omc-text);
-}
-.omc-stylist__num {
-	display: grid;
-	place-items: center;
-	width: 24px;
-	height: 24px;
-	border-radius: 50%;
-	background: #fff;
-	border: 1px solid var(--omc-line);
-	font: 600 11px/1 var(--omc-sans);
-	color: var(--omc-rose-dark);
-}
 .omc-stylist__note {
 	margin: 16px 0 0;
 	font: 400 12.5px/1.6 var(--omc-sans);

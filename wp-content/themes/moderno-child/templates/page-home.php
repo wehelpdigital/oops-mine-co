@@ -135,13 +135,6 @@ get_header();
 				<p class="omc-eyebrow omc-stylist__eyebrow"><?php echo esc_html( $omc_sty['eyebrow'] ); ?></p>
 				<h2 class="omc-section__title" id="omc-stylist-title"><?php echo wp_kses( $omc_sty['title'], [ 'em' => [] ] ); ?></h2>
 				<p class="omc-stylist__text"><?php echo esc_html( $omc_sty['text'] ); ?></p>
-				<?php if ( ! empty( $omc_sty['steps'] ) ) : ?>
-					<ol class="omc-stylist__steps">
-						<?php foreach ( (array) $omc_sty['steps'] as $omc_i => $omc_step ) : ?>
-							<li><span class="omc-stylist__num"><?php echo (int) ( $omc_i + 1 ); ?></span><?php echo esc_html( $omc_step ); ?></li>
-						<?php endforeach; ?>
-					</ol>
-				<?php endif; ?>
 				<button type="button" class="omc-btn omc-btn--solid omc-stylist__go" data-whd-stylist>
 					<?php echo esc_html( $omc_sty['button'] ); ?>
 				</button>
