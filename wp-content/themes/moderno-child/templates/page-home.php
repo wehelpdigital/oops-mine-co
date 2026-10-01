@@ -67,49 +67,49 @@ get_header();
 			?>
 			<?php if ( $omc_press ) : ?>
 				<aside class="omc-seen" aria-label="<?php esc_attr_e( 'Press coverage', 'moderno-child' ); ?>">
-					<div class="omc-seen__head">
-						<p class="omc-seen__eyebrow"><?php esc_html_e( 'As seen on', 'moderno-child' ); ?></p>
-						<?php /* The cycle is decoration; the names are read from the line below it instead. */ ?>
-						<div class="omc-seen__stage js-omc-fade" data-fade="2600" data-fade-hover="no" aria-hidden="true">
-							<?php foreach ( $omc_press as $omc_i => $omc_p ) : ?>
-								<?php
-								echo omc_press_mark( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
-									$omc_p,
-									'omc-seen__logo' . ( 0 === $omc_i ? ' is-active' : '' ),
-									0 === $omc_i
-								);
-								?>
-							<?php endforeach; ?>
-						</div>
-					</div>
-					<p class="omc-sr">
-						<?php
-						printf(
-							/* translators: %s: list of outlet names, e.g. "FOX, NBC, CBS, ABC" */
-							esc_html__( 'As seen on %s.', 'moderno-child' ),
-							esc_html( implode( ', ', wp_list_pluck( $omc_press, 'name' ) ) )
-						);
-						?>
-					</p>
-					<?php if ( $omc_note_count ) : ?>
-						<p class="omc-seen__count"><?php echo esc_html( $omc_note_count ); ?></p>
-					<?php endif; ?>
-					<?php if ( $omc_note_by ) : ?>
-						<p class="omc-seen__by">
+					<?php /* The cycle is decoration; the names are read from the hidden line below instead. */ ?>
+					<div class="omc-seen__stage js-omc-fade" data-fade="2600" data-fade-hover="no" aria-hidden="true">
+						<?php foreach ( $omc_press as $omc_i => $omc_p ) : ?>
 							<?php
-							if ( $omc_note_prefix ) {
-								echo esc_html( $omc_note_prefix ) . ' ';
-							}
+							echo omc_press_mark( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
+								$omc_p,
+								'omc-seen__logo' . ( 0 === $omc_i ? ' is-active' : '' ),
+								0 === $omc_i
+							);
 							?>
-							<span class="omc-seen__src">
-								<?php if ( $omc_note_url ) : ?>
-									<a href="<?php echo esc_url( $omc_note_url ); ?>" target="_blank" rel="noopener"><?php echo esc_html( $omc_note_by ); ?></a>
-								<?php else : ?>
-									<?php echo esc_html( $omc_note_by ); ?>
-								<?php endif; ?>
-							</span>
+						<?php endforeach; ?>
+					</div>
+					<div class="omc-seen__text">
+						<p class="omc-seen__eyebrow"><?php esc_html_e( 'As seen on', 'moderno-child' ); ?></p>
+						<p class="omc-sr">
+							<?php
+							printf(
+								/* translators: %s: list of outlet names, e.g. "FOX, NBC, CBS, ABC" */
+								esc_html__( 'As seen on %s.', 'moderno-child' ),
+								esc_html( implode( ', ', wp_list_pluck( $omc_press, 'name' ) ) )
+							);
+							?>
 						</p>
-					<?php endif; ?>
+						<?php if ( $omc_note_count ) : ?>
+							<p class="omc-seen__count"><?php echo esc_html( $omc_note_count ); ?></p>
+						<?php endif; ?>
+						<?php if ( $omc_note_by ) : ?>
+							<p class="omc-seen__by">
+								<?php
+								if ( $omc_note_prefix ) {
+									echo esc_html( $omc_note_prefix ) . ' ';
+								}
+								?>
+								<span class="omc-seen__src">
+									<?php if ( $omc_note_url ) : ?>
+										<a href="<?php echo esc_url( $omc_note_url ); ?>" target="_blank" rel="noopener"><?php echo esc_html( $omc_note_by ); ?></a>
+									<?php else : ?>
+										<?php echo esc_html( $omc_note_by ); ?>
+									<?php endif; ?>
+								</span>
+							</p>
+						<?php endif; ?>
+					</div>
 				</aside>
 			<?php endif; ?>
 			<?php echo omc_logo_img( 'cream', 'omc-hero__logo', [ 'loading' => 'eager' ] ); ?>

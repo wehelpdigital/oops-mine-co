@@ -231,10 +231,11 @@
 	content: "";
 	position: absolute;
 	inset: 0;
-	/* a steady dark wash plus a heavier foot: the copy sits in the lower half over changing photos */
+	/* a steady dark wash plus a heavier foot: the copy sits over photographs that keep changing, so
+	   the wash has to hold for the lightest of them rather than the one on screen now */
 	background:
-		linear-gradient(180deg, rgba(58, 43, 38, .22) 0%, rgba(58, 43, 38, .3) 45%, rgba(58, 43, 38, .74) 100%),
-		radial-gradient(ellipse 60% 55% at 50% 72%, rgba(58, 43, 38, .28), rgba(58, 43, 38, 0) 70%);
+		linear-gradient(180deg, rgba(58, 43, 38, .38) 0%, rgba(58, 43, 38, .46) 45%, rgba(58, 43, 38, .82) 100%),
+		radial-gradient(ellipse 62% 58% at 50% 68%, rgba(58, 43, 38, .36), rgba(58, 43, 38, 0) 72%);
 	z-index: 1;
 }
 .omc-hero__content > * { text-shadow: 0 2px 28px rgba(58, 43, 38, .35); }
@@ -1071,14 +1072,19 @@
 	/* svh is the viewport with the browser's own bars showing, which is what a phone actually has;
 	   vh stays first for anything that does not know the unit. */
 	.omc-hero { min-height: 70vh; min-height: 70svh; align-items: center; }
+	.omc-hero::after {
+		background:
+			linear-gradient(180deg, rgba(58, 43, 38, .46) 0%, rgba(58, 43, 38, .54) 45%, rgba(58, 43, 38, .84) 100%),
+			radial-gradient(ellipse 85% 52% at 50% 52%, rgba(58, 43, 38, .4), rgba(58, 43, 38, 0) 75%);
+	}
 	.omc-hero__media img { object-position: 56% 10%; }
 	/* Centred, with the foot left clear for the credit pinned in the corner. */
 	.omc-hero__content {
 		padding-top: clamp(28px, 5vh, 48px);
 		padding-bottom: clamp(84px, 13vh, 116px);
 	}
-	.omc-hero__title { font-size: clamp(34px, 10.5vw, 44px); }
-	.omc-hero__lede { font-size: 15px; }
+	.omc-hero__title { font-size: clamp(28px, 8.6vw, 37px); }
+	.omc-hero__lede { font-size: 14px; }
 	.omc-section__head { flex-direction: column; align-items: flex-start; gap: 14px; }
 	.omc-usp__list { grid-template-columns: 1fr 1fr; gap: 10px 14px; padding-top: 14px; padding-bottom: 14px; }
 	/* Tighter tracking on a phone buys about two characters a line, which is the difference
@@ -1150,7 +1156,7 @@
 	.omc-footer__inner { padding-top: 40px; padding-bottom: 22px; }
 	.omc-footer__grid, .omc-footer__grid--3 { gap: 30px 18px; }
 	.omc-footer__logo img { width: 132px; }
-	.omc-hero__logo { width: 116px; margin-bottom: 16px; }
+	.omc-hero__logo { width: 100px; margin-bottom: 14px; }
 	.omc-footer__tagline { font-size: 17px; margin-top: 8px; }
 	.omc-footer__blurb { font-size: 13px; margin-top: 10px; }
 	.omc-footer__heading { margin-bottom: 14px; }
@@ -1190,11 +1196,8 @@
 	bottom: var(--omc-wm-inset, 16px);
 	z-index: 2;
 	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
-	gap: 6px;
-	padding-left: 12px;
-	border-left: 1px solid rgba(255, 255, 255, .24);
+	align-items: center;
+	gap: 11px;
 	text-align: left;
 	/* The credit lives inside the 1170px column; the monogram it answers is pinned to the edge of
 	   the full-bleed hero. The column is centred, so its own 50% is the hero's centre, and stepping
@@ -1219,15 +1222,22 @@
 	object-fit: contain;
 	opacity: 0;
 	filter: brightness(0) invert(1) drop-shadow(0 2px 10px rgba(58, 43, 38, .55));
-	transition: opacity .45s var(--omc-ease);
+	transition: opacity .3s var(--omc-ease);
 }
 /* One mark leaves before the next arrives. Photographs may cross-fade through each other; two
    wordmarks doing it read as a double exposure, so the incoming one waits out the departure. */
-.omc-seen__logo.is-active { opacity: .96; transition-delay: .45s; }
-.omc-seen__head { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.omc-seen__logo.is-active { opacity: .96; transition-delay: .3s; }
+/* The mark is what the rule introduces, so it sits on the far side of it. */
+.omc-seen__text {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	padding-left: 11px;
+	border-left: 1px solid rgba(255, 255, 255, .26);
+}
 .omc-seen__stage {
 	position: relative;
-	width: clamp(86px, 9vw, 118px);
+	width: clamp(64px, 6vw, 86px);
 	height: calc(var(--omc-seen-h) * 1.5);
 	flex: none;
 }
@@ -1286,26 +1296,20 @@
 
 /* Room for a column: the mark gets a line of its own above the footnote, and more height with it. */
 @media (min-width: 1024px) {
-	.omc-seen {
-		--omc-seen-h: clamp(24px, 2.3vw, 33px);
-		width: clamp(148px, 13vw, 184px);
-		padding-left: 15px;
-		gap: 9px;
-	}
-	.omc-seen__head { flex-direction: column; align-items: flex-start; gap: 9px; }
-	.omc-seen__stage { width: 100%; height: calc(var(--omc-seen-h) * 1.6); }
-	.omc-seen__logo { left: 0; transform: translate(0, -50%); }
+	.omc-seen { --omc-seen-h: clamp(24px, 2.3vw, 33px); gap: 14px; }
+	.omc-seen__text { width: clamp(136px, 11.5vw, 170px); padding-left: 14px; gap: 7px; }
+	.omc-seen__stage { height: calc(var(--omc-seen-h) * 1.6); }
 }
 
 /* Phones: the mark sits beside its label rather than above it, so the corner block stays short
    enough to leave the copy the middle of the picture. */
 @media (max-width: 767px) {
-	.omc-seen { --omc-seen-h: 18px; gap: 4px; padding-left: 10px; }
-	.omc-seen__head { gap: 9px; }
-	.omc-seen__stage { width: 74px; height: calc(var(--omc-seen-h) * 1.45); }
-	.omc-seen__eyebrow { font-size: 9px; letter-spacing: .18em; }
-	.omc-seen__count { font-size: 10px; letter-spacing: .1em; }
-	.omc-seen__by { font-size: 9px; letter-spacing: .08em; }
+	.omc-seen { --omc-seen-h: 17px; gap: 9px; }
+	.omc-seen__text { gap: 3px; padding-left: 9px; }
+	.omc-seen__stage { width: 62px; height: calc(var(--omc-seen-h) * 1.45); }
+	.omc-seen__eyebrow { font-size: 8.5px; letter-spacing: .16em; }
+	.omc-seen__count { font-size: 9.5px; letter-spacing: .09em; }
+	.omc-seen__by { font-size: 8.5px; letter-spacing: .07em; }
 }
 
 /* Nothing moves: show the marks together instead of cycling through them. */
