@@ -33,7 +33,7 @@ final class WHD_AI {
 
 	/** Fields holding a credential: password box, blank means "keep what is stored". */
 	public static function secret_fields() {
-		return [ 'anthropic_key', 'openai_key', 'google_key', 'recaptcha_secret' ];
+		return [ 'anthropic_key', 'openai_key', 'google_key', 'recaptcha_secret', 'recaptcha_api_key' ];
 	}
 
 	public static function defaults() {
@@ -45,6 +45,8 @@ final class WHD_AI {
 			'recaptcha_site'  => '',
 			'recaptcha_secret'=> '',
 			'recaptcha_version' => 'v2',
+			'recaptcha_project' => '',
+			'recaptcha_api_key' => '',
 			'recaptcha_score' => 0.5,
 			'model'           => '',
 			'max_tokens'      => 1600,
@@ -90,12 +92,35 @@ final class WHD_AI {
 		];
 	}
 
-	/** The two flavours. They are not interchangeable: a key issued for one is rejected by the other. */
+	/** The three flavours. They are not interchangeable: a key issued for one is rejected by the others. */
 	public static function recaptcha_versions() {
 		return [
-			'v2' => __( 'v2 — the "I am not a robot" tickbox', 'whd' ),
-			'v3' => __( 'v3 — invisible, scores each visitor', 'whd' ),
+			'v2'         => __( 'v2 — the "I am not a robot" tickbox', 'whd' ),
+			'v3'         => __( 'v3 — invisible, scores each visitor', 'whd' ),
+			'enterprise' => __( 'Enterprise — invisible, scored by a Google Cloud project', 'whd' ),
 		];
+	}
+
+	/** Enterprise and v3 both draw nothing and score silently. Only v2 asks the visitor to do anything. */
+	public static function recaptcha_silent(): bool {
+		return 'v2' !== self::recaptcha_version();
+	}
+
+	public static function recaptcha_enterprise(): bool {
+		return 'enterprise' === self::recaptcha_version();
+	}
+
+	/** The script the page has to load. Enterprise is served from its own file. */
+	public static function recaptcha_script(): string {
+		$site = rawurlencode( trim( self::get()['recaptcha_site'] ) );
+		if ( self::recaptcha_enterprise() ) {
+			return 'https://www.google.com/recaptcha/enterprise.js?render=' . $site;
+		}
+
+		// v2 is rendered explicitly, because its box is built when the visitor reaches that step.
+		return 'v3' === self::recaptcha_version()
+			? 'https://www.google.com/recaptcha/api.js?render=' . $site
+			: 'https://www.google.com/recaptcha/api.js?render=explicit';
 	}
 
 	/** Which flavour the saved keys belong to. */
@@ -110,10 +135,42 @@ final class WHD_AI {
 		return '' !== trim( self::get()['recaptcha_site'] );
 	}
 
-	/** Is reCAPTCHA configured? Both halves are needed: the site key renders it, the secret checks it. */
+	/**
+	 * Is reCAPTCHA configured well enough to check anything?
+	 *
+	 * Classic needs the secret that pairs with the site key. Enterprise has no secret at all: it
+	 * needs the Cloud project the key belongs to and an API key allowed to write assessments there.
+	 */
 	public static function recaptcha_ready(): bool {
 		$o = self::get();
-		return '' !== trim( $o['recaptcha_site'] ) && '' !== trim( $o['recaptcha_secret'] );
+		if ( '' === trim( $o['recaptcha_site'] ) ) {
+			return false;
+		}
+		if ( self::recaptcha_enterprise() ) {
+			return '' !== trim( $o['recaptcha_project'] ) && '' !== trim( $o['recaptcha_api_key'] );
+		}
+
+		return '' !== trim( $o['recaptcha_secret'] );
+	}
+
+	/** What is still missing, in the owner's words, or '' when nothing is. */
+	public static function recaptcha_missing(): string {
+		$o = self::get();
+		if ( '' === trim( $o['recaptcha_site'] ) ) {
+			return __( 'the site key', 'whd' );
+		}
+		if ( self::recaptcha_enterprise() ) {
+			$gaps = [];
+			if ( '' === trim( $o['recaptcha_project'] ) ) {
+				$gaps[] = __( 'the Google Cloud project ID', 'whd' );
+			}
+			if ( '' === trim( $o['recaptcha_api_key'] ) ) {
+				$gaps[] = __( 'an API key that may write assessments', 'whd' );
+			}
+			return implode( __( ' and ', 'whd' ), $gaps );
+		}
+
+		return '' === trim( $o['recaptcha_secret'] ) ? __( 'the secret key', 'whd' ) : '';
 	}
 
 	/**
@@ -121,41 +178,162 @@ final class WHD_AI {
 	 *
 	 * Returns true when reCAPTCHA is not configured at all: the wizard has its own defences and
 	 * refusing every visitor because a key is missing would be worse than the thing it prevents.
-	 *
-	 * v2 answers yes or no. v3 answers with a score between 0 and 1 and the action the token was
-	 * minted for; both are checked, because a token lifted from another form on the site would
-	 * otherwise pass here.
+	 * The same mercy covers a reply that says the *configuration* is wrong — a visitor should never
+	 * be shut out by an unpaid bill or a mistyped project. Only a real verdict about the token
+	 * itself turns people away.
 	 */
 	public static function recaptcha_verify( $token, $action = '' ) {
+		$result = self::recaptcha_check( $token, $action );
+
+		return ! empty( $result['ok'] );
+	}
+
+	/**
+	 * Check a token and say what came back.
+	 *
+	 * Returns [ ok, score, reason, message, config ]. recaptcha_verify() reduces it to a yes or no;
+	 * the settings screen prints the whole thing, because "it did not work" is not a diagnosis.
+	 */
+	public static function recaptcha_check( $token, $action = '' ) {
 		if ( ! self::recaptcha_ready() ) {
-			return true;
+			return [
+				'ok'      => true,
+				'config'  => false,
+				/* translators: %s: what is missing, e.g. "the secret key" */
+				'message' => sprintf( __( 'Nothing was checked — still missing: %s.', 'whd' ), self::recaptcha_missing() ),
+			];
 		}
 		$o = self::get();
+
+		return self::recaptcha_enterprise()
+			? self::check_enterprise( (string) $token, (string) $action, $o )
+			: self::check_classic( (string) $token, (string) $action, $o );
+	}
+
+	/** v2 and v3: one secret, one endpoint, one yes or no (plus a score for v3). */
+	private static function check_classic( $token, $action, array $o ) {
 		$r = wp_remote_post( 'https://www.google.com/recaptcha/api/siteverify', [
 			'timeout' => 10,
 			'body'    => [
 				'secret'   => $o['recaptcha_secret'],
-				'response' => (string) $token,
-				'remoteip' => isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '',
+				'response' => $token,
+				'remoteip' => self::visitor_ip(),
 			],
 		] );
 		if ( is_wp_error( $r ) ) {
-			return true; // Google unreachable is not the visitor's fault
+			return [ 'ok' => true, 'config' => false, 'message' => __( 'Google could not be reached, so the visitor was let through.', 'whd' ) ];
 		}
-		$body = json_decode( wp_remote_retrieve_body( $r ), true );
+		$body   = json_decode( wp_remote_retrieve_body( $r ), true );
+		$body   = is_array( $body ) ? $body : [];
+		$errors = implode( ', ', (array) ( $body['error-codes'] ?? [] ) );
 
 		if ( empty( $body['success'] ) ) {
-			return false;
+			// A key the site owner got wrong is the site owner's problem, not the visitor's.
+			$ours = array_intersect( (array) ( $body['error-codes'] ?? [] ), [ 'invalid-input-secret', 'missing-input-secret', 'bad-request' ] );
+			if ( $ours ) {
+				self::log( 'recaptcha', 400, $errors, self::recaptcha_version() );
+				return [ 'ok' => true, 'config' => false, 'reason' => $errors, 'message' => __( 'The keys are wrong, so nothing could be checked.', 'whd' ) . ' ' . $errors ];
+			}
+			return [ 'ok' => false, 'config' => true, 'reason' => $errors, 'message' => __( 'Google rejected the token.', 'whd' ) . ( $errors ? ' ' . $errors : '' ) ];
 		}
 		if ( 'v3' !== self::recaptcha_version() ) {
-			return true;
+			return [ 'ok' => true, 'config' => true, 'message' => __( 'Tickbox accepted.', 'whd' ) ];
 		}
 		if ( '' !== $action && isset( $body['action'] ) && $body['action'] !== $action ) {
-			return false;
+			return [ 'ok' => false, 'config' => true, 'message' => __( 'The token was minted for another form.', 'whd' ) ];
 		}
-		$min = (float) ( $o['recaptcha_score'] ?? 0.5 );
+		$score = (float) ( $body['score'] ?? 0 );
 
-		return (float) ( $body['score'] ?? 0 ) >= $min;
+		return self::verdict( $score, $o );
+	}
+
+	/**
+	 * Enterprise: an assessment posted to the project the key belongs to.
+	 *
+	 * The API key authenticates the call, so it is sent as a query parameter exactly as Google's
+	 * own examples do — and it is a server-side value that never reaches the page.
+	 */
+	private static function check_enterprise( $token, $action, array $o ) {
+		$url = sprintf(
+			'https://recaptchaenterprise.googleapis.com/v1/projects/%s/assessments?key=%s',
+			rawurlencode( trim( $o['recaptcha_project'] ) ),
+			rawurlencode( trim( $o['recaptcha_api_key'] ) )
+		);
+
+		$event = [
+			'token'   => $token,
+			'siteKey' => trim( $o['recaptcha_site'] ),
+		];
+		if ( '' !== $action ) {
+			$event['expectedAction'] = $action;
+		}
+		$ip = self::visitor_ip();
+		if ( '' !== $ip ) {
+			$event['userIpAddress'] = $ip;
+		}
+
+		$r = wp_remote_post( $url, [
+			'timeout' => 12,
+			'headers' => [ 'Content-Type' => 'application/json' ],
+			'body'    => wp_json_encode( [ 'event' => $event ] ),
+		] );
+		if ( is_wp_error( $r ) ) {
+			return [ 'ok' => true, 'config' => false, 'message' => __( 'Google could not be reached, so the visitor was let through.', 'whd' ) ];
+		}
+
+		$code = (int) wp_remote_retrieve_response_code( $r );
+		$data = json_decode( wp_remote_retrieve_body( $r ), true );
+		$data = is_array( $data ) ? $data : [];
+
+		if ( $code < 200 || $code >= 300 ) {
+			$why = (string) ( $data['error']['message'] ?? wp_remote_retrieve_response_message( $r ) );
+			self::log( 'recaptcha', $code, $why, 'enterprise' );
+
+			/* translators: 1: HTTP status, 2: Google's explanation */
+			return [ 'ok' => true, 'config' => false, 'message' => sprintf( __( 'The project or API key is wrong, so nothing was checked. Google answered %1$d: %2$s', 'whd' ), $code, $why ) ];
+		}
+
+		$props = (array) ( $data['tokenProperties'] ?? [] );
+		if ( empty( $props['valid'] ) ) {
+			$why = (string) ( $props['invalidReason'] ?? '' );
+
+			// A token minted by the wrong site key is a setup mistake; the rest are the token's fault.
+			if ( in_array( $why, [ 'UNKNOWN_INVALID_REASON', 'SITE_MISMATCH', 'MISSING' ], true ) ) {
+				self::log( 'recaptcha', 200, $why, 'enterprise' );
+				return [ 'ok' => true, 'config' => false, 'reason' => $why, 'message' => __( 'The token did not belong to this site key, so nothing was checked.', 'whd' ) . ' ' . $why ];
+			}
+
+			return [ 'ok' => false, 'config' => true, 'reason' => $why, 'message' => __( 'Google rejected the token.', 'whd' ) . ( $why ? ' ' . $why : '' ) ];
+		}
+		if ( '' !== $action && ! empty( $props['action'] ) && $props['action'] !== $action ) {
+			return [ 'ok' => false, 'config' => true, 'message' => __( 'The token was minted for another form.', 'whd' ) ];
+		}
+
+		return self::verdict( (float) ( $data['riskAnalysis']['score'] ?? 0 ), $o );
+	}
+
+	/** Above the line or below it, in words the owner can act on. */
+	private static function verdict( $score, array $o ) {
+		$min = (float) ( $o['recaptcha_score'] ?? 0.5 );
+		$ok  = $score >= $min;
+
+		return [
+			'ok'      => $ok,
+			'config'  => true,
+			'score'   => $score,
+			/* translators: 1: the score Google gave, 2: the lowest score allowed through */
+			'message' => sprintf(
+				$ok ? __( 'Scored %1$.1f, and %2$.1f is the lowest you allow — let through.', 'whd' ) : __( 'Scored %1$.1f, below the %2$.1f you allow — turned away.', 'whd' ),
+				$score,
+				$min
+			),
+		];
+	}
+
+	private static function visitor_ip(): string {
+		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+
+		return filter_var( $ip, FILTER_VALIDATE_IP ) ? $ip : '';
 	}
 
 	/** Suggested models per provider. The field is free text, so a newer one can always be typed. */
@@ -225,9 +403,10 @@ final class WHD_AI {
 		$out['model']          = sanitize_text_field( $input['model'] ?? '' );
 		$out['recaptcha_site'] = sanitize_text_field( $input['recaptcha_site'] ?? '' );
 
-		$version                    = sanitize_key( $input['recaptcha_version'] ?? 'v2' );
-		$out['recaptcha_version']   = isset( self::recaptcha_versions()[ $version ] ) ? $version : 'v2';
-		$out['recaptcha_score']     = min( 0.9, max( 0.1, round( (float) ( $input['recaptcha_score'] ?? 0.5 ), 1 ) ) );
+		$version                  = sanitize_key( $input['recaptcha_version'] ?? 'v2' );
+		$out['recaptcha_version'] = isset( self::recaptcha_versions()[ $version ] ) ? $version : 'v2';
+		$out['recaptcha_project'] = sanitize_text_field( $input['recaptcha_project'] ?? '' );
+		$out['recaptcha_score']   = min( 0.9, max( 0.1, round( (float) ( $input['recaptcha_score'] ?? 0.5 ), 1 ) ) );
 		$out['max_tokens']  = min( 8000, max( 200, (int) ( $input['max_tokens'] ?? 1600 ) ) );
 		$out['temperature'] = min( 1, max( 0, round( (float) ( $input['temperature'] ?? 0.7 ), 2 ) ) );
 

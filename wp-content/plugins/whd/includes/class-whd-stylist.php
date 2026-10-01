@@ -643,19 +643,14 @@ final class WHD_Stylist {
 		wp_enqueue_style( 'whd-stylist', WHD_URL . 'assets/stylist.css', [], WHD_VERSION );
 		wp_enqueue_script( 'whd-stylist', WHD_URL . 'assets/stylist.js', [], WHD_VERSION, true );
 
-		$o       = WHD_AI::get();
-		$version = WHD_AI::recaptcha_version();
+		$o = WHD_AI::get();
 		if ( WHD_AI::recaptcha_shown() ) {
 			/*
-			 * The two flavours need different script URLs, and a key issued for one is refused by
-			 * the other — so the version the owner chose decides this, not a guess. v2 is rendered
-			 * explicitly because the tickbox is built when the visitor reaches that step; v3 draws
-			 * nothing and simply mints a token when the form is sent.
+			 * Each kind has its own script and a key the others refuse, so the version the owner
+			 * saved decides this rather than a guess: v2 draws a tickbox when the visitor reaches
+			 * that step, v3 and Enterprise draw nothing and mint a token when the form is sent.
 			 */
-			$src = 'v3' === $version
-				? 'https://www.google.com/recaptcha/api.js?render=' . rawurlencode( $o['recaptcha_site'] )
-				: 'https://www.google.com/recaptcha/api.js?render=explicit';
-			wp_enqueue_script( 'whd-recaptcha', $src, [], null, true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
+			wp_enqueue_script( 'whd-recaptcha', WHD_AI::recaptcha_script(), [], null, true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
 		}
 
 		wp_localize_script( 'whd-stylist', 'WHD_STYLIST', [
@@ -663,8 +658,9 @@ final class WHD_Stylist {
 			'nonce'     => wp_create_nonce( 'whd_stylist' ),
 			'questions' => self::questions(),
 			'recaptcha' => WHD_AI::recaptcha_shown() ? $o['recaptcha_site'] : '',
-			'captchaV3' => 'v3' === $version,
-			'captchaAction' => self::CAPTCHA_ACTION,
+			'captchaSilent'     => WHD_AI::recaptcha_silent(),
+			'captchaEnterprise' => WHD_AI::recaptcha_enterprise(),
+			'captchaAction'     => self::CAPTCHA_ACTION,
 			'i18n'      => [
 				'working'  => __( 'Reading the rail…', 'whd' ),
 				'next'     => __( 'Next', 'whd' ),

@@ -235,12 +235,25 @@
 		if ( ! D.recaptcha ) {
 			return '';
 		}
-		if ( D.captchaV3 ) {
+		if ( D.captchaSilent ) {
 			return '<p class="whd-sty__legal">' + esc( T.captchaNote || '' ) + '</p>' +
 				'<span class="whd-sty__err" data-for="captcha"></span>';
 		}
 		return '<div class="whd-sty__captcha" id="whd-sty-captcha"></div>' +
 			'<span class="whd-sty__err" data-for="captcha"></span>';
+	}
+
+	/**
+	 * The reCAPTCHA object this site actually has.
+	 *
+	 * Enterprise keys are served by enterprise.js and live under grecaptcha.enterprise; the classic
+	 * ones live on grecaptcha itself. Everything else about the two is the same, so this is the only
+	 * place that needs to know which is which.
+	 */
+	function captchaApi() {
+		if ( ! window.grecaptcha ) { return null; }
+
+		return D.captchaEnterprise ? ( window.grecaptcha.enterprise || null ) : window.grecaptcha;
 	}
 
 	/**
@@ -253,14 +266,15 @@
 		if ( ! D.recaptcha ) {
 			return Promise.resolve( '' );
 		}
-		if ( D.captchaV3 ) {
+		var g = captchaApi();
+		if ( D.captchaSilent ) {
 			return new Promise( function ( resolve, reject ) {
-				if ( ! window.grecaptcha || ! window.grecaptcha.ready ) {
+				if ( ! g || ! g.ready ) {
 					return reject( 'off' );
 				}
-				window.grecaptcha.ready( function () {
+				g.ready( function () {
 					try {
-						window.grecaptcha.execute( D.recaptcha, { action: D.captchaAction || 'whd_stylist' } )
+						g.execute( D.recaptcha, { action: D.captchaAction || 'whd_stylist' } )
 							.then( resolve, function () { reject( 'off' ); } );
 					} catch ( e ) {
 						reject( 'off' );
@@ -268,25 +282,26 @@
 				} );
 			} );
 		}
-		if ( ! window.grecaptcha ) {
+		if ( ! g ) {
 			return Promise.reject( 'off' );
 		}
-		var answer = captchaId !== null ? window.grecaptcha.getResponse( captchaId ) : window.grecaptcha.getResponse();
+		var answer = captchaId !== null ? g.getResponse( captchaId ) : g.getResponse();
 
 		return answer ? Promise.resolve( answer ) : Promise.reject( 'tick' );
 	}
 
 	function renderCaptcha() {
-		if ( ! D.recaptcha || D.captchaV3 ) { return; }
+		if ( ! D.recaptcha || D.captchaSilent ) { return; }
 		var box = root.querySelector( '#whd-sty-captcha' );
 		if ( ! box ) { return; }
 		// The widget is built when the visitor reaches this step, so the API may still be loading.
 		var tryRender = function () {
-			if ( ! window.grecaptcha || ! window.grecaptcha.render ) {
+			var g = captchaApi();
+			if ( ! g || ! g.render ) {
 				return setTimeout( tryRender, 250 );
 			}
 			box.innerHTML = '';
-			captchaId = window.grecaptcha.render( box, { sitekey: D.recaptcha } );
+			captchaId = g.render( box, { sitekey: D.recaptcha } );
 		};
 		tryRender();
 	}
@@ -366,7 +381,8 @@
 					host.querySelector( '.whd-sty__note' ).textContent = ( res.data && res.data.message ) || T.error;
 					host.querySelector( '.whd-sty__note' ).className = 'whd-sty__note is-bad';
 				}
-				if ( window.grecaptcha && captchaId !== null ) { window.grecaptcha.reset( captchaId ); }
+				var g = captchaApi();
+				if ( g && g.reset && captchaId !== null ) { g.reset( captchaId ); }
 				return;
 			}
 			progress( questions.length + 2 );

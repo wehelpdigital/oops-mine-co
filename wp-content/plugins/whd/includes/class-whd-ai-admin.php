@@ -184,7 +184,7 @@ final class WHD_AI_Admin {
 		$o = WHD_AI::get();
 		echo '<form method="post" action="options.php" class="whd-form">';
 		settings_fields( 'whd_ai_group' );
-		self::carry_over( [ 'provider', 'model', 'max_tokens', 'temperature', 'post_types', 'recaptcha_site', 'recaptcha_version', 'recaptcha_score' ] );
+		self::carry_over( [ 'provider', 'model', 'max_tokens', 'temperature', 'post_types', 'recaptcha_site', 'recaptcha_version', 'recaptcha_project', 'recaptcha_score' ] );
 
 		echo '<h2 class="whd-h2">' . esc_html__( 'Provider', 'whd' ) . ' '
 			. '<span class="whd-pill ' . ( WHD_AI::ready() ? 'whd-pill--on' : 'whd-pill--off' ) . '">'
@@ -255,13 +255,42 @@ final class WHD_AI_Admin {
 
 		echo '<tr><th><label for="recaptcha_site">' . esc_html__( 'Site key', 'whd' ) . '</label></th><td>'
 			. '<input class="regular-text" id="recaptcha_site" name="' . esc_attr( self::field( 'recaptcha_site' ) ) . '" value="' . esc_attr( $o['recaptcha_site'] ) . '" placeholder="6L…">'
-			. '<p class="description">' . esc_html__( 'Public — it appears in the page, so it is not a secret.', 'whd' ) . '</p></td></tr>';
-		self::secret_row( 'recaptcha_secret', __( 'Secret key', 'whd' ), $o['recaptcha_secret'], __( 'Never leaves the server. Paste it once; it is stored masked. Until it is here, no token is checked with Google.', 'whd' ), '' );
+			. '<p class="description">' . esc_html__( 'Public — it appears in the page, so it is not a secret. All three kinds use one.', 'whd' ) . '</p></td></tr>';
 
-		echo '<tr data-whd-recaptcha="v3"' . ( 'v3' === WHD_AI::recaptcha_version() ? '' : ' hidden' ) . '><th><label for="recaptcha_score">' . esc_html__( 'Lowest score to let through', 'whd' ) . '</label></th><td>'
+		self::secret_row( 'recaptcha_secret', __( 'Secret key', 'whd' ), $o['recaptcha_secret'], __( 'Never leaves the server. Paste it once; it is stored masked. Until it is here, no token is checked with Google.', 'whd' ), '', 'v2 v3' );
+
+		echo '<tr data-whd-recaptcha="enterprise"' . self::captcha_hidden( 'enterprise' ) . '><th><label for="recaptcha_project">' . esc_html__( 'Google Cloud project ID', 'whd' ) . '</label></th><td>'
+			. '<input class="regular-text" id="recaptcha_project" name="' . esc_attr( self::field( 'recaptcha_project' ) ) . '" value="' . esc_attr( $o['recaptcha_project'] ) . '" placeholder="my-project-123456">'
+			. '<p class="description">' . esc_html__( 'The project the Enterprise key was created in — the ID, not the display name. It is in the Google Cloud console beside the project name, and in the address bar as ?project=…', 'whd' ) . '</p></td></tr>';
+
+		self::secret_row(
+			'recaptcha_api_key',
+			__( 'API key', 'whd' ),
+			$o['recaptcha_api_key'],
+			__( 'An API key from that same project, allowed to use the reCAPTCHA Enterprise API. Enterprise has no secret key: this is what signs the check. If your Gemini key is from the same project and is not restricted to one API, it works here too.', 'whd' ),
+			'',
+			'enterprise'
+		);
+
+		echo '<tr data-whd-recaptcha="v3 enterprise"' . self::captcha_hidden( 'v3 enterprise' ) . '><th><label for="recaptcha_score">' . esc_html__( 'Lowest score to let through', 'whd' ) . '</label></th><td>'
 			. '<input type="number" class="small-text" step="0.1" min="0.1" max="0.9" id="recaptcha_score" name="' . esc_attr( self::field( 'recaptcha_score' ) ) . '" value="' . esc_attr( (string) $o['recaptcha_score'] ) . '">'
-			. '<p class="description">' . esc_html__( 'v3 scores every visitor from 0 (certainly a bot) to 1 (certainly a person). 0.5 is Google\'s suggestion. Raise it if spam gets through; lower it if real people are being turned away.', 'whd' ) . '</p></td></tr>';
+			. '<p class="description">' . esc_html__( 'Every visitor is scored from 0 (certainly a bot) to 1 (certainly a person). 0.5 is Google\'s suggestion. Raise it if spam gets through; lower it if real people are being turned away.', 'whd' ) . '</p></td></tr>';
 		echo '</tbody></table>';
+
+		echo '<p class="whd-ai-brief__actions">';
+		echo '<button type="button" class="button" id="whd-captcha-test"'
+			. ' data-script="' . esc_attr( WHD_AI::recaptcha_shown() ? WHD_AI::recaptcha_script() : '' ) . '"'
+			. ' data-site="' . esc_attr( $o['recaptcha_site'] ) . '"'
+			. ' data-enterprise="' . ( WHD_AI::recaptcha_enterprise() ? '1' : '0' ) . '"'
+			. ' data-silent="' . ( WHD_AI::recaptcha_silent() ? '1' : '0' ) . '">'
+			. esc_html__( 'Check these keys now', 'whd' ) . '</button> ';
+		echo '<span class="whd-ai-note" id="whd-captcha-result">';
+		$missing = WHD_AI::recaptcha_missing();
+		echo '' !== $missing
+			/* translators: %s: what is missing, e.g. "the secret key" */
+			? esc_html( sprintf( __( 'Still missing: %s. Nothing is being checked yet.', 'whd' ), $missing ) )
+			: esc_html__( 'Mints a real token in this browser and asks Google to assess it.', 'whd' );
+		echo '</span></p>';
 
 		submit_button( __( 'Save settings', 'whd' ) );
 		echo '</form>';
@@ -279,10 +308,19 @@ final class WHD_AI_Admin {
 	 *
 	 * $provider empty means the row is not tied to a model provider and is always shown.
 	 */
-	private static function secret_row( $key, $label, $stored, $help, $provider ) {
+	/** Rows that only make sense for some reCAPTCHA kinds start out of sight for the others. */
+	private static function captcha_hidden( $kinds ) {
+		return in_array( WHD_AI::recaptcha_version(), explode( ' ', $kinds ), true ) ? '' : ' hidden';
+	}
+
+	private static function secret_row( $key, $label, $stored, $help, $provider, $captcha = '' ) {
 		$scoped = '' !== $provider;
 		$hidden = ( $scoped && WHD_AI::get()['provider'] !== $provider ) ? ' hidden' : '';
-		echo '<tr' . ( $scoped ? ' data-whd-ai-provider="' . esc_attr( $provider ) . '"' : '' ) . $hidden . '>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		if ( '' !== $captcha ) {
+			$hidden = self::captcha_hidden( $captcha );
+		}
+		echo '<tr' . ( $scoped ? ' data-whd-ai-provider="' . esc_attr( $provider ) . '"' : '' )
+			. ( '' !== $captcha ? ' data-whd-recaptcha="' . esc_attr( $captcha ) . '"' : '' ) . $hidden . '>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo '<th><label for="' . esc_attr( $key ) . '">' . esc_html( $label ) . '</label></th><td>';
 		echo '<input class="regular-text" type="password" autocomplete="new-password" id="' . esc_attr( $key ) . '" name="' . esc_attr( self::field( $key ) ) . '" value="" placeholder="'
 			. esc_attr( '' !== $stored ? __( 'Saved — leave blank to keep it', 'whd' ) : __( 'Paste your key', 'whd' ) ) . '">';
@@ -304,7 +342,92 @@ final class WHD_AI_Admin {
 	}
 
 	private static function provider_toggle_script() {
-		echo '<script>(function(){var s=document.getElementById("whd-ai-provider");if(s){var paint=function(){var r=document.querySelectorAll("[data-whd-ai-provider]");for(var i=0;i<r.length;i++){r[i].hidden=r[i].getAttribute("data-whd-ai-provider")!==s.value;}};s.addEventListener("change",paint);paint();}var v=document.getElementById("recaptcha_version");if(v){var show=function(){var r=document.querySelectorAll("[data-whd-recaptcha]");for(var i=0;i<r.length;i++){r[i].hidden=r[i].getAttribute("data-whd-recaptcha")!==v.value;}};v.addEventListener("change",show);show();}})();</script>';
+		echo '<script>(function(){var s=document.getElementById("whd-ai-provider");if(s){var paint=function(){var r=document.querySelectorAll("[data-whd-ai-provider]");for(var i=0;i<r.length;i++){r[i].hidden=r[i].getAttribute("data-whd-ai-provider")!==s.value;}};s.addEventListener("change",paint);paint();}var v=document.getElementById("recaptcha_version");if(v){var show=function(){var r=document.querySelectorAll("[data-whd-recaptcha]");for(var i=0;i<r.length;i++){r[i].hidden=r[i].getAttribute("data-whd-recaptcha").split(" ").indexOf(v.value)===-1;}};v.addEventListener("change",show);show();}})();</script>';
+		self::captcha_test_script();
+	}
+
+	/**
+	 * "Check these keys now".
+	 *
+	 * Enterprise cannot be proved by looking at it: the site key lives in the browser, the project
+	 * and API key live here, and only a round trip says whether the pair actually works. So the
+	 * button mints a real token the way the stylist does and prints Google's answer verbatim.
+	 */
+	private static function captcha_test_script() {
+		$strings = [
+			'none'    => __( 'Save a site key first.', 'whd' ),
+			'minting' => __( 'Asking Google…', 'whd' ),
+			'noApi'   => __( 'The reCAPTCHA script did not load — check the site key, and whether this domain is on the key.', 'whd' ),
+			'failed'  => __( 'Could not reach the site.', 'whd' ),
+			'saveMsg' => __( 'Save the page first — this tests the keys that are stored, not the ones typed above.', 'whd' ),
+			'tickbox' => __( 'The tickbox cannot be tested from here. Open the stylist on the site: if the box draws and accepts a tick, the keys are right.', 'whd' ),
+		];
+		?>
+		<script>
+		( function () {
+			var btn = document.getElementById( 'whd-captcha-test' );
+			var out = document.getElementById( 'whd-captcha-result' );
+			var sel = document.getElementById( 'recaptcha_version' );
+			var T = <?php echo wp_json_encode( $strings ); ?>;
+			if ( ! btn || ! out ) { return; }
+
+			var say = function ( text, bad ) {
+				out.textContent = text;
+				out.className = 'whd-ai-note' + ( bad ? ' is-bad' : '' );
+			};
+
+			// What is stored is what gets tested, so say so the moment the form is edited.
+			var form = btn.closest( 'form' );
+			if ( form ) {
+				form.addEventListener( 'input', function () { btn.dataset.dirty = '1'; } );
+				form.addEventListener( 'change', function () { btn.dataset.dirty = '1'; } );
+			}
+
+			btn.addEventListener( 'click', function () {
+				var site = btn.dataset.site, src = btn.dataset.script;
+				if ( ! site || ! src ) { return say( T.none, true ); }
+				if ( btn.dataset.dirty ) { return say( T.saveMsg, true ); }
+				if ( sel && sel.value !== btn.dataset.wasVersion && btn.dataset.wasVersion ) { return say( T.saveMsg, true ); }
+
+				if ( '1' !== btn.dataset.silent ) { return say( T.tickbox, false ); }
+
+				btn.disabled = true;
+				say( T.minting, false );
+
+				var ent = '1' === btn.dataset.enterprise;
+				var ready = function () {
+					var g = ent ? ( window.grecaptcha && window.grecaptcha.enterprise ) : window.grecaptcha;
+					if ( ! g || ! g.ready ) { btn.disabled = false; return say( T.noApi, true ); }
+					g.ready( function () {
+						Promise.resolve( g.execute( site, { action: 'whd_admin_test' } ) ).then( function ( t ) {
+							return fetch( WHD_AI_DATA.rest.root + 'recaptcha-test', {
+								method: 'POST',
+								headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': WHD_AI_DATA.rest.nonce },
+								body: JSON.stringify( { token: t } )
+							} ).then( function ( r ) { return r.json(); } );
+						} ).then( function ( res ) {
+							btn.disabled = false;
+							say( res.message || '', ! res.ok || false === res.config );
+						} ).catch( function () {
+							btn.disabled = false;
+							say( T.failed, true );
+						} );
+					} );
+				};
+
+				if ( document.querySelector( 'script[data-whd-captcha]' ) ) { return ready(); }
+				var s = document.createElement( 'script' );
+				s.src = src;
+				s.setAttribute( 'data-whd-captcha', '1' );
+				s.onload = ready;
+				s.onerror = function () { btn.disabled = false; say( T.noApi, true ); };
+				document.head.appendChild( s );
+			} );
+
+			btn.dataset.wasVersion = sel ? sel.value : '';
+		} )();
+		</script>
+		<?php
 	}
 
 	private static function log_section() {
@@ -755,6 +878,16 @@ final class WHD_AI_Admin {
 			'callback'            => [ __CLASS__, 'rest_brief' ],
 			'permission_callback' => $is_admin,
 		] );
+		register_rest_route( 'whd/v1', '/ai/recaptcha-test', [
+			'methods'             => 'POST',
+			'callback'            => [ __CLASS__, 'rest_recaptcha_test' ],
+			'permission_callback' => $is_admin,
+		] );
+	}
+
+	/** Assess a token minted on this screen, and hand back exactly what Google said. */
+	public static function rest_recaptcha_test( WP_REST_Request $r ) {
+		return new WP_REST_Response( WHD_AI::recaptcha_check( (string) $r->get_param( 'token' ), 'whd_admin_test' ), 200 );
 	}
 
 	public static function rest_generate( WP_REST_Request $r ) {
