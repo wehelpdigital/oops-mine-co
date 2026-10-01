@@ -251,7 +251,7 @@ final class WHD_AI_Admin {
 		foreach ( WHD_AI::recaptcha_versions() as $key => $label ) {
 			printf( '<option value="%s"%s>%s</option>', esc_attr( $key ), selected( WHD_AI::recaptcha_version(), $key, false ), esc_html( $label ) );
 		}
-		echo '</select><p class="description">' . esc_html__( 'Google shows this when you create the keys, and the two kinds are not interchangeable — a v3 key asked to draw a tickbox answers "Invalid key type" and nobody can get past it. If the stylist shows that message, it is this setting that is wrong.', 'whd' ) . '</p></td></tr>';
+		echo '</select><p class="description">' . esc_html__( 'Google shows this when you create the key, and the three kinds are not interchangeable — a key made for one of the others, asked to draw a tickbox, answers "Invalid key type" and nobody can get past it. If the stylist shows that message, it is this setting that is wrong. Enterprise keys are the ones created in the Google Cloud console rather than at google.com/recaptcha.', 'whd' ) . '</p></td></tr>';
 
 		echo '<tr><th><label for="recaptcha_site">' . esc_html__( 'Site key', 'whd' ) . '</label></th><td>'
 			. '<input class="regular-text" id="recaptcha_site" name="' . esc_attr( self::field( 'recaptcha_site' ) ) . '" value="' . esc_attr( $o['recaptcha_site'] ) . '" placeholder="6L…">'
