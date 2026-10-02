@@ -1815,6 +1815,8 @@
    A quiet invitation rather than a banner: the same sand as the rest of the
    page, centred, one button. The wizard it opens does the talking. ─────── */
 .omc-stylist {
+	/* Clear of the trust strip above: stacked edge to edge, two bordered panels read as one. */
+	margin-top: clamp(30px, 4.5vw, 64px);
 	padding: clamp(46px, 6vw, 88px) 0;
 	background: var(--omc-sand);
 	border-top: 1px solid var(--omc-line);
