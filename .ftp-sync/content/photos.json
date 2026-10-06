@@ -607,5 +607,125 @@
     "assign": {
       "post": "cute-vacation-outfits"
     }
+  },
+  {
+    "slug": "omc-journal-petite-mean",
+    "source": "Photoroom_20251004_052935.jpeg",
+    "role": "landscape",
+    "focus": [
+      0.5,
+      0.3
+    ],
+    "title": "Grey midi skirt and striped knit, full length",
+    "alt": "Woman in a grey midi skirt, striped knit and boots photographed full length",
+    "description": "What petite means in practice, measured against the pieces on the Oops, Mine Co. rail.",
+    "assign": {
+      "post": "what-does-petite-mean"
+    }
+  },
+  {
+    "slug": "omc-journal-over-50",
+    "source": "Photoroom_20251114_230526.jpg",
+    "role": "landscape",
+    "focus": [
+      0.5,
+      0.3
+    ],
+    "title": "Brown lace midi skirt at a cafe table",
+    "alt": "Woman in a black knit and brown lace midi skirt seated at a cafe table",
+    "description": "Petite dressing that does not read as girlish — lengths and proportions that work at any age.",
+    "assign": {
+      "post": "petite-fashion-over-50"
+    }
+  },
+  {
+    "slug": "omc-journal-winter",
+    "source": "Photoroom_20251114_231632.jpg",
+    "role": "landscape",
+    "focus": [
+      0.5,
+      0.3
+    ],
+    "title": "Hooded sweatshirt and cream skirt in winter light",
+    "alt": "Woman in a navy hooded sweatshirt and cream midi skirt by a sunlit window",
+    "description": "Cute clothes for winter from the Oops, Mine Co. edit — soft layers, long lengths.",
+    "assign": {
+      "post": "cute-clothes-for-winter"
+    }
+  },
+  {
+    "slug": "omc-journal-bangkok",
+    "source": "Photoroom_20251114_225741.jpg",
+    "role": "landscape",
+    "focus": [
+      0.5,
+      0.3
+    ],
+    "title": "Cream cardigan and black skirt outside a cafe",
+    "alt": "Woman in a cream cardigan and black midi skirt walking past a pavement cafe",
+    "description": "What to look for when shopping in Bangkok, from the people who buy there.",
+    "assign": {
+      "post": "bangkok-shopping-guide"
+    }
+  },
+  {
+    "slug": "omc-journal-gifts",
+    "source": "Photoroom_20251027_110724.jpg",
+    "role": "landscape",
+    "focus": [
+      0.5,
+      0.3
+    ],
+    "title": "Close-up of mint faux fur",
+    "alt": "A close-up of soft mint-green faux fur",
+    "description": "Gift ideas from the Oops, Mine Co. rail — the pieces people keep rather than return.",
+    "assign": {
+      "post": "asian-gift-guide"
+    }
+  },
+  {
+    "slug": "omc-journal-teens",
+    "source": "IMG_0197.JPG",
+    "role": "landscape",
+    "focus": [
+      0.5,
+      0.3
+    ],
+    "title": "Slogan sweatshirts in three print colours",
+    "alt": "Three cropped slogan sweatshirts on hangers with the print in blue, red and navy",
+    "description": "Cute fashion for teenagers, built from pieces that are not only for teenagers.",
+    "assign": {
+      "post": "cute-fashion-for-teens"
+    }
+  },
+  {
+    "slug": "omc-journal-men-knit",
+    "source": "IMG_4795.jpeg",
+    "role": "landscape",
+    "focus": [
+      0.5,
+      0.3
+    ],
+    "title": "Drawstring waistbands in olive, sand and black",
+    "alt": "Close-up of three drawstring waistbands in olive, sand and black",
+    "description": "How Korean menswear is cut, read through the fabrics and finishes on the rail.",
+    "assign": {
+      "post": "korean-fashion-for-men"
+    }
+  },
+  {
+    "slug": "omc-journal-men-kpop",
+    "source": "IMG_4796.jpeg",
+    "role": "landscape",
+    "focus": [
+      0.5,
+      0.3
+    ],
+    "title": "Olive brushed jersey, folded",
+    "alt": "A close-up of olive brushed jersey folded into a swirl",
+    "description": "Kpop stage looks broken down into the fabrics and shapes behind them.",
+    "assign": {
+      "post": "kpop-fashion-for-men"
+    }
   }
 ]

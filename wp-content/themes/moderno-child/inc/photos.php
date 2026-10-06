@@ -244,4 +244,44 @@ return array (
     'title' => 'Quilted midi skirt at a pavement cafe',
     'alt' => 'Woman in a quilted brown midi skirt walking past a pavement cafe',
   ),
+  'omc-journal-petite-mean' => 
+  array (
+    'title' => 'Grey midi skirt and striped knit, full length',
+    'alt' => 'Woman in a grey midi skirt, striped knit and boots photographed full length',
+  ),
+  'omc-journal-over-50' => 
+  array (
+    'title' => 'Brown lace midi skirt at a cafe table',
+    'alt' => 'Woman in a black knit and brown lace midi skirt seated at a cafe table',
+  ),
+  'omc-journal-winter' => 
+  array (
+    'title' => 'Hooded sweatshirt and cream skirt in winter light',
+    'alt' => 'Woman in a navy hooded sweatshirt and cream midi skirt by a sunlit window',
+  ),
+  'omc-journal-bangkok' => 
+  array (
+    'title' => 'Cream cardigan and black skirt outside a cafe',
+    'alt' => 'Woman in a cream cardigan and black midi skirt walking past a pavement cafe',
+  ),
+  'omc-journal-gifts' => 
+  array (
+    'title' => 'Close-up of mint faux fur',
+    'alt' => 'A close-up of soft mint-green faux fur',
+  ),
+  'omc-journal-teens' => 
+  array (
+    'title' => 'Slogan sweatshirts in three print colours',
+    'alt' => 'Three cropped slogan sweatshirts on hangers with the print in blue, red and navy',
+  ),
+  'omc-journal-men-knit' => 
+  array (
+    'title' => 'Drawstring waistbands in olive, sand and black',
+    'alt' => 'Close-up of three drawstring waistbands in olive, sand and black',
+  ),
+  'omc-journal-men-kpop' => 
+  array (
+    'title' => 'Olive brushed jersey, folded',
+    'alt' => 'A close-up of olive brushed jersey folded into a swirl',
+  ),
 );

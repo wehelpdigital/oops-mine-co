@@ -383,6 +383,29 @@ if ( ! $dry ) {
 }
 
 echo "\n";
+/* -- the theme's own demo journal posts ------------------------------------ */
+
+if ( ! $dry ) {
+	/*
+	 * Filler that arrived with the theme, carrying its stock photography. Leaving it published
+	 * beside the client's own work is the same problem the demo catalogue was. Drafted, not
+	 * deleted — the slugs are listed rather than guessed at, so nothing the client wrote is caught
+	 * by a pattern match.
+	 */
+	$demo_posts = [ 'collections_post', 'collection2023', 'gifts', 'new-trends-in-clothes-industry-in-2023' ];
+	$put_away   = 0;
+	foreach ( $demo_posts as $slug ) {
+		$post = get_page_by_path( $slug, OBJECT, 'post' );
+		if ( $post && 'draft' !== $post->post_status ) {
+			wp_update_post( [ 'ID' => $post->ID, 'post_status' => 'draft' ] );
+			$put_away++;
+		}
+	}
+	if ( $put_away ) {
+		printf( "   drafted %d demo journal post(s)\n", $put_away );
+	}
+}
+
 /* -- the default category, which keeps coming back ------------------------- */
 
 if ( ! $dry && $kept_ids ) {
