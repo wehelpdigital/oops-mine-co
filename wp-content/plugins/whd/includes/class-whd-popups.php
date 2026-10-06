@@ -95,7 +95,7 @@ final class WHD_Popups {
 			return [
 				'settings' => array_merge( $settings, [ 'delay' => 5, 'cookie_days' => 3, 'show_on' => 'not_checkout' ] ),
 				'blocks'   => [
-					[ 'type' => 'heading', 'props' => [ 'text' => 'Wait — before you go', 'level' => 'h2', 'align' => 'center', 'color' => '#3a2b26' ] ],
+					[ 'type' => 'heading', 'props' => [ 'text' => 'Wait, before you go', 'level' => 'h2', 'align' => 'center', 'color' => '#3a2b26' ] ],
 					[ 'type' => 'text', 'props' => [ 'text' => 'Take 15% off the pieces you paused on. This code lasts 15 minutes.', 'align' => 'center', 'size' => 16, 'color' => '#4a3f3a' ] ],
 					[ 'type' => 'countdown', 'props' => [ 'minutes' => 15, 'label' => 'Your code ends in', 'expired' => 'This code has ended', 'color' => '#3a2b26', 'hide_on_expire' => 0 ] ],
 					[ 'type' => 'coupon', 'props' => [ 'code' => '{exit_coupon}', 'note' => 'Use at checkout', 'color' => '#9c6f63' ] ],
@@ -106,7 +106,7 @@ final class WHD_Popups {
 		return [
 			'settings' => array_merge( $settings, [ 'delay' => 6, 'cookie_days' => 14 ] ),
 			'blocks'   => [
-				[ 'type' => 'heading', 'props' => [ 'text' => 'Oops — you found us.', 'level' => 'h2', 'align' => 'center', 'color' => '#3a2b26' ] ],
+				[ 'type' => 'heading', 'props' => [ 'text' => 'Oops, you found us.', 'level' => 'h2', 'align' => 'center', 'color' => '#3a2b26' ] ],
 				[ 'type' => 'text', 'props' => [ 'text' => 'Take 10% off your first order and get first look at every new drop. One unexpected find at a time.', 'align' => 'center', 'size' => 16, 'color' => '#4a3f3a' ] ],
 				[ 'type' => 'form', 'props' => [
 					'show_name'         => 0,

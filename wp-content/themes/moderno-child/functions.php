@@ -228,6 +228,16 @@ function omc_photo_words( $file, $which = 'alt' ) {
 }
 
 /**
+ * Join the page title to the site name with a pipe rather than a dash.
+ *
+ * WordPress uses an en dash, which is the same punctuation the headings have been cleared of, and a
+ * title tag reading "Shop – Oops, Mine Co." is the one place it would survive.
+ */
+add_filter( 'document_title_separator', static function () {
+	return '|';
+} );
+
+/**
  * Stamp prepared photographs with the moment they were last written.
  *
  * They are rebuilt in place — re-pointed, re-graded, re-cut — under the same file names, so a

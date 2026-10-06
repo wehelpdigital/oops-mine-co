@@ -17,6 +17,18 @@ function omc_cat_config() {
 	if ( false !== $cfg ) {
 		return $cfg;
 	}
+	/*
+	 * catalog-2026.json and import-catalog.php own the shop now: the client's own category list,
+	 * their own products, their own photographs. This file still describes the demo tree, and
+	 * applying it on top puts retired categories back and re-files products that are already where
+	 * they belong. Stand down while the newer one exists.
+	 */
+	if ( file_exists( dirname( __DIR__ ) . '/content/catalog-2026.json' ) ) {
+		omc_pub_note( 'catalog.json: skipped, catalog-2026.json owns the shop (see import-catalog.php)' );
+		$cfg = null;
+		return $cfg;
+	}
+
 	$file = dirname( __DIR__ ) . '/content/catalog.json';
 	$cfg  = null;
 	if ( file_exists( $file ) ) {
