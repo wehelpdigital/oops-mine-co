@@ -3,7 +3,11 @@
  * Register the prepared photographs in the media library, with the words that belong to them.
  *
  *   php .ftp-sync/import-photos.php [--dry-run]
- *   OMC_DB=live php .ftp-sync/import-photos.php       (production write — the site owner runs this)
+ *   php .ftp-sync/import-photos.php --live [--dry-run]   (production write — the site owner runs this)
+ *
+ * `--live` does what OMC_DB=live does, without the caller needing a shell that supports an inline
+ * environment-variable prefix — PowerShell does not — and without leaving the variable set for
+ * whatever is typed into that window next.
  *
  * `.ftp-sync/tools/prepare-photos.php` writes the files; this gives each one a title, alt text and
  * a description, and asks WordPress to generate its sizes. Idempotent: an image already in the
@@ -13,7 +17,19 @@
  * text can never drift from the photograph it is meant to be describing.
  */
 
-$_SERVER['HTTP_HOST'] = getenv( 'OMC_DB' ) === 'live' ? 'oopsmineco.com' : 'oopsmine.test';
+/*
+ * `--live` is the same thing as OMC_DB=live, set here rather than by the caller.
+ *
+ * The environment-variable form is bash syntax; PowerShell has no inline prefix for it and fails
+ * before PHP is reached, and setting it by hand leaves it set for everything else typed into that
+ * window afterwards. This has to happen before wp-config.php is read, which is what wp-load does.
+ */
+if ( in_array( '--live', $argv, true ) ) {
+	putenv( 'OMC_DB=live' );
+}
+
+$live = 'live' === getenv( 'OMC_DB' );
+$_SERVER['HTTP_HOST'] = $live ? 'oopsmineco.com' : 'oopsmine.test';
 $_SERVER['REQUEST_URI'] = '/';
 require dirname( __DIR__ ) . '/wp-load.php';
 require_once ABSPATH . 'wp-admin/includes/image.php';
