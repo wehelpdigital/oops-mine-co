@@ -191,7 +191,7 @@ function omc_image_fallback( $file, $attrs = [] ) {
 	}
 
 	$attrs = array_filter( array_merge( [
-		'src' => trailingslashit( $uploads['baseurl'] ) . $file,
+		'src' => omc_image_version( trailingslashit( $uploads['baseurl'] ) . $file ),
 		'alt' => omc_photo_words( $file, 'alt' ),
 	], $attrs ), static function ( $v ) {
 		return '' !== $v && null !== $v;
@@ -226,6 +226,52 @@ function omc_photo_words( $file, $which = 'alt' ) {
 
 	return (string) ( $map[ $slug ][ $which ] ?? '' );
 }
+
+/**
+ * Stamp prepared photographs with the moment they were last written.
+ *
+ * They are rebuilt in place — re-pointed, re-graded, re-cut — under the same file names, so a
+ * browser holding the previous version never asks for the new one. The page then looks unchanged to
+ * the person who has seen it before and perfectly correct to everybody else, and to every check run
+ * against the server, which is a miserable thing to debug. The stamp moves only when the file does.
+ *
+ * Only `omc-2026/`: the rest of the library is written once and never edited.
+ *
+ * @param string $url Image URL.
+ * @return string
+ */
+function omc_image_version( $url ) {
+	if ( ! is_string( $url ) || false === strpos( $url, '/omc-2026/' ) || false !== strpos( $url, '?' ) ) {
+		return $url;
+	}
+	static $stamps = [];
+	$uploads = wp_get_upload_dir();
+	$rel     = ltrim( (string) str_replace( $uploads['baseurl'], '', $url ), '/' );
+	if ( ! isset( $stamps[ $rel ] ) ) {
+		$path           = trailingslashit( $uploads['basedir'] ) . $rel;
+		$stamps[ $rel ] = file_exists( $path ) ? (int) filemtime( $path ) : 0;
+	}
+
+	return $stamps[ $rel ] ? $url . '?v=' . $stamps[ $rel ] : $url;
+}
+
+add_filter( 'wp_get_attachment_image_src', function ( $image ) {
+	if ( is_array( $image ) && isset( $image[0] ) ) {
+		$image[0] = omc_image_version( $image[0] );
+	}
+	return $image;
+}, 20 );
+
+add_filter( 'wp_calculate_image_srcset', function ( $sources ) {
+	if ( is_array( $sources ) ) {
+		foreach ( $sources as $w => $s ) {
+			if ( isset( $s['url'] ) ) {
+				$sources[ $w ]['url'] = omc_image_version( $s['url'] );
+			}
+		}
+	}
+	return $sources;
+}, 20 );
 
 /**
  * What a picture should be described as, preferring what was written about the picture itself.
@@ -914,7 +960,7 @@ function omc_banner( $b, $size = 'tile' ) {
 	$alt   = $b['alt'] ?: wp_strip_all_tags( $b['title'] );
 	$imgs  = [];
 	foreach ( $files as $i => $file ) {
-		$attrs = [ 'class' => 'omc-banner__img', 'sizes' => '(max-width: 900px) 100vw, 60vw' . ( 0 === $i ? ' is-active' : '' ), 'loading' => 'lazy', 'alt' => $alt ];
+		$attrs = [ 'class' => 'omc-banner__img' . ( 0 === $i ? ' is-active' : '' ), 'sizes' => '(max-width: 900px) 100vw, 60vw', 'loading' => 'lazy', 'alt' => $alt ];
 		if ( $i > 0 ) {
 			$attrs['aria-hidden'] = 'true'; // only the visible photo is announced
 		}
