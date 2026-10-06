@@ -139,7 +139,14 @@ get_header();
 	<!-- ───────────── The stylist ───────────── -->
 	<?php $omc_sty = function_exists( 'omc_stylist_band' ) ? omc_stylist_band() : null; ?>
 	<?php if ( $omc_sty ) : ?>
-		<section class="omc-stylist omc-reveal<?php echo empty( $omc_sty['figure'] ) ? '' : ' has-figure'; ?>" aria-labelledby="omc-stylist-title">
+		<?php
+		$omc_sty_class = 'omc-stylist omc-reveal'
+			. ( empty( $omc_sty['figure'] ) ? '' : ' has-figure' )
+			. ( empty( $omc_sty['room'] ) ? '' : ' has-room' );
+		// The backdrop arrives as a custom property so the veil over it stays in the stylesheet.
+		$omc_sty_style = empty( $omc_sty['room'] ) ? '' : '--omc-stylist-room:url(' . esc_url( $omc_sty['room'] ) . ')';
+		?>
+		<section class="<?php echo esc_attr( $omc_sty_class ); ?>"<?php echo $omc_sty_style ? ' style="' . esc_attr( $omc_sty_style ) . '"' : ''; ?> aria-labelledby="omc-stylist-title">
 			<div class="l-section__container omc-stylist__inner">
 				<div class="omc-stylist__copy">
 					<p class="omc-eyebrow omc-stylist__eyebrow"><?php echo esc_html( $omc_sty['eyebrow'] ); ?></p>

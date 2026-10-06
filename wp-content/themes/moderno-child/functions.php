@@ -385,6 +385,13 @@ function omc_stylist_band() {
 	 * look the same on an environment whose database has never been published to.
 	 */
 	$figure = OMC_DIR . '/assets/img/stylist-thinking.webp';
+	$room   = OMC_DIR . '/assets/img/stylist-room.webp';
+
+	/*
+	 * Both carry the file's own timestamp. The names never change when the tool is re-run, and a
+	 * browser that has the old one would otherwise keep showing it — which is exactly how an edited
+	 * hero went on looking unedited for a day.
+	 */
 
 	return apply_filters( 'omc_stylist_band', [
 		'eyebrow' => __( 'The stylist', 'moderno-child' ),
@@ -392,10 +399,12 @@ function omc_stylist_band() {
 		'text'    => __( 'Try our digital stylist, free, and we’ll recommend what’s best for you.', 'moderno-child' ),
 		'button'  => __( 'Start the stylist', 'moderno-child' ),
 		'figure'  => file_exists( $figure ) ? [
-			'url'    => OMC_URI . '/assets/img/stylist-thinking.webp',
-			'width'  => 540,
-			'height' => 920,
+			'url'    => OMC_URI . '/assets/img/stylist-thinking.webp?v=' . filemtime( $figure ),
+			'width'  => 512,
+			'height' => 700,
 		] : null,
+		// The room she is standing in: the same photograph's café corner, blurred past recognition.
+		'room'    => file_exists( $room ) ? OMC_URI . '/assets/img/stylist-room.webp?v=' . filemtime( $room ) : '',
 	] );
 }
 

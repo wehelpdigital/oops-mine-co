@@ -20,13 +20,27 @@
  * logo variants, so it travels with the theme and needs nothing in the database.
  */
 
-$src  = 'C:/Users/User/Downloads/oops-photos/Gemini_Generated_Image_5wf0kr5wf0kr5wf0.jpg';
+/* A different photograph can be cut out without editing this file:
+ *   php make-stylist-photo.php --figure=C:/path/to/her.jpg --crop=278,0,512,700
+ * The crop is in the source's own pixels, left,top,width,height. */
+$arg = function ( $name, $fallback ) use ( $argv ) {
+	foreach ( $argv as $a ) {
+		if ( 0 === strpos( $a, "--$name=" ) ) {
+			return substr( $a, strlen( $name ) + 3 );
+		}
+	}
+
+	return $fallback;
+};
+
+$src  = $arg( 'figure', 'C:/Users/User/Downloads/oops-photos/Gemini_Generated_Image_5wf0kr5wf0kr5wf0.jpg' );
 $dir  = dirname( __DIR__, 2 ) . '/wp-content/themes/moderno-child/assets/img';
 $out  = $dir . '/stylist-thinking.webp';
 $prev = in_array( '--preview', $argv, true );
 
-/* Her, with a little air, and the floor left out. */
-$crop = [ 'x' => 250, 'y' => 0, 'w' => 540, 'h' => 920 ];
+/* Closer in: her head, the raised hand and the jacket, down to the thigh. At full length she was a
+   small figure at the edge of a wide band; the gesture is the point, so the gesture gets the room. */
+$crop = array_combine( [ 'x', 'y', 'w', 'h' ], array_map( 'intval', explode( ',', $arg( 'crop', '278,0,512,700' ) ) ) );
 
 /* How sure a pixel has to be that it is wall before the flood crosses it. */
 $wall_lum = 142;   // darker than this is her, not the room
@@ -187,7 +201,7 @@ for ( $pass = 0; $pass < 2; $pass++ ) {
 /* ── 4. warm her to the palette, fade the cut legs, write it ──────────────── */
 
 $grade = [ 1.045, 1.012, 0.975 ];   // a quarter-stop of warmth: the band either side of her is sand
-$fade  = 300;                        // the legs are cut off; they dissolve rather than stop
+$fade  = 70;                         // she is cut at the thigh by the band's own edge; this softens the contact
 
 $dst = imagecreatetruecolor( $w, $h );
 imagealphablending( $dst, false );
@@ -228,3 +242,69 @@ if ( $prev ) {
 	printf( "preview → %s\n", $file );
 }
 imagedestroy( $dst );
+
+/* ── the room she is standing in ──────────────────────────────────────────────
+   A flat sand band behind a cut-out figure reads as a product shot. This gives her somewhere to be:
+   a corner of the café from another of the client's photographs, far enough to the right of the
+   woman in it that she is not in frame at all, blurred until it is weather rather than furniture.
+
+   Blurring is what makes the size question go away. The crop is 364 pixels across; at this radius
+   nothing in it survives that could look soft, so it can cover a 2560-pixel band without complaint.
+   It is blurred by scaling down and back up, which is both faster and smoother than repeated
+   gaussian passes. ─────────────────────────────────────────────────────────── */
+
+$room_src  = 'C:/Users/User/Downloads/oops-photos/Gemini_Generated_Image_3w667r3w667r3w66.jpg';
+$room_out  = $dir . '/stylist-room.webp';
+$room_crop = [ 'x' => 660, 'y' => 418, 'w' => 364, 'h' => 205 ];   // window, tables, a plant
+$room_size = [ 1600, 900 ];
+$room_tint = 0.38;                                                  // how far towards the sand it is pulled
+
+$room = imagecreatefromjpeg( $room_src );
+if ( ! $room ) {
+	exit( "cannot read $room_src\n" );
+}
+$piece = imagecreatetruecolor( $room_crop['w'], $room_crop['h'] );
+imagecopy( $piece, $room, 0, 0, $room_crop['x'], $room_crop['y'], $room_crop['w'], $room_crop['h'] );
+imagedestroy( $room );
+
+$step = imagescale( $piece, 70, -1, IMG_BILINEAR_FIXED );
+imagedestroy( $piece );
+foreach ( [ 110, 170, 260, 400, 620, 960, $room_size[0] ] as $width ) {
+	$next = imagescale( $step, $width, -1, IMG_BILINEAR_FIXED );
+	imagedestroy( $step );
+	$step = $next;
+}
+$wide = imagescale( $step, $room_size[0], $room_size[1], IMG_BILINEAR_FIXED );
+imagedestroy( $step );
+
+/* Pulled towards the sand so the band is one colour family; the rest of the veil is done in CSS,
+   where it can be changed without coming back here. */
+for ( $y = 0; $y < $room_size[1]; $y++ ) {
+	for ( $x = 0; $x < $room_size[0]; $x++ ) {
+		$c = imagecolorat( $wide, $x, $y );
+		// Packed, not allocated: on a truecolour image imagecolorallocate is a needless round trip.
+		imagesetpixel( $wide, $x, $y,
+			( (int) round( ( ( $c >> 16 ) & 0xFF ) * ( 1 - $room_tint ) + 0xef * $room_tint ) << 16 )
+			| ( (int) round( ( ( $c >> 8 ) & 0xFF ) * ( 1 - $room_tint ) + 0xe6 * $room_tint ) << 8 )
+			| (int) round( ( $c & 0xFF ) * ( 1 - $room_tint ) + 0xde * $room_tint )
+		);
+	}
+}
+
+imagewebp( $wide, $room_out, 82 );
+printf( "%dx%d  →  %s  (%s KB)\n", $room_size[0], $room_size[1], str_replace( dirname( __DIR__, 2 ) . '/', '', $room_out ), number_format( filesize( $room_out ) / 1024 ) );
+
+if ( $prev ) {
+	$fig  = imagecreatefromwebp( $out );
+	$card = imagecreatetruecolor( 1400, 560 );
+	imagecopyresampled( $card, $wide, 0, 0, 0, 0, 1400, 560, $room_size[0], (int) ( $room_size[1] * 0.62 ) );
+	imagealphablending( $card, true );
+	$fh = 520;
+	$fw = (int) round( imagesx( $fig ) * $fh / imagesy( $fig ) );
+	imagecopyresampled( $card, $fig, 1400 - $fw - 120, 560 - $fh, 0, 0, $fw, $fh, imagesx( $fig ), imagesy( $fig ) );
+	$file = sys_get_temp_dir() . '/stylist-band.png';
+	imagepng( $card, $file );
+	printf( "band preview → %s\n", $file );
+	imagedestroy( $fig );
+}
+imagedestroy( $wide );
