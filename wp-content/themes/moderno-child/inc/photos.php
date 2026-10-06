@@ -284,4 +284,29 @@ return array (
     'title' => 'Olive brushed jersey, folded',
     'alt' => 'A close-up of olive brushed jersey folded into a swirl',
   ),
+  'omc-wide-everyday' => 
+  array (
+    'title' => 'Grey knit set at home with a morning cup',
+    'alt' => 'Woman in a grey knit top and matching skirt holding a cup by a window at home',
+  ),
+  'omc-wide-knits' => 
+  array (
+    'title' => 'Cream knit cardigan over a black pleated skirt',
+    'alt' => 'Woman in a cream knit cardigan and black pleated midi skirt in a bright room',
+  ),
+  'omc-wide-evening' => 
+  array (
+    'title' => 'Black button-front midi dress with a belt',
+    'alt' => 'Woman in a black button-front midi dress with a narrow belt and shoulder bag',
+  ),
+  'omc-cat-blouses' => 
+  array (
+    'title' => 'Brown check shirt dress at a window',
+    'alt' => 'Woman in a brown check shirt with a gathered skirt standing by a curtained window',
+  ),
+  'omc-cat-tees' => 
+  array (
+    'title' => 'Slogan print on a cotton sweatshirt, close up',
+    'alt' => 'Close-up of blue slogan lettering printed across a white cotton sweatshirt',
+  ),
 );

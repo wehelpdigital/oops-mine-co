@@ -901,7 +901,7 @@ function omc_home_banners() {
 			[ 'image' => 'omc-2026/omc-carousel-beauty.webp',    'title' => __( 'Korean skincare', 'moderno-child' ), 'url' => omc_shop_url() ],
 		],
 		'wide' => [ // full-width photo banner after New arrivals, copy on the left
-			'image'   => 'omc-2026/omc-banner-seoul-1.webp',
+			'image'   => 'omc-2026/omc-wide-everyday.webp',
 			'eyebrow' => __( 'Everyday elegance', 'moderno-child' ),
 			'title'   => __( 'Dressed, not done up', 'moderno-child' ),
 			'text'    => __( 'Knits, tailoring and denim that work as hard on a Tuesday as they do on a night out.', 'moderno-child' ),
@@ -911,7 +911,7 @@ function omc_home_banners() {
 			'tone'    => 'dark',
 		],
 		'wide2' => [ // its pair, directly below: copy on the right
-			'image'   => 'omc-2026/omc-banner-bangkok-3.webp',
+			'image'   => 'omc-2026/omc-wide-knits.webp',
 			'eyebrow' => __( 'Soft season', 'moderno-child' ),
 			'title'   => __( 'Knits worth keeping', 'moderno-child' ),
 			'text'    => __( 'Oversized, brushed and quietly patterned — the layers you’ll reach for first every morning.', 'moderno-child' ),
@@ -921,7 +921,7 @@ function omc_home_banners() {
 			'tone'    => 'dark',
 		],
 		'wide3' => [ // third in the stack: copy on the left again
-			'image'   => 'omc-2026/omc-quotes-green-knit-sofa.webp',
+			'image'   => 'omc-2026/omc-wide-evening.webp',
 			'eyebrow' => __( 'After dark', 'moderno-child' ),
 			'title'   => __( 'Evenings, softly', 'moderno-child' ),
 			'text'    => __( 'Silk, satin and the small details that carry you from dinner to whatever comes next.', 'moderno-child' ),

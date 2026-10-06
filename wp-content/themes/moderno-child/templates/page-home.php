@@ -337,7 +337,22 @@ get_header();
 		<div class="l-section__container-wide">
 			<?php omc_section_head( __( 'Just landed', 'moderno-child' ), __( 'New <em>arrivals</em>', 'moderno-child' ), omc_new_arrivals_url(), __( 'Shop all new', 'moderno-child' ), 'omc-new-title' ); ?>
 			<div class="omc-products__grid">
-				<?php echo do_shortcode( '[products limit="8" columns="4" orderby="date" order="DESC" visibility="visible"' . $omc_cat_at . ']' ); ?>
+				<?php
+			/*
+			 * Remember what this row shows, so the "most loved" row below can avoid repeating it.
+			 * With no orders yet, best_selling falls back to much the same order and the two rows
+			 * came out showing the same four pieces.
+			 */
+			$omc_new_ids = function_exists( 'wc_get_products' ) ? wc_get_products( [
+				'limit'    => 8,
+				'status'   => 'publish',
+				'orderby'  => 'date',
+				'order'    => 'DESC',
+				'return'   => 'ids',
+				'category' => $omc_cat ? [ $omc_cat ] : [],
+			] ) : [];
+			echo do_shortcode( '[products limit="8" columns="4" orderby="date" order="DESC" visibility="visible"' . $omc_cat_at . ']' );
+			?>
 			</div>
 		</div>
 	</section>
@@ -370,7 +385,24 @@ get_header();
 		<div class="l-section__container-wide">
 			<?php omc_section_head( __( 'Most loved', 'moderno-child' ), __( 'The pieces everyone keeps <em>reaching for</em>', 'moderno-child' ), omc_shop_url( [ 'orderby' => 'popularity' ] ), __( 'Shop best sellers', 'moderno-child' ), 'omc-loved-title' ); ?>
 			<div class="omc-products__grid">
-				<?php echo do_shortcode( '[products limit="4" columns="4" best_selling="true" visibility="visible"' . $omc_cat_at . ']' ); ?>
+				<?php
+			// Anything but what "New arrivals" just showed; if that leaves too few, take the rest.
+			$omc_loved = [];
+			if ( function_exists( 'wc_get_products' ) ) {
+				$omc_loved = wc_get_products( [
+					'limit'    => 4,
+					'status'   => 'publish',
+					'exclude'  => $omc_new_ids,
+					'orderby'  => 'date',
+					'order'    => 'ASC',
+					'return'   => 'ids',
+					'category' => $omc_cat ? [ $omc_cat ] : [],
+				] );
+			}
+			echo $omc_loved
+				? do_shortcode( '[products columns="4" orderby="date" order="ASC" visibility="visible" ids="' . esc_attr( implode( ',', $omc_loved ) ) . '"]' )
+				: do_shortcode( '[products limit="4" columns="4" best_selling="true" visibility="visible"' . $omc_cat_at . ']' );
+			?>
 			</div>
 		</div>
 	</section>

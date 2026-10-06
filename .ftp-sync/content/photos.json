@@ -738,5 +738,76 @@
     "assign": {
       "post": "kpop-fashion-for-men"
     }
+  },
+  {
+    "slug": "omc-wide-everyday",
+    "source": "Photoroom_20251115_075855.jpg",
+    "role": "wide",
+    "focus": [
+      0.5,
+      0.26
+    ],
+    "cool": 0.3,
+    "title": "Grey knit set at home with a morning cup",
+    "alt": "Woman in a grey knit top and matching skirt holding a cup by a window at home",
+    "description": "The grey knit co-ord — the sort of thing that gets worn on a Tuesday and again on Saturday."
+  },
+  {
+    "slug": "omc-wide-knits",
+    "source": "Photoroom_20251115_144847.jpg",
+    "role": "wide",
+    "focus": [
+      0.5,
+      0.26
+    ],
+    "cool": 0.3,
+    "title": "Cream knit cardigan over a black pleated skirt",
+    "alt": "Woman in a cream knit cardigan and black pleated midi skirt in a bright room",
+    "description": "Soft knits over a pleated skirt. Small-batch knitwear at Oops, Mine Co."
+  },
+  {
+    "slug": "omc-wide-evening",
+    "source": "Photoroom_20251114_235345.jpg",
+    "role": "wide",
+    "focus": [
+      0.5,
+      0.26
+    ],
+    "cool": 0.3,
+    "title": "Black button-front midi dress with a belt",
+    "alt": "Woman in a black button-front midi dress with a narrow belt and shoulder bag",
+    "description": "The black button-front midi dress, cut long enough to carry from dinner onwards."
+  },
+  {
+    "slug": "omc-cat-blouses",
+    "source": "Photoroom_20251115_144006.jpg",
+    "role": "portrait",
+    "focus": [
+      0.5,
+      0.26
+    ],
+    "cool": 0.25,
+    "title": "Brown check shirt dress at a window",
+    "alt": "Woman in a brown check shirt with a gathered skirt standing by a curtained window",
+    "description": "Blouses at Oops, Mine Co. — collared shirts and overshirts, cut loose enough to layer.",
+    "assign": {
+      "term": "product_cat:blouses"
+    }
+  },
+  {
+    "slug": "omc-cat-tees",
+    "source": "IMG_0198.JPG",
+    "role": "portrait",
+    "focus": [
+      0.5,
+      0.26
+    ],
+    "cool": 0.0,
+    "title": "Slogan print on a cotton sweatshirt, close up",
+    "alt": "Close-up of blue slogan lettering printed across a white cotton sweatshirt",
+    "description": "Tees at Oops, Mine Co. — printed and plain cotton, bought a few dozen at a time.",
+    "assign": {
+      "term": "product_cat:tees"
+    }
   }
 ]
