@@ -31,6 +31,20 @@
 .whd-table-settings th { width: 260px; }
 .whd-table-settings[hidden] { display: none; }
 .whd-clear { margin-left: 10px; font-size: 12px; color: #8a7d76; white-space: nowrap; }
+/* A saved key, shown as dots. The value itself never reaches the browser — this is rendered from
+   the first and last few characters so two keys can be told apart, and nothing more. */
+.whd-secret {
+	display: inline-block;
+	margin-left: 8px;
+	padding: 3px 8px;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-radius: 3px;
+	font-size: 12px;
+	letter-spacing: .04em;
+	color: #50575e;
+	vertical-align: middle;
+}
 .whd-consent { max-width: 620px; }
 .whd-note { max-width: 820px; background: #f7f2ed; border-left: 3px solid #b98b7e; border-radius: 0 6px 6px 0; padding: 10px 14px; color: #4a3f3a; font-size: 13px; margin: 0 0 14px; }
 .whd-tests { display: flex; flex-wrap: wrap; gap: 16px; }

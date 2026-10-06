@@ -163,20 +163,6 @@
 .whd-ai-kwtag.is-in { background: #edfaef; border-color: #a7d8b0; color: #14602a; }
 .whd-ai-kwtag.is-out { background: #fcf0f1; border-color: #e6b2b3; color: #8a2424; }
 
-/* A saved key, shown as dots. The value itself never reaches the browser — this is rendered from
-   the first and last few characters so two keys can be told apart, and nothing more. */
-.whd-secret {
-	display: inline-block;
-	margin-left: 8px;
-	padding: 3px 8px;
-	background: #f6f7f7;
-	border: 1px solid #dcdcde;
-	border-radius: 3px;
-	font-size: 12px;
-	letter-spacing: .04em;
-	color: #50575e;
-	vertical-align: middle;
-}
 
 /* Stylist answer totals: a bar per option, so a screen of numbers reads as a shape. */
 .whd-sty-totals {

@@ -236,6 +236,14 @@ final class WHD_Integrations {
 		return (string) $parts[0];
 	}
 
+	/** Everything after the first word, so "Ana Maria Reyes" keeps both of her surnames. */
+	private static function last_name( $row ) {
+		$name  = trim( (string) $row->name );
+		$parts = '' === $name ? [] : preg_split( '/\s+/', $name );
+
+		return count( $parts ) > 1 ? implode( ' ', array_slice( $parts, 1 ) ) : '';
+	}
+
 	/* ── Mailchimp ── */
 
 	/** Data centre lives in the key suffix, e.g. "…-us21" → us21. */
@@ -324,18 +332,27 @@ final class WHD_Integrations {
 		return wp_remote_request( 'https://a.klaviyo.com/api/' . ltrim( $path, '/' ), $args );
 	}
 
+	/**
+	 * Hand a subscriber to Klaviyo.
+	 *
+	 * Two calls, because the subscription job accepts an address, a phone number and consent and
+	 * refuses everything else — a name sent with it fails the whole request. So the details are
+	 * written first with create-or-update, and the job then does the one thing it is for. A failed
+	 * first call never stops the second: a missing surname is a blemish, a missing subscription is
+	 * the whole point.
+	 */
 	private static function push_klaviyo( $row, $o ) {
-		$attributes = [ 'email' => $row->email ];
-		if ( '' !== self::first_name( $row ) ) {
-			$attributes['first_name'] = self::first_name( $row );
-		}
-		$subscriptions = [ 'email' => [ 'marketing' => [ 'consent' => 'SUBSCRIBED' ] ] ];
-		$phone         = self::normalize_phone( $row->phone ?? '' );
+		self::klaviyo_profile( $row, $o );
+
+		$attributes = [
+			'email'         => $row->email,
+			'subscriptions' => [ 'email' => [ 'marketing' => [ 'consent' => 'SUBSCRIBED' ] ] ],
+		];
+		$phone = self::normalize_phone( $row->phone ?? '' );
 		if ( '' !== $phone && ! empty( $row->sms_consent ) ) {
-			$attributes['phone_number'] = $phone;
-			$subscriptions['sms']       = [ 'marketing' => [ 'consent' => 'SUBSCRIBED' ] ];
+			$attributes['phone_number']            = $phone;
+			$attributes['subscriptions']['sms']    = [ 'marketing' => [ 'consent' => 'SUBSCRIBED' ] ];
 		}
-		$attributes['subscriptions'] = $subscriptions;
 		$body = [
 			'data' => [
 				'type'       => 'profile-subscription-bulk-create-job',
@@ -348,6 +365,38 @@ final class WHD_Integrations {
 			],
 		];
 		return self::finish( 'klaviyo', 'subscriber #' . (int) $row->id, self::klaviyo_request( $o, 'profile-subscription-bulk-create-jobs/', 'POST', $body ) );
+	}
+
+	/**
+	 * Name and provenance, written straight onto the profile.
+	 *
+	 * "Signup Source" is the form they used — newsletter band, popup, stylist, the live card — which
+	 * is what a segment in Klaviyo would want to filter on later.
+	 */
+	private static function klaviyo_profile( $row, $o ) {
+		$attributes = [ 'email' => $row->email ];
+		$first      = self::first_name( $row );
+		$last       = self::last_name( $row );
+		if ( '' !== $first ) {
+			$attributes['first_name'] = $first;
+		}
+		if ( '' !== $last ) {
+			$attributes['last_name'] = $last;
+		}
+		$phone = self::normalize_phone( $row->phone ?? '' );
+		if ( '' !== $phone && ! empty( $row->sms_consent ) ) {
+			$attributes['phone_number'] = $phone;
+		}
+		$attributes['properties'] = [
+			'Signup Source' => (string) $row->source,
+			'Signup Site'   => home_url( '/' ),
+		];
+
+		return self::finish(
+			'klaviyo',
+			'profile for subscriber #' . (int) $row->id,
+			self::klaviyo_request( $o, 'profile-import/', 'POST', [ 'data' => [ 'type' => 'profile', 'attributes' => $attributes ] ] )
+		);
 	}
 
 	/* ── Webhook ── */
@@ -643,6 +692,17 @@ final class WHD_Integrations {
 		return self::OPTION . '[' . $key . ']';
 	}
 
+	/** "pk_V••••••••342c" — enough to recognise which key is stored, not enough to use it. */
+	private static function mask( $secret ) {
+		$secret = (string) $secret;
+		$len    = strlen( $secret );
+		if ( $len <= 8 ) {
+			return str_repeat( '•', max( 6, $len ) );
+		}
+
+		return substr( $secret, 0, 4 ) . str_repeat( '•', min( 18, max( 6, $len - 7 ) ) ) . substr( $secret, -3 );
+	}
+
 	private static function status_pill( $on ) {
 		return '<span class="whd-pill ' . ( $on ? 'whd-pill--on' : 'whd-pill--off' ) . '">' . ( $on ? esc_html__( 'Connected', 'whd' ) : esc_html__( 'Not connected', 'whd' ) ) . '</span>';
 	}
@@ -652,6 +712,7 @@ final class WHD_Integrations {
 		echo '<tr><th><label for="' . esc_attr( $key ) . '">' . esc_html( $label ) . '</label></th><td>';
 		echo '<input class="regular-text" type="password" autocomplete="new-password" id="' . esc_attr( $key ) . '" name="' . esc_attr( self::field( $key ) ) . '" value="" placeholder="' . esc_attr( '' !== $stored ? __( 'Saved — leave blank to keep it', 'whd' ) : __( 'Paste your key', 'whd' ) ) . '">';
 		if ( '' !== $stored ) {
+			echo ' <code class="whd-secret">' . esc_html( self::mask( $stored ) ) . '</code>';
 			echo ' <label class="whd-clear"><input type="checkbox" name="' . esc_attr( self::OPTION . '[clear][' . $key . ']' ) . '" value="1"> ' . esc_html__( 'Remove the saved key', 'whd' ) . '</label>';
 		}
 		if ( $help ) {
