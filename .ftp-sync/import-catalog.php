@@ -216,6 +216,11 @@ foreach ( (array) $plan['products'] as $p ) {
 
 	if ( $dry ) {
 		printf( "   %-30s %s  (%d images, %d colours)\n", $slug, $existing ? 'update' : 'create', count( $p['images'] ), count( $p['colours'] ?? [] ) );
+		// Count it as kept, or the tally below reports the whole catalogue as about to be archived.
+		if ( $existing ) {
+			$kept_ids[] = (int) $existing->ID;
+		}
+		$made++;
 		continue;
 	}
 
@@ -380,6 +385,21 @@ if ( ! $dry ) {
 		$gone++;
 	}
 	printf( "   removed %d category(ies) that are not on the client's list\n", $gone );
+}
+
+if ( $dry ) {
+	$doomed = [];
+	foreach ( get_terms( [ 'taxonomy' => 'product_cat', 'hide_empty' => false ] ) as $t ) {
+		if ( ! in_array( $t->slug, $keep, true ) ) {
+			$doomed[] = sprintf( '%s (%d)', $t->slug, (int) $t->count );
+		}
+	}
+	printf(
+		"   %d category(ies) would be removed%s
+",
+		count( $doomed ),
+		$doomed ? ': ' . implode( ', ', $doomed ) : ''
+	);
 }
 
 echo "\n";
