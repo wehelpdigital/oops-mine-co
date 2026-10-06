@@ -18,7 +18,9 @@ defined( 'ABSPATH' ) || exit;
 class WHD_Size_Charts {
 
 	const CPT  = 'whd_size_chart';
-	const META = '_whd_size_chart';
+	const META = '_whd_size_chart';          // on a product: the chart chosen for it
+	const CATS = '_whd_chart_categories';    // on a chart: the categories it covers
+	const DEF  = '_whd_chart_is_default';    // on a chart: use it when nothing else matches
 
 	public static function init() {
 		add_action( 'init', [ __CLASS__, 'register' ] );
@@ -26,6 +28,8 @@ class WHD_Size_Charts {
 		// Admin: the chart screen and the picker on the product screen.
 		add_action( 'add_meta_boxes', [ __CLASS__, 'meta_boxes' ] );
 		add_action( 'save_post_product', [ __CLASS__, 'save_product' ], 10, 2 );
+		add_action( 'save_post_' . self::CPT, [ __CLASS__, 'save_chart' ], 10, 2 );
+		add_filter( 'whd_size_chart_id', [ __CLASS__, 'resolve' ], 10, 2 );
 		add_filter( 'manage_' . self::CPT . '_posts_columns', [ __CLASS__, 'columns' ] );
 		add_action( 'manage_' . self::CPT . '_posts_custom_column', [ __CLASS__, 'column' ], 10, 2 );
 		add_filter( 'enter_title_here', [ __CLASS__, 'title_placeholder' ], 10, 2 );
@@ -38,6 +42,93 @@ class WHD_Size_Charts {
 	}
 
 	/* ─────────────────────────── The post type ─────────────────────────── */
+
+	/**
+	 * Write a first chart, once, so the screen is not empty next to a product page that already
+	 * shows a size guide.
+	 *
+	 * Uses the client's own US sizing: XS (0–2) to XL (16–18). Marked as the default so it reaches
+	 * every product without anyone assigning it. Guarded by an option rather than by "are there any
+	 * charts", so deleting it is a decision that sticks.
+	 */
+	public static function maybe_seed() {
+		if ( get_option( 'whd_size_chart_seeded' ) ) {
+			return;
+		}
+		update_option( 'whd_size_chart_seeded', 1, false );
+
+		$existing = self::all();
+		$table    = self::default_table();
+
+		/*
+		 * A chart that is already here gets finished rather than replaced: its title and any
+		 * preamble were somebody's work. It needs a table if it has none, and it needs to reach a
+		 * product, which nothing was doing.
+		 */
+		if ( $existing ) {
+			$chart = $existing[0];
+			if ( false === stripos( (string) $chart->post_content, '<table' ) ) {
+				wp_update_post( [
+					'ID'           => $chart->ID,
+					'post_content' => trim( (string) $chart->post_content ) . "\n\n" . $table,
+				] );
+			}
+			/*
+			 * A featured image here is meant to be a picture of the chart. One from the theme demo's
+			 * photo library is a model in a dress, which would be a strange thing to open a size
+			 * guide onto. Detached, not deleted.
+			 */
+			$thumb = (int) get_post_thumbnail_id( $chart->ID );
+			if ( $thumb ) {
+				$file = (string) get_post_meta( $thumb, '_wp_attached_file', true );
+				if ( preg_match( '#^20\d\d/\d\d/#', $file ) && false === stripos( $file, 'size' ) ) {
+					delete_post_thumbnail( $chart->ID );
+				}
+			}
+			// Nothing was marked as the default, so no product could ever find it.
+			$has_default = false;
+			foreach ( $existing as $c ) {
+				if ( get_post_meta( $c->ID, self::DEF, true ) ) {
+					$has_default = true;
+					break;
+				}
+			}
+			if ( ! $has_default ) {
+				update_post_meta( $chart->ID, self::DEF, 1 );
+			}
+			return;
+		}
+
+		$html = '<p>Measurements are of the body, in inches. Korean and Thai sizing runs small, so if you are between two sizes take the larger one.</p>' . $table;
+
+		$id = wp_insert_post( [
+			'post_type'    => self::CPT,
+			'post_status'  => 'publish',
+			'post_title'   => __( 'Womenswear (US sizing)', 'whd' ),
+			'post_content' => $html,
+		] );
+
+		if ( $id && ! is_wp_error( $id ) ) {
+			update_post_meta( $id, self::DEF, 1 );
+		}
+	}
+
+	/** The client's own US size run, as a table anyone can edit afterwards. */
+	public static function default_table() {
+		$rows = [
+			[ 'XS (0–2)',   '31–32', '24–25', '34–35' ],
+			[ 'S (4–6)',    '33–34', '26–27', '36–37' ],
+			[ 'M (8–10)',   '35–36', '28–29', '38–39' ],
+			[ 'L (12–14)',  '37–39', '30–32', '40–42' ],
+			[ 'XL (16–18)', '40–42', '33–35', '43–45' ],
+		];
+		$html = '<table><thead><tr><th>Size</th><th>Bust</th><th>Waist</th><th>Hip</th></tr></thead><tbody>';
+		foreach ( $rows as $r ) {
+			$html .= '<tr><th>' . $r[0] . '</th><td>' . $r[1] . '&quot;</td><td>' . $r[2] . '&quot;</td><td>' . $r[3] . '&quot;</td></tr>';
+		}
+
+		return $html . '</tbody></table><p>Every piece is measured flat as well, and those measurements sit on the product itself. Where the two disagree, trust the garment.</p>';
+	}
 
 	public static function register() {
 		register_post_type( self::CPT, [
@@ -138,6 +229,138 @@ class WHD_Size_Charts {
 			'side',
 			'default'
 		);
+		add_meta_box(
+			'whd-chart-reach',
+			__( 'Where this chart is used', 'whd' ),
+			[ __CLASS__, 'reach_box' ],
+			self::CPT,
+			'side',
+			'high'
+		);
+		add_meta_box(
+			'whd-chart-help',
+			__( 'How to build it', 'whd' ),
+			[ __CLASS__, 'help_box' ],
+			self::CPT,
+			'side',
+			'low'
+		);
+	}
+
+	/**
+	 * Which products this chart covers.
+	 *
+	 * Most shops want one chart on everything, so "the default" is one tick rather than a visit to
+	 * every product. Categories are there for the shop that measures knitwear differently from
+	 * denim. Either way the dropdown on an individual product still wins.
+	 */
+	public static function reach_box( $post ) {
+		wp_nonce_field( 'whd_chart_reach', 'whd_chart_reach_nonce' );
+		$is_default = (bool) get_post_meta( $post->ID, self::DEF, true );
+		$chosen     = (array) get_post_meta( $post->ID, self::CATS, true );
+
+		printf(
+			'<p><label><input type="checkbox" name="whd_chart_default" value="1"%s> <strong>%s</strong></label></p><p class="description">%s</p>',
+			checked( $is_default, true, false ),
+			esc_html__( 'Use this chart on every product', 'whd' ),
+			esc_html__( 'Unless a product or one of the categories below says otherwise.', 'whd' )
+		);
+
+		$terms = get_terms( [ 'taxonomy' => 'product_cat', 'hide_empty' => false ] );
+		if ( is_wp_error( $terms ) || ! $terms ) {
+			return;
+		}
+		printf( '<p><strong>%s</strong></p>', esc_html__( 'Or only these categories', 'whd' ) );
+		echo '<div style="max-height:220px;overflow:auto;border:1px solid #dcdcde;padding:8px;background:#fff">';
+		foreach ( $terms as $t ) {
+			if ( 'archive' === $t->slug || 'uncategorized' === $t->slug ) {
+				continue;
+			}
+			printf(
+				'<label style="display:block;margin:2px 0"><input type="checkbox" name="whd_chart_cats[]" value="%d"%s> %s</label>',
+				(int) $t->term_id,
+				checked( in_array( (int) $t->term_id, array_map( 'intval', $chosen ), true ), true, false ),
+				esc_html( $t->name )
+			);
+		}
+		echo '</div>';
+	}
+
+	/** Said once on the editing screen, because the two ways to make a chart are not obvious. */
+	public static function help_box() {
+		echo '<p>' . esc_html__( 'There are two ways, and you can use either:', 'whd' ) . '</p>';
+		echo '<ol style="margin:0 0 0 18px">';
+		echo '<li style="margin-bottom:8px">' . wp_kses_post( __( '<strong>Type a table</strong> in the big box. Use the editor\'s table button, or paste one straight out of a spreadsheet.', 'whd' ) ) . '</li>';
+		echo '<li>' . wp_kses_post( __( '<strong>Upload a picture</strong> of your chart in the box below. A photograph or a screenshot is fine.', 'whd' ) ) . '</li>';
+		echo '</ol>';
+		echo '<p class="description">' . esc_html__( 'If you do both, the picture is shown first and the table beneath it.', 'whd' ) . '</p>';
+	}
+
+	public static function save_chart( $post_id, $post ) {
+		if ( ! isset( $_POST['whd_chart_reach_nonce'] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_POST['whd_chart_reach_nonce'] ) ), 'whd_chart_reach' ) ) {
+			return;
+		}
+		if ( ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) || ! current_user_can( 'edit_post', $post_id ) ) {
+			return;
+		}
+		$cats = isset( $_POST['whd_chart_cats'] ) ? array_map( 'absint', (array) wp_unslash( $_POST['whd_chart_cats'] ) ) : [];
+		update_post_meta( $post_id, self::CATS, $cats );
+
+		if ( empty( $_POST['whd_chart_default'] ) ) {
+			delete_post_meta( $post_id, self::DEF );
+			return;
+		}
+		// Only one chart can be the default; the newest claim wins.
+		foreach ( self::all() as $other ) {
+			if ( (int) $other->ID !== (int) $post_id ) {
+				delete_post_meta( $other->ID, self::DEF );
+			}
+		}
+		update_post_meta( $post_id, self::DEF, 1 );
+	}
+
+	/**
+	 * Work out which chart a product should show.
+	 *
+	 * Product first, because an override on one piece is a deliberate act. Then a chart that names
+	 * one of the product's categories, walking up the tree so a chart on Clothing covers Skirts.
+	 * Then whichever chart is marked as the default.
+	 *
+	 * @param int $chart_id   What the product's own meta said, if anything.
+	 * @param int $product_id Product being looked at.
+	 * @return int
+	 */
+	public static function resolve( $chart_id, $product_id ) {
+		if ( $chart_id ) {
+			return (int) $chart_id;
+		}
+		$charts = self::all();
+		if ( ! $charts ) {
+			return 0;
+		}
+
+		$terms = wp_get_object_terms( (int) $product_id, 'product_cat', [ 'fields' => 'ids' ] );
+		$terms = is_wp_error( $terms ) ? [] : array_map( 'intval', $terms );
+		// A chart on a parent category covers everything beneath it.
+		foreach ( $terms as $tid ) {
+			foreach ( (array) get_ancestors( $tid, 'product_cat', 'taxonomy' ) as $ancestor ) {
+				$terms[] = (int) $ancestor;
+			}
+		}
+		$terms = array_unique( $terms );
+
+		$fallback = 0;
+		foreach ( $charts as $chart ) {
+			if ( ! $fallback && get_post_meta( $chart->ID, self::DEF, true ) ) {
+				$fallback = (int) $chart->ID;
+			}
+			$covers = array_map( 'intval', (array) get_post_meta( $chart->ID, self::CATS, true ) );
+			if ( $covers && array_intersect( $covers, $terms ) ) {
+				return (int) $chart->ID;
+			}
+		}
+
+		return $fallback;
 	}
 
 	public static function product_box( $post ) {

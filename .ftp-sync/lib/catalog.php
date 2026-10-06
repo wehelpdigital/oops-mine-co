@@ -11,6 +11,19 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/**
+ * Is the shop's category tree owned by a catalogue file rather than by this script?
+ *
+ * True for either of them: catalog.json, which built the demo tree, and catalog-2026.json, which
+ * import-catalog.php writes from the client's own list. The guards below use this to leave the
+ * taxonomy alone; asking "did catalog.json parse?" instead meant that retiring the older file
+ * silently re-enabled sixteen categories it had been suppressing.
+ */
+function omc_pub_shop_owned() {
+	return file_exists( dirname( __DIR__ ) . '/content/catalog-2026.json' )
+		|| file_exists( dirname( __DIR__ ) . '/content/catalog.json' );
+}
+
 /** The catalog definition, or null when the file is missing or unreadable. */
 function omc_cat_config() {
 	static $cfg = false;

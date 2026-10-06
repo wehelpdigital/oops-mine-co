@@ -238,6 +238,13 @@ function omc_pdp_size_guide_simple() {
 }
 add_action( 'woocommerce_before_add_to_cart_button', 'omc_pdp_size_guide_simple', 5 );
 
+/*
+ * WHD prints its own "Size chart" button and dialog. The theme already has one beside the size
+ * selector, and two buttons opening two dialogs of the same thing is worse than either. The data
+ * still comes from WHD — only its markup stands down.
+ */
+add_filter( 'whd_size_chart_render', '__return_false' );
+
 /**
  * One measurement cell: both units, one of them hidden by CSS.
  *
@@ -257,10 +264,52 @@ function omc_pdp_size_cell( $value ) {
 }
 
 /**
+ * The chart the owner wrote in the admin for this product, or null.
+ *
+ * WHD resolves it: the product's own choice first, then a chart that names one of its categories,
+ * then whichever chart is marked as the default. Returns the picture and the table as HTML.
+ */
+function omc_pdp_admin_chart() {
+	if ( ! class_exists( 'WHD_Size_Charts' ) ) {
+		return null;
+	}
+	$chart = WHD_Size_Charts::for_product();
+	if ( ! $chart ) {
+		return null;
+	}
+	$has = trim( (string) ( $chart['image_tag'] ?? '' ) ) !== '' || trim( wp_strip_all_tags( (string) ( $chart['description'] ?? '' ) ) ) !== '';
+
+	return $has ? $chart : null;
+}
+
+/**
  * The modal itself, printed once in the footer of a product page.
  */
 function omc_pdp_size_guide_modal() {
 	if ( ! omc_pdp_is_product_page() ) {
+		return;
+	}
+
+	// A chart written in the admin wins: it is the one somebody maintains.
+	$admin_chart = omc_pdp_admin_chart();
+	if ( $admin_chart ) {
+		?>
+		<div class="omc-sg" id="omc-size-guide" hidden>
+			<div class="omc-sg__overlay" data-omc-sg-close></div>
+			<div class="omc-sg__dialog" role="dialog" aria-modal="true" aria-labelledby="omc-sg-title" tabindex="-1">
+				<button type="button" class="omc-sg__close" data-omc-sg-close aria-label="<?php esc_attr_e( 'Close the size guide', 'moderno-child' ); ?>">
+					<?php echo omc_pdp_icon( 'close' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				</button>
+				<h2 class="omc-sg__title" id="omc-sg-title"><?php echo esc_html( $admin_chart['title'] ); ?></h2>
+				<?php if ( ! empty( $admin_chart['image_tag'] ) ) : ?>
+					<div class="omc-sg__image"><?php echo $admin_chart['image_tag']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped — wp_get_attachment_image(). ?></div>
+				<?php endif; ?>
+				<?php if ( ! empty( $admin_chart['description'] ) ) : ?>
+					<div class="omc-sg__table-wrap omc-sg__rich"><?php echo wp_kses_post( $admin_chart['description'] ); ?></div>
+				<?php endif; ?>
+			</div>
+		</div>
+		<?php
 		return;
 	}
 

@@ -221,6 +221,44 @@
 	border-radius: 3px;
 }
 
+/* A chart written in the admin: a picture of one, a table typed into the editor, or both. The
+   selectors reach by position because nothing in the editor carries a class. */
+.omc-sg__image { margin: 0 0 18px; }
+.omc-sg__image img { display: block; width: 100%; height: auto; border-radius: 2px; }
+.omc-sg__rich > :first-child { margin-top: 0; }
+.omc-sg__rich > :last-child { margin-bottom: 0; }
+.omc-sg__rich p {
+	margin: 0 0 14px;
+	font: 400 14px/1.65 var(--omc-sans);
+	color: var(--omc-text);
+	text-wrap: pretty;
+}
+.omc-sg__rich table {
+	width: 100%;
+	border-collapse: collapse;
+	margin: 0 0 14px;
+	font: 400 14px/1.4 var(--omc-sans);
+}
+.omc-sg__rich th,
+.omc-sg__rich td {
+	padding: 11px 12px;
+	border-bottom: 1px solid var(--omc-line);
+	text-align: left;
+	color: var(--omc-text);
+}
+.omc-sg__rich thead th,
+.omc-sg__rich tr:first-child th {
+	font-weight: 600;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+	font-size: 11px;
+	color: var(--omc-muted);
+	white-space: nowrap;
+}
+.omc-sg__rich tbody th { font-weight: 600; white-space: nowrap; }
+.omc-sg__rich tr:last-child th,
+.omc-sg__rich tr:last-child td { border-bottom: 0; }
+
 .omc-sg__table {
 	width: 100%;
 	min-width: 420px;

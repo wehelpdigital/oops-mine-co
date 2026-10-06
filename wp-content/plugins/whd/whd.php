@@ -113,6 +113,9 @@ final class WHD_Plugin {
 		if ( class_exists( 'WHD_Stylist' ) ) {
 			WHD_Stylist::install();
 		}
+		if ( class_exists( 'WHD_Size_Charts' ) ) {
+			WHD_Size_Charts::maybe_seed();
+		}
 		WHD_Popups::ensure_defaults();
 		WHD_Emails::ensure_defaults();
 		if ( ! wp_next_scheduled( 'whd_cart_cron' ) ) {

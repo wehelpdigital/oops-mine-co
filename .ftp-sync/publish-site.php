@@ -930,7 +930,7 @@ foreach ( $files as $file ) {
 	   taxonomy, and the style categories these pages were written against have been retired from
 	   it. Creating them here as well would have the two steps undo each other on every run — the
 	   landing template falls back to a category that does exist. */
-	$catalog_owns_taxonomy = function_exists( 'omc_cat_config' ) && omc_cat_config();
+	$catalog_owns_taxonomy = function_exists( 'omc_pub_shop_owned' ) && omc_pub_shop_owned();
 	$category = ( ! $catalog_owns_taxonomy && isset( $doc['category'] ) && is_array( $doc['category'] ) && ! empty( $doc['category']['slug'] ) ) ? $doc['category'] : null;
 	$term_id  = 0;
 	if ( $category ) {
@@ -1040,7 +1040,7 @@ $occasion_terms = [];
 /* The occasion categories (Casual, Workwear, Evening, Wedding Guest) belong to the retired style
    taxonomy. catalog.json owns the shop tree now, so stop recreating them — otherwise this step and
    the retire step delete and rebuild the same four terms on every run. */
-if ( function_exists( 'omc_cat_config' ) && omc_cat_config() ) {
+if ( function_exists( 'omc_pub_shop_owned' ) && omc_pub_shop_owned() ) {
 	$occasions = [];
 }
 foreach ( $occasions as $slug => $occasion ) {
