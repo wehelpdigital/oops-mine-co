@@ -33,18 +33,27 @@ $arg = function ( $name, $fallback ) use ( $argv ) {
 	return $fallback;
 };
 
-$src  = $arg( 'figure', 'C:/Users/User/Downloads/oops-photos/Gemini_Generated_Image_5wf0kr5wf0kr5wf0.jpg' );
+$src  = $arg( 'figure', 'C:/Users/User/Downloads/oops-photos/Gemini_Generated_Image_6schzc6schzc6sch.jpeg' );
 $dir  = dirname( __DIR__, 2 ) . '/wp-content/themes/moderno-child/assets/img';
 $out  = $arg( 'out', $dir . '/stylist-thinking.webp' );
 $prev = in_array( '--preview', $argv, true );
 
-/* Closer in: her head, the raised hand and the jacket, down to the thigh. At full length she was a
-   small figure at the edge of a wide band; the gesture is the point, so the gesture gets the room. */
-$crop = array_combine( [ 'x', 'y', 'w', 'h' ], array_map( 'intval', explode( ',', $arg( 'crop', '278,0,512,700' ) ) ) );
+/* Head to waist, tight to her outline: the band sizes her by height, so anything wider than she is
+   only pushes her away from the copy. The shot before this one, a woman in black on the same kind of
+   wall, was --crop=278,0,512,700 --wall=142,34 --floor=88,52 --height=0 if it is ever wanted back. */
+$crop = array_combine( [ 'x', 'y', 'w', 'h' ], array_map( 'intval', explode( ',', $arg( 'crop', '400,640,1060,1888' ) ) ) );
 
-/* How sure a pixel has to be that it is wall before the flood crosses it. */
-$wall_lum = 142;   // darker than this is her, not the room
-$wall_sat = 34;    // and the wall has no colour in it to speak of
+/*
+ * How sure a pixel has to be that it is room before the flood crosses it: a floor on brightness
+ * and a ceiling on saturation. The defaults are measured off the shot this was written for. A
+ * cream knit on the same grey wall needs the ceiling at about 16, because the wall measures 2-8
+ * and the knit 26-30; black clothing is happy with anything.
+ *   --wall=120,16   --floor=none   (a cut-off figure has no floor under it)
+ */
+list( $wall_lum, $wall_sat ) = array_map( 'intval', explode( ',', $arg( 'wall', '120,16' ) ) );
+$floor_arg = $arg( 'floor', 'none' );
+$do_floor  = 'none' !== $floor_arg;
+list( $floor_lum, $floor_sat ) = array_map( 'intval', explode( ',', $do_floor ? $floor_arg : '0,0' ) );
 
 if ( ! file_exists( $src ) ) {
 	printf( "There is no file at %s
@@ -95,6 +104,21 @@ imagealphablending( $cut, false );
 imagesavealpha( $cut, true );
 imagecopy( $cut, $im, 0, 0, $crop['x'], $crop['y'], $crop['w'], $crop['h'] );
 imagedestroy( $im );
+
+/*
+ * The flood walks every pixel four times over; an original straight out of a generator is
+ * several million of them for a figure the band draws 520 tall. Scaled first, it is seconds
+ * rather than minutes, and the asset comes out at a size worth serving.
+ */
+$height = (int) $arg( 'height', '1040' );
+if ( $height && imagesy( $cut ) > $height ) {
+	$small = imagescale( $cut, -1, $height, IMG_BILINEAR_FIXED );
+	imagealphablending( $small, false );
+	imagesavealpha( $small, true );
+	imagedestroy( $cut );
+	$cut = $small;
+	printf( "scaled to %dx%d to work on\n", imagesx( $cut ), imagesy( $cut ) );
+}
 
 $w = imagesx( $cut );
 $h = imagesy( $cut );
@@ -178,9 +202,7 @@ printf( "room: %d of %d pixels (%d%%)\n", count( $queue ), $w * $h, round( 100 *
  * smear under her feet. A second flood crosses it with a looser rule, seeded only along the bottom
  * edge - her jeans sit at a fifth of that brightness, so there is no danger of walking into them.
  */
-if ( ! $pre_cut ) {
-$floor_lum = 88;
-	$floor_sat = 52;
+if ( ! $pre_cut && $do_floor ) {
 	$queue     = [];
 	for ( $x = 0; $x < $w; $x++ ) {
 		$i   = ( $h - 1 ) * $w + $x;

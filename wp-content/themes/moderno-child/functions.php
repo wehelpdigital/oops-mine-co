@@ -400,8 +400,8 @@ function omc_stylist_band() {
 		'button'  => __( 'Start the stylist', 'moderno-child' ),
 		'figure'  => file_exists( $figure ) ? [
 			'url'    => OMC_URI . '/assets/img/stylist-thinking.webp?v=' . filemtime( $figure ),
-			'width'  => 512,
-			'height' => 700,
+			'width'  => 583,
+			'height' => 1040,
 		] : null,
 		// The room she is standing in: the same photograph's café corner, blurred past recognition.
 		'room'    => file_exists( $room ) ? OMC_URI . '/assets/img/stylist-room.webp?v=' . filemtime( $room ) : '',

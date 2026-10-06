@@ -1896,18 +1896,29 @@
 	.omc-stylist__figure { margin-right: 44px; }
 }
 
-/* Narrower than that there is no room beside the copy, so she goes behind it: anchored right, faded
-   back, and masked away on the left so nothing crosses the words. */
+/* On a phone the two columns become one narrow one and a figure at the edge. Putting her behind the
+   copy was the first answer and it only works for a dark figure: in cream on sand she either
+   disappears or, turned up, has the heading written across her face. So the copy keeps to the left
+   of her instead, which costs it a line of wrapping and nothing else. */
 @media (max-width: 699px) {
+	.omc-stylist.has-figure { text-align: left; }
+	.omc-stylist.has-figure .omc-stylist__copy {
+		position: relative;
+		padding-right: 44%;
+	}
+	.omc-stylist.has-figure .omc-stylist__text { margin-left: 0; margin-right: 0; }
+	/* The button's tracking is what decides whether the column can be this narrow: at the full .18em
+	   "Start the stylist" needs 216px and wraps to two lines in it. */
+	.omc-stylist.has-figure .omc-stylist__go { padding: 0 18px; letter-spacing: .12em; }
+	/* Her box is a share of the width rather than a share of the height, so the column beside her is
+	   the same width whatever the band's height turns out to be; contain keeps her in it. */
 	.omc-stylist__figure {
 		position: absolute;
-		right: -4%;
+		right: -2%;
 		bottom: 0;
-		width: auto;
-		height: 84%;                       /* the crop stops just above her hair; this gives it air */
-		opacity: .3;
-		-webkit-mask-image: linear-gradient(90deg, transparent 2%, #000 48%);
-		mask-image: linear-gradient(90deg, transparent 2%, #000 48%);
+		width: 40%;
+		height: 100%;
+		object-fit: contain;
+		object-position: bottom right;
 	}
-	.omc-stylist__copy { position: relative; }
 }
