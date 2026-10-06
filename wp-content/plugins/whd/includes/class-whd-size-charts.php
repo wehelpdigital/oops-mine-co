@@ -33,7 +33,6 @@ class WHD_Size_Charts {
 		add_filter( 'manage_' . self::CPT . '_posts_columns', [ __CLASS__, 'columns' ] );
 		add_action( 'manage_' . self::CPT . '_posts_custom_column', [ __CLASS__, 'column' ], 10, 2 );
 		add_filter( 'enter_title_here', [ __CLASS__, 'title_placeholder' ], 10, 2 );
-		add_action( 'admin_head', [ __CLASS__, 'relabel_featured_image' ] );
 
 		// Front end.
 		add_action( 'woocommerce_single_product_summary', [ __CLASS__, 'render_link' ], 25 );
@@ -144,6 +143,11 @@ class WHD_Size_Charts {
 				'search_items'       => __( 'Search size charts', 'whd' ),
 				'not_found'          => __( 'No size charts yet. Add one and it becomes pickable on every product.', 'whd' ),
 				'not_found_in_trash' => __( 'No size charts in the trash.', 'whd' ),
+				// "Featured image" means nothing here: the picture IS the chart.
+				'featured_image'        => __( 'Picture of the chart', 'whd' ),
+				'set_featured_image'    => __( 'Upload a picture of your chart', 'whd' ),
+				'remove_featured_image' => __( 'Remove the picture', 'whd' ),
+				'use_featured_image'    => __( 'Use as the chart', 'whd' ),
 			],
 			'public'          => false,
 			'show_ui'         => true,
@@ -165,20 +169,6 @@ class WHD_Size_Charts {
 			: $text;
 	}
 
-	/** "Featured image" means nothing here; the image IS the chart. */
-	public static function relabel_featured_image() {
-		$screen = get_current_screen();
-		if ( ! $screen || self::CPT !== $screen->post_type ) {
-			return;
-		}
-		?>
-		<style>
-			#postimagediv .hndle span::after { content: " \2014 <?php echo esc_html__( 'this is the chart shoppers see', 'whd' ); ?>"; font-weight: 400; opacity: .7; }
-			#postdivrich .wp-editor-tools + .wp-editor-container::before { content: ""; }
-		</style>
-		<?php
-	}
-
 	public static function columns( $columns ) {
 		$out = [];
 		foreach ( $columns as $key => $label ) {
@@ -194,16 +184,53 @@ class WHD_Size_Charts {
 	public static function column( $column, $post_id ) {
 		if ( 'whd_image' === $column ) {
 			$thumb = get_the_post_thumbnail( $post_id, [ 90, 90 ], [ 'style' => 'height:auto;border:1px solid #dcdcde' ] );
-			echo $thumb ? wp_kses_post( $thumb ) : '<span style="color:#b32d2e">' . esc_html__( 'No image yet', 'whd' ) . '</span>';
+			if ( $thumb ) {
+				echo wp_kses_post( $thumb );
+			} elseif ( false !== stripos( (string) get_post_field( 'post_content', $post_id ), '<table' ) ) {
+				echo '<span style="color:#646970">' . esc_html__( 'Typed table', 'whd' ) . '</span>';
+			} else {
+				echo '<span style="color:#b32d2e">' . esc_html__( 'Nothing in it yet', 'whd' ) . '</span>';
+			}
 		}
 		if ( 'whd_used' === $column ) {
-			$count = self::product_count( $post_id );
-			printf(
-				/* translators: %d: number of products */
-				esc_html( _n( '%d product', '%d products', $count, 'whd' ) ),
-				(int) $count
-			);
+			echo wp_kses_post( self::reach_summary( $post_id ) );
 		}
+	}
+
+	/**
+	 * What this chart reaches, in the words the owner ticked.
+	 *
+	 * Counting products that store the chart's id misses the default and the categories entirely,
+	 * which is how the chart the whole shop uses came to be listed as reaching nothing.
+	 */
+	public static function reach_summary( $chart_id ) {
+		$out = [];
+		if ( get_post_meta( $chart_id, self::DEF, true ) ) {
+			$out[] = '<strong>' . esc_html__( 'Every product', 'whd' ) . '</strong>';
+		}
+
+		$names = [];
+		foreach ( (array) get_post_meta( $chart_id, self::CATS, true ) as $term_id ) {
+			$term = get_term( (int) $term_id, 'product_cat' );
+			if ( $term && ! is_wp_error( $term ) ) {
+				$names[] = $term->name;
+			}
+		}
+		if ( $names ) {
+			sort( $names );
+			$out[] = esc_html( implode( ', ', $names ) );
+		}
+
+		$picked = self::product_count( $chart_id );
+		if ( $picked ) {
+			$out[] = esc_html( sprintf(
+				/* translators: %d: number of products that name this chart themselves */
+				_n( '%d product picks it', '%d products pick it', $picked, 'whd' ),
+				$picked
+			) );
+		}
+
+		return $out ? implode( '<br>', $out ) : '<span style="color:#646970">' . esc_html__( 'Not used yet', 'whd' ) . '</span>';
 	}
 
 	/** How many products point at this chart. */
@@ -291,7 +318,7 @@ class WHD_Size_Charts {
 		echo '<p>' . esc_html__( 'There are two ways, and you can use either:', 'whd' ) . '</p>';
 		echo '<ol style="margin:0 0 0 18px">';
 		echo '<li style="margin-bottom:8px">' . wp_kses_post( __( '<strong>Type a table</strong> in the big box. Use the editor\'s table button, or paste one straight out of a spreadsheet.', 'whd' ) ) . '</li>';
-		echo '<li>' . wp_kses_post( __( '<strong>Upload a picture</strong> of your chart in the box below. A photograph or a screenshot is fine.', 'whd' ) ) . '</li>';
+		echo '<li>' . wp_kses_post( __( '<strong>Upload a picture</strong> of your chart under <em>Picture of the chart</em>. A photograph or a screenshot is fine.', 'whd' ) ) . '</li>';
 		echo '</ol>';
 		echo '<p class="description">' . esc_html__( 'If you do both, the picture is shown first and the table beneath it.', 'whd' ) . '</p>';
 	}
