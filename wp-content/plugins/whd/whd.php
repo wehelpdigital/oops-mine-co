@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'WHD_VERSION', '1.5.1' );
+define( 'WHD_VERSION', '1.5.2' );
 define( 'WHD_FILE', __FILE__ );
 define( 'WHD_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WHD_URL', plugin_dir_url( __FILE__ ) );

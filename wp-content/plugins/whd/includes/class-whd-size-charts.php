@@ -99,7 +99,7 @@ class WHD_Size_Charts {
 			return;
 		}
 
-		$html = '<p>Measurements are of the body, in inches. Korean and Thai sizing runs small, so if you are between two sizes take the larger one.</p>' . $table;
+		$html = '<p>Sizes below are <strong>body</strong> measurements, in inches. Pieces sourced from Korea and Thailand often run a size smaller than US sizing, so if you are between two sizes take the larger one.</p>' . $table;
 
 		$id = wp_insert_post( [
 			'post_type'    => self::CPT,
@@ -127,7 +127,7 @@ class WHD_Size_Charts {
 			$html .= '<tr><th>' . $r[0] . '</th><td>' . $r[1] . '&quot;</td><td>' . $r[2] . '&quot;</td><td>' . $r[3] . '&quot;</td></tr>';
 		}
 
-		return $html . '</tbody></table><p>Every piece is measured flat as well, and those measurements sit on the product itself. Where the two disagree, trust the garment.</p>';
+		return $html . '</tbody></table><p>Each piece is also measured flat, and those measurements sit on the product itself. Where the two disagree, trust the garment.</p>';
 	}
 
 	public static function register() {
