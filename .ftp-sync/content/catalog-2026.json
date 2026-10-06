@@ -1,0 +1,608 @@
+{
+  "_note": "The shop, built from the photographs in the client's folder. Categories and size runs follow the client's own CATEGORIES / VARIANTS / US sizing notes of 24 Sep 2026. Only categories with something to put in them are created.",
+  "sizes": {
+    "alpha": [
+      "XS (0–2)",
+      "S (4–6)",
+      "M (8–10)",
+      "L (12–14)",
+      "XL (16–18)"
+    ],
+    "waist": [
+      "S (25–26\")",
+      "M (27–28\")",
+      "L (29–30\")",
+      "XL (31–32\")"
+    ],
+    "onesize": [
+      "One Size"
+    ]
+  },
+  "categories": [
+    {
+      "slug": "new-now",
+      "name": "New & Now",
+      "children": [
+        {
+          "slug": "new-arrivals",
+          "name": "New Arrivals",
+          "description": "The pieces that landed most recently. Small runs, so what is here now is what there is."
+        }
+      ]
+    },
+    {
+      "slug": "clothing",
+      "name": "Clothing",
+      "children": [
+        {
+          "slug": "tops",
+          "name": "Tops",
+          "description": "Knit tops, sweatshirts and hooded layers in the Korean fashion cuts the boutique buys in small batches."
+        },
+        {
+          "slug": "blouses",
+          "name": "Blouses",
+          "description": "Collared shirts and overshirts, cut loose enough to layer."
+        },
+        {
+          "slug": "tees",
+          "name": "Tees",
+          "description": "Printed and plain cotton tees, bought a few dozen at a time."
+        },
+        {
+          "slug": "sweaters-knits",
+          "name": "Sweaters & Knits",
+          "description": "Cardigans, knit vests and jumpers. Soft yarns, hand-finished details, nothing in big numbers."
+        },
+        {
+          "slug": "dresses",
+          "name": "Dresses",
+          "description": "Midi and maxi lengths, from shirt dresses to fine knits. Korean fashion casual dress shapes that carry from day into evening."
+        },
+        {
+          "slug": "skirts",
+          "name": "Skirts",
+          "description": "Pleated, flared and knit midi skirts. Korean fashion skirt shapes cut for petite and regular frames alike."
+        },
+        {
+          "slug": "pants-trousers",
+          "name": "Pants & Trousers",
+          "description": "Wide-leg, drawstring and tailored cuts, including petite dress pants for work."
+        },
+        {
+          "slug": "jeans",
+          "name": "Jeans",
+          "description": "Washed denim, chosen a few pairs at a time. Korean fashion jeans in straight and relaxed cuts."
+        },
+        {
+          "slug": "jackets-outerwear",
+          "name": "Jackets & Outerwear",
+          "description": "Shackets, quilted jackets and gilets. Korean fashion jacket shapes for the shoulder seasons."
+        },
+        {
+          "slug": "coats",
+          "name": "Coats",
+          "description": "Wool-blend and teddy coats, cut long. Korean fashion winter coat shapes for the cold months."
+        },
+        {
+          "slug": "matching-sets",
+          "name": "Matching Sets",
+          "description": "Knit and sweat co-ords. Cute clothes sets that work apart as well as together."
+        }
+      ]
+    },
+    {
+      "slug": "skincare",
+      "name": "Skincare",
+      "children": [
+        {
+          "slug": "masks",
+          "name": "Masks",
+          "description": "Korean ampoule sheet masks, one treatment at a time."
+        },
+        {
+          "slug": "sun-care",
+          "name": "Sun Care",
+          "description": "Daily sunblock and brightening UV cream from Korean skincare houses."
+        }
+      ]
+    }
+  ],
+  "products": [
+    {
+      "slug": "flared-skater-skirt",
+      "title": "Flared Skater Skirt",
+      "category": "skirts",
+      "price": 34,
+      "sizes": "alpha",
+      "keywords": [
+        "korean fashion skirt"
+      ],
+      "short": "A short flared skirt with a smooth elastic waist, in three colours that keep selling out.",
+      "description": "A short flared skirt that holds its shape without any stiffness in it. The waist is a covered elastic band, so there is no zip to sit on and nothing to adjust once it is on. It falls to just above the knee on most people and a little lower if you are petite.\n\nWe took three colours: black for the ones who wear black, a proper postbox red, and a cobalt blue that photographs brighter than it looks on the rail. All three are the same fabric — a double knit with enough body to swing when you turn.\n\nIt is one of the few things in the shop that works with trainers and with heels, which is why we keep reordering it. Runs small on the waist; take the next size up if you are between two.\n\nIt is the Korean fashion skirt people come in and describe rather than name — short, full, holds its shape.",
+      "images": [
+        "IMG_0195.JPG",
+        "IMG_0193.JPG",
+        "IMG_0194.JPG",
+        "IMG_0196.JPG"
+      ],
+      "colours": [
+        {
+          "name": "Black",
+          "image": "IMG_0195.JPG"
+        },
+        {
+          "name": "Red",
+          "image": "IMG_0195.JPG"
+        },
+        {
+          "name": "Cobalt Blue",
+          "image": "IMG_0193.JPG"
+        }
+      ]
+    },
+    {
+      "slug": "slogan-crop-sweatshirt",
+      "title": "Stop Worrying Slogan Sweatshirt",
+      "category": "tees",
+      "price": 29,
+      "sizes": "alpha",
+      "keywords": [
+        "comfy cute clothes"
+      ],
+      "short": "A cropped cotton sweatshirt with the print set large across the chest.",
+      "description": "A cropped sweatshirt in brushed cotton, cut boxy through the body with a dropped shoulder. The hem sits at the top of the hip, so it works over a high waist without bunching.\n\nThe print is set large and slightly off-centre, which is deliberate — it reads better on a body than it does flat on a hanger. We have it with the lettering in blue, in red and in a deep navy.\n\nIt washes well. Cold water, inside out, and the print stays as it arrived.\n\nIt sits in the part of the rail we think of as comfy cute clothes: things you put on without deciding anything.",
+      "images": [
+        "IMG_0197.JPG",
+        "IMG_0198.JPG"
+      ],
+      "colours": [
+        {
+          "name": "Blue Print",
+          "image": "IMG_0197.JPG"
+        },
+        {
+          "name": "Red Print",
+          "image": "IMG_0197.JPG"
+        },
+        {
+          "name": "Navy Print",
+          "image": "IMG_0198.JPG"
+        }
+      ]
+    },
+    {
+      "slug": "zip-through-hoodie",
+      "title": "Zip-Through Hoodie",
+      "category": "tops",
+      "price": 42,
+      "sizes": "alpha",
+      "keywords": [],
+      "short": "A fitted zip hoodie in a heavier loopback cotton, with a drawstring hood that stays up.",
+      "description": "A zip hoodie cut closer through the waist than the ones you find on the high street, which is what makes it wearable under a coat. The cotton is a heavier loopback — it has weight to it without being warm enough to be a problem indoors.\n\nThe hood is lined and the drawcords are flat rather than round, so they sit neatly when the zip is open. Pockets are set into the side seams.\n\nWhite, burgundy and black. The white is a true white, not cream.",
+      "images": [
+        "IMG_0924.jpeg",
+        "IMG_0925.jpeg",
+        "IMG_0926.jpeg"
+      ],
+      "colours": [
+        {
+          "name": "White",
+          "image": "IMG_0924.jpeg"
+        },
+        {
+          "name": "Burgundy",
+          "image": "IMG_0925.jpeg"
+        },
+        {
+          "name": "Black",
+          "image": "IMG_0926.jpeg"
+        }
+      ]
+    },
+    {
+      "slug": "varsity-sweat-set",
+      "title": "Varsity Sweat Set",
+      "category": "matching-sets",
+      "price": 58,
+      "sizes": "alpha",
+      "keywords": [
+        "cute clothes sets"
+      ],
+      "short": "A cropped sweatshirt and wide-leg joggers in the same brushed cotton, sold together.",
+      "description": "A two-piece in brushed cotton: a cropped sweatshirt with a number set on the front, and wide-leg joggers with a drawstring waist and a soft cuff at the ankle.\n\nIt arrived as a set and we have kept it as one, because the dye lots match between the two halves and they do not once you start mixing seasons. The trousers sit high and the top is short enough that they read as one outfit rather than two things worn at the same time.\n\nOlive is the one everyone photographs. It also comes in cream, soft blue, pink and navy.\n\nWe keep a shelf of cute clothes sets and this is the one that goes out fastest in the colder months.",
+      "images": [
+        "IMG_0927.jpeg",
+        "IMG_0928.jpeg",
+        "IMG_0929.jpeg",
+        "IMG_0930.jpeg"
+      ],
+      "colours": [
+        {
+          "name": "Olive",
+          "image": "IMG_0927.jpeg"
+        },
+        {
+          "name": "Cream",
+          "image": "IMG_0930.jpeg"
+        },
+        {
+          "name": "Soft Blue",
+          "image": "IMG_0930.jpeg"
+        },
+        {
+          "name": "Pink",
+          "image": "IMG_0930.jpeg"
+        },
+        {
+          "name": "Navy",
+          "image": "IMG_0930.jpeg"
+        }
+      ]
+    },
+    {
+      "slug": "brushed-check-overshirt",
+      "title": "Brushed Check Overshirt",
+      "category": "blouses",
+      "price": 46,
+      "sizes": "alpha",
+      "keywords": [
+        "korean fashion jacket"
+      ],
+      "short": "An oversized check shirt in brushed cotton, warm enough to wear as a light jacket.",
+      "description": "An overshirt rather than a shirt: cut long, dropped at the shoulder, and brushed on both faces so it holds a little warmth. It closes with horn-look buttons and has two chest pockets with flaps.\n\nWe buy this one every autumn because it is the layer people reach for between a jumper and a coat. Worn open over a tee it reads as a jacket; buttoned with the sleeves rolled it reads as a shirt.\n\nThe blue and tan check is the one we photograph most, but it comes in a burgundy and a grey as well.\n\nIf you have been looking for a Korean fashion jacket that is not quite a coat, this is the shape.",
+      "images": [
+        "IMG_0931.jpeg",
+        "IMG_0932.jpeg",
+        "IMG_0933.jpeg",
+        "IMG_0934.jpeg"
+      ],
+      "colours": [
+        {
+          "name": "Blue Check",
+          "image": "IMG_0932.jpeg"
+        },
+        {
+          "name": "Burgundy Check",
+          "image": "IMG_0934.jpeg"
+        },
+        {
+          "name": "Grey Check",
+          "image": "IMG_0934.jpeg"
+        }
+      ]
+    },
+    {
+      "slug": "cat-motif-cardigan",
+      "title": "Cat Motif Cardigan",
+      "category": "sweaters-knits",
+      "price": 52,
+      "sizes": "alpha",
+      "keywords": [
+        "cute clothes for winter"
+      ],
+      "short": "A cream V-neck cardigan with cats knitted into the body and a contrast placket.",
+      "description": "A cream cardigan with the cats knitted in rather than printed on, which is the difference between something that survives a winter and something that does not. The placket and cuffs are picked out in black, and the buttons are a dark horn look.\n\nIt is a true V-neck and sits at the hip, so it buttons over a tee without riding up. The yarn is soft but has enough twist that it is not going to pill in the first month.\n\nOne of those pieces people buy for themselves and then come back for as a gift.\n\nIt is on the shelf we fill with cute clothes for winter, and it does not stay there long.",
+      "images": [
+        "IMG_4398.jpeg",
+        "IMG_4399.jpeg",
+        "IMG_4400.jpeg"
+      ],
+      "colours": [
+        {
+          "name": "Cream",
+          "image": "IMG_4398.jpeg"
+        }
+      ]
+    },
+    {
+      "slug": "drawstring-wide-leg-trousers",
+      "title": "Drawstring Wide-Leg Trousers",
+      "category": "pants-trousers",
+      "price": 44,
+      "sizes": "waist",
+      "keywords": [
+        "petite dress pants for work"
+      ],
+      "short": "Soft wide-leg trousers with a drawstring waist and a buttoned slit at the ankle.",
+      "description": "Wide-leg trousers with a drawstring at the waist and a short buttoned opening at the outside ankle, which is what stops them pooling on the floor if you are petite.\n\nThe fabric is a brushed twill with a bit of drape — it skims rather than clings, and it does not hold a crease, so they travel well. There are proper pockets, deep enough for a phone.\n\nThe waist is elastic behind the drawstring, so the measurement in the size list is where it sits comfortably rather than where it stops. Cream and pale grey.\n\nSeveral customers buy these as petite dress pants for work, because the ankle opening means no tailoring.",
+      "images": [
+        "IMG_4447.jpeg",
+        "IMG_4448.jpeg",
+        "IMG_4449.jpeg",
+        "IMG_4450.jpeg",
+        "IMG_4451.jpeg"
+      ],
+      "colours": [
+        {
+          "name": "Cream",
+          "image": "IMG_4448.jpeg"
+        },
+        {
+          "name": "Pale Grey",
+          "image": "IMG_4447.jpeg"
+        }
+      ]
+    },
+    {
+      "slug": "fine-knit-cardigan",
+      "title": "Fine-Knit Button Cardigan",
+      "category": "sweaters-knits",
+      "price": 39,
+      "sizes": "alpha",
+      "keywords": [
+        "korean style winter wear"
+      ],
+      "short": "A close-fitting cardigan in a fine rib, buttoned to a high round neck.",
+      "description": "A fine-rib cardigan that buttons right up to a small round neck, so it can be worn as a top on its own. The rib is narrow and the buttons are self-covered, which keeps the line clean under a jacket.\n\nIt is cut close. If you want it loose, take a size up — several people have, and it works either way.\n\nGrey, pink and cream, all in the same soft yarn.\n\nA quiet piece of Korean style winter wear: thin enough for a layer, warm enough to matter.",
+      "images": [
+        "IMG_4460.jpeg",
+        "IMG_4461.jpeg",
+        "IMG_4462.jpeg"
+      ],
+      "colours": [
+        {
+          "name": "Grey",
+          "image": "IMG_4460.jpeg"
+        },
+        {
+          "name": "Pink",
+          "image": "IMG_4461.jpeg"
+        },
+        {
+          "name": "Cream",
+          "image": "IMG_4462.jpeg"
+        }
+      ]
+    },
+    {
+      "slug": "faux-fur-gilet",
+      "title": "Faux Fur Gilet",
+      "category": "jackets-outerwear",
+      "price": 62,
+      "sizes": "onesize",
+      "keywords": [],
+      "short": "A collarless faux fur gilet, long enough in the pile to look like the real thing.",
+      "description": "A collarless gilet in a long-pile faux fur, lined and hook-fastened so nothing interrupts the front. It sits at the hip and is cut generously through the body, which is why we have it in one size.\n\nThe pile is long enough that it moves properly rather than sitting flat, and the backing has some weight, so it hangs instead of standing away from you.\n\nSilver grey and a darker smoke. Shake it out when it arrives and hang it for a day — it ships folded.",
+      "images": [
+        "IMG_4548.jpeg",
+        "IMG_4549.jpeg",
+        "IMG_4552.jpeg",
+        "IMG_4554.jpeg"
+      ],
+      "colours": [
+        {
+          "name": "Silver Grey",
+          "image": "IMG_4548.jpeg"
+        },
+        {
+          "name": "Smoke",
+          "image": "IMG_4552.jpeg"
+        }
+      ]
+    },
+    {
+      "slug": "wide-leg-knit-trousers",
+      "title": "Wide-Leg Knit Trousers",
+      "category": "pants-trousers",
+      "price": 48,
+      "sizes": "waist",
+      "keywords": [
+        "petite dress pants"
+      ],
+      "short": "Flat-knit wide-leg trousers with an elastic waist, in four neutrals.",
+      "description": "Knitted rather than woven, so they move with you and do not crease behind the knee. The waist is a flat elastic band, wide enough that it does not dig in when you sit.\n\nThe leg is full from the hip down and the hem is left unfinished in the knit, which is how they came and how they are meant to be. On a petite frame they break at the ankle; on a taller one they sit just above the shoe.\n\nCream, grey, taupe and black. The cream is the one that sells first.\n\nThey work as petite dress pants without a hem taken up, which is rare in a wide leg.",
+      "images": [
+        "IMG_4526.jpg",
+        "IMG_4527.jpg",
+        "IMG_4528.jpg",
+        "IMG_4529.jpg"
+      ],
+      "colours": [
+        {
+          "name": "Cream",
+          "image": "IMG_4526.jpg"
+        },
+        {
+          "name": "Grey",
+          "image": "IMG_4527.jpg"
+        },
+        {
+          "name": "Taupe",
+          "image": "IMG_4528.jpg"
+        },
+        {
+          "name": "Black",
+          "image": "IMG_4529.jpg"
+        }
+      ]
+    },
+    {
+      "slug": "bear-motif-knit-vest",
+      "title": "Bear Motif Knit Vest",
+      "category": "sweaters-knits",
+      "price": 36,
+      "sizes": "alpha",
+      "keywords": [],
+      "short": "A sleeveless knit vest with a bear worked into the front, for layering over a shirt.",
+      "description": "A sleeveless knit vest with the bear worked into the knit on the chest. It is cut to sit over a long-sleeved tee or a collared shirt, with the armholes dropped enough that a shirt sleeve goes through without bunching.\n\nThe yarn is brushed, so the surface is soft and the motif sits slightly proud of the ground. Ribbed at the neck, armhole and hem.\n\nCream and a mid grey. Both have the same bear.",
+      "images": [
+        "IMG_4729.jpeg",
+        "IMG_4731.jpeg",
+        "IMG_4732.jpeg",
+        "IMG_4733.jpeg"
+      ],
+      "colours": [
+        {
+          "name": "Cream",
+          "image": "IMG_4729.jpeg"
+        },
+        {
+          "name": "Grey",
+          "image": "IMG_4731.jpeg"
+        }
+      ]
+    },
+    {
+      "slug": "belted-shirt-dress",
+      "title": "Belted Shirt Dress",
+      "category": "dresses",
+      "price": 56,
+      "sizes": "alpha",
+      "keywords": [
+        "korean fashion casual dress"
+      ],
+      "short": "A long shirt dress with a self-tie belt and a full skirt below the waist seam.",
+      "description": "A shirt dress cut long, with a waist seam and a self-tie belt that you can leave loose or pull in. The skirt below it is full enough to move but not so full that it reads as formal.\n\nThe collar is soft and the buttons run the whole way down, which means you can wear it open over trousers as a light coat. Sleeves are long with a buttoned cuff.\n\nCream, black, taupe and grey. The taupe is warmer in person than it photographs.\n\nIt is the Korean fashion casual dress we are asked for most, usually by someone who saw it on somebody else.",
+      "images": [
+        "IMG_4954.jpeg",
+        "IMG_4955.jpeg",
+        "IMG_4956.jpeg"
+      ],
+      "colours": [
+        {
+          "name": "Cream",
+          "image": "IMG_4954.jpeg"
+        },
+        {
+          "name": "Black",
+          "image": "IMG_4955.jpeg"
+        },
+        {
+          "name": "Taupe",
+          "image": "IMG_4954.jpeg"
+        },
+        {
+          "name": "Grey",
+          "image": "IMG_4956.jpeg"
+        }
+      ]
+    },
+    {
+      "slug": "wool-blend-long-coat",
+      "title": "Wool-Blend Long Coat",
+      "category": "coats",
+      "price": 128,
+      "sizes": "alpha",
+      "keywords": [
+        "korean fashion winter coat"
+      ],
+      "short": "A long, collarless wool-blend coat with a clean front and no belt.",
+      "description": "A long coat with nothing on it: no belt, no epaulettes, a single row of concealed buttons. The line runs straight from the shoulder to just below the knee.\n\nThe cloth is a wool blend with enough body to hold that line in a wind. It is lined to the hem and there are two welt pockets set low, where your hands actually go.\n\nCream. It is the piece in the shop we would keep if we could only keep one.\n\nA Korean fashion winter coat in the plainest sense: one good cloth, one good line, nothing else.",
+      "images": [
+        "IMG_5285.jpg",
+        "IMG_5286.jpg",
+        "IMG_5287.jpg"
+      ],
+      "colours": [
+        {
+          "name": "Cream",
+          "image": "IMG_5285.jpg"
+        }
+      ]
+    },
+    {
+      "slug": "quilted-liner-jacket",
+      "title": "Quilted Liner Jacket",
+      "category": "jackets-outerwear",
+      "price": 68,
+      "sizes": "alpha",
+      "keywords": [],
+      "short": "A light diamond-quilted jacket that layers under a coat or stands on its own.",
+      "description": "A diamond-quilted jacket with a light fill — warm enough on its own in autumn, thin enough to go under a coat in winter without bulking out the shoulder.\n\nIt buttons rather than zips, which keeps it looking like a jacket instead of a liner. Two patch pockets, a soft stand collar, and elastic at the cuff.\n\nCream and a sage green. The sage is closer to olive in daylight.",
+      "images": [
+        "IMG_4845.jpg",
+        "IMG_4847.jpg",
+        "IMG_4849.jpg"
+      ],
+      "colours": [
+        {
+          "name": "Cream",
+          "image": "IMG_4845.jpg"
+        },
+        {
+          "name": "Sage",
+          "image": "IMG_4847.jpg"
+        }
+      ]
+    },
+    {
+      "slug": "washed-denim-jeans",
+      "title": "Washed Denim Jeans",
+      "category": "jeans",
+      "price": 54,
+      "sizes": "waist",
+      "keywords": [
+        "korean fashion jeans"
+      ],
+      "short": "Mid-blue washed denim in a straight cut, with the fading done properly.",
+      "description": "Straight-cut jeans in a mid-blue wash, faded through the thigh and seat rather than printed to look that way. The denim has a little stretch, enough to sit down in without the knees going.\n\nFive pockets, a button fly, and a waistband that sits at the natural waist rather than below it. The leg is straight from the knee down.\n\nWe buy denim a few pairs at a time, so sizes go quickly and do not always come back.\n\nKorean fashion jeans tend to sit higher and cut straighter than most, and these do both.",
+      "images": [
+        "IMG_1036.jpg",
+        "IMG_E1036.JPG"
+      ],
+      "colours": [
+        {
+          "name": "Mid Blue",
+          "image": "IMG_1036.jpg"
+        }
+      ]
+    },
+    {
+      "slug": "ampoule-sheet-mask",
+      "title": "Ampoule Sheet Mask",
+      "category": "masks",
+      "price": 4,
+      "sizes": null,
+      "keywords": [],
+      "short": "Single-use ampoule sheet masks, sold one at a time so you can try the whole set.",
+      "description": "Cotton sheet masks soaked in an ampoule rather than a watery essence, so there is enough left in the sachet to press into your neck and the backs of your hands afterwards.\n\nFive to choose from. Cica for skin that is reacting to something, hyaluronic acid for flat and tired skin, vitamin for dullness, arbutin for marks left behind by old spots, and tea tree for an oily week.\n\nTwenty minutes is plenty. There is no need to rinse.",
+      "images": [
+        "IMG_4909.jpg",
+        "IMG_4910.jpg",
+        "IMG_4912.jpg",
+        "IMG_4913.jpg",
+        "IMG_4914.jpg",
+        "IMG_4915.jpg"
+      ],
+      "colours": [
+        {
+          "name": "Cica",
+          "image": "IMG_4909.jpg"
+        },
+        {
+          "name": "Hyaluronic Acid",
+          "image": "IMG_4912.jpg"
+        },
+        {
+          "name": "Vitamin",
+          "image": "IMG_4913.jpg"
+        },
+        {
+          "name": "Arbutin",
+          "image": "IMG_4914.jpg"
+        },
+        {
+          "name": "Tea Tree",
+          "image": "IMG_4915.jpg"
+        }
+      ]
+    },
+    {
+      "slug": "whitening-uv-sunblock",
+      "title": "Brightening UV Sunblock",
+      "category": "sun-care",
+      "price": 16,
+      "sizes": null,
+      "keywords": [],
+      "short": "A light daily sunblock that sits under makeup without pilling.",
+      "description": "A daily sunblock in a light cream that goes on white and finishes clear, with none of the grey cast that comes with heavier mineral filters.\n\nIt sits under makeup without rolling, which is the part most sunblocks get wrong. Water resistant enough for a normal day out, though it still wants reapplying if you have been swimming.\n\n70ml tube. One of the two Korean skincare lines we carry alongside the clothes.",
+      "images": [
+        "IMG_6115.jpg",
+        "IMG_6116.jpg",
+        "IMG_6117.jpg"
+      ],
+      "colours": []
+    }
+  ]
+}
