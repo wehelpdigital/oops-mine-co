@@ -30,6 +30,16 @@ foreach ( $argv as $a ) {
 	}
 }
 
+/*
+ * `--live` is the same thing as OMC_DB=live, set here rather than by the caller: the environment
+ * form is bash syntax, PowerShell has no inline prefix for it, and passing --live to a script that
+ * only reads the variable is a silent no-op that reports success against the wrong database. This
+ * has to happen before wp-config.php is read.
+ */
+if ( in_array( '--live', $argv, true ) ) {
+	putenv( 'OMC_DB=live' );
+}
+
 $_SERVER['HTTP_HOST'] = getenv( 'OMC_DB' ) === 'live' ? 'oopsmineco.com' : 'oopsmine.test';
 require dirname( __DIR__ ) . '/wp-load.php';
 require_once ABSPATH . 'wp-admin/includes/file.php';

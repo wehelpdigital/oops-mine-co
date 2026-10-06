@@ -33,6 +33,16 @@ $GLOBALS['omc_pub_dry']     = in_array( '--dry-run', $omc_argv, true ) || in_arr
 $GLOBALS['omc_pub_changes'] = [];
 $omc_force_menu             = in_array( '--force-menu', $omc_argv, true );
 
+/*
+ * `--live` is the same thing as OMC_DB=live, set here rather than by the caller: the environment
+ * form is bash syntax, PowerShell has no inline prefix for it, and passing --live to a script that
+ * only reads the variable is a silent no-op that reports success against the wrong database. This
+ * has to happen before wp-config.php is read.
+ */
+if ( in_array( '--live', $argv, true ) ) {
+	putenv( 'OMC_DB=live' );
+}
+
 $_SERVER['HTTP_HOST']   = 'oopsmine.test';
 $_SERVER['REQUEST_URI'] = '/';
 require dirname( __DIR__ ) . '/wp-load.php';
