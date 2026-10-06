@@ -35,7 +35,7 @@ $arg = function ( $name, $fallback ) use ( $argv ) {
 
 $src  = $arg( 'figure', 'C:/Users/User/Downloads/oops-photos/Gemini_Generated_Image_5wf0kr5wf0kr5wf0.jpg' );
 $dir  = dirname( __DIR__, 2 ) . '/wp-content/themes/moderno-child/assets/img';
-$out  = $dir . '/stylist-thinking.webp';
+$out  = $arg( 'out', $dir . '/stylist-thinking.webp' );
 $prev = in_array( '--preview', $argv, true );
 
 /* Closer in: her head, the raised hand and the jacket, down to the thigh. At full length she was a
@@ -46,11 +46,35 @@ $crop = array_combine( [ 'x', 'y', 'w', 'h' ], array_map( 'intval', explode( ','
 $wall_lum = 142;   // darker than this is her, not the room
 $wall_sat = 34;    // and the wall has no colour in it to speak of
 
-$im = imagecreatefromjpeg( $src );
+$im = @imagecreatefromstring( (string) file_get_contents( $src ) );
 if ( ! $im ) {
 	exit( "cannot read $src\n" );
 }
+if ( ! $crop['w'] || ! $crop['h'] ) {                  // --crop=0,0,0,0 means the whole picture
+	$crop = [ 'x' => 0, 'y' => 0, 'w' => imagesx( $im ), 'h' => imagesy( $im ) ];
+}
+
+/*
+ * Does it arrive cut out already? A generated or stock figure usually does, and its own alpha
+ * channel beats anything a rule about brightness could work out. Every seventh pixel is enough
+ * to tell, and a photograph on a wall has none at all.
+ */
+$clear = 0;
+$looked = 0;
+for ( $y = 0; $y < imagesy( $im ); $y += 7 ) {
+	for ( $x = 0; $x < imagesx( $im ); $x += 7 ) {
+		$looked++;
+		if ( ( ( imagecolorat( $im, $x, $y ) >> 24 ) & 0x7F ) > 100 ) {
+			$clear++;
+		}
+	}
+}
+$pre_cut = $clear > $looked / 50;
+printf( "%s: %s\n", basename( $src ), $pre_cut ? 'arrives cut out, its own alpha is the room' : 'on a wall, the room is flooded away' );
+
 $cut = imagecreatetruecolor( $crop['w'], $crop['h'] );
+imagealphablending( $cut, false );
+imagesavealpha( $cut, true );
 imagecopy( $cut, $im, 0, 0, $crop['x'], $crop['y'], $crop['w'], $crop['h'] );
 imagedestroy( $im );
 
@@ -62,11 +86,13 @@ $h = imagesy( $cut );
 $r = [];
 $g = [];
 $b = [];
-$wall = [];                       // could this pixel be room?
+$wall  = [];                      // could this pixel be room?
+$alpha = [];                      // 0 opaque .. 127 invisible, as GD counts it
 for ( $y = 0; $y < $h; $y++ ) {
 	for ( $x = 0; $x < $w; $x++ ) {
 		$i  = $y * $w + $x;
 		$c  = imagecolorat( $cut, $x, $y );
+		$alpha[ $i ] = ( $c >> 24 ) & 0x7F;
 		$rr = ( $c >> 16 ) & 0xFF;
 		$gg = ( $c >> 8 ) & 0xFF;
 		$bb = $c & 0xFF;
@@ -83,38 +109,47 @@ for ( $y = 0; $y < $h; $y++ ) {
 
 $seen  = array_fill( 0, $w * $h, false );
 $queue = [];
-for ( $x = 0; $x < $w; $x++ ) {
-	foreach ( [ 0, $h - 1 ] as $y ) {
-		$i = $y * $w + $x;
-		if ( $wall[ $i ] && ! $seen[ $i ] ) {
-			$seen[ $i ] = true;
-			$queue[]    = $i;
+if ( $pre_cut ) {
+	foreach ( $alpha as $i => $a ) {
+		$seen[ $i ] = $a > 100;
+		if ( $seen[ $i ] ) {
+			$queue[] = $i;
 		}
 	}
-}
-for ( $y = 0; $y < $h; $y++ ) {
-	foreach ( [ 0, $w - 1 ] as $x ) {
-		$i = $y * $w + $x;
-		if ( $wall[ $i ] && ! $seen[ $i ] ) {
-			$seen[ $i ] = true;
-			$queue[]    = $i;
+} else {
+	for ( $x = 0; $x < $w; $x++ ) {
+		foreach ( [ 0, $h - 1 ] as $y ) {
+			$i = $y * $w + $x;
+			if ( $wall[ $i ] && ! $seen[ $i ] ) {
+				$seen[ $i ] = true;
+				$queue[]    = $i;
+			}
 		}
 	}
-}
-for ( $q = 0; $q < count( $queue ); $q++ ) {
-	$i = $queue[ $q ];
-	$x = $i % $w;
-	$y = intdiv( $i, $w );
-	foreach ( [ [ 1, 0 ], [ -1, 0 ], [ 0, 1 ], [ 0, -1 ] ] as $d ) {
-		$nx = $x + $d[0];
-		$ny = $y + $d[1];
-		if ( $nx < 0 || $ny < 0 || $nx >= $w || $ny >= $h ) {
-			continue;
+	for ( $y = 0; $y < $h; $y++ ) {
+		foreach ( [ 0, $w - 1 ] as $x ) {
+			$i = $y * $w + $x;
+			if ( $wall[ $i ] && ! $seen[ $i ] ) {
+				$seen[ $i ] = true;
+				$queue[]    = $i;
+			}
 		}
-		$n = $ny * $w + $nx;
-		if ( ! $seen[ $n ] && $wall[ $n ] ) {
-			$seen[ $n ] = true;
-			$queue[]    = $n;
+	}
+	for ( $q = 0; $q < count( $queue ); $q++ ) {
+		$i = $queue[ $q ];
+		$x = $i % $w;
+		$y = intdiv( $i, $w );
+		foreach ( [ [ 1, 0 ], [ -1, 0 ], [ 0, 1 ], [ 0, -1 ] ] as $d ) {
+			$nx = $x + $d[0];
+			$ny = $y + $d[1];
+			if ( $nx < 0 || $ny < 0 || $nx >= $w || $ny >= $h ) {
+				continue;
+			}
+			$n = $ny * $w + $nx;
+			if ( ! $seen[ $n ] && $wall[ $n ] ) {
+				$seen[ $n ] = true;
+				$queue[]    = $n;
+			}
 		}
 	}
 }
@@ -125,41 +160,43 @@ printf( "room: %d of %d pixels (%d%%)\n", count( $queue ), $w * $h, round( 100 *
  * smear under her feet. A second flood crosses it with a looser rule, seeded only along the bottom
  * edge - her jeans sit at a fifth of that brightness, so there is no danger of walking into them.
  */
+if ( ! $pre_cut ) {
 $floor_lum = 88;
-$floor_sat = 52;
-$queue     = [];
-for ( $x = 0; $x < $w; $x++ ) {
-	$i   = ( $h - 1 ) * $w + $x;
-	$lum = 0.299 * $r[ $i ] + 0.587 * $g[ $i ] + 0.114 * $b[ $i ];
-	$sat = max( $r[ $i ], $g[ $i ], $b[ $i ] ) - min( $r[ $i ], $g[ $i ], $b[ $i ] );
-	if ( ! $seen[ $i ] && $lum >= $floor_lum && $sat <= $floor_sat ) {
-		$seen[ $i ] = true;
-		$queue[]    = $i;
-	}
-}
-for ( $q = 0; $q < count( $queue ); $q++ ) {
-	$i = $queue[ $q ];
-	$x = $i % $w;
-	$y = intdiv( $i, $w );
-	foreach ( [ [ 1, 0 ], [ -1, 0 ], [ 0, 1 ], [ 0, -1 ] ] as $d ) {
-		$nx = $x + $d[0];
-		$ny = $y + $d[1];
-		if ( $nx < 0 || $ny < 0 || $nx >= $w || $ny >= $h ) {
-			continue;
-		}
-		$n = $ny * $w + $nx;
-		if ( $seen[ $n ] ) {
-			continue;
-		}
-		$lum = 0.299 * $r[ $n ] + 0.587 * $g[ $n ] + 0.114 * $b[ $n ];
-		$sat = max( $r[ $n ], $g[ $n ], $b[ $n ] ) - min( $r[ $n ], $g[ $n ], $b[ $n ] );
-		if ( $lum >= $floor_lum && $sat <= $floor_sat ) {
-			$seen[ $n ] = true;
-			$queue[]    = $n;
+	$floor_sat = 52;
+	$queue     = [];
+	for ( $x = 0; $x < $w; $x++ ) {
+		$i   = ( $h - 1 ) * $w + $x;
+		$lum = 0.299 * $r[ $i ] + 0.587 * $g[ $i ] + 0.114 * $b[ $i ];
+		$sat = max( $r[ $i ], $g[ $i ], $b[ $i ] ) - min( $r[ $i ], $g[ $i ], $b[ $i ] );
+		if ( ! $seen[ $i ] && $lum >= $floor_lum && $sat <= $floor_sat ) {
+			$seen[ $i ] = true;
+			$queue[]    = $i;
 		}
 	}
+	for ( $q = 0; $q < count( $queue ); $q++ ) {
+		$i = $queue[ $q ];
+		$x = $i % $w;
+		$y = intdiv( $i, $w );
+		foreach ( [ [ 1, 0 ], [ -1, 0 ], [ 0, 1 ], [ 0, -1 ] ] as $d ) {
+			$nx = $x + $d[0];
+			$ny = $y + $d[1];
+			if ( $nx < 0 || $ny < 0 || $nx >= $w || $ny >= $h ) {
+				continue;
+			}
+			$n = $ny * $w + $nx;
+			if ( $seen[ $n ] ) {
+				continue;
+			}
+			$lum = 0.299 * $r[ $n ] + 0.587 * $g[ $n ] + 0.114 * $b[ $n ];
+			$sat = max( $r[ $n ], $g[ $n ], $b[ $n ] ) - min( $r[ $n ], $g[ $n ], $b[ $n ] );
+			if ( $lum >= $floor_lum && $sat <= $floor_sat ) {
+				$seen[ $n ] = true;
+				$queue[]    = $n;
+			}
+		}
+	}
+	printf( "floor: %d more pixel(s)\n", count( $queue ) );
 }
-printf( "floor: %d more pixel(s)\n", count( $queue ) );
 
 /* ── 3. soften the cut ────────────────────────────────────────────────────── */
 
