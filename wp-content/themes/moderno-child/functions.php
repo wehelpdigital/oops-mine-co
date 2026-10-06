@@ -914,7 +914,7 @@ function omc_banner( $b, $size = 'tile' ) {
 	$alt   = $b['alt'] ?: wp_strip_all_tags( $b['title'] );
 	$imgs  = [];
 	foreach ( $files as $i => $file ) {
-		$attrs = [ 'class' => 'omc-banner__img' . ( 0 === $i ? ' is-active' : '' ), 'loading' => 'lazy', 'alt' => $alt ];
+		$attrs = [ 'class' => 'omc-banner__img', 'sizes' => '(max-width: 900px) 100vw, 60vw' . ( 0 === $i ? ' is-active' : '' ), 'loading' => 'lazy', 'alt' => $alt ];
 		if ( $i > 0 ) {
 			$attrs['aria-hidden'] = 'true'; // only the visible photo is announced
 		}

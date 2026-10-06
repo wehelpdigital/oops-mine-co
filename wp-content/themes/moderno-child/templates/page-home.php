@@ -40,12 +40,14 @@ get_header();
 					'loading'       => 'eager',
 					'fetchpriority' => 'high',
 					'decoding'      => 'async',
+					'sizes'         => '100vw',
 				] : [
 					'class'       => 'omc-hero__img',
 					'loading'     => 'lazy',
 					'decoding'    => 'async',
 					'alt'         => '',
 					'aria-hidden' => 'true',
+					'sizes'       => '100vw',
 				] );
 			}
 			?>

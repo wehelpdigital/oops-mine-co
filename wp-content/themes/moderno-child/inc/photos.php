@@ -11,13 +11,13 @@
 return array (
   'omc-hero-black-midi-skirt' => 
   array (
-    'title' => 'Black double-breasted coat on a city street',
-    'alt' => 'Woman in a long black double-breasted coat walking a city street',
+    'title' => 'Black midi dress by a floor-to-ceiling window',
+    'alt' => 'Woman in a black midi dress standing at a floor-to-ceiling window in daylight',
   ),
   'omc-hero-white-dress' => 
   array (
-    'title' => 'Camel knit midi dress on a cobbled street',
-    'alt' => 'Woman in a camel knit midi dress carrying a tan bag on a cobbled street',
+    'title' => 'Long black coat on a city street',
+    'alt' => 'Woman in a long black double-breasted coat walking a city street',
   ),
   'omc-hero-pleated-skirt-light' => 
   array (
@@ -51,8 +51,8 @@ return array (
   ),
   'omc-quotes-green-knit-sofa' => 
   array (
-    'title' => 'Black midi dress by a hotel window',
-    'alt' => 'Woman in a black midi dress standing by a floor-to-ceiling hotel window',
+    'title' => 'Close-up of soft mint faux fur',
+    'alt' => 'A close-up of soft mint-green faux fur',
   ),
   'omc-about-plaid-street' => 
   array (
@@ -61,8 +61,8 @@ return array (
   ),
   'omc-tile-new-in' => 
   array (
-    'title' => 'Fringed black midi skirt on a studio plinth',
-    'alt' => 'A black fringed midi skirt displayed on a studio plinth',
+    'title' => 'Fringed black midi skirt in the studio',
+    'alt' => 'A black fringed knit midi skirt on a plinth against a cool grey studio wall',
   ),
   'omc-tile-knitwear' => 
   array (

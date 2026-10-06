@@ -1,27 +1,29 @@
 [
   {
     "slug": "omc-hero-black-midi-skirt",
+    "source": "Photoroom_20251027_111818.jpg",
+    "role": "hero",
+    "focus": [
+      0.5,
+      0.26
+    ],
+    "title": "Black midi dress by a floor-to-ceiling window",
+    "alt": "Woman in a black midi dress standing at a floor-to-ceiling window in daylight",
+    "description": "The black midi dress, cut long and quiet. Korean fashion sourced in small batches for Oops, Mine Co.",
+    "cool": 0.35
+  },
+  {
+    "slug": "omc-hero-white-dress",
     "source": "Photoroom_20251027_111450.jpg",
     "role": "hero",
     "focus": [
       0.5,
-      0.3
+      0.24
     ],
-    "title": "Black double-breasted coat on a city street",
+    "title": "Long black coat on a city street",
     "alt": "Woman in a long black double-breasted coat walking a city street",
-    "description": "The long black coat from the Oops, Mine Co. winter edit, worn on a city street. Korean fashion sourced in small batches."
-  },
-  {
-    "slug": "omc-hero-white-dress",
-    "source": "Photoroom_20251114_233814.jpg",
-    "role": "hero",
-    "focus": [
-      0.5,
-      0.3
-    ],
-    "title": "Camel knit midi dress on a cobbled street",
-    "alt": "Woman in a camel knit midi dress carrying a tan bag on a cobbled street",
-    "description": "A camel knit midi dress, soft enough for every day and long enough for anything. From the women’s edit at Oops, Mine Co."
+    "description": "A long black double-breasted coat — the kind of outer layer the buyers look for when sourcing abroad.",
+    "cool": 0.45
   },
   {
     "slug": "omc-hero-pleated-skirt-light",
@@ -29,11 +31,12 @@
     "role": "hero",
     "focus": [
       0.5,
-      0.3
+      0.24
     ],
     "title": "Black button-front midi dress outside a boutique",
     "alt": "Woman in a black button-front midi dress walking past a boutique window",
-    "description": "The black button-front midi dress — one of the pieces the buyers brought back from Seoul for Oops, Mine Co."
+    "description": "The black button-front midi dress, one of the pieces brought back from Seoul for Oops, Mine Co.",
+    "cool": 0.4
   },
   {
     "slug": "omc-edit-collar-sweatshirt",
@@ -97,15 +100,16 @@
   },
   {
     "slug": "omc-quotes-green-knit-sofa",
-    "source": "Photoroom_20251027_111818.jpg",
+    "source": "Photoroom_20251027_110724.jpg",
     "role": "banner",
     "focus": [
       0.5,
-      0.3
+      0.5
     ],
-    "title": "Black midi dress by a hotel window",
-    "alt": "Woman in a black midi dress standing by a floor-to-ceiling hotel window",
-    "description": "The black midi dress, cut long and quiet. Occasion dressing from Oops, Mine Co."
+    "title": "Close-up of soft mint faux fur",
+    "alt": "A close-up of soft mint-green faux fur",
+    "description": "The faux fur gilet, photographed close.",
+    "cool": 0.0
   },
   {
     "slug": "omc-about-plaid-street",
@@ -125,11 +129,12 @@
     "role": "square",
     "focus": [
       0.5,
-      0.3
+      0.4
     ],
-    "title": "Fringed black midi skirt on a studio plinth",
-    "alt": "A black fringed midi skirt displayed on a studio plinth",
-    "description": "New in at Oops, Mine Co. — the fringed black midi skirt, photographed in the studio."
+    "title": "Fringed black midi skirt in the studio",
+    "alt": "A black fringed knit midi skirt on a plinth against a cool grey studio wall",
+    "description": "New in at Oops, Mine Co. — the fringed black midi skirt, photographed in the studio.",
+    "cool": 0.0
   },
   {
     "slug": "omc-tile-knitwear",
@@ -321,7 +326,8 @@
     ],
     "title": "Black pleated midi skirt on a cobbled street",
     "alt": "Woman in a black pleated midi skirt and cream knit on a cobbled street",
-    "description": "The black pleated midi skirt, from the Seoul edit at Oops, Mine Co."
+    "description": "The black pleated midi skirt, from the Seoul edit at Oops, Mine Co.",
+    "cool": 0.22
   },
   {
     "slug": "omc-banner-seoul-2",
@@ -333,7 +339,8 @@
     ],
     "title": "Cream pleated skirt in window light",
     "alt": "Woman in a cream pleated midi skirt and fine knit at a bright window",
-    "description": "A cream pleated midi skirt styled for the working week. Korean fashion in small batches."
+    "description": "A cream pleated midi skirt styled for the working week. Korean fashion in small batches.",
+    "cool": 0.22
   },
   {
     "slug": "omc-banner-seoul-3",
@@ -345,7 +352,8 @@
     ],
     "title": "Embroidered knit vest over a blouse",
     "alt": "Woman in an embroidered knit vest layered over a cream blouse",
-    "description": "The embroidered knit vest — a layering piece with hand-finished detail."
+    "description": "The embroidered knit vest — a layering piece with hand-finished detail.",
+    "cool": 0.22
   },
   {
     "slug": "omc-banner-bangkok-1",
@@ -357,7 +365,8 @@
     ],
     "title": "Linen midi skirt on a terrace at golden hour",
     "alt": "Woman in a linen midi skirt and camisole on a terrace at golden hour",
-    "description": "Warm-weather dressing from the Thai fashion edit at Oops, Mine Co."
+    "description": "Warm-weather dressing from the Thai fashion edit at Oops, Mine Co.",
+    "cool": 0.22
   },
   {
     "slug": "omc-banner-bangkok-2",
@@ -369,7 +378,8 @@
     ],
     "title": "Striped top and grey midi skirt",
     "alt": "Woman in a striped top and grey midi skirt carrying a shoulder bag",
-    "description": "A striped top with a grey midi skirt — easy separates that travel well."
+    "description": "A striped top with a grey midi skirt — easy separates that travel well.",
+    "cool": 0.22
   },
   {
     "slug": "omc-banner-bangkok-3",
@@ -381,7 +391,8 @@
     ],
     "title": "Sage knit jumper among autumn trees",
     "alt": "Woman in a sage green oversized knit jumper and jeans among autumn trees",
-    "description": "A sage green oversized knit jumper, photographed outdoors. Soft knitwear at Oops, Mine Co."
+    "description": "A sage green oversized knit jumper, photographed outdoors. Soft knitwear at Oops, Mine Co.",
+    "cool": 0.22
   },
   {
     "slug": "omc-cat-dresses",

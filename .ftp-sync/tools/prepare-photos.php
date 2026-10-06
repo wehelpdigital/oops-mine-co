@@ -102,6 +102,49 @@ function load( $file ) {
 }
 
 /**
+ * Shift a picture's white balance.
+ *
+ * `$amount` is how far, 0 to 1. Positive cools (red down, blue up), negative warms. The shift is
+ * weighted by how far a pixel sits from black and white, so highlights keep their paper white and
+ * shadows keep their weight — a flat offset tints those first and looks like a filter.
+ */
+function balance( $im, $amount ) {
+	if ( ! $amount ) {
+		return $im;
+	}
+	$w     = imagesx( $im );
+	$h     = imagesy( $im );
+	$shift = 26 * $amount; // at full strength, about a tenth of the range
+
+	for ( $y = 0; $y < $h; $y++ ) {
+		for ( $x = 0; $x < $w; $x++ ) {
+			$c = imagecolorat( $im, $x, $y );
+			$r = ( $c >> 16 ) & 0xFF;
+			$g = ( $c >> 8 ) & 0xFF;
+			$b = $c & 0xFF;
+
+			// 1 through the midtones, 0 at pure black and pure white.
+			$lum  = ( $r * 0.299 + $g * 0.587 + $b * 0.114 ) / 255;
+			$step = $shift * ( 1 - abs( $lum - 0.5 ) * 2 );
+
+			imagesetpixel(
+				$im,
+				$x,
+				$y,
+				imagecolorallocate(
+					$im,
+					max( 0, min( 255, (int) round( $r - $step ) ) ),
+					$g,
+					max( 0, min( 255, (int) round( $b + $step ) ) )
+				)
+			);
+		}
+	}
+
+	return $im;
+}
+
+/**
  * Crop to a shape around a point of interest, then resize.
  *
  * `focus` is where the subject sits, 0–1 across and down, so a tall portrait can be cut to a wide
@@ -190,6 +233,8 @@ foreach ( $photos as $p ) {
 	// A picture may carry the shape of the slot it is going into, overriding its role's.
 	$ratio = array_key_exists( 'ratio', $p ) ? $p['ratio'] : $role['ratio'];
 	$im    = shape( $im, $ratio, $role['w'], $p['focus'] ?? [ 0.5, 0.38 ], $role['short'] ?? 0 );
+	// Graded after resizing, so the work lands on the pixels that ship.
+	$im    = balance( $im, (float) ( $p['cool'] ?? 0 ) );
 	imagewebp( $im, $out, 82 );
 	imagedestroy( $im );
 
