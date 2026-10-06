@@ -46,9 +46,27 @@ $crop = array_combine( [ 'x', 'y', 'w', 'h' ], array_map( 'intval', explode( ','
 $wall_lum = 142;   // darker than this is her, not the room
 $wall_sat = 34;    // and the wall has no colour in it to speak of
 
+if ( ! file_exists( $src ) ) {
+	printf( "There is no file at %s
+
+", $src );
+	echo "--figure takes the path to the picture you want cut out. Put the file somewhere and
+";
+	echo "pass that path, in quotes if it has spaces in it:
+
+";
+	echo "  php make-stylist-photo.php --figure=\"C:/Users/User/Downloads/stylist.png\" --crop=0,0,0,0 --preview
+
+";
+	echo "Without --figure it rebuilds from the shot it has always used.
+";
+	exit( 1 );
+}
+
 $im = @imagecreatefromstring( (string) file_get_contents( $src ) );
 if ( ! $im ) {
-	exit( "cannot read $src\n" );
+	exit( "$src is there but is not a picture GD can read (PNG, JPEG, WebP or GIF).
+" );
 }
 if ( ! $crop['w'] || ! $crop['h'] ) {                  // --crop=0,0,0,0 means the whole picture
 	$crop = [ 'x' => 0, 'y' => 0, 'w' => imagesx( $im ), 'h' => imagesy( $im ) ];
