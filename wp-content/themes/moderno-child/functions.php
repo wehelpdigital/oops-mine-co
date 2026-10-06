@@ -378,11 +378,24 @@ function omc_stylist_band() {
 		return null;
 	}
 
+	/*
+	 * The figure that stands in the band: somebody mid-decision, which is what the band is about.
+	 * Cut out of the studio shot and graded by .ftp-sync/tools/make-stylist-photo.php, so it drops
+	 * onto the sand with no edge. A theme asset rather than a media item, because the band has to
+	 * look the same on an environment whose database has never been published to.
+	 */
+	$figure = OMC_DIR . '/assets/img/stylist-thinking.webp';
+
 	return apply_filters( 'omc_stylist_band', [
 		'eyebrow' => __( 'The stylist', 'moderno-child' ),
 		'title'   => __( 'Not sure what’s <em>perfect</em>?', 'moderno-child' ),
 		'text'    => __( 'Try our digital stylist, free, and we’ll recommend what’s best for you.', 'moderno-child' ),
 		'button'  => __( 'Start the stylist', 'moderno-child' ),
+		'figure'  => file_exists( $figure ) ? [
+			'url'    => OMC_URI . '/assets/img/stylist-thinking.webp',
+			'width'  => 540,
+			'height' => 920,
+		] : null,
 	] );
 }
 

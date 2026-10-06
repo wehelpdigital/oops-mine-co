@@ -139,16 +139,25 @@ get_header();
 	<!-- ───────────── The stylist ───────────── -->
 	<?php $omc_sty = function_exists( 'omc_stylist_band' ) ? omc_stylist_band() : null; ?>
 	<?php if ( $omc_sty ) : ?>
-		<section class="omc-stylist omc-reveal" aria-labelledby="omc-stylist-title">
+		<section class="omc-stylist omc-reveal<?php echo empty( $omc_sty['figure'] ) ? '' : ' has-figure'; ?>" aria-labelledby="omc-stylist-title">
 			<div class="l-section__container omc-stylist__inner">
-				<p class="omc-eyebrow omc-stylist__eyebrow"><?php echo esc_html( $omc_sty['eyebrow'] ); ?></p>
-				<h2 class="omc-section__title" id="omc-stylist-title"><?php echo wp_kses( $omc_sty['title'], [ 'em' => [] ] ); ?></h2>
-				<p class="omc-stylist__text"><?php echo esc_html( $omc_sty['text'] ); ?></p>
-				<button type="button" class="omc-btn omc-btn--solid omc-stylist__go" data-whd-stylist>
-					<?php echo esc_html( $omc_sty['button'] ); ?>
-				</button>
-				<?php if ( ! empty( $omc_sty['note'] ) ) : ?>
-					<p class="omc-stylist__note"><?php echo esc_html( $omc_sty['note'] ); ?></p>
+				<div class="omc-stylist__copy">
+					<p class="omc-eyebrow omc-stylist__eyebrow"><?php echo esc_html( $omc_sty['eyebrow'] ); ?></p>
+					<h2 class="omc-section__title" id="omc-stylist-title"><?php echo wp_kses( $omc_sty['title'], [ 'em' => [] ] ); ?></h2>
+					<p class="omc-stylist__text"><?php echo esc_html( $omc_sty['text'] ); ?></p>
+					<button type="button" class="omc-btn omc-btn--solid omc-stylist__go" data-whd-stylist>
+						<?php echo esc_html( $omc_sty['button'] ); ?>
+					</button>
+					<?php if ( ! empty( $omc_sty['note'] ) ) : ?>
+						<p class="omc-stylist__note"><?php echo esc_html( $omc_sty['note'] ); ?></p>
+					<?php endif; ?>
+				</div>
+				<?php if ( ! empty( $omc_sty['figure'] ) ) : ?>
+					<img class="omc-stylist__figure"
+						src="<?php echo esc_url( $omc_sty['figure']['url'] ); ?>"
+						width="<?php echo (int) $omc_sty['figure']['width']; ?>"
+						height="<?php echo (int) $omc_sty['figure']['height']; ?>"
+						alt="" aria-hidden="true" loading="lazy" decoding="async">
 				<?php endif; ?>
 			</div>
 		</section>

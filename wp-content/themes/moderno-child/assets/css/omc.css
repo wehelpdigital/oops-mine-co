@@ -1818,6 +1818,8 @@
 .omc-stylist {
 	/* Clear of the trust strip above: stacked edge to edge, two bordered panels read as one. The
 	   same seam the live card leaves below it, so the band sits level between the two. */
+	position: relative;
+	overflow: hidden;                       /* she stands on the bottom hairline, not past it */
 	margin-top: var(--omc-seam);
 	padding: clamp(46px, 6vw, 88px) 0;
 	background: var(--omc-sand);
@@ -1825,7 +1827,7 @@
 	border-bottom: 1px solid var(--omc-line);
 	text-align: center;
 }
-.omc-stylist__inner { max-width: 760px; }
+.omc-stylist:not(.has-figure) .omc-stylist__inner { max-width: 760px; }
 .omc-stylist__eyebrow { margin-bottom: 10px; }
 .omc-stylist .omc-section__title { margin: 0 0 14px; }
 .omc-stylist__text {
@@ -1841,4 +1843,48 @@
 	margin: 16px 0 0;
 	font: 400 12.5px/1.6 var(--omc-sans);
 	color: var(--omc-muted);
+}
+
+/* With the figure: she takes the right of the container and the copy takes the left. Her feet are
+   in the band's bottom padding, which is what the section clips. */
+@media (min-width: 700px) {
+	.omc-stylist.has-figure { text-align: left; }
+	.omc-stylist.has-figure .omc-stylist__inner {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: center;                /* the copy sits level with her, she stands on the floor */
+		gap: clamp(28px, 4vw, 72px);
+	}
+	.omc-stylist.has-figure .omc-stylist__copy { max-width: 56ch; }
+	.omc-stylist.has-figure .omc-stylist__text { margin-left: 0; margin-right: 0; }
+	.omc-stylist__figure {
+		display: block;
+		align-self: end;
+		justify-self: end;
+		width: auto;
+		height: clamp(250px, 34vw, 480px);
+		margin-bottom: calc(-1 * clamp(46px, 6vw, 88px));
+	}
+}
+
+/* The discount tab is fixed to the right edge, and below the container's full width that edge is
+   where she is standing. Step her in by the width of the tab until there is margin to spare. */
+@media (min-width: 700px) and (max-width: 1259px) {
+	.omc-stylist__figure { margin-right: 44px; }
+}
+
+/* Narrower than that there is no room beside the copy, so she goes behind it: anchored right, faded
+   back, and masked away on the left so nothing crosses the words. */
+@media (max-width: 699px) {
+	.omc-stylist__figure {
+		position: absolute;
+		right: -4%;
+		bottom: 0;
+		width: auto;
+		height: 94%;
+		opacity: .26;
+		-webkit-mask-image: linear-gradient(90deg, transparent 2%, #000 48%);
+		mask-image: linear-gradient(90deg, transparent 2%, #000 48%);
+	}
+	.omc-stylist__copy { position: relative; }
 }
