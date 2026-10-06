@@ -51,7 +51,7 @@ printf( "%s  →  %s%s\n\n", $live ? 'LIVE database' : 'local database', home_ur
 /* ─────────────────────────── helpers ─────────────────────────── */
 
 /** A source photograph, resized and written as WebP into the catalogue folder. */
-function omc_cat_webp( $src_file, $out_path, $max = 1400 ) {
+function omc_cat_webp( $src_file, $out_path, $max = 1800, $square = false ) {
 	$size = @getimagesize( $src_file );
 	if ( ! $size ) {
 		return false;
@@ -77,11 +77,38 @@ function omc_cat_webp( $src_file, $out_path, $max = 1400 ) {
 			}
 		}
 	}
-	$w = imagesx( $im );
-	$h = imagesy( $im );
-	if ( $w > $max || $h > $max ) {
-		$sc  = min( $max / $w, $max / $h );
-		$out = imagecreatetruecolor( (int) round( $w * $sc ), (int) round( $h * $sc ) );
+	/*
+	 * Scale by the short edge, not the long one. A product card is square and filled with cover, so
+	 * a landscape photograph is scaled until its *height* covers the box; capping the long edge
+	 * left some of them with 450px of height doing the work of 590, which is what made the cards
+	 * look soft on a high-density screen. Never upscales.
+	 */
+	/*
+	 * The card is square and filled with cover; cut the picture to match rather than leave the
+	 * browser to stretch it. A third of the way down, not centred — in a photograph of a person the
+	 * clothes are below the middle.
+	 */
+	if ( $square ) {
+		$cw = imagesx( $im );
+		$ch = imagesy( $im );
+		$e  = min( $cw, $ch );
+		if ( $cw !== $ch ) {
+			$cut = imagecreatetruecolor( $e, $e );
+			imagecopy( $cut, $im, 0, 0, (int) round( ( $cw - $e ) / 2 ), (int) round( ( $ch - $e ) * 0.32 ), $e, $e );
+			imagedestroy( $im );
+			$im = $cut;
+		}
+	}
+
+	$w     = imagesx( $im );
+	$h     = imagesy( $im );
+	$short = 1200;
+	$sc    = min( 1, min( $max / $w, $max / $h ) );
+	if ( min( $w, $h ) * $sc < $short ) {
+		$sc = min( 1, $short / min( $w, $h ) );
+	}
+	if ( $sc < 1 ) {
+		$out = imagecreatetruecolor( max( 1, (int) round( $w * $sc ) ), max( 1, (int) round( $h * $sc ) ) );
 		imagecopyresampled( $out, $im, 0, 0, 0, 0, imagesx( $out ), imagesy( $out ), $w, $h );
 		imagedestroy( $im );
 		$im = $out;
@@ -112,6 +139,13 @@ function omc_cat_attachment( $rel, $path, $title, $alt ) {
 		wp_update_attachment_metadata( $id, wp_generate_attachment_metadata( $id, $path ) );
 	} else {
 		wp_update_post( [ 'ID' => $id, 'post_title' => $title, 'post_excerpt' => $alt ] );
+		// The intermediate sizes are cut from the file; if the file has been re-prepared at another
+		// shape, the stale set is what the browser picks from and the card looks soft.
+		$meta = wp_get_attachment_metadata( $id );
+		$now  = @getimagesize( $path );
+		if ( $now && ( (int) ( $meta['width'] ?? 0 ) !== $now[0] || (int) ( $meta['height'] ?? 0 ) !== $now[1] ) ) {
+			wp_update_attachment_metadata( $id, wp_generate_attachment_metadata( $id, $path ) );
+		}
 	}
 	update_post_meta( $id, '_wp_attachment_image_alt', $alt );
 
@@ -203,7 +237,7 @@ foreach ( (array) $plan['products'] as $p ) {
 	foreach ( array_values( (array) $p['images'] ) as $i => $file ) {
 		$rel  = 'omc-2026/products/' . $slug . '-' . ( $i + 1 ) . '.webp';
 		$path = trailingslashit( wp_get_upload_dir()['basedir'] ) . $rel;
-		if ( ! file_exists( $path ) && ! omc_cat_webp( 'C:/Users/User/Downloads/oops-photos/' . $file, $path ) ) {
+		if ( ! file_exists( $path ) && ! omc_cat_webp( 'C:/Users/User/Downloads/oops-photos/' . $file, $path, 1800, 0 === $i ) ) {
 			continue;
 		}
 		$alt = $p['title'] . ' — ' . $p['short'];

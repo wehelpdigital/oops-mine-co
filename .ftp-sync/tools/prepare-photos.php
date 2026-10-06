@@ -50,14 +50,16 @@ $roles = [
 	 * be their shape — and these photographs are small enough that cropping one to 16:9 threw away
 	 * more than half of what little height there was. They keep their own frame and a width cap.
 	 */
-	'hero'     => [ 'w' => 2200, 'ratio' => null ],
-	'banner'   => [ 'w' => 1700, 'ratio' => null ],
-	'wide'     => [ 'w' => 2000, 'ratio' => null ],
-	'square'   => [ 'w' => 1100, 'ratio' => 1 ],
-	'tile'     => [ 'w' => 1100, 'ratio' => null ],
-	'portrait'  => [ 'w' => 1200, 'ratio' => 2 / 3 ],
-	'landscape' => [ 'w' => 1400, 'ratio' => 3 / 2 ],
-	'product'  => [ 'w' => 1400, 'ratio' => null ],
+	'hero'      => [ 'w' => 2400, 'ratio' => null, 'short' => 1400 ],
+	'banner'    => [ 'w' => 1800, 'ratio' => null, 'short' => 1100 ],
+	'wide'      => [ 'w' => 2200, 'ratio' => null, 'short' => 1000 ],
+	'square'    => [ 'w' => 1200, 'ratio' => 1,    'short' => 1100 ],
+	'tile'      => [ 'w' => 1600, 'ratio' => null, 'short' => 1100 ],
+	'tile-tall' => [ 'w' => 1200, 'ratio' => 1 / 2, 'short' => 760 ],
+	'tile-wide' => [ 'w' => 2000, 'ratio' => 2,    'short' => 820 ],
+	'portrait'  => [ 'w' => 1200, 'ratio' => 2 / 3, 'short' => 800 ],
+	'landscape' => [ 'w' => 1600, 'ratio' => 3 / 2, 'short' => 900 ],
+	'product'   => [ 'w' => 1600, 'ratio' => null, 'short' => 1200 ],
 ];
 
 if ( ! $dry && ! is_dir( $dest ) ) {
@@ -106,7 +108,7 @@ function load( $file ) {
  * banner without beheading anyone. It defaults to the upper middle, which is where a person is in
  * almost every one of these.
  */
-function shape( $im, $ratio, $maxW, $focus ) {
+function shape( $im, $ratio, $maxW, $focus, $short = 0 ) {
 	$sw = imagesx( $im );
 	$sh = imagesy( $im );
 
@@ -130,9 +132,22 @@ function shape( $im, $ratio, $maxW, $focus ) {
 		$sh = $ch;
 	}
 
-	if ( $sw > $maxW ) {
-		$tw  = $maxW;
-		$th  = max( 1, (int) round( $sh * ( $maxW / $sw ) ) );
+	/*
+	 * Shrink to the long-edge cap, but never past the short edge the slot needs — the short edge is
+	 * the one that has to cover, and a file that satisfies the cap can still be half the pixels a
+	 * high-density screen asks of it. Never upscales: if the photograph does not have them, it does
+	 * not have them, and inventing pixels only makes it look worse.
+	 */
+	$scale = $sw > $maxW ? $maxW / $sw : 1;
+	if ( $short > 0 ) {
+		$shortest = min( $sw, $sh );
+		$needed   = min( 1, $short / $shortest );
+		$scale    = max( $scale, min( 1, $short / $shortest ) );
+		unset( $needed );
+	}
+	if ( $scale < 1 ) {
+		$tw  = max( 1, (int) round( $sw * $scale ) );
+		$th  = max( 1, (int) round( $sh * $scale ) );
 		$out = imagecreatetruecolor( $tw, $th );
 		imagecopyresampled( $out, $im, 0, 0, 0, 0, $tw, $th, $sw, $sh );
 		imagedestroy( $im );
@@ -172,7 +187,9 @@ foreach ( $photos as $p ) {
 		$missing[] = basename( $file ) . ' (unreadable)';
 		continue;
 	}
-	$im = shape( $im, $role['ratio'], $role['w'], $p['focus'] ?? [ 0.5, 0.38 ] );
+	// A picture may carry the shape of the slot it is going into, overriding its role's.
+	$ratio = array_key_exists( 'ratio', $p ) ? $p['ratio'] : $role['ratio'];
+	$im    = shape( $im, $ratio, $role['w'], $p['focus'] ?? [ 0.5, 0.38 ], $role['short'] ?? 0 );
 	imagewebp( $im, $out, 82 );
 	imagedestroy( $im );
 

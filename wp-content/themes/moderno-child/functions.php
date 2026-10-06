@@ -330,6 +330,35 @@ function omc_stylist_band() {
 	] );
 }
 
+/**
+ * Which part of the shop a keyword page shows when its own category is not one the shop keeps.
+ *
+ * These pages were written against a style taxonomy — Korean Fashion, Petite, Chic & Boho — and the
+ * browse tree is by garment type. Sending them all to the same place works but reads as a default;
+ * a page about petite evening dresses should open on dresses, and one about Korean winter fashion
+ * on coats.
+ */
+add_filter( 'omc_landing_category_fallback', function ( $slug, $page ) {
+	$map = [
+		'petite-dresses'                   => 'dresses',
+		'petite-evening-dresses'           => 'dresses',
+		'petite-dresses-for-wedding-guest' => 'dresses',
+		'korean-winter-fashion'            => 'coats',
+		'kpop-fashion'                     => 'tops',
+		'cute-fashion'                     => 'tops',
+		'statement-pieces'                 => 'jackets-outerwear',
+		'chic-boho-clothes'                => 'skirts',
+		'chic-style'                       => 'sweaters-knits',
+		'affordable-luxury-clothes'        => 'sweaters-knits',
+		'petite-clothes-for-women'         => 'pants-trousers',
+		'thai-fashion'                     => 'skirts',
+		'asian-fashion'                    => 'matching-sets',
+		'korean-fashion'                   => 'clothing',
+	];
+
+	return $map[ $page ] ?? $slug;
+}, 10, 2 );
+
 /** Trust strip under the hero. Edit via the `omc_usp_items` filter. */
 function omc_usp_items() {
 	return apply_filters( 'omc_usp_items', [
@@ -364,11 +393,11 @@ function omc_home_mosaic() {
 	return apply_filters( 'omc_home_mosaic', [
 		[ 'image' => 'omc-2026/omc-tile-new-in.webp',    'label' => __( 'New in', 'moderno-child' ),    'url' => omc_new_arrivals_url(),                     'size' => '2x2' ],
 		[ 'image' => 'omc-2026/omc-tile-knitwear.webp',  'label' => __( 'Knitwear', 'moderno-child' ),  'url' => omc_category_url( 'tops', omc_shop_url() ), 'size' => '1x1' ],
-		[ 'image' => 'omc-2026/omc-tile-dresses.webp',   'label' => __( 'Dresses', 'moderno-child' ),   'url' => omc_category_url( 'dresses' ),              'size' => '1x2' ],
+		[ 'image' => 'omc-2026/omc-tile-occasion.webp',  'label' => __( 'Occasion', 'moderno-child' ),  'url' => omc_category_url( 'dresses' ),              'size' => '1x2' ],
 		[ 'image' => 'omc-2026/omc-tile-skirts.webp',    'label' => __( 'Skirts', 'moderno-child' ),    'url' => omc_category_url( 'skirts' ),               'size' => '1x1' ],
 		[ 'image' => 'omc-2026/omc-tile-outerwear.webp', 'label' => __( 'Outerwear', 'moderno-child' ), 'url' => omc_shop_url(),                             'size' => '1x1' ],
 		[ 'image' => 'omc-2026/omc-tile-trousers.webp',  'label' => __( 'Everyday', 'moderno-child' ),  'url' => omc_shop_url(),                             'size' => '2x1' ],
-		[ 'image' => 'omc-2026/omc-tile-occasion.webp',  'label' => __( 'Occasion', 'moderno-child' ),  'url' => omc_category_url( 'dresses' ),              'size' => '1x1' ],
+		[ 'image' => 'omc-2026/omc-tile-dresses.webp',   'label' => __( 'Dresses', 'moderno-child' ),   'url' => omc_category_url( 'dresses' ),              'size' => '1x1' ],
 	] );
 }
 

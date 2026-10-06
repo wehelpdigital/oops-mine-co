@@ -103,6 +103,16 @@ foreach ( $rows as $row ) {
 			'post_content' => $row['description'] ?? '',
 			'post_excerpt' => $row['alt'] ?? '',
 		] );
+		/*
+		 * The intermediate sizes are cut from the file, and the file may have been re-prepared at a
+		 * different shape since — a stale set leaves the browser choosing a 600px crop of a picture
+		 * that is now tall, which is exactly how a sharp photograph ends up looking soft.
+		 */
+		$meta = wp_get_attachment_metadata( $id );
+		$size = @getimagesize( $path );
+		if ( $size && ( (int) ( $meta['width'] ?? 0 ) !== $size[0] || (int) ( $meta['height'] ?? 0 ) !== $size[1] ) ) {
+			wp_update_attachment_metadata( $id, wp_generate_attachment_metadata( $id, $path ) );
+		}
 		$updated++;
 	}
 

@@ -121,20 +121,20 @@
   },
   {
     "slug": "omc-tile-new-in",
-    "source": "Photoroom_20251025_212906.jpg",
-    "role": "tile",
+    "source": "Photoroom_20251025_205413.jpg",
+    "role": "square",
     "focus": [
       0.5,
       0.3
     ],
-    "title": "Blue tiered midi skirt in motion",
-    "alt": "Woman turning in a blue tiered midi skirt on a cobbled street",
-    "description": "New in at Oops, Mine Co. — the blue tiered midi skirt."
+    "title": "Fringed black midi skirt on a studio plinth",
+    "alt": "A black fringed midi skirt displayed on a studio plinth",
+    "description": "New in at Oops, Mine Co. — the fringed black midi skirt, photographed in the studio."
   },
   {
     "slug": "omc-tile-knitwear",
     "source": "Photoroom_20251001_183910.jpg",
-    "role": "tile",
+    "role": "square",
     "focus": [
       0.5,
       0.3
@@ -146,7 +146,7 @@
   {
     "slug": "omc-tile-skirts",
     "source": "Photoroom_20251027_095336.jpg",
-    "role": "tile",
+    "role": "square",
     "focus": [
       0.5,
       0.4
@@ -158,7 +158,7 @@
   {
     "slug": "omc-tile-dresses",
     "source": "Photoroom_20251027_112535.jpg",
-    "role": "tile",
+    "role": "square",
     "focus": [
       0.5,
       0.28
@@ -170,7 +170,7 @@
   {
     "slug": "omc-tile-outerwear",
     "source": "Photoroom_20251027_110046.jpg",
-    "role": "tile",
+    "role": "square",
     "focus": [
       0.5,
       0.3
@@ -182,7 +182,7 @@
   {
     "slug": "omc-tile-trousers",
     "source": "Photoroom_20251025_204026.jpg",
-    "role": "tile",
+    "role": "tile-wide",
     "focus": [
       0.5,
       0.35
@@ -194,7 +194,7 @@
   {
     "slug": "omc-tile-occasion",
     "source": "Photoroom_20251001_134608.jpeg",
-    "role": "tile",
+    "role": "tile-tall",
     "focus": [
       0.45,
       0.25

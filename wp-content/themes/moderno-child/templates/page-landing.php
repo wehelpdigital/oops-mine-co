@@ -51,8 +51,36 @@ while ( have_posts() ) :
 		}
 	}
 	$omc_grid = '';
-	if ( $omc_term && $omc_term->count > 0 && shortcode_exists( 'products' ) ) {
-		$omc_grid  = do_shortcode( '[products limit="8" columns="4" category="' . esc_attr( $omc_term->slug ) . '" orderby="date" order="DESC" visibility="visible"]' );
+	/*
+	 * No count check: a parent category's count excludes its children, and every product is filed on
+	 * a child, so the count is zero for exactly the categories that have the most in them. Ask the
+	 * shortcode and read its answer.
+	 *
+	 * A thin answer widens. The shop is small enough that a named category can hold one piece, and a
+	 * four-column grid with one card in it reads as a fault rather than as a selection.
+	 */
+	if ( $omc_term && shortcode_exists( 'products' ) ) {
+		$omc_ask = static function ( $slug ) {
+			return do_shortcode( '[products limit="8" columns="4" category="' . esc_attr( $slug ) . '" orderby="date" order="DESC" visibility="visible"]' );
+		};
+		$omc_grid = $omc_ask( $omc_term->slug );
+
+		// The grid publishes its own total; the class name appears four times per card and counting
+		// those made a row of one look like a row of four.
+		$omc_count = static function ( $html ) {
+			return preg_match( '/data-count="(\d+)"/', (string) $html, $m ) ? (int) $m[1] : 0;
+		};
+		$omc_min = (int) apply_filters( 'omc_landing_min_products', 4, $omc_data['slug'] );
+		if ( $omc_count( $omc_grid ) < $omc_min ) {
+			$omc_wider = get_term_by( 'slug', 'clothing', 'product_cat' );
+			if ( $omc_wider && ! is_wp_error( $omc_wider ) ) {
+				$omc_try = $omc_ask( $omc_wider->slug );
+				if ( $omc_count( $omc_try ) > $omc_count( $omc_grid ) ) {
+					$omc_grid = $omc_try;
+					$omc_term = $omc_wider;
+				}
+			}
+		}
 		$omc_empty = false !== strpos( $omc_grid, 'woocommerce-info' ) || false === strpos( $omc_grid, 'product' );
 		if ( $omc_empty ) {
 			$omc_grid = ''; // no products: hide the whole section rather than show an empty grid

@@ -61,8 +61,8 @@ return array (
   ),
   'omc-tile-new-in' => 
   array (
-    'title' => 'Blue tiered midi skirt in motion',
-    'alt' => 'Woman turning in a blue tiered midi skirt on a cobbled street',
+    'title' => 'Fringed black midi skirt on a studio plinth',
+    'alt' => 'A black fringed midi skirt displayed on a studio plinth',
   ),
   'omc-tile-knitwear' => 
   array (
