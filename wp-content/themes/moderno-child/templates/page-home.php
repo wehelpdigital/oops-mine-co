@@ -40,7 +40,6 @@ get_header();
 					'loading'       => 'eager',
 					'fetchpriority' => 'high',
 					'decoding'      => 'async',
-					'alt'           => __( 'Two women in soft knit dresses — the Oops, Mine Co. edit', 'moderno-child' ),
 				] : [
 					'class'       => 'omc-hero__img',
 					'loading'     => 'lazy',
@@ -160,7 +159,7 @@ get_header();
 			<div class="l-section__container-wide">
 				<div class="omc-live__card js-omc-countdown" data-until="<?php echo esc_attr( $omc_live['when']->format( DATE_ATOM ) ); ?>" data-live-window="7200">
 					<?php if ( ! empty( $omc_images['live'] ) ) : ?>
-						<div class="omc-live__media"><?php echo omc_image( $omc_images['live'], 'large', [ 'loading' => 'lazy', 'alt' => '' ] ); ?></div>
+						<div class="omc-live__media"><?php echo omc_image( $omc_images['live'], 'large', [ 'loading' => 'lazy' ] ); ?></div>
 					<?php endif; ?>
 					<div class="omc-live__body">
 						<p class="omc-live__badge"><span class="omc-live__dot" aria-hidden="true"></span><?php esc_html_e( 'Live on Facebook', 'moderno-child' ); ?></p>
@@ -203,7 +202,7 @@ get_header();
 				<div class="omc-mosaic">
 					<?php foreach ( $omc_tiles as $omc_t ) :
 						$omc_t   = wp_parse_args( $omc_t, [ 'image' => '', 'label' => '', 'url' => $omc_shop, 'size' => '1x1', 'focus' => '' ] );
-						$omc_img = omc_image( $omc_t['image'], 'large', array_filter( [ 'loading' => 'lazy', 'alt' => $omc_t['label'], 'style' => $omc_t['focus'] ? 'object-position:' . $omc_t['focus'] : '' ] ) );
+						$omc_img = omc_image( $omc_t['image'], 'large', array_filter( [ 'loading' => 'lazy', 'alt' => omc_image_alt( $omc_t['image'], $omc_t['label'] ), 'style' => $omc_t['focus'] ? 'object-position:' . $omc_t['focus'] : '' ] ) );
 						if ( ! $omc_img ) {
 							continue;
 						}
@@ -236,7 +235,7 @@ get_header();
 					<button type="button" class="omc-carousel__btn omc-carousel__btn--prev" aria-label="<?php esc_attr_e( 'Previous', 'moderno-child' ); ?>"><?php echo omc_icon( 'arrow' ); ?></button>
 					<div class="omc-carousel__track" tabindex="0" aria-label="<?php esc_attr_e( 'Edits — use arrow keys or swipe', 'moderno-child' ); ?>">
 						<?php foreach ( $omc_banners['carousel'] as $omc_slide ) :
-							$omc_slide_img = omc_image( $omc_slide['image'], 'large', [ 'loading' => 'lazy', 'alt' => $omc_slide['title'] ] );
+							$omc_slide_img = omc_image( $omc_slide['image'], 'large', [ 'loading' => 'lazy', 'alt' => omc_image_alt( $omc_slide['image'], $omc_slide['title'] ) ] );
 							if ( ! $omc_slide_img ) {
 								continue;
 							}

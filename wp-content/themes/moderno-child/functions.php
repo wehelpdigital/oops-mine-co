@@ -135,14 +135,14 @@ add_filter( 'body_class', function ( $classes ) {
  */
 function omc_images() {
 	return apply_filters( 'omc_images', [
-		'hero'       => '2023/04/moderno-2840461420.jpg', // two women in knit dresses, blush tones
-		'edit_a'     => '2023/04/moderno-2355149011.jpg', // cream knit close-up
-		'edit_b'     => '2023/04/ricky-2347791350.jpg',   // black linen shirt portrait
-		'story'      => '2023/04/moderno-2726173801.jpg', // beige suit close-up — blurred, darkened backdrop of the story band (the sofa shot is the wide banner below)
-		'newsletter' => '2023/04/ricky-2127148895.jpg',   // knit dresses on the stairs — blurred, sand-washed backdrop of the newsletter band
-		'live'       => '2023/04/moderno-2310427039.jpg', // white tee, wavy hair, face fully in frame — photo side of the Facebook Live card
-		'quotes'     => '2023/04/moderno-2338813525.jpg', // blonde on a pink backdrop — blurred, darkened backdrop of the testimonials band
-		'about_hero' => '2023/07/moderno-1349368030.jpg', // monochrome editorial
+		'hero'       => 'omc-2026/omc-hero-black-midi-skirt.webp',   // long black coat, city street
+		'edit_a'     => 'omc-2026/omc-edit-collar-sweatshirt.webp',  // brown check midi skirt at a cafe window
+		'edit_b'     => 'omc-2026/omc-edit-green-knit.webp',         // striped cardigan over a cream skirt
+		'story'      => 'omc-2026/omc-story-black-coat.webp',        // pink striped cardigan — blurred, darkened backdrop of the story band
+		'newsletter' => 'omc-2026/omc-newsletter-blue-skirt.webp',   // cardigan and pink pleated skirt — backdrop of the newsletter band
+		'live'       => 'omc-2026/omc-live-plaid-shacket.webp',      // grey sweatshirt and a morning cup — photo side of the Facebook Live card
+		'quotes'     => 'omc-2026/omc-quotes-green-knit-sofa.webp',  // black midi dress by a window — backdrop of the testimonials band
+		'about_hero' => 'omc-2026/omc-about-plaid-street.webp',      // red trench coat in an autumn park
 	] );
 }
 
@@ -167,6 +167,24 @@ function omc_attachment_id( $file_or_id ) {
 function omc_image( $file_or_id, $size = 'full', $attrs = [] ) {
 	$id = omc_attachment_id( $file_or_id );
 	return $id ? wp_get_attachment_image( $id, $size, false, $attrs ) : '';
+}
+
+/**
+ * What a picture should be described as, preferring what was written about the picture itself.
+ *
+ * A tile's label says what the slot is for ("Knitwear"); the attachment's alt says what is actually
+ * in the photograph. The second is the better description, and it travels with the file, so a
+ * swapped picture cannot leave a stale sentence behind.
+ *
+ * @param string|int $file_or_id Upload-relative path or attachment id.
+ * @param string     $fallback   Used when the attachment has no alt of its own.
+ * @return string
+ */
+function omc_image_alt( $file_or_id, $fallback = '' ) {
+	$id  = omc_attachment_id( $file_or_id );
+	$alt = $id ? trim( (string) get_post_meta( $id, '_wp_attachment_image_alt', true ) ) : '';
+
+	return '' !== $alt ? $alt : (string) $fallback;
 }
 
 /**
@@ -270,8 +288,8 @@ function omc_hero_images() {
 	$images = omc_images();
 	return array_values( array_filter( apply_filters( 'omc_hero_images', [
 		$images['hero'],                    // two women in knit dresses, blush tones
-		'2023/04/moderno-2338813525.jpg',   // blonde on a pink backdrop
-		'2023/04/ricky-2131673471.jpg',     // camel knit on a cream sofa
+		'omc-2026/omc-hero-white-dress.webp',          // camel knit midi dress, cobbled street
+		'omc-2026/omc-hero-pleated-skirt-light.webp',  // black button-front midi dress, boutique window
 	] ) ) );
 }
 
@@ -283,13 +301,13 @@ function omc_hero_images() {
  */
 function omc_home_mosaic() {
 	return apply_filters( 'omc_home_mosaic', [
-		[ 'image' => '2023/04/moderno-2338441644.jpg', 'label' => __( 'New in', 'moderno-child' ),      'url' => omc_new_arrivals_url(),                       'size' => '2x2' ],
-		[ 'image' => '2023/04/ricky-2152516324.jpg',   'label' => __( 'Accessories', 'moderno-child' ), 'url' => omc_category_url( 'shoes_and_accessories' ), 'size' => '1x1' ],
-		[ 'image' => '2023/04/moderno-2327197569.jpg', 'label' => __( 'Dresses', 'moderno-child' ),     'url' => omc_category_url( 'dresses' ),               'size' => '1x2' ],
-		[ 'image' => '2023/04/moderno-2426118020.jpg', 'label' => __( 'Knitwear', 'moderno-child' ),    'url' => omc_category_url( 'tops', omc_shop_url() ),  'size' => '1x1' ],
-		[ 'image' => '2023/04/moderno-2726284777.jpg', 'label' => __( 'Handbags', 'moderno-child' ),    'url' => omc_category_url( 'handbags' ),              'size' => '1x1' ],
-		[ 'image' => '2023/04/moderno-2338177441.jpg', 'label' => __( 'Tailoring', 'moderno-child' ),   'url' => omc_shop_url(),                              'size' => '2x1' ],
-		[ 'image' => '2023/04/moderno-2606742971.jpg', 'label' => __( 'Occasion', 'moderno-child' ),    'url' => omc_category_url( 'dresses' ),               'size' => '1x1', 'focus' => '82% 30%' ], // subject sits at the right of this shot
+		[ 'image' => 'omc-2026/omc-tile-new-in.webp',    'label' => __( 'New in', 'moderno-child' ),    'url' => omc_new_arrivals_url(),                     'size' => '2x2' ],
+		[ 'image' => 'omc-2026/omc-tile-knitwear.webp',  'label' => __( 'Knitwear', 'moderno-child' ),  'url' => omc_category_url( 'tops', omc_shop_url() ), 'size' => '1x1' ],
+		[ 'image' => 'omc-2026/omc-tile-dresses.webp',   'label' => __( 'Dresses', 'moderno-child' ),   'url' => omc_category_url( 'dresses' ),              'size' => '1x2' ],
+		[ 'image' => 'omc-2026/omc-tile-skirts.webp',    'label' => __( 'Skirts', 'moderno-child' ),    'url' => omc_category_url( 'skirts' ),               'size' => '1x1' ],
+		[ 'image' => 'omc-2026/omc-tile-outerwear.webp', 'label' => __( 'Outerwear', 'moderno-child' ), 'url' => omc_shop_url(),                             'size' => '1x1' ],
+		[ 'image' => 'omc-2026/omc-tile-trousers.webp',  'label' => __( 'Everyday', 'moderno-child' ),  'url' => omc_shop_url(),                             'size' => '2x1' ],
+		[ 'image' => 'omc-2026/omc-tile-occasion.webp',  'label' => __( 'Occasion', 'moderno-child' ),  'url' => omc_category_url( 'dresses' ),              'size' => '1x1' ],
 	] );
 }
 
@@ -718,7 +736,7 @@ function omc_home_banners() {
 	$images = omc_images();
 	return apply_filters( 'omc_home_banners', [
 		'campaign' => [ // split banner: photos (cross-fading) left, cream copy panel right
-			'images'  => [ '2023/04/ricky-2127760710.jpg', '2023/04/moderno-2346592900.jpg', '2023/04/moderno-2310883787.jpg' ],
+			'images'  => [ 'omc-2026/omc-banner-seoul-1.webp', 'omc-2026/omc-banner-seoul-2.webp', 'omc-2026/omc-banner-seoul-3.webp' ],
 			'side'    => 'left',
 			'eyebrow' => __( 'New season', 'moderno-child' ),
 			'title'   => __( 'The Seoul edit', 'moderno-child' ),
@@ -727,7 +745,7 @@ function omc_home_banners() {
 			'url'     => omc_new_arrivals_url(),
 		],
 		'campaign2' => [ // mirrored split banner under the carousel: copy left, photos (cross-fading) right
-			'images'  => [ '2023/04/ricky-2347110865.jpg', '2023/04/ricky-2131286131.jpg', '2023/04/moderno-2346546369.jpg' ],
+			'images'  => [ 'omc-2026/omc-banner-bangkok-1.webp', 'omc-2026/omc-banner-bangkok-2.webp', 'omc-2026/omc-banner-bangkok-3.webp' ],
 			'side'    => 'right',
 			'eyebrow' => __( 'Warm-weather dressing', 'moderno-child' ),
 			'title'   => __( 'The Bangkok edit', 'moderno-child' ),
@@ -736,19 +754,18 @@ function omc_home_banners() {
 			'url'     => omc_category_url( 'dresses' ),
 		],
 		'carousel' => [ // square slides under the campaign banner (Chicwish's second row); title + link per slide
-			[ 'image' => omc_category_image( 'dresses' ), 'title' => __( 'The dress edit', 'moderno-child' ), 'url' => omc_category_url( 'dresses' ) ],
-			[ 'image' => '2023/04/moderno-2310883787.jpg', 'title' => __( 'The colour edit', 'moderno-child' ), 'url' => omc_shop_url() ],
-			[ 'image' => omc_category_image( 'skirts' ), 'title' => __( 'The skirt edit', 'moderno-child' ), 'url' => omc_category_url( 'skirts' ) ],
-			[ 'image' => '2023/04/moderno-2355149011.jpg', 'title' => __( 'Everyday knits', 'moderno-child' ), 'url' => omc_shop_url() ],
-			[ 'image' => '2023/04/ricky-2347791350.jpg', 'title' => __( 'The shirt edit', 'moderno-child' ), 'url' => omc_shop_url() ],
-			[ 'image' => omc_category_image( 'handbags' ), 'title' => __( 'Handbags', 'moderno-child' ), 'url' => omc_category_url( 'handbags' ) ],
-			[ 'image' => omc_category_image( 'sunglasses' ), 'title' => __( 'Sunglasses', 'moderno-child' ), 'url' => omc_category_url( 'sunglasses' ) ],
-			[ 'image' => omc_category_image( 'shoes_and_accessories' ), 'title' => __( 'Shoes', 'moderno-child' ), 'url' => omc_category_url( 'shoes_and_accessories' ) ],
-			[ 'image' => omc_category_image( 'hats' ), 'title' => __( 'Hats', 'moderno-child' ), 'url' => omc_category_url( 'hats' ) ],
-			[ 'image' => '2023/04/ricky-2127760710.jpg', 'title' => __( 'New arrivals', 'moderno-child' ), 'url' => omc_new_arrivals_url() ],
+			[ 'image' => 'omc-2026/omc-carousel-colour.webp',    'title' => __( 'The colour edit', 'moderno-child' ), 'url' => omc_shop_url() ],
+			[ 'image' => 'omc-2026/omc-carousel-dresses.webp',   'title' => __( 'The dress edit', 'moderno-child' ),  'url' => omc_category_url( 'dresses' ) ],
+			[ 'image' => 'omc-2026/omc-carousel-trousers.webp',  'title' => __( 'Wide-leg knits', 'moderno-child' ),  'url' => omc_shop_url() ],
+			[ 'image' => 'omc-2026/omc-carousel-sweats.webp',    'title' => __( 'Everyday sweats', 'moderno-child' ), 'url' => omc_shop_url() ],
+			[ 'image' => 'omc-2026/omc-carousel-coat.webp',      'title' => __( 'The coat edit', 'moderno-child' ),   'url' => omc_shop_url() ],
+			[ 'image' => 'omc-2026/omc-carousel-plaid.webp',     'title' => __( 'The shirt edit', 'moderno-child' ),  'url' => omc_shop_url() ],
+			[ 'image' => 'omc-2026/omc-carousel-furvest.webp',   'title' => __( 'Gilets & vests', 'moderno-child' ),  'url' => omc_shop_url() ],
+			[ 'image' => 'omc-2026/omc-carousel-bearvest.webp',  'title' => __( 'Knit vests', 'moderno-child' ),      'url' => omc_shop_url() ],
+			[ 'image' => 'omc-2026/omc-carousel-beauty.webp',    'title' => __( 'Korean skincare', 'moderno-child' ), 'url' => omc_shop_url() ],
 		],
 		'wide' => [ // full-width photo banner after New arrivals, copy on the left
-			'image'   => '2023/04/ricky-2131286131.jpg',
+			'image'   => 'omc-2026/omc-banner-seoul-1.webp',
 			'eyebrow' => __( 'Everyday elegance', 'moderno-child' ),
 			'title'   => __( 'Dressed, not done up', 'moderno-child' ),
 			'text'    => __( 'Knits, tailoring and denim that work as hard on a Tuesday as they do on a night out.', 'moderno-child' ),
@@ -758,7 +775,7 @@ function omc_home_banners() {
 			'tone'    => 'dark',
 		],
 		'wide2' => [ // its pair, directly below: copy on the right
-			'image'   => '2023/04/ricky-2152193566.jpg',
+			'image'   => 'omc-2026/omc-banner-bangkok-3.webp',
 			'eyebrow' => __( 'Soft season', 'moderno-child' ),
 			'title'   => __( 'Knits worth keeping', 'moderno-child' ),
 			'text'    => __( 'Oversized, brushed and quietly patterned — the layers you’ll reach for first every morning.', 'moderno-child' ),
@@ -768,7 +785,7 @@ function omc_home_banners() {
 			'tone'    => 'dark',
 		],
 		'wide3' => [ // third in the stack: copy on the left again
-			'image'   => '2023/04/ricky-2152926699.jpg',
+			'image'   => 'omc-2026/omc-quotes-green-knit-sofa.webp',
 			'eyebrow' => __( 'After dark', 'moderno-child' ),
 			'title'   => __( 'Evenings, softly', 'moderno-child' ),
 			'text'    => __( 'Silk, satin and the small details that carry you from dinner to whatever comes next.', 'moderno-child' ),
