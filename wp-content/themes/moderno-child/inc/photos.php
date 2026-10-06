@@ -169,4 +169,79 @@ return array (
     'title' => 'Sage knit jumper among autumn trees',
     'alt' => 'Woman in a sage green oversized knit jumper and jeans among autumn trees',
   ),
+  'omc-cat-dresses' => 
+  array (
+    'title' => 'Black button-front midi dress',
+    'alt' => 'Woman in a black button-front midi dress walking a city street',
+  ),
+  'omc-cat-skirts' => 
+  array (
+    'title' => 'Grey check pencil skirt in daylight',
+    'alt' => 'Woman in a grey check pencil skirt and black knit in a bright room',
+  ),
+  'omc-cat-tops' => 
+  array (
+    'title' => 'Cream knit top on a sofa',
+    'alt' => 'Woman in a cream knit top seated on a cream sofa',
+  ),
+  'omc-cat-knits' => 
+  array (
+    'title' => 'Black knit dress by a window',
+    'alt' => 'Woman in a black fine-knit dress standing by a window',
+  ),
+  'omc-cat-trousers' => 
+  array (
+    'title' => 'Check tailored trousers in an office',
+    'alt' => 'Woman in check tailored trousers and a cream blouse in an office',
+  ),
+  'omc-cat-jeans' => 
+  array (
+    'title' => 'Washed blue denim jeans',
+    'alt' => 'A pair of washed blue denim jeans photographed from behind',
+  ),
+  'omc-cat-sets' => 
+  array (
+    'title' => 'Cream knit co-ord set',
+    'alt' => 'Woman in a cream knit top and matching trousers on a sofa',
+  ),
+  'omc-journal-thai' => 
+  array (
+    'title' => 'Blue embroidered midi skirt in daylight',
+    'alt' => 'Woman in a blue embroidered midi skirt standing in a bright room',
+  ),
+  'omc-journal-hanbok' => 
+  array (
+    'title' => 'Monochrome tweed dress with a shoulder bag',
+    'alt' => 'Woman in a black and cream tweed dress holding a shoulder bag',
+  ),
+  'omc-journal-decades' => 
+  array (
+    'title' => 'Brown check midi skirt on cobbles',
+    'alt' => 'Woman in a brown check midi skirt and boots walking a cobbled street',
+  ),
+  'omc-journal-kpop' => 
+  array (
+    'title' => 'Floral trim faux fur jacket outdoors',
+    'alt' => 'Woman in a cream floral-trim faux fur jacket and jeans outdoors',
+  ),
+  'omc-journal-street' => 
+  array (
+    'title' => 'Grey midi skirt on an autumn street',
+    'alt' => 'Woman in a grey midi skirt and knit walking an autumn street',
+  ),
+  'omc-journal-brands' => 
+  array (
+    'title' => 'A rail of knitwear and coats',
+    'alt' => 'Woman beside a clothing rail of knitwear, coats and dresses',
+  ),
+  'omc-journal-kawaii' => 
+  array (
+    'title' => 'Pink faux fur jacket in window light',
+    'alt' => 'Woman in a pink and cream faux fur jacket holding a cup by a window',
+  ),
+  'omc-journal-vacation' => 
+  array (
+    'title' => 'Quilted midi skirt at a pavement cafe',
+    'alt' => 'Woman in a quilted brown midi skirt walking past a pavement cafe',
+  ),
 );

@@ -55,7 +55,8 @@ $roles = [
 	'wide'     => [ 'w' => 2000, 'ratio' => null ],
 	'square'   => [ 'w' => 1100, 'ratio' => 1 ],
 	'tile'     => [ 'w' => 1100, 'ratio' => null ],
-	'portrait' => [ 'w' => 1200, 'ratio' => 2 / 3 ],
+	'portrait'  => [ 'w' => 1200, 'ratio' => 2 / 3 ],
+	'landscape' => [ 'w' => 1400, 'ratio' => 3 / 2 ],
 	'product'  => [ 'w' => 1400, 'ratio' => null ],
 ];
 

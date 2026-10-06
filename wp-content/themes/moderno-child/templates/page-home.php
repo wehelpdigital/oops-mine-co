@@ -287,17 +287,15 @@ get_header();
 				?>
 				<div class="omc-cats__grid">
 					<?php foreach ( $omc_terms as $term ) :
-						// Prefer a real product photo from the category (the demo's category thumbnails are line-art icons);
-						// fall back to the category thumbnail. Override per category with the `omc_category_tile_image` filter.
-						$thumb_id = 0;
-						if ( function_exists( 'wc_get_products' ) ) {
+						// The picture chosen for the category wins. A product photo stands in only where no
+						// one has chosen one — which is better than an empty tile, but it is a stand-in, not a
+						// preference. Override per category with the `omc_category_tile_image` filter.
+						$thumb_id = (int) get_term_meta( $term->term_id, 'thumbnail_id', true );
+						if ( ! $thumb_id && function_exists( 'wc_get_products' ) ) {
 							$sample = wc_get_products( [ 'category' => [ $term->slug ], 'limit' => 1, 'status' => 'publish', 'orderby' => 'date', 'order' => 'DESC' ] );
 							if ( $sample ) {
 								$thumb_id = (int) $sample[0]->get_image_id();
 							}
-						}
-						if ( ! $thumb_id ) {
-							$thumb_id = (int) get_term_meta( $term->term_id, 'thumbnail_id', true );
 						}
 						$thumb_id = (int) apply_filters( 'omc_category_tile_image', $thumb_id, $term );
 						$link     = get_term_link( $term );

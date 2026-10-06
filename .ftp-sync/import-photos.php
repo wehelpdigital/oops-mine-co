@@ -107,7 +107,33 @@ foreach ( $rows as $row ) {
 	}
 
 	update_post_meta( $id, '_wp_attachment_image_alt', (string) ( $row['alt'] ?? '' ) );
-	printf( "#%-6d %-42s %s\n", $id, $slug, mb_strimwidth( (string) ( $row['alt'] ?? '' ), 0, 58, '…' ) );
+
+	// Hang it where it belongs: a category's tile, or a journal post's card. Matched by slug, since
+	// attachment and term ids differ between this machine and live.
+	$where  = '';
+	$assign = $row['assign'] ?? [];
+	if ( ! empty( $assign['term'] ) ) {
+		list( $tax, $term_slug ) = array_pad( explode( ':', (string) $assign['term'], 2 ), 2, '' );
+		$term = $term_slug ? get_term_by( 'slug', $term_slug, $tax ) : null;
+		if ( $term && ! is_wp_error( $term ) ) {
+			update_term_meta( $term->term_id, 'thumbnail_id', $id );
+			$where = ' -> ' . $tax . '/' . $term_slug;
+		} else {
+			$where = ' -> ' . $assign['term'] . ' NOT FOUND';
+		}
+	}
+	if ( ! empty( $assign['post'] ) ) {
+		$post = get_page_by_path( (string) $assign['post'], OBJECT, [ 'post', 'page' ] );
+		if ( $post ) {
+			set_post_thumbnail( $post->ID, $id );
+			$where = ' -> ' . $post->post_name;
+		} else {
+			$where = ' -> ' . $assign['post'] . ' NOT FOUND';
+		}
+	}
+
+	printf( "#%-6d %-30s %-40s%s
+", $id, $slug, mb_strimwidth( (string) ( $row['alt'] ?? '' ), 0, 38, '...' ), $where );
 }
 
 echo "\n";
