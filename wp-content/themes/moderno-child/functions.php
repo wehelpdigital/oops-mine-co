@@ -166,7 +166,65 @@ function omc_attachment_id( $file_or_id ) {
 /** `<img>` for an upload-relative path / ID, with proper srcset + attributes. */
 function omc_image( $file_or_id, $size = 'full', $attrs = [] ) {
 	$id = omc_attachment_id( $file_or_id );
-	return $id ? wp_get_attachment_image( $id, $size, false, $attrs ) : '';
+	if ( $id ) {
+		return wp_get_attachment_image( $id, $size, false, $attrs );
+	}
+
+	/*
+	 * No attachment row — but the file may still be there. This happens the moment the theme is
+	 * deployed ahead of the media library import, and an empty string in that window takes the
+	 * hero, the mosaic and the carousel off the page with nothing in a log to say why. Serve the
+	 * file directly instead; the library is what gives WordPress its sizes and srcset, not what
+	 * gives the page its photograph.
+	 */
+	return omc_image_fallback( $file_or_id, $attrs );
+}
+
+/** A plain <img> for a file that is on disk but not yet in the media library. */
+function omc_image_fallback( $file, $attrs = [] ) {
+	if ( ! is_string( $file ) || '' === $file ) {
+		return '';
+	}
+	$uploads = wp_get_upload_dir();
+	if ( ! file_exists( trailingslashit( $uploads['basedir'] ) . $file ) ) {
+		return '';
+	}
+
+	$attrs = array_filter( array_merge( [
+		'src' => trailingslashit( $uploads['baseurl'] ) . $file,
+		'alt' => omc_photo_words( $file, 'alt' ),
+	], $attrs ), static function ( $v ) {
+		return '' !== $v && null !== $v;
+	} );
+	// An alt of "" is a deliberate choice for a decorative picture, so put it back if it was asked for.
+	if ( array_key_exists( 'alt', $attrs ) === false ) {
+		$attrs['alt'] = '';
+	}
+
+	$out = '';
+	foreach ( $attrs as $k => $v ) {
+		$out .= sprintf( ' %s="%s"', esc_attr( $k ), esc_attr( $v ) );
+	}
+
+	return '<img' . $out . '>';
+}
+
+/**
+ * The title or alt written for one of the prepared photographs.
+ *
+ * Generated from `.ftp-sync/content/photos.json` into `inc/photos.php` so it travels with the
+ * theme: the words are then available before the media library import has run, and identical to
+ * what that import will store.
+ */
+function omc_photo_words( $file, $which = 'alt' ) {
+	static $map = null;
+	if ( null === $map ) {
+		$path = OMC_DIR . '/inc/photos.php';
+		$map  = file_exists( $path ) ? (array) require $path : [];
+	}
+	$slug = basename( (string) $file, '.webp' );
+
+	return (string) ( $map[ $slug ][ $which ] ?? '' );
 }
 
 /**
@@ -183,6 +241,9 @@ function omc_image( $file_or_id, $size = 'full', $attrs = [] ) {
 function omc_image_alt( $file_or_id, $fallback = '' ) {
 	$id  = omc_attachment_id( $file_or_id );
 	$alt = $id ? trim( (string) get_post_meta( $id, '_wp_attachment_image_alt', true ) ) : '';
+	if ( '' === $alt ) {
+		$alt = trim( omc_photo_words( $file_or_id, 'alt' ) );
+	}
 
 	return '' !== $alt ? $alt : (string) $fallback;
 }
