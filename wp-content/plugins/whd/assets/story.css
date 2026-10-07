@@ -10,8 +10,8 @@
 .whd-talk { max-width: none !important; width: 100%; }
 
 .whd-story {
-	margin: clamp(34px, 5vw, 70px) 0 0;
-	padding: clamp(34px, 5vw, 66px) 0;
+	margin: clamp(28px, 3.4vw, 50px) 0 0;
+	padding: clamp(30px, 3.6vw, 52px) 0;
 	background: var(--omc-cream, #fdfaf6);
 	border-top: 1px solid var(--omc-line, #e9e1da);
 	border-bottom: 1px solid var(--omc-line, #e9e1da);
@@ -34,22 +34,33 @@
    other, and every other row reversed. Reading down the page the eye crosses
    from left to right and back, which is what stops three sections of body copy
    reading as one long column. ──────────────────────────────────────────── */
+/* Enough air to read as separate sections, not so much that the page feels padded out. */
 .whd-story--rows .whd-story__row + .whd-story__row {
-	margin-top: clamp(40px, 6vw, 96px);
+	margin-top: clamp(32px, 3.4vw, 54px);
 }
 
 @media (min-width: 900px) {
 	.whd-story--rows .whd-story__row {
 		display: grid;
-		/* The copy takes the larger share. An even split made the photograph the loudest thing in
-		   a section whose job is to be read. */
-		grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-		gap: clamp(40px, 5vw, 80px);
+		/* The copy takes the rest of the row; the photograph is given a width rather than a share,
+		   so a wide screen makes the column of words longer instead of the picture taller. */
+		grid-template-columns: minmax(0, 700px) minmax(0, 440px);
+		gap: clamp(36px, 4vw, 68px);
+		/* Both tracks are capped, so the slack on a wide screen goes between them rather than
+		   inside the column of words — which is what left a hole beside every paragraph. */
+		justify-content: space-between;
 		align-items: center;
 	}
 	.whd-story--rows .whd-story__copy {
-		max-width: 620px;
+		max-width: none;
 		margin-inline: 0;
+	}
+	/* A set height keeps a rhythm down the page and stops four lines of text sitting beside six
+	   hundred pixels of photograph, which was most of the white space in this band. */
+	.whd-story--rows .whd-story__figure {
+		aspect-ratio: auto;
+		height: clamp(340px, 30vw, 440px);
+		max-height: none;
 	}
 	/* A hairline above each heading, the length of a word or two — the mark of a spread rather
 	   than a paragraph that happens to sit next to a picture. */
@@ -58,15 +69,16 @@
 		display: block;
 		width: 48px;
 		height: 1px;
-		margin-bottom: clamp(16px, 2vw, 26px);
+		margin-bottom: clamp(12px, 1.4vw, 18px);
 		background: var(--omc-rose, #b98b7e);
 	}
 	.whd-story--rows .whd-story__row--flip .whd-story__copy::before { margin-left: 0; }
-	/* Order, not markup: the copy stays first in the document so it is read first,
-	   however the row happens to be arranged. */
-	.whd-story--rows .whd-story__row--flip .whd-story__copy { order: 2; }
-	.whd-story--rows .whd-story__row--flip .whd-story__figure { order: 1; }
-	.whd-story--rows .whd-story__row--flip .whd-story__copy { justify-self: end; }
+	/* Placement, not markup: the copy stays first in the document so it is read first, however the
+	   row happens to be arranged. The template is mirrored as well as the placement, or the
+	   photograph inherits the wide column on every other row and doubles in width. */
+	.whd-story--rows .whd-story__row--flip { grid-template-columns: minmax(0, 440px) minmax(0, 700px); }
+	.whd-story--rows .whd-story__row--flip .whd-story__copy { grid-column: 2; grid-row: 1; justify-self: end; }
+	.whd-story--rows .whd-story__row--flip .whd-story__figure { grid-column: 1; grid-row: 1; }
 
 	/* A section with no photograph of its own is a single centred column rather
 	   than a half-width one with a hole beside it. */
@@ -77,6 +89,10 @@
 	.whd-story--rows .whd-story__row--solo .whd-story__copy {
 		max-width: 720px;
 		margin-inline: auto;
+		/* A flipped row sends its copy to the second column; a solo row only has one, so the
+		   placement has to be handed back or the section lands off the right-hand edge. */
+		grid-column: 1;
+		justify-self: center;
 	}
 	.whd-story--rows .whd-story__row--solo .whd-b-heading,
 	.whd-story--rows .whd-story__row--solo .whd-b-text { text-align: center; }
@@ -124,9 +140,11 @@
 @media (max-width: 899px) {
 	/* Stacked: the photograph leads, then the words about it. */
 	.whd-story--rows .whd-story__row { display: flex; flex-direction: column; }
-	.whd-story--rows .whd-story__figure { order: -1; margin-bottom: clamp(18px, 3vw, 26px); }
+	.whd-story--rows .whd-story__figure { order: -1; margin-bottom: clamp(14px, 2.4vw, 20px); }
 	.whd-story--rows .whd-story__copy { max-width: none; margin-inline: 0; }
-	.whd-story__figure { aspect-ratio: 3 / 2; max-height: none; }
+	/* Portrait on a phone too: these are photographs of clothes, and a landscape crop cuts the
+	   garment in half. Capped so a row is never taller than a thumb's scroll. */
+	.whd-story__figure { aspect-ratio: 4 / 5; max-height: 360px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -135,7 +153,7 @@
 }
 
 /* The blocks themselves, as WHD_Blocks emits them in div mode. */
-.whd-story .whd-b { margin: 0 0 clamp(16px, 2vw, 24px); }
+.whd-story .whd-b { margin: 0 0 clamp(11px, 1.3vw, 16px); }
 .whd-story .whd-b:last-child { margin-bottom: 0; }
 
 .whd-story .whd-b-heading {
