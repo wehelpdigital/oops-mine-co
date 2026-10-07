@@ -576,3 +576,21 @@
 	/* On a phone one column is the card width anyway. */
 	.c-product__products--recently .c-product-grid__wrap--cnt-1 .c-product-grid__item { width: 100% !important; }
 }
+
+/* ─── The description, now that it has sections in it ─────────────────────── */
+.c-product__tabs-panel h3,
+#tab-description h3 {
+	margin: 26px 0 8px;
+	font: 400 20px/1.25 var(--omc-serif);
+	letter-spacing: .01em;
+	color: var(--omc-rose-dark);
+}
+.c-product__tabs-panel h3:first-child,
+#tab-description h3:first-child { margin-top: 0; }
+.c-product__tabs-panel p,
+#tab-description p {
+	margin: 0 0 12px;
+	text-wrap: pretty;
+}
+.c-product__tabs-panel p:last-child,
+#tab-description p:last-child { margin-bottom: 0; }

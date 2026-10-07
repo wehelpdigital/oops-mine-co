@@ -53,7 +53,11 @@ printf( "%s  →  %s%s\n\n", $live ? 'LIVE database' : 'local database', home_ur
  * sentences finds it. A product without one simply does not get that line.
  */
 function omc_story_measurements( $description ) {
-	foreach ( preg_split( '/(?<=[.!?])\s+/', (string) $description ) as $sentence ) {
+	// Tags out first, with a space in their place: the description carries <h3> headings now, and
+	// splitting the raw HTML leaves "How it fits" glued to the sentence after it.
+	$plain = preg_replace( '#<h3>.*?</h3>#s', ' ', (string) $description );   // headings have no full stop, so they glue to the sentence after them
+	$plain = trim( preg_replace( '/\s+/', ' ', strip_tags( str_replace( '<', ' <', $plain ) ) ) );
+	foreach ( preg_split( '/(?<=[.!?])\s+/', $plain ) as $sentence ) {
 		if ( preg_match( '/\b(inches|inch)\b/i', $sentence ) && preg_match( '/\b(chest|length|waist|rise|inseam|bust|hip)\b/i', $sentence ) ) {
 			return trim( $sentence );
 		}
@@ -128,11 +132,19 @@ foreach ( (array) $plan['products'] as $p ) {
 		wpautop( $story['lead'] ),
 		$picture( 0 )
 	);
+	// The styling paragraph lives here and nowhere else, so the page does not say it twice.
+	if ( ! empty( $story['wear'] ) ) {
+		$blocks = array_merge( $blocks, omc_story_row(
+			$story['wear_heading'] ?? 'Wearing it',
+			wpautop( $story['wear'] ),
+			$picture( 1 )
+		) );
+	}
 	if ( $facts ) {
 		$blocks = array_merge( $blocks, omc_story_row(
 			$story['facts_heading'] ?? 'The particulars',
 			'<p>' . implode( '<br>', $facts ) . '</p>',
-			$picture( 1 )
+			$picture( empty( $story['wear'] ) ? 1 : 2 )
 		) );
 	}
 
