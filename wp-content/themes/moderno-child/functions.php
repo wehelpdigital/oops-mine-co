@@ -1140,20 +1140,15 @@ function omc_press_mark( array $entry, $class = 'omc-press__logo', $eager = fals
  */
 function omc_footer_badges() {
 	return apply_filters( 'omc_footer_badges', [
-		[
-			'icon'  => 'lock',
-			'title' => __( 'Secure checkout', 'moderno-child' ),
-			'text'  => __( 'Encrypted end to end', 'moderno-child' ),
-		],
+		/*
+		 * "Secure checkout" and "card numbers never touch us" used to sit here. The marks below the
+		 * badges say both, with the padlock and the processor's own name on them, so saying it in
+		 * the shop's words as well was the same reassurance twice and weaker for it.
+		 */
 		[
 			'icon'  => 'shield',
 			'title' => __( 'Your details stay yours', 'moderno-child' ),
 			'text'  => __( 'Never sold, never shared', 'moderno-child' ),
-		],
-		[
-			'icon'  => 'card',
-			'title' => __( 'Card numbers never touch us', 'moderno-child' ),
-			'text'  => __( 'Handled by the payment processor', 'moderno-child' ),
 		],
 		[
 			'icon'  => 'return',
@@ -1161,6 +1156,89 @@ function omc_footer_badges() {
 			'text'  => __( 'Terms on the return policy', 'moderno-child' ),
 		],
 	] );
+}
+
+/**
+ * One of the brand marks in assets/img/marks, inline.
+ *
+ * Inline because a trust mark that arrives after the rest of the footer, or not at all, is worse
+ * than no trust mark: these are 600 bytes each and there are four of them. The files are the
+ * brands' own artwork in the brands' own colours, which is the whole point of showing them.
+ */
+function omc_brand_mark( $name, $height = 20 ) {
+	$file = OMC_DIR . '/assets/img/marks/' . sanitize_key( $name ) . '.svg';
+	if ( ! file_exists( $file ) ) {
+		return '';
+	}
+	$svg = (string) file_get_contents( $file );
+	$svg = preg_replace( '#<title>.*?</title>#s', '', $svg );   // the label beside it says what it is
+	// The fill has to be in the style attribute: as a presentation attribute it loses to the theme's
+	// `svg { fill: currentColor }` and Stripe arrives in the footer's ink instead of Stripe's purple.
+	$svg = preg_replace( '/fill="(#[0-9A-Fa-f]{3,8})"/', 'style="fill:$1"', $svg, 1 );
+	$svg = str_replace( '<svg ', sprintf( '<svg height="%d" aria-hidden="true" focusable="false" ', (int) $height ), $svg );
+
+	return $svg;
+}
+
+/**
+ * Is this install actually taking Stripe payments?
+ *
+ * Asked of WooCommerce rather than assumed, so the mark cannot outlive the arrangement. Returning
+ * true from `omc_stripe_ready` says it in so many words - for the stretch where the business takes
+ * Stripe but the gateway has not been installed on this site yet.
+ */
+function omc_stripe_ready() {
+	$on = false;
+	if ( function_exists( 'WC' ) && WC()->payment_gateways ) {
+		foreach ( WC()->payment_gateways->payment_gateways() as $id => $gateway ) {
+			if ( false !== stripos( $id, 'stripe' ) && 'yes' === $gateway->enabled ) {
+				$on = true;
+				break;
+			}
+		}
+	}
+
+	return (bool) apply_filters( 'omc_stripe_ready', $on );
+}
+
+/**
+ * The security and payment marks along the bottom of the footer.
+ *
+ * The padlock is a fact about this page and is always true; the rest depend on Stripe, because the
+ * cards are the ones Stripe settles and showing them without it would be a claim about a checkout
+ * that does not exist.
+ */
+/*
+ * The shop takes Stripe - it is the processor on yourbeautifulclosets.com, which this site
+ * replaces - but the gateway plugin has not been added to this install yet, so WooCommerce cannot
+ * confirm it on its own. Delete this line once it can, or if the arrangement ever changes.
+ */
+add_filter( 'omc_stripe_ready', '__return_true' );
+
+function omc_trust_marks() {
+	$marks = [
+		[
+			'kind'  => 'lock',
+			'label' => __( 'Secured by HTTPS', 'moderno-child' ),
+			'note'  => __( 'Every page on this site is encrypted', 'moderno-child' ),
+		],
+	];
+
+	if ( omc_stripe_ready() ) {
+		$marks[] = [
+			'kind'  => 'brand',
+			'mark'  => 'stripe',
+			'label' => __( 'Secured by Stripe', 'moderno-child' ),
+			'note'  => __( 'Card details go to Stripe, never to us', 'moderno-child' ),
+		];
+		$marks[] = [
+			'kind'  => 'cards',
+			'marks' => [ 'visa', 'mastercard', 'americanexpress' ],
+			'label' => __( 'Cards accepted', 'moderno-child' ),
+		];
+	}
+
+	return apply_filters( 'omc_trust_marks', $marks );
 }
 
 /**

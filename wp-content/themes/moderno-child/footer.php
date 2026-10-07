@@ -87,6 +87,33 @@ $omc_show_news = apply_filters( 'omc_footer_newsletter', ! is_front_page() );
 			</ul>
 		<?php endif; ?>
 
+		<?php $omc_marks = function_exists( 'omc_trust_marks' ) ? omc_trust_marks() : []; ?>
+		<?php if ( $omc_marks ) : ?>
+			<ul class="omc-footer__trust" aria-label="<?php esc_attr_e( 'Security and payment', 'moderno-child' ); ?>">
+				<?php foreach ( $omc_marks as $omc_m ) : ?>
+					<li class="omc-footer__trust-item omc-footer__trust-item--<?php echo esc_attr( $omc_m['kind'] ); ?>">
+						<?php if ( 'lock' === $omc_m['kind'] ) : ?>
+							<?php echo omc_icon( 'lock' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static inline SVG ?>
+						<?php elseif ( 'brand' === $omc_m['kind'] ) : ?>
+							<?php echo omc_brand_mark( $omc_m['mark'], 22 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- bundled SVG ?>
+						<?php else : ?>
+							<span class="omc-footer__cards">
+								<?php foreach ( $omc_m['marks'] as $omc_c ) : ?>
+									<?php echo omc_brand_mark( $omc_c, 16 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- bundled SVG ?>
+								<?php endforeach; ?>
+							</span>
+						<?php endif; ?>
+						<span class="omc-footer__trust-text">
+							<strong><?php echo esc_html( $omc_m['label'] ); ?></strong>
+							<?php if ( ! empty( $omc_m['note'] ) ) : ?>
+								<em><?php echo esc_html( $omc_m['note'] ); ?></em>
+							<?php endif; ?>
+						</span>
+					</li>
+				<?php endforeach; ?>
+			</ul>
+		<?php endif; ?>
+
 		<div class="omc-footer__bottom">
 			<p class="omc-footer__copy">&copy; <?php echo esc_html( $omc_year . ' ' . rtrim( get_bloginfo( 'name' ), '.' ) ); ?>. <?php esc_html_e( 'All rights reserved.', 'moderno-child' ); ?></p>
 			<?php if ( ! empty( $omc_links['legal'] ) ) : ?>
