@@ -28,11 +28,11 @@
 /* shop / category pages: drop the demo's line-art category strip, centre the title like every other page */
 .c-page-header__row-2-col--categories { display: none; }
 .c-page-header__row-2--2-columns { justify-content: center; }
-.c-page-header__row-2--2-columns .c-page-header__row-2-col--title-breadcrumbs { width: 100%; }
+.c-page-header__row-2--2-columns .c-page-header__row-2-col--title-breadcrumbs { width: 100% !important; }
 .c-page-header__title { justify-content: center; text-align: center; width: 100%; }
 .c-page-header .c-page-header__title { min-height: 0 !important; } /* the theme reserves the category-strip height here */
 .c-page-header__row-2, .c-page-header__row-2-col { min-height: 0; }
-.c-page-header__row-2-col--title-breadcrumbs { width: 100%; }
+.c-page-header__row-2-col--title-breadcrumbs { width: 100% !important; }
 .c-page-header__row-1 { border-bottom: 1px solid var(--omc-line); }
 .woocommerce-result-count, .woocommerce-ordering select { font: 500 10px/1.6 var(--omc-sans); letter-spacing: .14em; text-transform: uppercase; color: var(--omc-muted); }
 
@@ -543,4 +543,31 @@
 	/* An 18px dot on a photograph is hard to see before it is hard to press. */
 	.c-product-grid__thumb-button,
 	.js-wishlist-btn { opacity: 1; }
+}
+
+/* ─── The recently-viewed row with one product in it ──────────────────────
+   That row is laid out with flex-wrap: nowrap and Moderno gives a one-item
+   grid `width: 100%`, so the single product a shopper has looked at becomes a
+   card 1379px wide and taller than the viewport.
+
+   A width rather than a ceiling: the items are flex: 0 0 auto, so a bare
+   max-width makes the browser fall back to the content's own width, which for a
+   product card is nothing at all. !important because the theme's rule is inside
+   a media query and three classes still lost to it. Scoped to this row only -
+   the related, up-sell and cross-sell rows wrap and size themselves. ───────── */
+.c-product__products--recently .c-product-grid__wrap .c-product-grid__list { justify-content: flex-start; }
+.c-product__products--recently .c-product-grid__wrap .c-product-grid__item {
+	flex: 0 0 auto !important;
+	width: 25% !important;
+}
+
+@media (max-width: 1199px) {
+	.c-product__products--recently .c-product-grid__wrap .c-product-grid__item { width: 33.333% !important; }
+}
+@media (max-width: 899px) {
+	.c-product__products--recently .c-product-grid__wrap .c-product-grid__item { width: 50% !important; }
+}
+@media (max-width: 599px) {
+	/* On a phone one column is the card width anyway. */
+	.c-product__products--recently .c-product-grid__wrap .c-product-grid__item { width: 100% !important; }
 }

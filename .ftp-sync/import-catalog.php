@@ -260,7 +260,8 @@ foreach ( (array) $plan['products'] as $p ) {
 
 	// Colour and size become real WooCommerce variations, so cart, stock and the swatch plugin work.
 	$colours = array_values( array_filter( array_column( (array) ( $p['colours'] ?? [] ), 'name' ) ) );
-	$runs    = $p['sizes'] ? (array) ( $sizes[ $p['sizes'] ] ?? [] ) : [];
+	// Either the name of one of the shared runs, or this product's own list of sizes.
+	$runs    = is_array( $p['sizes'] ?? null ) ? array_values( $p['sizes'] ) : ( $p['sizes'] ? (array) ( $sizes[ $p['sizes'] ] ?? [] ) : [] );
 
 	if ( $colours || $runs ) {
 		$attrs = [];
@@ -346,7 +347,7 @@ foreach ( (array) $plan['products'] as $p ) {
 	 * category called "pants-trousers" beside "Pants & Trousers".
 	 */
 	$cat_ids = [];
-	foreach ( [ $p['category'], 'new-arrivals' ] as $cslug ) {
+	foreach ( array_merge( [ $p['category'] ], (array) ( $p['collections'] ?? [] ), [ 'new-arrivals' ] ) as $cslug ) {
 		$t = get_term_by( 'slug', $cslug, 'product_cat' );
 		if ( $t && ! is_wp_error( $t ) ) {
 			$cat_ids[] = (int) $t->term_id;
