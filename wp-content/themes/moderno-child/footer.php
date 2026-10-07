@@ -78,21 +78,22 @@ $omc_show_news = apply_filters( 'omc_footer_newsletter', ! is_front_page() );
 				<?php foreach ( $omc_marks as $omc_m ) : ?>
 					<li class="omc-footer__trust-item omc-footer__trust-item--<?php echo esc_attr( $omc_m['kind'] ); ?>">
 						<?php if ( ! empty( $omc_m['url'] ) ) : ?><a class="omc-footer__trust-link" href="<?php echo esc_url( $omc_m['url'] ); ?>"><?php endif; ?>
-						<?php if ( in_array( $omc_m['kind'], [ 'lock', 'globe', 'return', 'shield' ], true ) ) : ?>
+						<?php if ( 'brand' !== $omc_m['kind'] ) : ?>
 							<?php echo omc_icon( $omc_m['kind'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static inline SVG ?>
 						<?php elseif ( 'brand' === $omc_m['kind'] ) : ?>
 							<?php echo omc_brand_mark( $omc_m['mark'], 22 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- bundled SVG ?>
-						<?php else : ?>
-							<span class="omc-footer__cards">
-								<?php foreach ( $omc_m['marks'] as $omc_c ) : ?>
-									<?php echo omc_brand_mark( $omc_c, 16 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- bundled SVG ?>
-								<?php endforeach; ?>
-							</span>
 						<?php endif; ?>
 						<span class="omc-footer__trust-text">
 							<strong><?php echo esc_html( $omc_m['label'] ); ?></strong>
 							<?php if ( ! empty( $omc_m['note'] ) ) : ?>
 								<em><?php echo esc_html( $omc_m['note'] ); ?></em>
+							<?php endif; ?>
+							<?php if ( ! empty( $omc_m['cards'] ) ) : ?>
+								<span class="omc-footer__cards">
+									<?php foreach ( $omc_m['cards'] as $omc_c ) : ?>
+										<?php echo omc_brand_mark( $omc_c, 14 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- bundled SVG ?>
+									<?php endforeach; ?>
+								</span>
 							<?php endif; ?>
 						</span>
 						<?php if ( ! empty( $omc_m['url'] ) ) : ?></a><?php endif; ?>

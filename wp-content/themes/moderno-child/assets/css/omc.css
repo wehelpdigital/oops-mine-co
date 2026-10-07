@@ -1031,76 +1031,84 @@
 .omc-footer__newsletter .omc-newsletter__form { margin-top: 16px; justify-content: flex-start; }
 .omc-footer__newsletter .omc-newsletter__input { flex-basis: 190px; min-height: 46px; }
 .omc-footer__newsletter .omc-btn { min-height: 46px; }
-/* The security and payment marks, under the badges. Quiet frames on the footer's own ground, with
-   the artwork left in the brands' colours - a Stripe mark recoloured to the palette stops being the
-   thing a shopper recognises, which is the only reason it is here. */
+/* The security and payment marks. A grid rather than a row of pills: four cards that size
+   themselves to their text never line up, and six of them wrapped four-and-two with a ragged gap.
+   Equal columns, equal heights, and the artwork left in the brands' own colours - a Stripe mark
+   recoloured to the palette stops being the thing a shopper recognises. */
 .omc-footer__trust {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: stretch;
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
 	gap: 10px;
-	margin: 26px 0 0;
+	margin: 30px 0 0;
 	padding: 0;
 	list-style: none;
 }
 .omc-footer__trust-item {
 	display: flex;
-	align-items: center;
-	gap: 11px;
-	padding: 11px 16px;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 15px 16px;
 	border: 1px solid var(--omc-line);
 	border-radius: 2px;
-	background: rgba(255, 255, 255, .5);
+	background: rgba(255, 255, 255, .55);
 }
-.omc-footer__trust-item > svg { flex: 0 0 auto; }
-/* A linked mark wraps its own icon and text, so the row's flex has one child and the icon stacks
-   above the words. The link becomes the row instead. */
 .omc-footer__trust-link {
 	display: flex;
-	align-items: center;
-	gap: 11px;
+	align-items: flex-start;
+	gap: 12px;
 	color: inherit;
 	text-decoration: none;
 }
-.omc-footer__trust-link > svg { flex: 0 0 auto; }
-.omc-footer__trust-link:hover .omc-footer__trust-text strong,
-.omc-footer__trust-link:focus-visible .omc-footer__trust-text strong { color: var(--omc-rose-dark); }
-.omc-footer__trust-link:hover .omc-footer__trust-text em { color: var(--omc-text); }
+/* One fixed slot for the mark, whatever shape it is, so the text starts at the same x in all four. */
+.omc-footer__trust-item > svg,
+.omc-footer__trust-link > svg {
+	flex: 0 0 22px;
+	width: 22px;
+	height: 22px;
+	margin-top: 1px;
+}
 .omc-footer__trust-item--lock > svg,
 .omc-footer__trust-item--globe > svg,
-.omc-footer__trust-item--shield > svg,
 .omc-footer__trust-link > svg {
-	width: 20px;
-	height: 20px;
 	fill: none;
 	stroke: var(--omc-rose-dark);
 	stroke-width: 1.5;
 }
-.omc-footer__cards {
-	display: inline-flex;
-	align-items: center;
-	gap: 10px;
-}
 .omc-footer__trust-text {
 	display: flex;
 	flex-direction: column;
-	gap: 2px;
+	gap: 3px;
 	min-width: 0;
 }
 .omc-footer__trust-text strong {
-	font: 600 11.5px/1.25 var(--omc-sans);
+	font: 600 11.5px/1.3 var(--omc-sans);
 	letter-spacing: .07em;
 	text-transform: uppercase;
 	color: var(--omc-ink);
+	text-wrap: balance;
 }
 .omc-footer__trust-text em {
-	font: 400 12px/1.35 var(--omc-sans);
+	font: 400 12px/1.45 var(--omc-sans);
 	font-style: normal;
 	color: var(--omc-muted);
+	text-wrap: pretty;
 }
-@media (max-width: 599px) {
-	.omc-footer__trust { gap: 8px; }
-	.omc-footer__trust-item { flex: 1 1 100%; padding: 10px 14px; }
+.omc-footer__cards {
+	display: inline-flex;
+	align-items: center;
+	gap: 9px;
+	margin-top: 7px;
+}
+.omc-footer__trust-link:hover .omc-footer__trust-text strong,
+.omc-footer__trust-link:focus-visible .omc-footer__trust-text strong { color: var(--omc-rose-dark); }
+.omc-footer__trust-link:hover .omc-footer__trust-text em { color: var(--omc-text); }
+
+@media (max-width: 1023px) {
+	.omc-footer__trust { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 519px) {
+	.omc-footer__trust { grid-template-columns: 1fr; gap: 8px; }
+	.omc-footer__trust-item { padding: 13px 15px; }
 }
 
 .omc-footer__bottom { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 24px; margin-top: clamp(36px, 4vw, 56px); padding-top: 20px; border-top: 1px solid var(--omc-line); }

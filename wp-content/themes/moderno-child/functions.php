@@ -1174,13 +1174,6 @@ function omc_stripe_ready() {
 	return (bool) apply_filters( 'omc_stripe_ready', $on );
 }
 
-/**
- * The security and payment marks along the bottom of the footer.
- *
- * The padlock is a fact about this page and is always true; the rest depend on Stripe, because the
- * cards are the ones Stripe settles and showing them without it would be a claim about a checkout
- * that does not exist.
- */
 /*
  * The shop takes Stripe - it is the processor on yourbeautifulclosets.com, which this site
  * replaces - but the gateway plugin has not been added to this install yet, so WooCommerce cannot
@@ -1188,19 +1181,40 @@ function omc_stripe_ready() {
  */
 add_filter( 'omc_stripe_ready', '__return_true' );
 
+/**
+ * The four marks along the bottom of the footer.
+ *
+ * Four because they sit in a row of four and a grid of two: a shopper reads a line of equal cards
+ * and skips a ragged one. Each says a different kind of thing - the connection, the processor,
+ * where it ships, what happens if it does not fit - so there is no room to add a fifth without one
+ * of them repeating another.
+ *
+ * The padlock is a fact about this page and is always true. The rest are answered by asking
+ * WooCommerce, or by the filters named below where WooCommerce cannot answer.
+ */
 function omc_trust_marks() {
 	$marks = [
 		[
 			'kind'  => 'lock',
 			'label' => __( 'Secured by HTTPS', 'moderno-child' ),
-			'note'  => __( 'Every page on this site is encrypted', 'moderno-child' ),
+			'note'  => __( 'Every page encrypted end to end', 'moderno-child' ),
 		],
 	];
 
+	if ( omc_stripe_ready() ) {
+		$marks[] = [
+			'kind'  => 'brand',
+			'mark'  => 'stripe',
+			'label' => __( 'Secured by Stripe', 'moderno-child' ),
+			'note'  => __( 'Card details go to Stripe, never to us', 'moderno-child' ),
+			// The cards Stripe settles, inside the card about Stripe: one claim, not two.
+			'cards' => [ 'visa', 'mastercard', 'americanexpress' ],
+		];
+	}
+
 	/*
-	 * Where the shop ships. WooCommerce has no shipping zones set up on this install, so it cannot
-	 * be asked - this is the owner's own statement, which is why it is a filter rather than a fact
-	 * read off the store. `omc_ships_to` takes it back out, or changes the wording.
+	 * Where the shop ships. WooCommerce has no shipping zones on this install, so it cannot be
+	 * asked - this is the owner's own statement. `omc_ships_to` takes it out or changes the wording.
 	 */
 	$ships = apply_filters( 'omc_ships_to', __( 'the US and Canada', 'moderno-child' ) );
 	if ( $ships ) {
@@ -1213,39 +1227,15 @@ function omc_trust_marks() {
 	}
 
 	/*
-	 * Returns, in the policy's own terms. The page says store credit within seven days with a
-	 * restocking fee, so "refunds" on its own would be a wider promise than the one it links to -
-	 * money back is for a piece that arrives damaged or faulty.
+	 * Returns in the policy's own terms. That page says store credit within seven days with tags on,
+	 * so "refunds" alone would be a wider promise than the page this links to.
 	 */
-	$returns = omc_page_url( 'refund_returns' );
 	$marks[] = [
 		'kind'  => 'return',
 		'label' => __( '7-day returns', 'moderno-child' ),
-		'note'  => __( 'Store credit, tags on. Read the refund and returns policy', 'moderno-child' ),
-		'url'   => $returns,
+		'note'  => __( 'Store credit, tags on. Read the policy', 'moderno-child' ),
+		'url'   => omc_page_url( 'refund_returns' ),
 	];
-
-	$marks[] = [
-		'kind'  => 'shield',
-		'label' => __( 'Your details stay yours', 'moderno-child' ),
-		'note'  => __( 'Never sold, never shared', 'moderno-child' ),
-	];
-
-	if ( omc_stripe_ready() ) {
-		$pay   = [];
-		$pay[] = [
-			'kind'  => 'brand',
-			'mark'  => 'stripe',
-			'label' => __( 'Secured by Stripe', 'moderno-child' ),
-			'note'  => __( 'Card details go to Stripe, never to us', 'moderno-child' ),
-		];
-		$pay[] = [
-			'kind'  => 'cards',
-			'marks' => [ 'visa', 'mastercard', 'americanexpress' ],
-			'label' => __( 'Cards accepted', 'moderno-child' ),
-		];
-		array_splice( $marks, 1, 0, $pay );      // beside the padlock, not after the returns note
-	}
 
 	return apply_filters( 'omc_trust_marks', $marks );
 }
