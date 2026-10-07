@@ -66,6 +66,34 @@ function omc_story_measurements( $description ) {
 	return '';
 }
 
+/**
+ * Does the before-you-order paragraph already say these measurements?
+ *
+ * Most of them open with the tape measure, so printing the same sentence again under "The
+ * particulars" reads like a stutter. Same words, or the same set of numbers, counts as said.
+ */
+function omc_story_measurements_said( $measure, $before ) {
+	$norm = static fn( $t ) => strtolower( trim( preg_replace( '/\s+/', ' ',
+		str_replace( [ '–', '—', '"', '”' ], [ '-', '-', '', '' ], wp_strip_all_tags( (string) $t ) ) ) ) );
+
+	$m = $norm( rtrim( $measure, '.' ) );
+	$b = $norm( $before );
+	if ( '' === $m || '' === $b ) {
+		return false;
+	}
+	if ( false !== strpos( $b, $m ) ) {
+		return true;
+	}
+
+	preg_match_all( '/\d+(?:\.\d+)?/', $m, $mine );
+	preg_match_all( '/\d+(?:\.\d+)?/', $b, $theirs );
+	if ( count( $mine[0] ) < 2 ) {
+		return false;
+	}
+
+	return ! array_diff( $mine[0], $theirs[0] );
+}
+
 /** A heading, a paragraph and a picture: one row of the story. */
 function omc_story_row( $heading, $html, $image ) {
 	$blocks = [
@@ -120,6 +148,9 @@ foreach ( (array) $plan['products'] as $p ) {
 		$facts[] = sprintf( '<strong>Colours</strong> %s', implode( ', ', $colours ) );
 	}
 	$measure = omc_story_measurements( $p['description'] ?? '' );
+	if ( $measure && omc_story_measurements_said( $measure, $story['before'] ?? '' ) ) {
+		$measure = '';
+	}
 	if ( $measure ) {
 		$facts[] = sprintf( '<strong>Measurements</strong> %s', rtrim( $measure, '.' ) );
 	}
@@ -132,19 +163,40 @@ foreach ( (array) $plan['products'] as $p ) {
 		wpautop( $story['lead'] ),
 		$picture( 0 )
 	);
-	// The styling paragraph lives here and nowhere else, so the page does not say it twice.
-	if ( ! empty( $story['wear'] ) ) {
+	/*
+	 * The styling row lives here and nowhere else, so the page does not say it twice. Where three
+	 * ways have been written they go in as a list - which is how styling advice is read - with the
+	 * paragraph above them as the general case.
+	 */
+	if ( ! empty( $story['wear'] ) || ! empty( $story['ways'] ) ) {
+		$html = empty( $story['wear'] ) ? '' : wpautop( $story['wear'] );
+		if ( ! empty( $story['ways'] ) ) {
+			$html .= '<ul>';
+			foreach ( (array) $story['ways'] as $way ) {
+				$html .= '<li>' . $way . '</li>';
+			}
+			$html .= '</ul>';
+		}
 		$blocks = array_merge( $blocks, omc_story_row(
-			$story['wear_heading'] ?? 'Wearing it',
-			wpautop( $story['wear'] ),
+			$story['wear_heading'] ?? ( empty( $story['ways'] ) ? 'Wearing it' : 'Three ways to wear it' ),
+			$html,
 			$picture( 1 )
+		) );
+	}
+
+	// What somebody wants to know with a finger over the button: sizing, who it suits, what to expect.
+	if ( ! empty( $story['before'] ) ) {
+		$blocks = array_merge( $blocks, omc_story_row(
+			$story['before_heading'] ?? 'Before you order',
+			wpautop( $story['before'] ),
+			$picture( 2 )
 		) );
 	}
 	if ( $facts ) {
 		$blocks = array_merge( $blocks, omc_story_row(
 			$story['facts_heading'] ?? 'The particulars',
 			'<p>' . implode( '<br>', $facts ) . '</p>',
-			$picture( empty( $story['wear'] ) ? 1 : 2 )
+			$picture( 1 + (int) ( ! empty( $story['wear'] ) || ! empty( $story['ways'] ) ) + (int) ! empty( $story['before'] ) )
 		) );
 	}
 
@@ -158,6 +210,33 @@ foreach ( (array) $plan['products'] as $p ) {
 	delete_post_meta( $post->ID, WHD_Product_Story::META . '_off' );   // on, which is the default once a story exists
 	$done++;
 	printf( "   #%-6d %-52s %d block(s)\n", $post->ID, $slug, count( $blocks ) );
+}
+
+/* A story nobody can find is a story nobody reads: each one has to carry a keyword of its own. */
+$bare = [];
+foreach ( (array) $plan['products'] as $p ) {
+	$story = $stories[ $p['slug'] ] ?? null;
+	if ( ! $story ) {
+		continue;
+	}
+	$text = strtolower( trim( ( $story['lead'] ?? '' ) . ' ' . ( $story['wear'] ?? '' ) . ' '
+		. implode( ' ', (array) ( $story['ways'] ?? [] ) ) . ' ' . ( $story['before'] ?? '' ) ) );
+	$has = false;
+	foreach ( (array) ( $p['keywords'] ?? [] ) as $k ) {
+		if ( false !== strpos( $text, strtolower( $k ) ) ) {
+			$has = true;
+			break;
+		}
+	}
+	if ( ! $has ) {
+		$bare[] = $p['slug'];
+	}
+}
+if ( $bare ) {
+	printf( "\n%d story(ies) with no keyword in them:\n", count( $bare ) );
+	foreach ( array_slice( $bare, 0, 20 ) as $b ) {
+		echo "   $b\n";
+	}
 }
 
 printf( "\n%d story(ies) %s, %d skipped\n", $done, $dry ? 'planned' : 'written', count( $skipped ) );
