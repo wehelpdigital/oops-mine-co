@@ -546,28 +546,33 @@
 }
 
 /* ─── The recently-viewed row with one product in it ──────────────────────
-   That row is laid out with flex-wrap: nowrap and Moderno gives a one-item
-   grid `width: 100%`, so the single product a shopper has looked at becomes a
-   card 1379px wide and taller than the viewport.
+   That row is laid out with flex-wrap: nowrap, and Moderno gives a grid
+   holding one product `width: 100%` - so the single thing a shopper has looked
+   at becomes a card 1379px wide and taller than the viewport. Centred, because
+   a card pinned to the left of 1400px of nothing reads as a mistake, and
+   centring is what the theme does for a one-item grid elsewhere.
 
    A width rather than a ceiling: the items are flex: 0 0 auto, so a bare
    max-width makes the browser fall back to the content's own width, which for a
    product card is nothing at all. !important because the theme's rule is inside
-   a media query and three classes still lost to it. Scoped to this row only -
-   the related, up-sell and cross-sell rows wrap and size themselves. ───────── */
-.c-product__products--recently .c-product-grid__wrap .c-product-grid__list { justify-content: flex-start; }
-.c-product__products--recently .c-product-grid__wrap .c-product-grid__item {
+   a media query that three classes still lost to. And scoped by --cnt-1, or a
+   shopper with five recently-viewed products would get five quarter-width cards
+   overflowing a row that cannot wrap. ───────────────────────────────────────── */
+.c-product__products--recently .c-product-grid__wrap--cnt-1 .c-product-grid__item {
 	flex: 0 0 auto !important;
 	width: 25% !important;
+	/* auto margins rather than justify-content: the carousel sets its own alignment on the list. */
+	margin-left: auto !important;
+	margin-right: auto !important;
 }
 
 @media (max-width: 1199px) {
-	.c-product__products--recently .c-product-grid__wrap .c-product-grid__item { width: 33.333% !important; }
+	.c-product__products--recently .c-product-grid__wrap--cnt-1 .c-product-grid__item { width: 33.333% !important; }
 }
 @media (max-width: 899px) {
-	.c-product__products--recently .c-product-grid__wrap .c-product-grid__item { width: 50% !important; }
+	.c-product__products--recently .c-product-grid__wrap--cnt-1 .c-product-grid__item { width: 50% !important; }
 }
 @media (max-width: 599px) {
 	/* On a phone one column is the card width anyway. */
-	.c-product__products--recently .c-product-grid__wrap .c-product-grid__item { width: 100% !important; }
+	.c-product__products--recently .c-product-grid__wrap--cnt-1 .c-product-grid__item { width: 100% !important; }
 }

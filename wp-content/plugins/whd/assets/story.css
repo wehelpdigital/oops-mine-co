@@ -97,7 +97,12 @@
 /* The block wrapper WHD_Blocks puts round the image has to stop taking part in layout, or the
    absolute image below has nothing to fill. */
 .whd-story__figure .whd-b {
-	margin: 0;
+	/* The block carries its spacing in a style attribute, so the stylesheet has to insist here or
+	   the picture finishes sixteen pixels above the bottom of its frame. */
+	margin: 0 !important;
+	/* The block wrapper carries the design padding; inside a frame it has to give it up, or the
+	   picture ends up sixteen pixels short of the bottom. */
+	padding: 0;
 	position: absolute;
 	inset: 0;
 }
@@ -105,8 +110,11 @@
 	position: absolute;
 	inset: 0;
 	display: block;
-	width: 100%;
-	height: 100%;
+	/* !important because WHD_Blocks writes the size into a style attribute - it has to, for email -
+	   and inline beats a stylesheet. Without this the picture sits short in its frame with a band
+	   of sand underneath it. */
+	width: 100% !important;
+	height: 100% !important;
 	object-fit: cover;
 	object-position: 50% 28%;
 	transition: transform 1.2s cubic-bezier(.22, .61, .36, 1);
