@@ -1053,7 +1053,23 @@
 	background: rgba(255, 255, 255, .5);
 }
 .omc-footer__trust-item > svg { flex: 0 0 auto; }
-.omc-footer__trust-item--lock > svg {
+/* A linked mark wraps its own icon and text, so the row's flex has one child and the icon stacks
+   above the words. The link becomes the row instead. */
+.omc-footer__trust-link {
+	display: flex;
+	align-items: center;
+	gap: 11px;
+	color: inherit;
+	text-decoration: none;
+}
+.omc-footer__trust-link > svg { flex: 0 0 auto; }
+.omc-footer__trust-link:hover .omc-footer__trust-text strong,
+.omc-footer__trust-link:focus-visible .omc-footer__trust-text strong { color: var(--omc-rose-dark); }
+.omc-footer__trust-link:hover .omc-footer__trust-text em { color: var(--omc-text); }
+.omc-footer__trust-item--lock > svg,
+.omc-footer__trust-item--globe > svg,
+.omc-footer__trust-item--shield > svg,
+.omc-footer__trust-link > svg {
 	width: 20px;
 	height: 20px;
 	fill: none;

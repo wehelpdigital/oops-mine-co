@@ -793,6 +793,7 @@ function omc_icon( $name ) {
 		'hand'    => '<path d="M8 13V6a2 2 0 1 1 4 0v6"/><path d="M12 12V5a2 2 0 1 1 4 0v8"/><path d="M16 13V8a2 2 0 1 1 4 0v6a7 7 0 0 1-7 7h-1a7 7 0 0 1-6-3.4L3.6 14a2 2 0 0 1 3.3-2.2L8 13"/>',
 		'return'  => '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>',
 		'lock'    => '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+		'globe'   => '<circle cx="12" cy="12" r="9"/><path d="M3.2 9h17.6M3.2 15h17.6"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/>',
 		'shield'  => '<path d="M12 3l7 3v5.5c0 4.3-2.9 7.8-7 9.5-4.1-1.7-7-5.2-7-9.5V6z"/><path d="M9.2 12.2l2 2 3.6-3.9"/>',
 		'card'    => '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18"/><path d="M6.5 14.5h3"/>',
 		'truck'   => '<path d="M3 7h10v9H3z"/><path d="M13 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/>',
@@ -1131,34 +1132,6 @@ function omc_press_mark( array $entry, $class = 'omc-press__logo', $eager = fals
 }
 
 /**
- * The reassurance row in the footer: what is true about paying here, said plainly.
- *
- * No card-brand marks on purpose — printing a Visa or PayPal logo asserts a gateway that is not
- * connected yet. These say what the site itself can back up.
- *
- * @return array List of [ icon, title, text ].
- */
-function omc_footer_badges() {
-	return apply_filters( 'omc_footer_badges', [
-		/*
-		 * "Secure checkout" and "card numbers never touch us" used to sit here. The marks below the
-		 * badges say both, with the padlock and the processor's own name on them, so saying it in
-		 * the shop's words as well was the same reassurance twice and weaker for it.
-		 */
-		[
-			'icon'  => 'shield',
-			'title' => __( 'Your details stay yours', 'moderno-child' ),
-			'text'  => __( 'Never sold, never shared', 'moderno-child' ),
-		],
-		[
-			'icon'  => 'return',
-			'title' => __( '7-day store-credit returns', 'moderno-child' ),
-			'text'  => __( 'Terms on the return policy', 'moderno-child' ),
-		],
-	] );
-}
-
-/**
  * One of the brand marks in assets/img/marks, inline.
  *
  * Inline because a trust mark that arrives after the rest of the footer, or not at all, is worse
@@ -1224,18 +1197,54 @@ function omc_trust_marks() {
 		],
 	];
 
-	if ( omc_stripe_ready() ) {
+	/*
+	 * Where the shop ships. WooCommerce has no shipping zones set up on this install, so it cannot
+	 * be asked - this is the owner's own statement, which is why it is a filter rather than a fact
+	 * read off the store. `omc_ships_to` takes it back out, or changes the wording.
+	 */
+	$ships = apply_filters( 'omc_ships_to', __( 'the US and Canada', 'moderno-child' ) );
+	if ( $ships ) {
 		$marks[] = [
+			'kind'  => 'globe',
+			/* translators: %s: the places the shop ships to. */
+			'label' => sprintf( __( 'Ships to %s', 'moderno-child' ), $ships ),
+			'note'  => __( 'Your rate is shown at checkout, before you pay', 'moderno-child' ),
+		];
+	}
+
+	/*
+	 * Returns, in the policy's own terms. The page says store credit within seven days with a
+	 * restocking fee, so "refunds" on its own would be a wider promise than the one it links to -
+	 * money back is for a piece that arrives damaged or faulty.
+	 */
+	$returns = omc_page_url( 'refund_returns' );
+	$marks[] = [
+		'kind'  => 'return',
+		'label' => __( '7-day returns', 'moderno-child' ),
+		'note'  => __( 'Store credit, tags on. Read the refund and returns policy', 'moderno-child' ),
+		'url'   => $returns,
+	];
+
+	$marks[] = [
+		'kind'  => 'shield',
+		'label' => __( 'Your details stay yours', 'moderno-child' ),
+		'note'  => __( 'Never sold, never shared', 'moderno-child' ),
+	];
+
+	if ( omc_stripe_ready() ) {
+		$pay   = [];
+		$pay[] = [
 			'kind'  => 'brand',
 			'mark'  => 'stripe',
 			'label' => __( 'Secured by Stripe', 'moderno-child' ),
 			'note'  => __( 'Card details go to Stripe, never to us', 'moderno-child' ),
 		];
-		$marks[] = [
+		$pay[] = [
 			'kind'  => 'cards',
 			'marks' => [ 'visa', 'mastercard', 'americanexpress' ],
 			'label' => __( 'Cards accepted', 'moderno-child' ),
 		];
+		array_splice( $marks, 1, 0, $pay );      // beside the padlock, not after the returns note
 	}
 
 	return apply_filters( 'omc_trust_marks', $marks );

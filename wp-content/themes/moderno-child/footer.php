@@ -72,28 +72,14 @@ $omc_show_news = apply_filters( 'omc_footer_newsletter', ! is_front_page() );
 
 		</div>
 
-		<?php $omc_badges = function_exists( 'omc_footer_badges' ) ? omc_footer_badges() : []; ?>
-		<?php if ( $omc_badges ) : ?>
-			<ul class="omc-footer__badges" aria-label="<?php esc_attr_e( 'Shopping here', 'moderno-child' ); ?>">
-				<?php foreach ( $omc_badges as $omc_b ) : ?>
-					<li class="omc-footer__badge">
-						<?php echo omc_icon( $omc_b['icon'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static inline SVG ?>
-						<span>
-							<strong><?php echo esc_html( $omc_b['title'] ); ?></strong>
-							<em><?php echo esc_html( $omc_b['text'] ); ?></em>
-						</span>
-					</li>
-				<?php endforeach; ?>
-			</ul>
-		<?php endif; ?>
-
 		<?php $omc_marks = function_exists( 'omc_trust_marks' ) ? omc_trust_marks() : []; ?>
 		<?php if ( $omc_marks ) : ?>
 			<ul class="omc-footer__trust" aria-label="<?php esc_attr_e( 'Security and payment', 'moderno-child' ); ?>">
 				<?php foreach ( $omc_marks as $omc_m ) : ?>
 					<li class="omc-footer__trust-item omc-footer__trust-item--<?php echo esc_attr( $omc_m['kind'] ); ?>">
-						<?php if ( 'lock' === $omc_m['kind'] ) : ?>
-							<?php echo omc_icon( 'lock' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static inline SVG ?>
+						<?php if ( ! empty( $omc_m['url'] ) ) : ?><a class="omc-footer__trust-link" href="<?php echo esc_url( $omc_m['url'] ); ?>"><?php endif; ?>
+						<?php if ( in_array( $omc_m['kind'], [ 'lock', 'globe', 'return', 'shield' ], true ) ) : ?>
+							<?php echo omc_icon( $omc_m['kind'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static inline SVG ?>
 						<?php elseif ( 'brand' === $omc_m['kind'] ) : ?>
 							<?php echo omc_brand_mark( $omc_m['mark'], 22 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- bundled SVG ?>
 						<?php else : ?>
@@ -109,6 +95,7 @@ $omc_show_news = apply_filters( 'omc_footer_newsletter', ! is_front_page() );
 								<em><?php echo esc_html( $omc_m['note'] ); ?></em>
 							<?php endif; ?>
 						</span>
+						<?php if ( ! empty( $omc_m['url'] ) ) : ?></a><?php endif; ?>
 					</li>
 				<?php endforeach; ?>
 			</ul>
