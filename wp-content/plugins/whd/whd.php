@@ -34,6 +34,7 @@ require_once WHD_DIR . 'includes/class-whd-ai.php';
 require_once WHD_DIR . 'includes/class-whd-ai-keywords.php';
 require_once WHD_DIR . 'includes/class-whd-ai-images.php';
 require_once WHD_DIR . 'includes/class-whd-ai-admin.php';
+require_once WHD_DIR . 'includes/class-whd-ai-writer.php';
 require_once WHD_DIR . 'includes/class-whd-product-admin.php';
 require_once WHD_DIR . 'includes/class-whd-admin.php';
 
@@ -79,6 +80,7 @@ final class WHD_Plugin {
 		}
 		WHD_Admin::init();
 		WHD_AI_Admin::init();
+		WHD_AI_Writer::init();
 		if ( class_exists( 'WooCommerce' ) ) {
 			WHD_Product_Admin::init();
 		}

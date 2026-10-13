@@ -1,0 +1,163 @@
+/* AI Posts and AI Pages.
+   Two things on the screen: the box you write the idea in, and the list of what came out of it.
+   The preview in between is styled like the page it will become rather than like a form field,
+   because it is the thing being judged. */
+
+.whd-writer__make {
+	margin: 18px 0 8px;
+	padding: 22px 24px 20px;
+	background: #fff;
+	border: 1px solid #e2e4e7;
+	border-left: 3px solid #b98b7e;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+}
+
+.whd-writer__field { margin: 0 0 16px; }
+.whd-writer__label {
+	display: block;
+	margin: 0 0 6px;
+	font-weight: 600;
+	font-size: 13px;
+	color: #1d2327;
+}
+.whd-writer__field textarea { resize: vertical; }
+
+/* ─── keywords ─── */
+
+.whd-writer__chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin: 0 0 8px;
+}
+.whd-writer__chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 5px 11px;
+	border: 1px solid #dcdcde;
+	border-radius: 999px;
+	background: #f6f7f7;
+	font-size: 12px;
+	line-height: 1.4;
+	color: #3c434a;
+	cursor: pointer;
+	transition: background .12s ease, border-color .12s ease, color .12s ease;
+}
+.whd-writer__chip:hover { border-color: #b98b7e; color: #1d2327; }
+.whd-writer__chip.is-on {
+	background: #b98b7e;
+	border-color: #b98b7e;
+	color: #fff;
+}
+.whd-writer__chip-n { opacity: .6; font-variant-numeric: tabular-nums; }
+.whd-writer__chip.is-on .whd-writer__chip-n { opacity: .85; }
+
+/* ─── the row of controls ─── */
+
+.whd-writer__row {
+	display: flex;
+	align-items: flex-end;
+	gap: 16px;
+	flex-wrap: wrap;
+	margin: 18px 0 0;
+	padding-top: 16px;
+	border-top: 1px solid #f0f0f1;
+}
+.whd-writer__inline { display: flex; flex-direction: column; gap: 5px; font-size: 13px; }
+.whd-writer__inline span { font-weight: 600; color: #1d2327; }
+.whd-writer__status { font-size: 13px; color: #646970; }
+.whd-writer__status a { color: #2271b1; }
+
+/* ─── what came back ─── */
+
+.whd-writer__result {
+	margin: 22px 0 0;
+	padding: 20px 0 0;
+	border-top: 1px solid #e2e4e7;
+}
+.whd-writer__meta {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 18px;
+	margin: 0 0 14px;
+}
+@media (max-width: 960px) {
+	.whd-writer__meta { grid-template-columns: 1fr; }
+}
+.whd-writer__count { display: block; margin-top: 4px; font-size: 12px; color: #646970; }
+.whd-writer__count.is-warn { color: #b32d2e; }
+
+.whd-writer__check {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin: 0 0 16px;
+}
+.whd-writer__badge {
+	padding: 4px 10px;
+	border-radius: 3px;
+	font-size: 12px;
+	font-weight: 600;
+	background: #edfaef;
+	color: #1d6b2f;
+}
+.whd-writer__badge.is-warn { background: #fcf0f1; color: #b32d2e; }
+.whd-writer__stat { font-size: 12px; color: #646970; }
+.whd-writer__stat.is-warn { color: #b32d2e; }
+
+/* The draft itself, set the way it will read rather than the way a textarea reads. */
+.whd-writer__body {
+	max-height: 60vh;
+	overflow: auto;
+	padding: 26px 30px;
+	background: #fdfaf6;
+	border: 1px solid #e9e1da;
+	font-family: Georgia, 'Times New Roman', serif;
+	font-size: 16px;
+	line-height: 1.75;
+	color: #3a2b26;
+}
+.whd-writer__body:focus { outline: 2px solid #b98b7e; outline-offset: -2px; }
+.whd-writer__body h2 {
+	margin: 1.4em 0 .4em;
+	font-size: 22px;
+	font-weight: 500;
+	color: #3a2b26;
+}
+.whd-writer__body h2:first-child { margin-top: 0; }
+.whd-writer__body h3 { margin: 1.2em 0 .3em; font-size: 17px; font-weight: 600; }
+.whd-writer__body p { margin: 0 0 1em; }
+.whd-writer__body ul { margin: 0 0 1em 1.2em; list-style: disc; }
+.whd-writer__body li { margin: 0 0 .4em; }
+
+.whd-writer__actions {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+	margin: 16px 0 0;
+}
+
+/* ─── the list ─── */
+
+.whd-writer__table { margin-top: 10px; }
+.whd-writer__cell-title strong a { text-decoration: none; }
+.whd-writer__idea {
+	margin-top: 3px;
+	font-size: 12px;
+	color: #787c82;
+	font-style: italic;
+}
+.whd-writer__cell-actions { white-space: nowrap; text-align: right; }
+.whd-writer__new { animation: whd-writer-in .6s ease; }
+@keyframes whd-writer-in {
+	from { background: #fcf7e8; }
+	to { background: transparent; }
+}
+.whd-muted { color: #a7aaad; }
+
+@media (prefers-reduced-motion: reduce) {
+	.whd-writer__new { animation: none; }
+}
