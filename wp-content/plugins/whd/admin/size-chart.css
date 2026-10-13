@@ -1,0 +1,124 @@
+/* The size chart builder: a form that looks like the thing it is making.
+   The preview below it uses the front end's own class names, so what is drawn here and what a
+   shopper sees come from one set of rules rather than two that drift apart. */
+
+.whd-grid { margin: 4px 0 2px; }
+
+.whd-grid__field { margin: 0 0 14px; }
+.whd-grid__field label {
+	display: block;
+	margin: 0 0 5px;
+	font-weight: 600;
+	color: #1d2327;
+}
+.whd-grid__field textarea { resize: vertical; }
+
+.whd-grid__bar {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+	margin: 0 0 14px;
+	padding: 10px 12px;
+	background: #f6f7f7;
+	border: 1px solid #e2e4e7;
+}
+.whd-grid__label { font-weight: 600; color: #1d2327; }
+
+/* The table can outgrow the box on a narrow screen; it scrolls rather than squashing the inputs. */
+.whd-grid__scroll { overflow-x: auto; padding-bottom: 2px; }
+
+.whd-grid__table {
+	border-collapse: separate;
+	border-spacing: 0;
+	width: 100%;
+	min-width: 520px;
+}
+.whd-grid__table th,
+.whd-grid__table td {
+	padding: 0;
+	border: 0;
+}
+.whd-grid__table thead th {
+	position: relative;
+	padding: 0 4px 6px 0;
+}
+.whd-grid__table thead input {
+	width: 100%;
+	font-weight: 600;
+	background: #fff;
+}
+.whd-grid__table tbody td { padding: 0 4px 4px 0; }
+.whd-grid__table tbody input { width: 100%; }
+/* The size name is the row's label, so it reads as one. */
+.whd-grid__table tbody td:first-of-type input { font-weight: 600; }
+
+.whd-grid__handle {
+	width: 26px;
+	padding: 0 4px 4px 0 !important;
+	vertical-align: middle;
+	text-align: center;
+}
+
+.whd-grid__drop {
+	border: 0;
+	background: none;
+	color: #a7aaad;
+	font-size: 17px;
+	line-height: 1;
+	cursor: pointer;
+	padding: 2px 4px;
+	border-radius: 3px;
+}
+.whd-grid__drop:hover { color: #b32d2e; background: #fcf0f1; }
+.whd-grid__table thead .whd-grid__drop {
+	position: absolute;
+	top: -2px;
+	right: 2px;
+	font-size: 14px;
+}
+
+.whd-grid__actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+	margin: 10px 0 18px;
+}
+
+.whd-grid__preview {
+	margin: 18px 0 0;
+	padding: 16px 18px 18px;
+	border: 1px solid #e2e4e7;
+	background: #fdfaf6;
+}
+.whd-grid__preview .whd-grid__label {
+	display: block;
+	margin: 0 0 10px;
+	font-size: 11px;
+	letter-spacing: .14em;
+	text-transform: uppercase;
+	color: #8a6a5e;
+}
+.whd-grid__empty { margin: 0; color: #8a7d76; }
+
+/* The preview borrows the front end's look rather than inventing a second one. */
+.whd-grid__preview .whd-sc__lede { margin: 0 0 12px; font-size: 14px; color: #4a3f3a; }
+.whd-grid__preview .whd-sc__note { margin: 12px 0 0; font-size: 13px; color: #8a7d76; }
+.whd-grid__preview .whd-sc__table { width: 100%; border-collapse: collapse; background: #fff; }
+.whd-grid__preview .whd-sc__table th,
+.whd-grid__preview .whd-sc__table td {
+	padding: 9px 12px;
+	border-bottom: 1px solid #e9e1da;
+	font-size: 14px;
+	text-align: left;
+	color: #4a3f3a;
+}
+.whd-grid__preview .whd-sc__table thead th {
+	font-size: 11px;
+	letter-spacing: .12em;
+	text-transform: uppercase;
+	color: #8a6a5e;
+	border-bottom-width: 2px;
+}
+.whd-grid__preview .whd-sc__table tbody th { font-weight: 600; color: #3a2b26; }

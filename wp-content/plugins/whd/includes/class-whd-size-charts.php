@@ -21,12 +21,17 @@ class WHD_Size_Charts {
 	const META = '_whd_size_chart';          // on a product: the chart chosen for it
 	const CATS = '_whd_chart_categories';    // on a chart: the categories it covers
 	const DEF  = '_whd_chart_is_default';    // on a chart: use it when nothing else matches
+	const GRID = '_whd_chart_grid';          // on a chart: { columns[], rows[][] }
+	const INTRO = '_whd_chart_intro';        // on a chart: the line above the table
+	const NOTE  = '_whd_chart_note';         // on a chart: the line below it
+	const UNIT  = '_whd_chart_unit';         // on a chart: in|cm|'' — written after every number
 
 	public static function init() {
 		add_action( 'init', [ __CLASS__, 'register' ] );
 
 		// Admin: the chart screen and the picker on the product screen.
 		add_action( 'add_meta_boxes', [ __CLASS__, 'meta_boxes' ] );
+		add_action( 'admin_enqueue_scripts', [ __CLASS__, 'admin_assets' ] );
 		add_action( 'save_post_product', [ __CLASS__, 'save_product' ], 10, 2 );
 		add_action( 'save_post_' . self::CPT, [ __CLASS__, 'save_chart' ], 10, 2 );
 		add_filter( 'whd_size_chart_id', [ __CLASS__, 'resolve' ], 10, 2 );
@@ -112,21 +117,113 @@ class WHD_Size_Charts {
 		}
 	}
 
-	/** The client's own US size run, as a table anyone can edit afterwards. */
-	public static function default_table() {
-		$rows = [
-			[ 'XS (0–2)',   '31–32', '24–25', '34–35' ],
-			[ 'S (4–6)',    '33–34', '26–27', '36–37' ],
-			[ 'M (8–10)',   '35–36', '28–29', '38–39' ],
-			[ 'L (12–14)',  '37–39', '30–32', '40–42' ],
-			[ 'XL (16–18)', '40–42', '33–35', '43–45' ],
+	/* ─────────────────────────── The measurements ───────────────────────────
+	   A chart is a grid: a list of column names and a list of rows. Kept as data rather than as
+	   markup so the screen can be a form rather than an HTML lesson, and so the table on the
+	   product page is drawn by us and looks the same on every chart anybody makes. */
+
+	/** The columns and rows of a chart, falling back to whatever was typed before this existed. */
+	public static function grid( $chart_id ): array {
+		$grid = get_post_meta( (int) $chart_id, self::GRID, true );
+		if ( is_array( $grid ) && ! empty( $grid['columns'] ) ) {
+			return [
+				'columns' => array_values( array_map( 'strval', (array) $grid['columns'] ) ),
+				'rows'    => array_values( array_map( static fn( $r ) => array_values( array_map( 'strval', (array) $r ) ), (array) ( $grid['rows'] ?? [] ) ) ),
+			];
+		}
+
+		// A chart written as HTML before the form existed still has to open in the form.
+		return self::grid_from_html( (string) get_post_field( 'post_content', $chart_id ) );
+	}
+
+	/**
+	 * Read the first table out of a lump of HTML.
+	 *
+	 * Only ever used to fill the form the first time an old chart is opened — what the form saves
+	 * is the grid, and from then on the HTML is ignored.
+	 */
+	public static function grid_from_html( string $html ): array {
+		$empty = [ 'columns' => [], 'rows' => [] ];
+		if ( false === stripos( $html, '<table' ) || ! preg_match( '#<table[^>]*>(.*?)</table>#is', $html, $table ) ) {
+			return $empty;
+		}
+		if ( ! preg_match_all( '#<tr[^>]*>(.*?)</tr>#is', $table[1], $trs ) ) {
+			return $empty;
+		}
+
+		$rows = [];
+		foreach ( $trs[1] as $tr ) {
+			if ( ! preg_match_all( '#<(th|td)[^>]*>(.*?)</\1>#is', $tr, $cells ) ) {
+				continue;
+			}
+			$rows[] = array_map(
+				static fn( $c ) => trim( html_entity_decode( wp_strip_all_tags( $c ), ENT_QUOTES, 'UTF-8' ) ),
+				$cells[2]
+			);
+		}
+		if ( ! $rows ) {
+			return $empty;
+		}
+
+		return [ 'columns' => array_shift( $rows ), 'rows' => array_values( $rows ) ];
+	}
+
+	/** The chart as a table, drawn the same way for every chart. */
+	public static function table_html( $chart_id ): string {
+		$grid = self::grid( $chart_id );
+		if ( ! $grid['columns'] || ! $grid['rows'] ) {
+			return '';
+		}
+		$unit = (string) get_post_meta( (int) $chart_id, self::UNIT, true );
+		$suf  = 'in' === $unit ? '″' : ( 'cm' === $unit ? ' cm' : '' );
+
+		$html = '<table class="whd-sc__table"><thead><tr>';
+		foreach ( $grid['columns'] as $column ) {
+			$html .= '<th scope="col">' . esc_html( $column ) . '</th>';
+		}
+		$html .= '</tr></thead><tbody>';
+
+		foreach ( $grid['rows'] as $row ) {
+			$html .= '<tr>';
+			foreach ( $grid['columns'] as $i => $column ) {
+				$cell = trim( (string) ( $row[ $i ] ?? '' ) );
+				// The unit goes on measurements, not on "M (8–10)" — so only where it is numeric.
+				if ( '' !== $cell && $suf && $i > 0 && preg_match( '/^[\d.,\s\-–—\/]+$/u', $cell ) ) {
+					$cell .= $suf;
+				}
+				$html .= $i
+					? '<td>' . esc_html( $cell ) . '</td>'
+					: '<th scope="row">' . esc_html( $cell ) . '</th>';
+			}
+			$html .= '</tr>';
+		}
+
+		return $html . '</tbody></table>';
+	}
+
+	/** The client's own US size run, as a grid anyone can edit afterwards. */
+	public static function default_grid(): array {
+		return [
+			'columns' => [ 'Size', 'Bust', 'Waist', 'Hip' ],
+			'rows'    => [
+				[ 'XS (0–2)', '31–32', '24–25', '34–35' ],
+				[ 'S (4–6)', '33–34', '26–27', '36–37' ],
+				[ 'M (8–10)', '35–36', '28–29', '38–39' ],
+				[ 'L (12–14)', '37–39', '30–32', '40–42' ],
+				[ 'XL (16–18)', '40–42', '33–35', '43–45' ],
+			],
 		];
-		$html = '<table><thead><tr><th>Size</th><th>Bust</th><th>Waist</th><th>Hip</th></tr></thead><tbody>';
-		foreach ( $rows as $r ) {
+	}
+
+	/** The same thing as HTML, for the post body an old chart still keeps. */
+	public static function default_table() {
+		$grid = self::default_grid();
+		$html = '<table><thead><tr><th>' . implode( '</th><th>', $grid['columns'] ) . '</th></tr></thead><tbody>';
+		foreach ( $grid['rows'] as $r ) {
 			$html .= '<tr><th>' . $r[0] . '</th><td>' . $r[1] . '&quot;</td><td>' . $r[2] . '&quot;</td><td>' . $r[3] . '&quot;</td></tr>';
 		}
 
-		return $html . '</tbody></table><p>Each piece is also measured flat, and those measurements sit on the product itself. Where the two disagree, trust the garment.</p>';
+		return $html . '</tbody></table>';
 	}
 
 	public static function register() {
@@ -154,7 +251,10 @@ class WHD_Size_Charts {
 			'show_in_menu'    => true,   // its own top-level menu, not a WHD submenu
 			'menu_position'   => 26,     // just under Products
 			'menu_icon'       => 'dashicons-editor-table',
-			'supports'        => [ 'title', 'editor', 'thumbnail' ],
+			// No editor: the chart is a form now, and a second place to type one was the thing
+			// that made the old screen confusing. Anything already written there still opens in
+			// the form, because the grid reads it when no grid has been saved yet.
+			'supports'        => [ 'title', 'thumbnail' ],
 			'capability_type' => 'page',
 			'map_meta_cap'    => true,
 			'has_archive'     => false,
@@ -265,6 +365,16 @@ class WHD_Size_Charts {
 			'high'
 		);
 		add_meta_box(
+			// Not 'whd-chart-grid': that id belongs to the form inside, and add_meta_box puts its
+			// own id on the postbox wrapper.
+			'whd-chart-grid-box',
+			__( 'The measurements', 'whd' ),
+			[ __CLASS__, 'grid_box' ],
+			self::CPT,
+			'normal',
+			'high'
+		);
+		add_meta_box(
 			'whd-chart-help',
 			__( 'How to build it', 'whd' ),
 			[ __CLASS__, 'help_box' ],
@@ -272,6 +382,105 @@ class WHD_Size_Charts {
 			'side',
 			'low'
 		);
+	}
+
+	/** The builder's own script and styles, on the chart screen and nowhere else. */
+	public static function admin_assets( $hook ) {
+		$screen = get_current_screen();
+		if ( ! $screen || self::CPT !== $screen->post_type || ! in_array( $hook, [ 'post.php', 'post-new.php' ], true ) ) {
+			return;
+		}
+		wp_enqueue_style( 'whd-size-chart-admin', WHD_URL . 'admin/size-chart.css', [], WHD_VERSION );
+		wp_enqueue_script( 'whd-size-chart-admin', WHD_URL . 'admin/size-chart.js', [], WHD_VERSION, true );
+	}
+
+	/**
+	 * The chart as a form: name the columns, fill the rows.
+	 *
+	 * Everything is a plain input in a real table, so it submits with the page whether or not the
+	 * JavaScript loads — the buttons only add and remove rows. Nobody has to know what a <td> is.
+	 */
+	public static function grid_box( $post ) {
+		wp_nonce_field( 'whd_chart_grid', 'whd_chart_grid_nonce' );
+		$grid = self::grid( $post->ID );
+		if ( ! $grid['columns'] ) {
+			$grid = self::default_grid();
+		}
+		/*
+		 * Inches for a new chart, nothing for one carried over: an old chart's cells already have
+		 * their own quote marks typed into them, and adding a second one is worse than none.
+		 */
+		$unit = metadata_exists( 'post', $post->ID, self::UNIT )
+			? (string) get_post_meta( $post->ID, self::UNIT, true )
+			: ( trim( (string) $post->post_content ) ? '' : 'in' );
+
+		$intro = (string) get_post_meta( $post->ID, self::INTRO, true );
+		$note  = (string) get_post_meta( $post->ID, self::NOTE, true );
+		$cols  = count( $grid['columns'] );
+		?>
+		<div class="whd-grid" id="whd-chart-grid">
+
+			<div class="whd-grid__field">
+				<label for="whd-chart-intro"><?php esc_html_e( 'A line above the table', 'whd' ); ?></label>
+				<textarea id="whd-chart-intro" name="whd_chart_intro" rows="2" class="large-text" placeholder="<?php esc_attr_e( 'e.g. Measure against something that already fits you, not against yourself.', 'whd' ); ?>"><?php echo esc_textarea( $intro ); ?></textarea>
+			</div>
+
+			<div class="whd-grid__bar">
+				<span class="whd-grid__label"><?php esc_html_e( 'Measurements are in', 'whd' ); ?></span>
+				<select name="whd_chart_unit" id="whd-chart-unit">
+					<option value="in" <?php selected( $unit, 'in' ); ?>><?php esc_html_e( 'inches', 'whd' ); ?></option>
+					<option value="cm" <?php selected( $unit, 'cm' ); ?>><?php esc_html_e( 'centimetres', 'whd' ); ?></option>
+					<option value="" <?php selected( $unit, '' ); ?>><?php esc_html_e( 'nothing — I will type the units myself', 'whd' ); ?></option>
+				</select>
+				<span class="description"><?php esc_html_e( 'Written after every number except the first column.', 'whd' ); ?></span>
+			</div>
+
+			<div class="whd-grid__scroll">
+				<table class="whd-grid__table">
+					<thead>
+						<tr>
+							<th class="whd-grid__handle" aria-hidden="true"></th>
+							<?php foreach ( $grid['columns'] as $i => $column ) : ?>
+								<th>
+									<input type="text" name="whd_chart_cols[]" value="<?php echo esc_attr( $column ); ?>"
+										placeholder="<?php echo esc_attr( $i ? __( 'Bust', 'whd' ) : __( 'Size', 'whd' ) ); ?>">
+									<button type="button" class="whd-grid__drop" data-whd-drop-col title="<?php esc_attr_e( 'Remove this column', 'whd' ); ?>">&times;</button>
+								</th>
+							<?php endforeach; ?>
+						</tr>
+					</thead>
+					<tbody>
+						<?php foreach ( $grid['rows'] as $row ) : ?>
+							<tr>
+								<th class="whd-grid__handle">
+									<button type="button" class="whd-grid__drop" data-whd-drop-row title="<?php esc_attr_e( 'Remove this row', 'whd' ); ?>">&times;</button>
+								</th>
+								<?php for ( $i = 0; $i < $cols; $i++ ) : ?>
+									<td><input type="text" name="whd_chart_cells[]" value="<?php echo esc_attr( $row[ $i ] ?? '' ); ?>"></td>
+								<?php endfor; ?>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			</div>
+
+			<p class="whd-grid__actions">
+				<button type="button" class="button" data-whd-add-row><?php esc_html_e( '+ Add a size', 'whd' ); ?></button>
+				<button type="button" class="button" data-whd-add-col><?php esc_html_e( '+ Add a measurement', 'whd' ); ?></button>
+				<span class="description"><?php esc_html_e( 'The first column is the size name; the rest are measurements.', 'whd' ); ?></span>
+			</p>
+
+			<div class="whd-grid__field">
+				<label for="whd-chart-note"><?php esc_html_e( 'A line below the table', 'whd' ); ?></label>
+				<textarea id="whd-chart-note" name="whd_chart_note" rows="2" class="large-text" placeholder="<?php esc_attr_e( 'e.g. Each piece is also measured flat on its own page. Where the two disagree, trust the garment.', 'whd' ); ?>"><?php echo esc_textarea( $note ); ?></textarea>
+			</div>
+
+			<div class="whd-grid__preview">
+				<p class="whd-grid__label"><?php esc_html_e( 'This is what a shopper sees', 'whd' ); ?></p>
+				<div class="whd-sc__text" data-whd-preview></div>
+			</div>
+		</div>
+		<?php
 	}
 
 	/**
@@ -313,21 +522,56 @@ class WHD_Size_Charts {
 		echo '</div>';
 	}
 
-	/** Said once on the editing screen, because the two ways to make a chart are not obvious. */
+	/** Said once on the editing screen, because what to fill in first is not obvious. */
 	public static function help_box() {
-		echo '<p>' . esc_html__( 'There are two ways, and you can use either:', 'whd' ) . '</p>';
-		echo '<ol style="margin:0 0 0 18px">';
-		echo '<li style="margin-bottom:8px">' . wp_kses_post( __( '<strong>Type a table</strong> in the big box. Use the editor\'s table button, or paste one straight out of a spreadsheet.', 'whd' ) ) . '</li>';
-		echo '<li>' . wp_kses_post( __( '<strong>Upload a picture</strong> of your chart under <em>Picture of the chart</em>. A photograph or a screenshot is fine.', 'whd' ) ) . '</li>';
-		echo '</ol>';
-		echo '<p class="description">' . esc_html__( 'If you do both, the picture is shown first and the table beneath it.', 'whd' ) . '</p>';
+		echo '<p>' . esc_html__( 'Fill in the table under “The measurements”. Name the columns, add a row per size, and type the numbers. Every chart is drawn the same way on the product page, so they all match.', 'whd' ) . '</p>';
+		echo '<p>' . wp_kses_post( __( 'You can also <strong>upload a picture</strong> of a chart under <em>Picture of the chart</em> — a photograph or a screenshot. It is shown above the table.', 'whd' ) ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'Leave the table empty and only the picture is shown.', 'whd' ) . '</p>';
+	}
+
+	/**
+	 * The grid, straight off the form.
+	 *
+	 * The cells arrive as one flat list because that is what a table of inputs posts; they are cut
+	 * back into rows by the number of columns. A row with nothing in it anywhere is dropped, so
+	 * adding a spare row and not using it costs nothing.
+	 */
+	public static function save_grid( $post_id ) {
+		if ( ! isset( $_POST['whd_chart_grid_nonce'] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_POST['whd_chart_grid_nonce'] ) ), 'whd_chart_grid' ) ) {
+			return;
+		}
+
+		$columns = array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['whd_chart_cols'] ?? [] ) );
+		$columns = array_values( array_filter( $columns, static fn( $c ) => '' !== trim( $c ) ) );
+		$cells   = array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['whd_chart_cells'] ?? [] ) );
+
+		$rows = [];
+		if ( $columns ) {
+			foreach ( array_chunk( $cells, count( $columns ) ) as $row ) {
+				$row = array_pad( array_slice( $row, 0, count( $columns ) ), count( $columns ), '' );
+				if ( '' !== trim( implode( '', $row ) ) ) {
+					$rows[] = array_map( 'trim', $row );
+				}
+			}
+		}
+
+		update_post_meta( $post_id, self::GRID, [ 'columns' => $columns, 'rows' => $rows ] );
+
+		$unit = sanitize_key( (string) wp_unslash( $_POST['whd_chart_unit'] ?? '' ) );
+		update_post_meta( $post_id, self::UNIT, in_array( $unit, [ 'in', 'cm' ], true ) ? $unit : '' );
+		update_post_meta( $post_id, self::INTRO, sanitize_textarea_field( (string) wp_unslash( $_POST['whd_chart_intro'] ?? '' ) ) );
+		update_post_meta( $post_id, self::NOTE, sanitize_textarea_field( (string) wp_unslash( $_POST['whd_chart_note'] ?? '' ) ) );
 	}
 
 	public static function save_chart( $post_id, $post ) {
-		if ( ! isset( $_POST['whd_chart_reach_nonce'] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_POST['whd_chart_reach_nonce'] ) ), 'whd_chart_reach' ) ) {
+		if ( ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) || ! current_user_can( 'edit_post', $post_id ) ) {
 			return;
 		}
-		if ( ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) || ! current_user_can( 'edit_post', $post_id ) ) {
+		// Its own nonce, because the measurements and the reach are two separate boxes and a screen
+		// can post one without the other.
+		self::save_grid( $post_id );
+
+		if ( ! isset( $_POST['whd_chart_reach_nonce'] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_POST['whd_chart_reach_nonce'] ) ), 'whd_chart_reach' ) ) {
 			return;
 		}
 		$cats = isset( $_POST['whd_chart_cats'] ) ? array_map( 'absint', (array) wp_unslash( $_POST['whd_chart_cats'] ) ) : [];
@@ -466,10 +710,17 @@ class WHD_Size_Charts {
 			return null;
 		}
 		$image_id = (int) get_post_thumbnail_id( $chart_id );
+		$table    = self::table_html( $chart_id );
 		return [
 			'id'          => $chart_id,
-			'title'       => get_the_title( $chart_id ),
-			'description' => apply_filters( 'the_content', get_post_field( 'post_content', $chart_id ) ),
+			// Decoded: the title filters turn "&" into an entity, and every place this is used
+			// escapes it again, so a chart called "Tops & Dresses" arrives as "Tops &#038; Dresses".
+			'title'       => html_entity_decode( get_the_title( $chart_id ), ENT_QUOTES, 'UTF-8' ),
+			'intro'       => (string) get_post_meta( $chart_id, self::INTRO, true ),
+			'table'       => $table,
+			'note'        => (string) get_post_meta( $chart_id, self::NOTE, true ),
+			// Only where there is no table: an old chart's body is the chart.
+			'description' => $table ? '' : apply_filters( 'the_content', get_post_field( 'post_content', $chart_id ) ),
 			'image'       => $image_id ? wp_get_attachment_image_url( $image_id, 'full' ) : '',
 			'image_tag'   => $image_id ? wp_get_attachment_image( $image_id, 'large', false, [ 'class' => 'whd-sc__img', 'loading' => 'lazy' ] ) : '',
 		];
@@ -514,16 +765,26 @@ class WHD_Size_Charts {
 			<div class="whd-sc__panel" role="document">
 				<button type="button" class="whd-sc__close" data-whd-size-chart-close aria-label="<?php esc_attr_e( 'Close', 'whd' ); ?>">&times;</button>
 				<h2 class="whd-sc__title" id="whd-sc-title"><?php echo esc_html( $chart['title'] ); ?></h2>
-				<?php if ( $chart['description'] ) : ?>
-					<div class="whd-sc__text"><?php echo wp_kses_post( $chart['description'] ); ?></div>
+				<?php if ( $chart['intro'] ) : ?>
+					<p class="whd-sc__lede"><?php echo esc_html( $chart['intro'] ); ?></p>
 				<?php endif; ?>
 				<?php if ( $chart['image_tag'] ) : ?>
 					<figure class="whd-sc__figure">
 						<?php echo wp_kses_post( $chart['image_tag'] ); ?>
 						<figcaption><a href="<?php echo esc_url( $chart['image'] ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Open the full-size chart', 'whd' ); ?></a></figcaption>
 					</figure>
-				<?php else : ?>
-					<p class="whd-sc__text"><?php esc_html_e( 'This chart has no image yet.', 'whd' ); ?></p>
+				<?php endif; ?>
+				<?php if ( $chart['table'] ) : ?>
+					<div class="whd-sc__tablewrap"><?php echo wp_kses_post( $chart['table'] ); ?></div>
+				<?php endif; ?>
+				<?php if ( $chart['note'] ) : ?>
+					<p class="whd-sc__note"><?php echo esc_html( $chart['note'] ); ?></p>
+				<?php endif; ?>
+				<?php if ( $chart['description'] ) : ?>
+					<div class="whd-sc__text"><?php echo wp_kses_post( $chart['description'] ); ?></div>
+				<?php endif; ?>
+				<?php if ( ! $chart['table'] && ! $chart['image_tag'] && ! $chart['description'] ) : ?>
+					<p class="whd-sc__text"><?php esc_html_e( 'This chart has nothing in it yet.', 'whd' ); ?></p>
 				<?php endif; ?>
 			</div>
 		</div>

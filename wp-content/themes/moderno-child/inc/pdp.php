@@ -283,6 +283,103 @@ function omc_pdp_admin_chart() {
 }
 
 /**
+ * One measurement in both units, from a figure typed in one of them.
+ *
+ * The admin screen asks for a number once. The modal has always offered inches and centimetres,
+ * and a chart somebody maintains should not be the one that loses that — so the other unit is
+ * worked out here. Anything that is not a plain figure (a size name, "one size") is left alone.
+ *
+ * @param string $text Cell as it was typed: 34, 31–32, 31–32", 86 cm.
+ * @param string $unit The chart's unit: in|cm|'' to read it off the cell.
+ * @return array|string Unit map, or the original string when there is nothing to convert.
+ */
+function omc_sg_both_units( $text, $unit ) {
+	$text = trim( (string) $text );
+	if ( '' === $text ) {
+		return '';
+	}
+
+	// A unit written into the cell wins over the chart's setting — it is the more specific fact.
+	if ( preg_match( '/\s*(?:″|"|in\.?|inches)$/iu', $text ) ) {
+		$unit = 'in';
+	} elseif ( preg_match( '/\s*cm\.?$/iu', $text ) ) {
+		$unit = 'cm';
+	}
+	if ( ! in_array( $unit, [ 'in', 'cm' ], true ) ) {
+		return $text;
+	}
+
+	$bare = trim( preg_replace( '/\s*(?:″|"|in\.?|inches|cm\.?)$/iu', '', $text ) );
+	if ( ! preg_match( '/^\d+(?:[.,]\d+)?(?:\s*[-–—]\s*\d+(?:[.,]\d+)?)?$/u', $bare ) ) {
+		return $text;
+	}
+
+	$convert = static function ( $n ) use ( $unit ) {
+		$n = (float) str_replace( ',', '.', $n );
+		return (string) round( 'in' === $unit ? $n * 2.54 : $n / 2.54 );
+	};
+	$parts = preg_split( '/\s*[-–—]\s*/u', $bare );
+	$other = implode( '–', array_map( $convert, $parts ) );
+
+	return 'in' === $unit
+		? [ 'in' => $bare . '″', 'cm' => $other . ' cm' ]
+		: [ 'in' => $other . '″', 'cm' => $bare . ' cm' ];
+}
+
+/**
+ * The admin's chart in the shape this modal already draws.
+ *
+ * One layout rather than two: a chart typed into the Size Charts screen comes out looking exactly
+ * like the one written in this file, units toggle and all, instead of being dropped in as a slab
+ * of somebody else's HTML.
+ *
+ * @return array|null
+ */
+function omc_pdp_chart_from_admin() {
+	if ( ! class_exists( 'WHD_Size_Charts' ) ) {
+		return null;
+	}
+	$found = WHD_Size_Charts::for_product();
+	if ( ! $found ) {
+		return null;
+	}
+	$grid = WHD_Size_Charts::grid( $found['id'] );
+	if ( empty( $grid['columns'] ) || empty( $grid['rows'] ) ) {
+		return null;   // picture-only, or written as HTML before the form existed
+	}
+
+	$unit    = (string) get_post_meta( $found['id'], '_whd_chart_unit', true );
+	$columns = [];
+	foreach ( $grid['columns'] as $i => $label ) {
+		$columns[ 'c' . $i ] = $label;
+	}
+
+	$rows      = [];
+	$two_units = false;
+	foreach ( $grid['rows'] as $row ) {
+		$out = [];
+		foreach ( array_keys( $columns ) as $i => $key ) {
+			$cell        = $i ? omc_sg_both_units( $row[ $i ] ?? '', $unit ) : trim( (string) ( $row[ $i ] ?? '' ) );
+			$two_units   = $two_units || is_array( $cell );
+			$out[ $key ] = $cell;
+		}
+		$rows[] = $out;
+	}
+
+	return [
+		'title'        => $found['title'],
+		'intro'        => (string) ( $found['intro'] ?? '' ),
+		'note'         => (string) ( $found['note'] ?? '' ),
+		'image_tag'    => (string) ( $found['image_tag'] ?? '' ),
+		// No toggle where nothing converts: two buttons that change nothing are worse than none.
+		'units'        => $two_units ? [ 'in' => __( 'inches', 'moderno-child' ), 'cm' => __( 'centimetres', 'moderno-child' ) ] : [],
+		'default_unit' => 'cm' === $unit ? 'cm' : 'in',
+		'columns'      => $columns,
+		'rows'         => $rows,
+	];
+}
+
+/**
  * The modal itself, printed once in the footer of a product page.
  */
 function omc_pdp_size_guide_modal() {
@@ -290,8 +387,15 @@ function omc_pdp_size_guide_modal() {
 		return;
 	}
 
-	// A chart written in the admin wins: it is the one somebody maintains.
-	$admin_chart = omc_pdp_admin_chart();
+	/*
+	 * A chart written in the admin wins: it is the one somebody maintains. Where it was typed into
+	 * the measurements form it is drawn below, in this file's own layout. The branch underneath is
+	 * for the two that cannot be: a chart that is only a photograph, and one written as HTML
+	 * before the form existed.
+	 */
+	$chart = omc_pdp_chart_from_admin();
+
+	$admin_chart = $chart ? null : omc_pdp_admin_chart();
 	if ( $admin_chart ) {
 		?>
 		<div class="omc-sg" id="omc-size-guide" hidden>
@@ -313,12 +417,15 @@ function omc_pdp_size_guide_modal() {
 		return;
 	}
 
-	$chart = omc_pdp_size_chart();
+	$chart = $chart ?: omc_pdp_size_chart();
 	if ( empty( $chart['rows'] ) || empty( $chart['columns'] ) ) {
 		return;
 	}
 
-	$units = ! empty( $chart['units'] ) && is_array( $chart['units'] ) ? $chart['units'] : [ 'in' => 'inches', 'cm' => 'centimetres' ];
+	// An admin chart in one unit has nothing to toggle between, and says so with an empty list.
+	$units = isset( $chart['units'] ) && is_array( $chart['units'] )
+		? $chart['units']
+		: [ 'in' => 'inches', 'cm' => 'centimetres' ];
 	$unit  = isset( $chart['default_unit'] ) && isset( $units[ $chart['default_unit'] ] ) ? $chart['default_unit'] : (string) array_key_first( $units );
 	?>
 	<div class="omc-sg" id="omc-size-guide" data-unit="<?php echo esc_attr( $unit ); ?>" hidden>
@@ -334,6 +441,11 @@ function omc_pdp_size_guide_modal() {
 				<p class="omc-sg__intro"><?php echo esc_html( $chart['intro'] ); ?></p>
 			<?php endif; ?>
 
+			<?php if ( ! empty( $chart['image_tag'] ) ) : ?>
+				<div class="omc-sg__image"><?php echo $chart['image_tag']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped — wp_get_attachment_image(). ?></div>
+			<?php endif; ?>
+
+			<?php if ( count( $units ) > 1 ) : ?>
 			<div class="omc-sg__units" role="group" aria-label="<?php esc_attr_e( 'Measurement units', 'moderno-child' ); ?>">
 				<?php foreach ( $units as $key => $label ) : ?>
 					<button type="button" class="omc-sg__unit<?php echo $key === $unit ? ' is-active' : ''; ?>"
@@ -344,6 +456,7 @@ function omc_pdp_size_guide_modal() {
 					</button>
 				<?php endforeach; ?>
 			</div>
+			<?php endif; ?>
 
 			<div class="omc-sg__table-wrap">
 				<table class="omc-sg__table">
