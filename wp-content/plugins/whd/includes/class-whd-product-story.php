@@ -84,20 +84,30 @@ class WHD_Product_Story {
 		<p class="description">
 			<?php esc_html_e( 'The written part of the page: how the piece wears, what it goes with, when to size up. It shows below the gallery, above “You might also like”.', 'whd' ); ?>
 		</p>
+		<?php
+		/*
+		 * The tick is always here, even before a story exists, and so is the marker beside it.
+		 * It used to appear only once there was a story, which meant writing one in the AI panel
+		 * and then pressing Update posted no tick at all — and a missing tick was read as "switch
+		 * it off". The story was still in the database; it simply stopped being shown, which from
+		 * the other side of the screen looks exactly like the Update button having eaten it.
+		 */
+		?>
+		<input type="hidden" name="whd_story_box" value="1">
 		<?php if ( $has ) : ?>
 			<p><strong><?php
 				/* translators: %d: number of blocks */
 				printf( esc_html( _n( '%d block', '%d blocks', $count, 'whd' ) ), (int) $count );
 			?></strong></p>
-			<p>
-				<label>
-					<input type="checkbox" name="whd_story_on" value="1" <?php checked( $on ); ?>>
-					<?php esc_html_e( 'Show on the product page', 'whd' ); ?>
-				</label>
-			</p>
 		<?php else : ?>
-			<p><em><?php esc_html_e( 'No story yet.', 'whd' ); ?></em></p>
+			<p><em><?php esc_html_e( 'No story yet — write one below and it appears here.', 'whd' ); ?></em></p>
 		<?php endif; ?>
+		<p>
+			<label>
+				<input type="checkbox" name="whd_story_on" value="1" <?php checked( $has ? $on : true ); ?>>
+				<?php esc_html_e( 'Show on the product page', 'whd' ); ?>
+			</label>
+		</p>
 		<p>
 			<a href="<?php echo esc_url( $edit ); ?>" class="button button-primary">
 				<?php echo $has ? esc_html__( 'Edit the story', 'whd' ) : esc_html__( 'Write the story', 'whd' ); ?>
@@ -116,10 +126,15 @@ class WHD_Product_Story {
 		if ( ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) || ! current_user_can( 'edit_post', $post_id ) ) {
 			return;
 		}
-		// Only meaningful once a story exists; the box only shows the checkbox then.
-		if ( self::has( $post_id ) ) {
-			update_post_meta( $post_id, self::META . '_off', isset( $_POST['whd_story_on'] ) ? '1' : '0' );
+		/*
+		 * Only when the box was actually on the screen that posted. A screen loaded before the
+		 * story existed carries no tick, and treating that absence as "switch it off" is how a
+		 * story written in the panel disappeared the moment anybody pressed Update.
+		 */
+		if ( ! isset( $_POST['whd_story_box'] ) ) {
+			return;
 		}
+		update_post_meta( $post_id, self::META . '_off', isset( $_POST['whd_story_on'] ) ? '1' : '0' );
 	}
 
 	/* ─────────────────────────── Product page ─────────────────────────── */

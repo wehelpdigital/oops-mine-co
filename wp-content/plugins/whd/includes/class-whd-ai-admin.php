@@ -1021,17 +1021,30 @@ final class WHD_AI_Admin {
 		$made = [];
 		foreach ( $result['made'] as $id ) {
 			$made[] = [
-				'id'  => (int) $id,
-				'url' => wp_get_attachment_image_url( $id, 'medium' ),
+				'id'    => (int) $id,
+				'url'   => wp_get_attachment_image_url( $id, 'medium' ),
+				'thumb' => wp_get_attachment_image_url( $id, 'thumbnail' ),
 			];
 		}
 
+		/*
+		 * The gallery as it now stands, so the screen can be brought up to date. Without it the
+		 * page still holds the list it was loaded with, and pressing Update writes that list back
+		 * — which quietly detaches every picture drawn since.
+		 */
+		$gallery  = WHD_AI_Images::gallery( $post_id );
+		$product  = function_exists( 'wc_get_product' ) ? wc_get_product( $post_id ) : null;
+		$featured = $product ? (int) $product->get_image_id() : 0;
+
 		return new WP_REST_Response( [
-			'made'    => $made,
-			'skipped' => $result['skipped'],
-			'missing' => WHD_AI_Images::missing( $post_id ),
-			'rows'    => WHD_AI_Images::rows( $post_id ),
-			'have'    => count( WHD_AI_Images::gallery( $post_id ) ),
+			'made'     => $made,
+			'skipped'  => $result['skipped'],
+			'missing'  => WHD_AI_Images::missing( $post_id ),
+			'rows'     => WHD_AI_Images::rows( $post_id ),
+			'have'     => count( $gallery ),
+			'featured' => $featured,
+			// The field on the product screen holds the gallery only, never the featured image.
+			'gallery'  => implode( ',', array_values( array_diff( $gallery, [ $featured ] ) ) ),
 		], 200 );
 	}
 

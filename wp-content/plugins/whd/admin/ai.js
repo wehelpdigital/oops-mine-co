@@ -471,7 +471,16 @@
 					img.className = 'whd-ai-photos__shot';
 					grid.hidden = false;
 					grid.appendChild( img );
+					intoProductGallery( picture );
 				} );
+				// The screen was loaded with the old list; bring it up to date or Update writes
+				// that old list straight back over the new pictures.
+				if ( typeof r.gallery === 'string' ) {
+					var field = document.getElementById( 'product_image_gallery' );
+					if ( field ) {
+						field.value = r.gallery;
+					}
+				}
 				( r.skipped || [] ).forEach( function ( why ) {
 					if ( status ) {
 						status.textContent = why;
@@ -524,6 +533,34 @@
 		}
 
 		next();
+	}
+
+	/**
+	 * Show a drawn picture in WooCommerce's own gallery box.
+	 *
+	 * It is already attached in the database. This is so the screen agrees — the thumbnail is
+	 * there to be seen, dragged and deleted like any other, and the hidden field beside it posts
+	 * the picture rather than losing it.
+	 */
+	function intoProductGallery( picture ) {
+		var list = document.querySelector( '#product_images_container ul.product_images' );
+		if ( ! list || ! picture.id ) {
+			return;
+		}
+		if ( list.querySelector( '[data-attachment_id="' + picture.id + '"]' ) ) {
+			return;
+		}
+		var li = document.createElement( 'li' );
+		li.className = 'image';
+		li.setAttribute( 'data-attachment_id', picture.id );
+		li.innerHTML = '<img src="' + ( picture.thumb || picture.url ) + '" alt="" />'
+			+ '<ul class="actions"><li><a href="#" class="delete tips" data-tip="Delete image">Delete</a></li></ul>';
+		var add = list.querySelector( '.add_product_images' );
+		if ( add ) {
+			list.insertBefore( li, add );
+		} else {
+			list.appendChild( li );
+		}
 	}
 
 	function photos() {
