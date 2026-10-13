@@ -216,3 +216,5 @@
 	border: 1px solid #dcdcde;
 	background: #f6f7f7;
 }
+.whd-ai-result__also { margin: 10px 0 0; }
+.whd-ai-result__also label { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: #1d2327; }

@@ -102,6 +102,14 @@ final class WHD_AI_Admin {
 				'drawing'    => __( 'Drawing…', 'whd' ),
 				'drawn'      => __( 'Done — have a look before you publish.', 'whd' ),
 				'allRows'    => __( 'Every row has one', 'whd' ),
+				'andPhotos'  => __( 'Now the photographs…', 'whd' ),
+				/* translators: %d: number of photographs drawn */
+				'andDrawn'   => __( '%d drawn — have a look before you publish.', 'whd' ),
+				'andNone'    => __( 'No photographs were drawn.', 'whd' ),
+				'bothPlaced' => __( 'Both fields filled — save the product to keep them.', 'whd' ),
+				'confirmCopy'=> __( 'Replace the description and the short description with these?', 'whd' ),
+				'keptAsIs'   => __( 'Left as they were.', 'whd' ),
+				'noHalves'   => __( 'Could not tell the two halves apart — keep the SHORT and DESCRIPTION headings in the box.', 'whd' ),
 				/* translators: 1: rows with a photograph, 2: rows in the story */
 				'rowsHave'   => __( '%1$d of %2$d rows have a photograph.', 'whd' ),
 			],
@@ -116,7 +124,9 @@ final class WHD_AI_Admin {
 				'key'    => $key,
 				'label'  => $spec['label'],
 				'apply'  => $spec['apply'],
-				'inline' => in_array( $spec['apply'], [ 'content', 'excerpt' ], true ),
+				// Applied in the browser, so it travels through WordPress's own save: the editor
+				// fields are on this screen, and writing them server-side would clobber an edit.
+				'inline' => in_array( $spec['apply'], [ 'content', 'excerpt', 'product_copy' ], true ),
 			];
 		}
 		return $out;
@@ -863,6 +873,21 @@ final class WHD_AI_Admin {
 			<div class="whd-ai-result" id="whd-ai-result" hidden>
 				<div class="whd-ai-result__check" id="whd-ai-check"></div>
 				<textarea class="whd-ai-result__text" id="whd-ai-text" rows="16"></textarea>
+				<?php
+				/*
+				 * Only on a product, and only where pictures can actually be drawn. Ticked by
+				 * default: a story is written in sections and read as spreads, so finishing the
+				 * words and leaving half the rows with nothing beside them is not finishing.
+				 */
+				if ( 'product' === $post->post_type && class_exists( 'WHD_AI_Images' ) && WHD_AI_Images::ready() ) :
+					?>
+					<p class="whd-ai-result__also">
+						<label>
+							<input type="checkbox" id="whd-ai-also-photos" checked>
+							<?php esc_html_e( 'Draw any photographs the story is short of', 'whd' ); ?>
+						</label>
+					</p>
+				<?php endif; ?>
 				<p class="whd-ai-result__actions">
 					<button type="button" class="button button-primary" id="whd-ai-apply"></button>
 					<button type="button" class="button" id="whd-ai-copy"><?php esc_html_e( 'Copy', 'whd' ); ?></button>
@@ -1055,9 +1080,15 @@ final class WHD_AI_Admin {
 				if ( ! $blocks ) {
 					return new WP_REST_Response( [ 'message' => __( 'There was nothing in that to save.', 'whd' ) ], 400 );
 				}
-				// Keep any images the owner already placed; replace the words.
+				/*
+				 * Keep any pictures already in the story and replace the words — but hand them
+				 * back one per section rather than appending them. The band pairs a section with
+				 * the picture inside it, so a heap of images at the end is a heap nobody sees.
+				 */
 				$images           = array_values( array_filter( $design['blocks'], static fn( $b ) => 'image' === ( $b['type'] ?? '' ) ) );
-				$design['blocks'] = array_merge( $blocks, $images );
+				$design['blocks'] = class_exists( 'WHD_AI_Images' )
+					? WHD_AI_Images::spread( $blocks, $images )
+					: array_merge( $blocks, $images );
 				WHD_Product_Story::save( $post_id, $design );
 				update_post_meta( $post_id, WHD_Product_Story::META . '_off', '1' );
 				$message = __( 'Saved as the product story and switched on.', 'whd' );
@@ -1078,7 +1109,22 @@ final class WHD_AI_Admin {
 		}
 
 		WHD_AI_Keywords::mark_used( (array) $r->get_param( 'keywords' ) );
-		return new WP_REST_Response( [ 'message' => $message ], 200 );
+
+		/*
+		 * Hand back the state of the story's photographs so the panel can carry straight on into
+		 * drawing the ones it is short of. Counted after the save, because applying a story is
+		 * what decides how many sections there are to fill.
+		 */
+		$photos = null;
+		if ( 'product' === $post->post_type && class_exists( 'WHD_AI_Images' ) && WHD_AI_Images::ready() ) {
+			$photos = [
+				'missing' => WHD_AI_Images::missing( $post_id ),
+				'rows'    => WHD_AI_Images::rows( $post_id ),
+				'have'    => count( WHD_AI_Images::gallery( $post_id ) ),
+			];
+		}
+
+		return new WP_REST_Response( [ 'message' => $message, 'photos' => $photos ], 200 );
 	}
 
 	public static function rest_suggest( WP_REST_Request $r ) {

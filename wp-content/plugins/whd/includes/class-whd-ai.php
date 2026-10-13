@@ -524,6 +524,25 @@ final class WHD_AI {
 				'apply' => 'story',
 				'words' => [ 200, 420 ],
 			],
+			/*
+			 * Both description fields in one go. They are written together because they are read
+			 * together — the short one is the promise and the long one is the detail behind it,
+			 * and writing them in separate passes is how a shop ends up with two descriptions that
+			 * do not quite agree. The markers are what let the panel put each half in its field.
+			 */
+			'product_copy'        => [
+				'label' => __( 'Description and short description (both at once)', 'whd' ),
+				'types' => [ 'product' ],
+				'brief' => __(
+					"Write both halves of this product's copy, in this exact shape and nothing else:\n\n"
+					. "## SHORT\nTwo sentences, at most 45 words, that make somebody want to read on. No headings, no list.\n\n"
+					. "## DESCRIPTION\nTwo or three paragraphs: the cut, the fabric and how it wears. No headings inside this part, and no bullet list of specifications the shop has not given you.\n\n"
+					. 'Keep the two halves consistent with each other, and do not repeat the short one word for word inside the long one.',
+					'whd'
+				),
+				'apply' => 'product_copy',
+				'words' => [ 110, 280 ],
+			],
 			'product_description' => [
 				'label' => __( 'Long description (the product tab)', 'whd' ),
 				'types' => [ 'product' ],

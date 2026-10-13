@@ -257,7 +257,38 @@ final class WHD_AI_Images {
 			return 0;
 		}
 
-		// Walk the rows: a heading opens one, and it runs to the next heading.
+		$before = count( $blocks );
+		$blocks = self::spread( $blocks, array_map(
+			static fn( $p ) => [ 'type' => 'image', 'props' => [ 'url' => $p['url'], 'alt' => $p['alt'], 'width' => 100 ] ],
+			$spare
+		) );
+		$filled = count( $blocks ) - $before;
+
+		if ( $filled ) {
+			$design['blocks'] = $blocks;
+			WHD_Product_Story::save( $product_id, $design );
+		}
+
+		return $filled;
+	}
+
+	/**
+	 * Put one picture in each section that has none, in order, and keep the rest.
+	 *
+	 * A heading opens a section and it runs to the next heading. The band reads a section's picture
+	 * as the one on the other side of its words, so a heap of images at the end of the design is a
+	 * heap of pictures nobody sees — which is exactly what happens when a rewritten story keeps the
+	 * old ones by appending them.
+	 *
+	 * @param array $blocks The design's blocks.
+	 * @param array $images Image blocks to place.
+	 * @return array The blocks, with the pictures distributed.
+	 */
+	public static function spread( array $blocks, array $images ): array {
+		if ( ! $images ) {
+			return $blocks;
+		}
+
 		$rows  = [];
 		$start = null;
 		foreach ( $blocks as $i => $block ) {
@@ -272,34 +303,36 @@ final class WHD_AI_Images {
 		if ( null !== $start ) {
 			$rows[] = [ $start, count( $blocks ) - 1 ];
 		}
+		if ( ! $rows ) {
+			return array_merge( $blocks, $images );
+		}
 
-		$filled = 0;
-		// Backwards, so inserting into one row does not move the ones not yet looked at.
-		foreach ( array_reverse( $rows ) as $row ) {
-			if ( ! $spare ) {
-				continue;
-			}
+		$empty = [];
+		foreach ( $rows as $row ) {
 			$has = false;
 			for ( $i = $row[0]; $i <= $row[1]; $i++ ) {
 				$has = $has || 'image' === ( $blocks[ $i ]['type'] ?? '' );
 			}
-			if ( $has ) {
-				continue;
+			if ( ! $has ) {
+				$empty[] = $row;
 			}
-			$picture = array_pop( $spare );
-			array_splice( $blocks, $row[1] + 1, 0, [ [
-				'type'  => 'image',
-				'props' => [ 'url' => $picture['url'], 'alt' => $picture['alt'], 'width' => 100 ],
-			] ] );
-			$filled++;
 		}
 
-		if ( $filled ) {
-			$design['blocks'] = $blocks;
-			WHD_Product_Story::save( $product_id, $design );
+		/*
+		 * From the top down when there are not enough to go round: the first section is the one
+		 * everybody reads, so a story one picture short should be short at the bottom.
+		 */
+		$take  = array_slice( $empty, 0, count( $images ) );
+		$left  = array_slice( $images, count( $take ) );
+		$pairs = array_combine( array_keys( $take ), $take );
+
+		// Spliced back to front, so inserting into one row does not move the ones still to do.
+		foreach ( array_reverse( $pairs, true ) as $n => $row ) {
+			array_splice( $blocks, $row[1] + 1, 0, [ $images[ $n ] ] );
 		}
 
-		return $filled;
+		// Anything over goes on the end rather than being thrown away.
+		return $left ? array_merge( $blocks, array_values( $left ) ) : $blocks;
 	}
 
 	/** Skincare is held and applied; clothes are worn. The prompt needs to know which. */
