@@ -74,6 +74,7 @@ final class WHD_Integrations {
 		add_action( 'whd_subscriber_added', [ __CLASS__, 'on_subscriber_added' ], 10, 6 );
 		add_action( self::SYNC_HOOK, [ __CLASS__, 'sync_subscriber' ] );
 		add_action( 'admin_post_whd_test_email_provider', [ __CLASS__, 'handle_test_email' ] );
+		add_action( 'admin_post_whd_sync_backlog', [ __CLASS__, 'handle_sync_backlog' ] );
 		add_action( 'admin_post_whd_test_sms', [ __CLASS__, 'handle_test_sms' ] );
 	}
 
@@ -622,6 +623,74 @@ final class WHD_Integrations {
 		self::back();
 	}
 
+	/**
+	 * Push everyone collected before the platform was connected.
+	 *
+	 * A subscriber is sent on the way in, once, and nowhere else. So every address taken before
+	 * the API key was saved — which on a new shop is all of them — sits in the table and reaches
+	 * nobody. This is the button that catches them up.
+	 *
+	 * @param int $limit How many to attempt in one go.
+	 * @return array [ sent, failed, left ]
+	 */
+	public static function sync_backlog( int $limit = 200 ): array {
+		global $wpdb;
+		if ( ! class_exists( 'WHD_Subscribers' ) || ! self::email_enabled() ) {
+			return [ 0, 0, 0 ];
+		}
+		$table = WHD_Subscribers::table();
+		$ids   = $wpdb->get_col( $wpdb->prepare( // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			"SELECT id FROM $table WHERE synced_at IS NULL AND status = 'subscribed' ORDER BY id ASC LIMIT %d",
+			max( 1, $limit )
+		) );
+
+		$sent   = 0;
+		$failed = 0;
+		foreach ( $ids as $id ) {
+			if ( self::sync_subscriber( (int) $id ) ) {
+				$sent++;
+			} else {
+				$failed++;
+			}
+		}
+		$left = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $table WHERE synced_at IS NULL AND status = 'subscribed'" ); // phpcs:ignore WordPress.DB
+
+		return [ $sent, $failed, $left ];
+	}
+
+	/** How many are waiting, so the button can say so before anybody presses it. */
+	public static function backlog_count(): int {
+		global $wpdb;
+		if ( ! class_exists( 'WHD_Subscribers' ) ) {
+			return 0;
+		}
+		$table = WHD_Subscribers::table();
+
+		return (int) $wpdb->get_var( "SELECT COUNT(*) FROM $table WHERE synced_at IS NULL AND status = 'subscribed'" ); // phpcs:ignore WordPress.DB
+	}
+
+	public static function handle_sync_backlog() {
+		if ( ! current_user_can( 'manage_options' ) || ! check_admin_referer( 'whd_sync_backlog' ) ) {
+			wp_die( esc_html__( 'Not allowed', 'whd' ) );
+		}
+		if ( ! self::email_enabled() ) {
+			self::notice( false, __( 'Connect an email platform above first.', 'whd' ) );
+			self::back();
+		}
+		list( $sent, $failed, $left ) = self::sync_backlog();
+		self::notice(
+			$sent > 0 || 0 === $failed,
+			sprintf(
+				/* translators: 1: number sent, 2: number that failed, 3: number still waiting */
+				__( '%1$d sent, %2$d refused, %3$d still waiting.', 'whd' ),
+				$sent,
+				$failed,
+				$left
+			)
+		);
+		self::back();
+	}
+
 	public static function handle_test_sms() {
 		if ( ! current_user_can( 'manage_options' ) || ! check_admin_referer( 'whd_test_sms' ) ) {
 			wp_die( esc_html__( 'Not allowed', 'whd' ) );
@@ -787,6 +856,23 @@ final class WHD_Integrations {
 		echo '<p class="whd-test__label">' . esc_html__( 'Email platform', 'whd' ) . '</p>';
 		echo '<p class="whd-muted">' . esc_html( 'none' === $o['email_provider'] ? __( 'Pick a platform above to test it.', 'whd' ) : ( self::email_providers()[ $o['email_provider'] ] ?? $o['email_provider'] ) ) . '</p>';
 		submit_button( __( 'Test connection', 'whd' ), 'secondary', 'whd_test_email_submit', false, 'none' === $o['email_provider'] ? [ 'disabled' => 'disabled' ] : [] );
+		echo '</form>';
+
+		$waiting = self::backlog_count();
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="whd-test">';
+		wp_nonce_field( 'whd_sync_backlog' );
+		echo '<input type="hidden" name="action" value="whd_sync_backlog">';
+		echo '<p class="whd-test__label">' . esc_html__( 'Addresses waiting', 'whd' ) . '</p>';
+		echo '<p class="whd-muted">' . esc_html(
+			$waiting
+				? sprintf(
+					/* translators: %d: number of subscribers */
+					_n( '%d subscriber has never been sent across — anyone who signed up before this was connected.', '%d subscribers have never been sent across — anyone who signed up before this was connected.', $waiting, 'whd' ),
+					$waiting
+				)
+				: __( 'Everyone collected so far has been sent across.', 'whd' )
+		) . '</p>';
+		submit_button( __( 'Send them now', 'whd' ), 'secondary', 'whd_sync_backlog_submit', false, ( $waiting && self::email_enabled() ) ? [] : [ 'disabled' => 'disabled' ] );
 		echo '</form>';
 
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="whd-test">';
