@@ -10,19 +10,20 @@
  *   php .ftp-sync/fill-product-photos.php --dry-run          what is short, and what it would cost
  *   php .ftp-sync/fill-product-photos.php --limit=10         draw for the ten emptiest products
  *   php .ftp-sync/fill-product-photos.php --slug=some-product
+ *   php .ftp-sync/fill-product-photos.php --live --limit=10  (production write — the owner runs it)
  *
  * The pictures land in wp-content/uploads, which is git-ignored, so they reach live through
- * `node .ftp-sync/server.mjs sync` rather than through a commit. For live, run the whole thing
- * against the live database and then sync the files:
- *
- *   OMC_DB=live php .ftp-sync/fill-product-photos.php --limit=10
- *   node .ftp-sync/server.mjs sync
- *
- * Attaching a picture and pointing a story row at it are database writes, so that first line is
- * the site owner's to run.
+ * `node .ftp-sync/server.mjs sync` rather than through a commit. Attaching a picture and pointing
+ * a story row at it are database writes, so the --live run is the site owner's.
  */
 
-$_SERVER['HTTP_HOST'] = 'oopsmine.test';
+if ( in_array( '--live', $argv, true ) ) {
+	putenv( 'OMC_DB=live' );
+}
+$live                   = 'live' === getenv( 'OMC_DB' );
+$_SERVER['HTTP_HOST']   = $live ? 'oopsmineco.com' : 'oopsmine.test';
+$_SERVER['REQUEST_URI'] = '/';
+
 require dirname( __DIR__ ) . '/wp-load.php';
 
 if ( ! class_exists( 'WHD_AI_Images' ) ) {
@@ -47,7 +48,13 @@ if ( $admin ) {
 	wp_set_current_user( (int) $admin[0] );
 }
 
-printf( "%s  →  %s%s\n\n", WHD_AI_Images::ready() ? 'Google ' . WHD_AI_Images::model() : 'NO KEY', home_url( '/' ), $dry ? '   (dry run)' : '' );
+printf(
+	"%s  →  %s  via %s%s\n\n",
+	$live ? 'LIVE database' : 'local database',
+	home_url( '/' ),
+	WHD_AI_Images::ready() ? 'Google ' . WHD_AI_Images::model() : 'NO KEY',
+	$dry ? '   (dry run)' : ''
+);
 if ( ! WHD_AI_Images::ready() && ! $dry ) {
 	exit( "No Google API key is set in WHD → AI content.\n" );
 }
