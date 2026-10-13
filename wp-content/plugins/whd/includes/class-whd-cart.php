@@ -188,6 +188,14 @@ final class WHD_Cart {
 		} else {
 			$wpdb->insert( $table, $data + [ 'token' => wp_generate_password( 32, false ), 'status' => 'active', 'step' => 0, 'created_at' => $now ] );
 		}
+
+		/**
+		 * An address given at the checkout, cart and all.
+		 *
+		 * Announced on every save rather than only the first: the queue behind it deduplicates,
+		 * and a cart that grows is worth knowing about.
+		 */
+		do_action( 'whd_cart_captured', $who['email'], $data );
 	}
 
 	public static function ajax_capture() {

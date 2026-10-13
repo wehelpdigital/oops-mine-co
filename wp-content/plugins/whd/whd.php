@@ -24,6 +24,7 @@ require_once WHD_DIR . 'includes/class-whd-cart.php';
 require_once WHD_DIR . 'includes/class-whd-scripts.php';
 require_once WHD_DIR . 'includes/class-whd-subscribers.php';
 require_once WHD_DIR . 'includes/class-whd-integrations.php';
+require_once WHD_DIR . 'includes/class-whd-contacts.php';
 require_once WHD_DIR . 'includes/class-whd-size-charts.php';
 require_once WHD_DIR . 'includes/class-whd-product-story.php';
 require_once WHD_DIR . 'includes/class-whd-story-comments.php';
@@ -64,6 +65,7 @@ final class WHD_Plugin {
 		WHD_Popups::init();
 		WHD_Subscribers::init();
 		WHD_Integrations::init();
+		WHD_Contacts::init();
 		WHD_Size_Charts::init();
 		WHD_Product_Story::init();
 		WHD_Story_Comments::init();

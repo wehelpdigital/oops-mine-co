@@ -25,6 +25,7 @@ final class WHD_Integrations {
 	const LOG_OPTION  = 'whd_integrations_log';
 	const LOG_MAX     = 20;
 	const SYNC_HOOK   = 'whd_sync_subscriber';
+	const CONTACT_HOOK = 'whd_push_contact';   // a profile with no list behind it
 	const KLAVIYO_REV = '2024-10-15';
 
 	/** Field names that hold a credential (password input, blank = keep). */
@@ -73,6 +74,7 @@ final class WHD_Integrations {
 	public static function init() {
 		add_action( 'whd_subscriber_added', [ __CLASS__, 'on_subscriber_added' ], 10, 6 );
 		add_action( self::SYNC_HOOK, [ __CLASS__, 'sync_subscriber' ] );
+		add_action( self::CONTACT_HOOK, [ __CLASS__, 'push_contact' ] );
 		add_action( 'admin_post_whd_test_email_provider', [ __CLASS__, 'handle_test_email' ] );
 		add_action( 'admin_post_whd_sync_backlog', [ __CLASS__, 'handle_sync_backlog' ] );
 		add_action( 'admin_post_whd_test_sms', [ __CLASS__, 'handle_test_sms' ] );
@@ -214,6 +216,69 @@ final class WHD_Integrations {
 		}
 		do_action( 'whd_subscriber_synced', $id, $ok, $o['email_provider'] );
 		return $ok;
+	}
+
+	/* ─────────────────────────── contacts without consent ───────────────────────────
+	   A shopper who typed an address into the checkout, asked to be told when a size came back, or
+	   opened an account has not asked to be marketed to — but the shop still needs them to exist at
+	   the other end, or a cart flow has nobody to run against. So their details go across as a
+	   profile and nothing more: no list, no marketing consent. Ticking the box at checkout is what
+	   makes somebody a subscriber, and that goes the ordinary way, through WHD_Subscribers. */
+
+	/**
+	 * Hand one person to the platform as a profile, without subscribing them to anything.
+	 *
+	 * Queued rather than sent on the spot: nobody waits at a checkout for somebody else's API.
+	 *
+	 * @param array $contact email, first_name, last_name, phone, source, properties[].
+	 */
+	public static function queue_contact( array $contact ) {
+		$contact['email'] = strtolower( sanitize_email( $contact['email'] ?? '' ) );
+		if ( ! is_email( $contact['email'] ) || ! self::email_enabled() ) {
+			return;
+		}
+		$delay = (int) apply_filters( 'whd_contact_delay', 10, $contact );
+		if ( ! wp_next_scheduled( self::CONTACT_HOOK, [ $contact ] ) ) {
+			wp_schedule_single_event( time() + max( 0, $delay ), self::CONTACT_HOOK, [ $contact ] );
+		}
+	}
+
+	/** Send one queued contact. */
+	public static function push_contact( $contact ): bool {
+		$contact = is_array( $contact ) ? $contact : [];
+		$email   = strtolower( sanitize_email( $contact['email'] ?? '' ) );
+		if ( ! is_email( $email ) || ! self::email_enabled() ) {
+			return false;
+		}
+		$o = self::get();
+
+		// A row-shaped object, so the Klaviyo helpers below take it as they take a subscriber.
+		$row = (object) [
+			'id'          => 0,
+			'email'       => $email,
+			'name'        => trim( ( $contact['first_name'] ?? '' ) . ' ' . ( $contact['last_name'] ?? '' ) ),
+			'phone'       => (string) ( $contact['phone'] ?? '' ),
+			'sms_consent' => 0,
+			'source'      => (string) ( $contact['source'] ?? '' ),
+		];
+
+		switch ( $o['email_provider'] ) {
+			case 'klaviyo':
+				return self::klaviyo_profile( $row, $o, (array) ( $contact['properties'] ?? [] ) );
+
+			case 'webhook':
+				return self::push_webhook( $row, $o, [ 'subscribed' => 0, 'properties' => (array) ( $contact['properties'] ?? [] ) ] );
+
+			case 'mailchimp':
+				/*
+				 * Mailchimp has no profile that is not in an audience, and putting somebody in one
+				 * without consent is the thing this whole path exists to avoid. So: nothing.
+				 */
+				self::log( 'mailchimp', 0, sprintf( 'profile-only contact %s skipped — Mailchimp has no list-less profile', $email ) );
+				return false;
+		}
+
+		return false;
 	}
 
 	/** The shape a webhook receives, and the base data for every provider. */
@@ -374,7 +439,7 @@ final class WHD_Integrations {
 	 * "Signup Source" is the form they used — newsletter band, popup, stylist, the live card — which
 	 * is what a segment in Klaviyo would want to filter on later.
 	 */
-	private static function klaviyo_profile( $row, $o ) {
+	private static function klaviyo_profile( $row, $o, array $extra_properties = [] ) {
 		$attributes = [ 'email' => $row->email ];
 		$first      = self::first_name( $row );
 		$last       = self::last_name( $row );
@@ -388,14 +453,17 @@ final class WHD_Integrations {
 		if ( '' !== $phone && ! empty( $row->sms_consent ) ) {
 			$attributes['phone_number'] = $phone;
 		}
-		$attributes['properties'] = [
-			'Signup Source' => (string) $row->source,
-			'Signup Site'   => home_url( '/' ),
-		];
+		$attributes['properties'] = array_merge(
+			[
+				'Signup Source' => (string) $row->source,
+				'Signup Site'   => home_url( '/' ),
+			],
+			$extra_properties
+		);
 
 		return self::finish(
 			'klaviyo',
-			'profile for subscriber #' . (int) $row->id,
+			$row->id ? 'profile for subscriber #' . (int) $row->id : 'profile for ' . $row->email,
 			self::klaviyo_request( $o, 'profile-import/', 'POST', [ 'data' => [ 'type' => 'profile', 'attributes' => $attributes ] ] )
 		);
 	}
