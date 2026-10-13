@@ -197,3 +197,22 @@
 }
 .whd-sty-total__label { position: relative; z-index: 1; flex: 1; }
 .whd-sty-total__n { position: relative; z-index: 1; font-weight: 600; color: #50575e; }
+
+/* ─── The story's photographs ───
+   A row inside the Write with AI panel: how many of the story's rows have a picture, a button to
+   draw the rest, and the ones it drew so you can see them without leaving the screen. */
+.whd-ai-photos { border-top: 1px solid #e2e4e7; padding-top: 14px; margin-top: 4px; }
+.whd-ai-photos__state { margin: 2px 0 8px; font-weight: 600; color: #1d2327; }
+.whd-ai-photos__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+	gap: 10px;
+	margin: 10px 0 6px;
+}
+.whd-ai-photos__shot {
+	width: 100%;
+	aspect-ratio: 4 / 5;
+	object-fit: cover;
+	border: 1px solid #dcdcde;
+	background: #f6f7f7;
+}

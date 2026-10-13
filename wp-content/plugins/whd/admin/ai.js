@@ -342,9 +342,78 @@
 		start();
 	}
 
+	/* ─────────────────────────── the story's photographs ───────────────────────────
+	   One request per picture. Each takes somewhere around fifteen seconds, so asking for four in
+	   one go is asking for a gateway timeout; this walks them instead and shows each as it lands. */
+
+	function photos() {
+		var root = document.getElementById( 'whd-ai-photos' );
+		var go = document.getElementById( 'whd-ai-photos-go' );
+		if ( ! root || ! go ) {
+			return;
+		}
+
+		var postId = parseInt( root.getAttribute( 'data-post' ), 10 );
+		var status = document.getElementById( 'whd-ai-photos-status' );
+		var state = document.getElementById( 'whd-ai-photos-state' );
+		var grid = document.getElementById( 'whd-ai-photos-grid' );
+
+		function show( picture ) {
+			var img = document.createElement( 'img' );
+			img.src = picture.url;
+			img.alt = '';
+			img.className = 'whd-ai-photos__shot';
+			grid.hidden = false;
+			grid.appendChild( img );
+		}
+
+		go.addEventListener( 'click', function () {
+			var left = parseInt( root.getAttribute( 'data-missing' ), 10 ) || 0;
+			if ( ! left ) {
+				return;
+			}
+			go.disabled = true;
+			var done = 0;
+
+			function next() {
+				status.textContent = ( T.drawing || 'Drawing…' ) + ' ' + ( done + 1 ) + '/' + left;
+				api( 'photos', 'POST', { post_id: postId, count: 1 } ).then( function ( r ) {
+					( r.made || [] ).forEach( show );
+					( r.skipped || [] ).forEach( function ( why ) {
+						status.textContent = why;
+					} );
+					done += ( r.made || [] ).length;
+					state.textContent = ( T.rowsHave || '%1$d of %2$d rows have a photograph.' )
+						.replace( '%1$d', Math.min( r.have, r.rows ) ).replace( '%2$d', r.rows );
+					root.setAttribute( 'data-missing', r.missing );
+
+					if ( ! ( r.made || [] ).length ) {
+						go.disabled = false;      // it refused; let them try again rather than stall
+						return;
+					}
+					if ( done < left && r.missing > 0 ) {
+						next();
+						return;
+					}
+					status.textContent = T.drawn || 'Done — check them before you publish.';
+					go.disabled = r.missing === 0;
+					if ( r.missing === 0 ) {
+						go.textContent = T.allRows || 'Every row has one';
+					}
+				} ).catch( function ( e ) {
+					status.textContent = e.message;
+					go.disabled = false;
+				} );
+			}
+
+			next();
+		} );
+	}
+
 	function start() {
 		brief();
 		rules();
 		panel();
+		photos();
 	}
 }() );

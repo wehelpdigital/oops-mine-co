@@ -49,6 +49,9 @@ final class WHD_AI {
 			'recaptcha_api_key' => '',
 			'recaptcha_score' => 0.5,
 			'model'           => '',
+			// Pictures come from a different model from the words, and always from Google.
+			'image_model'     => '',
+			'image_brief'     => '',
 			'max_tokens'      => 1600,
 			'temperature'     => 0.7,
 			'brief'           => '',
@@ -402,6 +405,10 @@ final class WHD_AI {
 
 		$out['model']          = sanitize_text_field( $input['model'] ?? '' );
 		$out['recaptcha_site'] = sanitize_text_field( $input['recaptcha_site'] ?? '' );
+
+		$image_model         = sanitize_text_field( $input['image_model'] ?? '' );
+		$out['image_model']  = ( class_exists( 'WHD_AI_Images' ) && isset( WHD_AI_Images::models()[ $image_model ] ) ) ? $image_model : '';
+		$out['image_brief']  = sanitize_textarea_field( $input['image_brief'] ?? '' );
 
 		$version                  = sanitize_key( $input['recaptcha_version'] ?? 'v2' );
 		$out['recaptcha_version'] = isset( self::recaptcha_versions()[ $version ] ) ? $version : 'v2';

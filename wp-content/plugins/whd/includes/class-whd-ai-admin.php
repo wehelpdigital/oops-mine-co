@@ -99,6 +99,11 @@ final class WHD_AI_Admin {
 				'error'      => __( 'Something went wrong', 'whd' ),
 				'drafting'   => __( 'Reading your site…', 'whd' ),
 				'confirmSet' => __( 'Replace what is stored there now?', 'whd' ),
+				'drawing'    => __( 'Drawing…', 'whd' ),
+				'drawn'      => __( 'Done — have a look before you publish.', 'whd' ),
+				'allRows'    => __( 'Every row has one', 'whd' ),
+				/* translators: 1: rows with a photograph, 2: rows in the story */
+				'rowsHave'   => __( '%1$d of %2$d rows have a photograph.', 'whd' ),
 			],
 		] );
 	}
@@ -212,6 +217,27 @@ final class WHD_AI_Admin {
 		}
 		echo '</datalist>';
 		echo '<p class="description">' . esc_html__( 'Leave blank for the sensible default. Type any model name your account can reach — this field is not a fixed list, so a newer model works the day it ships.', 'whd' ) . '</p></td></tr>';
+
+		/*
+		 * Pictures are a separate model from words and only Google has one here, so this row is
+		 * its own rather than folded into the model field above.
+		 */
+		echo '<tr><th><label for="whd-ai-image-model">' . esc_html__( 'Model for pictures', 'whd' ) . '</label></th><td>';
+		echo '<select id="whd-ai-image-model" name="' . esc_attr( self::field( 'image_model' ) ) . '">';
+		foreach ( WHD_AI_Images::models() as $id => $label ) {
+			printf(
+				'<option value="%s"%s>%s</option>',
+				esc_attr( $id ),
+				selected( $id, WHD_AI_Images::model(), false ),
+				esc_html( $label )
+			);
+		}
+		echo '</select>';
+		echo '<p class="description">' . esc_html__( 'Used by the “Draw the missing photographs” button on a product. It always goes to Google, whichever provider writes your words, so a Google key has to be set above for it to work.', 'whd' ) . '</p></td></tr>';
+
+		echo '<tr><th><label for="whd-ai-image-brief">' . esc_html__( 'How your photographs look', 'whd' ) . '</label></th><td>';
+		echo '<textarea class="large-text" rows="3" id="whd-ai-image-brief" name="' . esc_attr( self::field( 'image_brief' ) ) . '" placeholder="' . esc_attr( WHD_AI_Images::look() ) . '">' . esc_textarea( (string) ( $o['image_brief'] ?? '' ) ) . '</textarea>';
+		echo '<p class="description">' . esc_html__( 'One or two lines describing the light, the colours and the kind of room your product pictures are shot in. Every drawn picture is told to match it. Leave blank for the description shown here.', 'whd' ) . '</p></td></tr>';
 
 		echo '<tr><th><label for="whd-ai-tokens">' . esc_html__( 'Longest reply', 'whd' ) . '</label></th><td>';
 		echo '<input type="number" class="small-text" id="whd-ai-tokens" min="200" max="8000" step="100" name="' . esc_attr( self::field( 'max_tokens' ) ) . '" value="' . esc_attr( $o['max_tokens'] ) . '"> ' . esc_html__( 'tokens', 'whd' );
@@ -832,6 +858,8 @@ final class WHD_AI_Admin {
 				<span class="whd-ai-panel__status" id="whd-ai-status" role="status"></span>
 			</p>
 
+			<?php self::photos_row( $post ); ?>
+
 			<div class="whd-ai-result" id="whd-ai-result" hidden>
 				<div class="whd-ai-result__check" id="whd-ai-check"></div>
 				<textarea class="whd-ai-result__text" id="whd-ai-text" rows="16"></textarea>
@@ -843,6 +871,60 @@ final class WHD_AI_Admin {
 				</p>
 				<p class="description"><?php esc_html_e( 'Edit it here first if you want to — what you apply is what is in the box, not what the model sent.', 'whd' ); ?></p>
 			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * The story's photographs, and an offer to draw the ones that are missing.
+	 *
+	 * The band under the reviews alternates copy and picture down the page. A product with fewer
+	 * pictures than sections leaves rows with nothing beside the words, so this says how many are
+	 * short and offers to make them from the pictures already on the product.
+	 */
+	private static function photos_row( $post ) {
+		if ( 'product' !== $post->post_type || ! class_exists( 'WHD_AI_Images' ) ) {
+			return;
+		}
+		$have    = count( WHD_AI_Images::gallery( $post->ID ) );
+		$rows    = WHD_AI_Images::rows( $post->ID );
+		$missing = WHD_AI_Images::missing( $post->ID );
+		?>
+		<div class="whd-ai-panel__row whd-ai-photos" id="whd-ai-photos"
+			data-post="<?php echo esc_attr( $post->ID ); ?>"
+			data-missing="<?php echo esc_attr( $missing ); ?>">
+			<span class="whd-ai-panel__label"><?php esc_html_e( 'Photographs for the story', 'whd' ); ?></span>
+			<p class="whd-ai-photos__state" id="whd-ai-photos-state">
+				<?php
+				printf(
+					/* translators: 1: pictures on the product, 2: sections in the story */
+					esc_html__( '%1$d of %2$d rows have a photograph.', 'whd' ),
+					(int) min( $have, $rows ),
+					(int) $rows
+				);
+				?>
+			</p>
+			<?php if ( ! WHD_AI_Images::ready() ) : ?>
+				<p class="description">
+					<?php esc_html_e( 'Drawing pictures needs a Google AI key — the other providers are text only.', 'whd' ); ?>
+					<a href="<?php echo esc_url( self::url() ); ?>"><?php esc_html_e( 'Add one', 'whd' ); ?></a>
+				</p>
+			<?php elseif ( ! $have ) : ?>
+				<p class="description"><?php esc_html_e( 'Add one real photograph first. Every drawn picture is made from the ones already here, so with none there is nothing to copy the product from.', 'whd' ); ?></p>
+			<?php else : ?>
+				<p>
+					<button type="button" class="button" id="whd-ai-photos-go" <?php disabled( ! $missing ); ?>>
+						<?php
+						echo $missing
+							? esc_html( sprintf( /* translators: %d: number of photographs */ _n( 'Draw the missing photograph', 'Draw the %d missing photographs', $missing, 'whd' ), $missing ) )
+							: esc_html__( 'Every row has one', 'whd' );
+						?>
+					</button>
+					<span class="whd-ai-panel__status" id="whd-ai-photos-status" role="status"></span>
+				</p>
+				<div class="whd-ai-photos__grid" id="whd-ai-photos-grid" hidden></div>
+				<p class="description"><?php esc_html_e( 'The same product on somebody else, in the look of your other photographs. They go on the end of the gallery — nothing already there is touched. Check each one before the page goes out.', 'whd' ); ?></p>
+			<?php endif; ?>
 		</div>
 		<?php
 	}
@@ -873,6 +955,11 @@ final class WHD_AI_Admin {
 			'callback'            => [ __CLASS__, 'rest_suggest' ],
 			'permission_callback' => $can_edit,
 		] );
+		register_rest_route( 'whd/v1', '/ai/photos', [
+			'methods'             => 'POST',
+			'callback'            => [ __CLASS__, 'rest_photos' ],
+			'permission_callback' => $can_edit,
+		] );
 		register_rest_route( 'whd/v1', '/ai/brief', [
 			'methods'             => 'POST',
 			'callback'            => [ __CLASS__, 'rest_brief' ],
@@ -888,6 +975,39 @@ final class WHD_AI_Admin {
 	/** Assess a token minted on this screen, and hand back exactly what Google said. */
 	public static function rest_recaptcha_test( WP_REST_Request $r ) {
 		return new WP_REST_Response( WHD_AI::recaptcha_check( (string) $r->get_param( 'token' ), 'whd_admin_test' ), 200 );
+	}
+
+	/**
+	 * Draw the photographs a product's story is short of.
+	 *
+	 * One at a time from the browser rather than all at once: each picture takes the best part of
+	 * fifteen seconds, and a single request for four of them is a request that times out.
+	 */
+	public static function rest_photos( WP_REST_Request $r ) {
+		if ( ! class_exists( 'WHD_AI_Images' ) ) {
+			return new WP_REST_Response( [ 'message' => __( 'Image drawing is not available.', 'whd' ) ], 400 );
+		}
+		$post_id = (int) $r->get_param( 'post_id' );
+		$result  = WHD_AI_Images::fill( $post_id, max( 1, (int) $r->get_param( 'count' ) ) );
+		if ( is_wp_error( $result ) ) {
+			return new WP_REST_Response( [ 'message' => $result->get_error_message() ], 400 );
+		}
+
+		$made = [];
+		foreach ( $result['made'] as $id ) {
+			$made[] = [
+				'id'  => (int) $id,
+				'url' => wp_get_attachment_image_url( $id, 'medium' ),
+			];
+		}
+
+		return new WP_REST_Response( [
+			'made'    => $made,
+			'skipped' => $result['skipped'],
+			'missing' => WHD_AI_Images::missing( $post_id ),
+			'rows'    => WHD_AI_Images::rows( $post_id ),
+			'have'    => count( WHD_AI_Images::gallery( $post_id ) ),
+		], 200 );
 	}
 
 	public static function rest_generate( WP_REST_Request $r ) {
