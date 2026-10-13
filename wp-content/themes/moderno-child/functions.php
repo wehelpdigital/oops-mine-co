@@ -1222,7 +1222,7 @@ function omc_trust_marks() {
 			'kind'  => 'globe',
 			/* translators: %s: the places the shop ships to. */
 			'label' => sprintf( __( 'Ships to %s', 'moderno-child' ), $ships ),
-			'note'  => __( 'Your rate is shown at checkout, before you pay', 'moderno-child' ),
+			'note'  => __( 'Your rate is shown before you pay', 'moderno-child' ),
 		];
 	}
 

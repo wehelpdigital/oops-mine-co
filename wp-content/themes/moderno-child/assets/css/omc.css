@@ -1035,80 +1035,148 @@
    themselves to their text never line up, and six of them wrapped four-and-two with a ragged gap.
    Equal columns, equal heights, and the artwork left in the brands' own colours - a Stripe mark
    recoloured to the palette stops being the thing a shopper recognises. */
+/* ─── The trust band ───
+   Four claims the shop can stand behind, read as one line across the bottom of the footer rather
+   than as four boxes. Boxes were the problem: a border and a fill on cream reads as a form, the
+   card logos made one of them taller than its neighbours, and a solid purple glyph among three
+   thin rose ones made the row look assembled from spare parts. One ground, hairlines between,
+   every mark drawn at the same weight. */
 .omc-footer__trust {
 	display: grid;
 	grid-template-columns: repeat(4, 1fr);
-	gap: 10px;
-	margin: 30px 0 0;
-	padding: 0;
+	margin: clamp(30px, 3.4vw, 44px) 0 0;
+	padding: clamp(20px, 2.4vw, 26px) 0 0;
+	border-top: 1px solid var(--omc-line);
 	list-style: none;
 }
 .omc-footer__trust-item {
 	display: flex;
 	align-items: flex-start;
-	gap: 12px;
-	padding: 15px 16px;
-	border: 1px solid var(--omc-line);
-	border-radius: 2px;
-	background: rgba(255, 255, 255, .55);
+	gap: 11px;
+	padding: 2px clamp(16px, 2vw, 26px);
+	border-left: 1px solid var(--omc-line);
 }
+.omc-footer__trust-item:first-child {
+	padding-left: 0;
+	border-left: 0;
+}
+.omc-footer__trust-item:last-child { padding-right: 0; }
+
 .omc-footer__trust-link {
 	display: flex;
 	align-items: flex-start;
-	gap: 12px;
+	gap: 11px;
 	color: inherit;
 	text-decoration: none;
 }
-/* One fixed slot for the mark, whatever shape it is, so the text starts at the same x in all four. */
+
+/* One slot for the mark whatever shape it is, so the words start at the same x in all four. */
 .omc-footer__trust-item > svg,
 .omc-footer__trust-link > svg {
-	flex: 0 0 22px;
-	width: 22px;
-	height: 22px;
+	flex: 0 0 19px;
+	width: 19px;
+	height: 19px;
 	margin-top: 1px;
 }
+/* Line icons: drawn, not filled, in the one accent this footer uses. */
 .omc-footer__trust-item--lock > svg,
 .omc-footer__trust-item--globe > svg,
+.omc-footer__trust-item--return > svg,
 .omc-footer__trust-link > svg {
 	fill: none;
-	stroke: var(--omc-rose-dark);
-	stroke-width: 1.5;
+	stroke: var(--omc-rose);
+	stroke-width: 1.4;
 }
+/*
+ * The Stripe mark is a solid shape and would shout next to three hairline drawings, so it is set
+ * in the footer's own ink at the same optical size. Monochrome is within Stripe's own guidance.
+ */
+.omc-footer__trust-item--brand > svg,
+.omc-footer__trust-item--brand .omc-footer__trust-link > svg {
+	/* A solid glyph covers more ink than a hairline drawing, so it is set smaller and softer to
+	   weigh the same on the page. */
+	flex-basis: 17px;
+	width: 17px;
+	height: 17px;
+	margin-top: 2px;
+	fill: var(--omc-rose-dark) !important;
+	stroke: none;
+	opacity: .8;
+}
+
 .omc-footer__trust-text {
 	display: flex;
 	flex-direction: column;
-	gap: 3px;
+	gap: 4px;
 	min-width: 0;
 }
 .omc-footer__trust-text strong {
-	font: 600 11.5px/1.3 var(--omc-sans);
-	letter-spacing: .07em;
+	font: 600 11px/1.35 var(--omc-sans);
+	letter-spacing: .085em;
 	text-transform: uppercase;
 	color: var(--omc-ink);
 	text-wrap: balance;
 }
 .omc-footer__trust-text em {
-	font: 400 12px/1.45 var(--omc-sans);
+	font: 400 12px/1.5 var(--omc-sans);
 	font-style: normal;
 	color: var(--omc-muted);
 	text-wrap: pretty;
 }
+
+/* The cards Stripe settles. Greyed back so they support the claim above rather than compete. */
 .omc-footer__cards {
 	display: inline-flex;
 	align-items: center;
-	gap: 9px;
-	margin-top: 7px;
+	gap: 8px;
+	margin-top: 3px;
+	opacity: .75;
+	filter: grayscale(1);
+	transition: opacity .25s ease, filter .25s ease;
 }
+.omc-footer__trust-item--brand:hover .omc-footer__cards {
+	opacity: 1;
+	filter: none;
+}
+
 .omc-footer__trust-link:hover .omc-footer__trust-text strong,
 .omc-footer__trust-link:focus-visible .omc-footer__trust-text strong { color: var(--omc-rose-dark); }
 .omc-footer__trust-link:hover .omc-footer__trust-text em { color: var(--omc-text); }
+.omc-footer__trust-link:focus-visible { outline: 2px solid var(--omc-rose); outline-offset: 4px; }
 
 @media (max-width: 1023px) {
-	.omc-footer__trust { grid-template-columns: repeat(2, 1fr); }
+	/* Two and two: the divider that was vertical becomes the rule between the rows. */
+	.omc-footer__trust { grid-template-columns: repeat(2, 1fr); row-gap: clamp(18px, 2.6vw, 24px); }
+	.omc-footer__trust-item:nth-child(odd) {
+		padding-left: 0;
+		border-left: 0;
+	}
+	.omc-footer__trust-item:nth-child(even) { padding-right: 0; }
+	.omc-footer__trust-item:nth-child(n + 3) {
+		padding-top: clamp(18px, 2.6vw, 24px);
+		border-top: 1px solid var(--omc-line);
+	}
 }
 @media (max-width: 519px) {
-	.omc-footer__trust { grid-template-columns: 1fr; gap: 8px; }
-	.omc-footer__trust-item { padding: 13px 15px; }
+	.omc-footer__trust { grid-template-columns: 1fr; row-gap: 0; }
+	.omc-footer__trust-item {
+		padding: 14px 0;
+		border-left: 0;
+		border-top: 1px solid var(--omc-line);
+	}
+	.omc-footer__trust-item:first-child {
+		padding-top: 0;
+		border-top: 0;
+	}
+	.omc-footer__trust-item:nth-child(n + 3) {
+		padding-top: 14px;
+		border-top: 1px solid var(--omc-line);
+	}
+	.omc-footer__trust-item:last-child { padding-bottom: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.omc-footer__cards { transition: none; }
 }
 
 .omc-footer__bottom { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 24px; margin-top: clamp(36px, 4vw, 56px); padding-top: 20px; border-top: 1px solid var(--omc-line); }
