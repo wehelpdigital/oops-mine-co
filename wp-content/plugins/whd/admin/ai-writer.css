@@ -22,37 +22,6 @@
 }
 .whd-writer__field textarea { resize: vertical; }
 
-/* ─── keywords ─── */
-
-.whd-writer__chips {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 6px;
-	margin: 0 0 8px;
-}
-.whd-writer__chip {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	padding: 5px 11px;
-	border: 1px solid #dcdcde;
-	border-radius: 999px;
-	background: #f6f7f7;
-	font-size: 12px;
-	line-height: 1.4;
-	color: #3c434a;
-	cursor: pointer;
-	transition: background .12s ease, border-color .12s ease, color .12s ease;
-}
-.whd-writer__chip:hover { border-color: #b98b7e; color: #1d2327; }
-.whd-writer__chip.is-on {
-	background: #b98b7e;
-	border-color: #b98b7e;
-	color: #fff;
-}
-.whd-writer__chip-n { opacity: .6; font-variant-numeric: tabular-nums; }
-.whd-writer__chip.is-on .whd-writer__chip-n { opacity: .85; }
-
 /* ─── the row of controls ─── */
 
 .whd-writer__row {

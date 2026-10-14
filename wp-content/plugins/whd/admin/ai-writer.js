@@ -17,8 +17,7 @@
 	}
 
 	var idea = document.getElementById( 'whd-writer-idea' );
-	var extra = document.getElementById( 'whd-writer-keywords' );
-	var chips = document.getElementById( 'whd-writer-chips' );
+	var picker = document.getElementById( 'whd-writer-keywords' );
 	var length = document.getElementById( 'whd-writer-length' );
 	var faq = document.getElementById( 'whd-writer-faq' );
 	var go = document.getElementById( 'whd-writer-go' );
@@ -34,7 +33,6 @@
 	var again = document.getElementById( 'whd-writer-again' );
 	var saveStatus = document.getElementById( 'whd-writer-save-status' );
 
-	var chosen = {};
 	var doc = null;
 
 	function api( path, body ) {
@@ -55,32 +53,8 @@
 
 	/* ─── keywords ─── */
 
-	if ( chips ) {
-		chips.addEventListener( 'click', function ( e ) {
-			var chip = e.target.closest( '.whd-writer__chip' );
-			if ( ! chip ) {
-				return;
-			}
-			var word = chip.getAttribute( 'data-keyword' );
-			if ( chosen[ word ] ) {
-				delete chosen[ word ];
-				chip.classList.remove( 'is-on' );
-			} else {
-				chosen[ word ] = true;
-				chip.classList.add( 'is-on' );
-			}
-		} );
-	}
-
 	function keywords() {
-		var out = Object.keys( chosen );
-		( extra && extra.value ? extra.value.split( ',' ) : [] ).forEach( function ( w ) {
-			w = w.trim();
-			if ( w && out.indexOf( w ) === -1 ) {
-				out.push( w );
-			}
-		} );
-		return out;
+		return window.WHDKeywords ? window.WHDKeywords.chosen( picker ) : [];
 	}
 
 	/* ─── writing ─── */
@@ -214,7 +188,7 @@
 		tr.className = 'whd-writer__new';
 		tr.innerHTML = '<td class="whd-writer__cell-title"><strong><a href="' + saved.edit_url + '">'
 			+ saved.title.replace( /</g, '&lt;' ) + '</a></strong></td>'
-			+ '<td>' + Object.keys( chosen ).slice( 0, 4 ).join( ', ' ) + '</td>'
+			+ '<td>' + keywords().slice( 0, 4 ).join( ', ' ) + '</td>'
 			+ '<td><span class="whd-pill whd-pill--' + ( postStatus === 'publish' ? 'on' : 'off' ) + '">'
 			+ ( postStatus === 'publish' ? 'Published' : 'Draft' ) + '</span></td>'
 			+ '<td>' + new Date().toLocaleDateString() + '</td>'

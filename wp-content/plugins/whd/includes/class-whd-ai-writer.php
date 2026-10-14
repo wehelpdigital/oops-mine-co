@@ -141,7 +141,9 @@ final class WHD_AI_Writer {
 		}
 		wp_enqueue_style( 'whd-admin', WHD_URL . 'admin/admin.css', [], WHD_VERSION );
 		wp_enqueue_style( 'whd-ai-writer', WHD_URL . 'admin/ai-writer.css', [ 'whd-admin' ], WHD_VERSION );
-		wp_enqueue_script( 'whd-ai-writer', WHD_URL . 'admin/ai-writer.js', [], WHD_VERSION, true );
+		wp_enqueue_style( 'whd-keyword-picker', WHD_URL . 'admin/keyword-picker.css', [], WHD_VERSION );
+		wp_enqueue_script( 'whd-keyword-picker', WHD_URL . 'admin/keyword-picker.js', [], WHD_VERSION, true );
+		wp_enqueue_script( 'whd-ai-writer', WHD_URL . 'admin/ai-writer.js', [ 'whd-keyword-picker' ], WHD_VERSION, true );
 
 		$type = ( 'toplevel_page_' . self::PAGE_POST ) === $hook ? 'post' : 'page';
 		wp_localize_script( 'whd-ai-writer', 'WHD_AI_WRITER', [
@@ -198,7 +200,7 @@ final class WHD_AI_Writer {
 	}
 
 	private static function compose_form( string $type ) {
-		$keywords = class_exists( 'WHD_AI_Keywords' ) ? WHD_AI_Keywords::all( [ 'limit' => 14, 'orderby' => 'volume' ] ) : [];
+		$total = class_exists( 'WHD_AI_Keywords' ) ? WHD_AI_Keywords::count() : 0;
 		?>
 		<div class="whd-writer__make" id="whd-writer">
 
@@ -208,27 +210,21 @@ final class WHD_AI_Writer {
 				<p class="description"><?php esc_html_e( 'A sentence is enough. The more you say about who it is for, the less you will have to edit afterwards.', 'whd' ); ?></p>
 			</div>
 
-			<?php if ( $keywords ) : ?>
-				<div class="whd-writer__field">
-					<span class="whd-writer__label"><?php esc_html_e( 'Keywords to work in', 'whd' ); ?></span>
-					<div class="whd-writer__chips" id="whd-writer-chips">
-						<?php foreach ( $keywords as $k ) : ?>
-							<button type="button" class="whd-writer__chip" data-keyword="<?php echo esc_attr( $k->keyword ); ?>">
-								<?php echo esc_html( $k->keyword ); ?>
-								<?php if ( ! empty( $k->volume ) ) : ?>
-									<span class="whd-writer__chip-n"><?php echo esc_html( number_format_i18n( (int) $k->volume ) ); ?></span>
-								<?php endif; ?>
-							</button>
-						<?php endforeach; ?>
-					</div>
-					<input type="text" class="large-text" id="whd-writer-keywords" placeholder="<?php esc_attr_e( 'or type your own, separated by commas', 'whd' ); ?>">
-				</div>
-			<?php else : ?>
-				<div class="whd-writer__field">
-					<label class="whd-writer__label" for="whd-writer-keywords"><?php esc_html_e( 'Keywords to work in', 'whd' ); ?></label>
-					<input type="text" class="large-text" id="whd-writer-keywords" placeholder="<?php esc_attr_e( 'separated by commas', 'whd' ); ?>">
-				</div>
-			<?php endif; ?>
+			<div class="whd-writer__field">
+				<span class="whd-writer__label"><?php esc_html_e( 'Keywords to work in', 'whd' ); ?></span>
+				<div class="whd-kw" id="whd-writer-keywords" data-whd-keywords
+					data-placeholder="<?php esc_attr_e( 'Search your keywords, or type your own', 'whd' ); ?>"></div>
+				<p class="description">
+					<?php
+					printf(
+						/* translators: %s: number of keywords in the list */
+						esc_html__( 'Type to search all %s of your keywords — monthly volume and how hard each one is to rank for are shown beside it. A phrase that is not in the list works too: type it and press Enter.', 'whd' ),
+						esc_html( number_format_i18n( $total ) )
+					);
+					?>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=whd-ai&tab=keywords' ) ); ?>"><?php esc_html_e( 'Manage the list', 'whd' ); ?></a>
+				</p>
+			</div>
 
 			<div class="whd-writer__row">
 				<label class="whd-writer__inline">

@@ -218,3 +218,23 @@
 }
 .whd-ai-result__also { margin: 10px 0 0; }
 .whd-ai-result__also label { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: #1d2327; }
+
+/* What the keyword list suggests for this particular product, under the picker: one click each. */
+.whd-ai-suggest {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	margin: 8px 0 0;
+}
+.whd-ai-suggest__label { font-size: 12px; color: #646970; }
+.whd-ai-suggest__chip {
+	padding: 3px 10px;
+	border: 1px dashed #c3c4c7;
+	border-radius: 999px;
+	background: transparent;
+	font-size: 12px;
+	color: #50575e;
+	cursor: pointer;
+}
+.whd-ai-suggest__chip:hover { border-style: solid; border-color: #b98b7e; color: #1d2327; }

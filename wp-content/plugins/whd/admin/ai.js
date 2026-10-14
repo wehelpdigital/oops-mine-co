@@ -100,15 +100,15 @@
 	function panel() {
 		var root = document.getElementById( 'whd-ai-panel' );
 		var target = document.getElementById( 'whd-ai-target' );
-		var chips = document.getElementById( 'whd-ai-chips' );
+		var picker = document.getElementById( 'whd-ai-keywords' );
 		// The panel is replaced by a short message when no model is connected, so check for the
 		// controls rather than for a container.
-		if ( ! root || ! target || ! chips ) {
+		if ( ! root || ! target || ! picker ) {
 			return;
 		}
 
 		var postId = parseInt( root.getAttribute( 'data-post' ), 10 );
-		var extra = document.getElementById( 'whd-ai-keywords' );
+		var suggest = document.getElementById( 'whd-ai-suggest' );
 		var instruction = document.getElementById( 'whd-ai-instruction' );
 		var go = document.getElementById( 'whd-ai-go' );
 		var status = document.getElementById( 'whd-ai-status' );
@@ -119,45 +119,36 @@
 		var copy = document.getElementById( 'whd-ai-copy' );
 		var again = document.getElementById( 'whd-ai-again' );
 		var count = document.getElementById( 'whd-ai-count' );
-		var chosen = {};
 		var lastHtml = '';   // the server's own conversion of the last draft
 		var lastText = '';   // what it looked like before anyone edited the box
 
-		( D.suggested || [] ).forEach( function ( keyword, i ) {
-			var chip = document.createElement( 'button' );
-			chip.type = 'button';
-			chip.className = 'whd-ai-chip';
-			chip.textContent = keyword;
-			// The top three are on by default: enough to steer the copy, few enough to stay natural.
-			if ( i < 3 ) {
-				chip.classList.add( 'is-on' );
-				chosen[ keyword ] = true;
-			}
-			chip.addEventListener( 'click', function () {
-				if ( chosen[ keyword ] ) {
-					delete chosen[ keyword ];
-					chip.classList.remove( 'is-on' );
-				} else {
-					chosen[ keyword ] = true;
-					chip.classList.add( 'is-on' );
-				}
+		/*
+		 * The picker searches the whole list. What is suggested for this particular product still
+		 * has a place, as a row of one-click additions underneath — the first three go in by
+		 * default, which is enough to steer the copy without stuffing it.
+		 */
+		if ( window.WHDKeywords ) {
+			window.WHDKeywords.add( picker, ( D.suggested || [] ).slice( 0, 3 ) );
+		}
+
+		if ( suggest && ( D.suggested || [] ).length ) {
+			( D.suggested || [] ).forEach( function ( keyword ) {
+				var chip = document.createElement( 'button' );
+				chip.type = 'button';
+				chip.className = 'whd-ai-suggest__chip';
+				chip.textContent = keyword;
+				chip.addEventListener( 'click', function () {
+					if ( window.WHDKeywords ) {
+						window.WHDKeywords.add( picker, keyword );
+					}
+				} );
+				suggest.appendChild( chip );
 			} );
-			chips.appendChild( chip );
-		} );
-		if ( ! ( D.suggested || [] ).length ) {
-			chips.innerHTML = '<span class="whd-ai-chips__empty">' +
-				'<a href="' + D.settings + '&tab=keywords">' + ( T.noKeywords || 'Add keywords' ) + '</a></span>';
+			suggest.hidden = false;
 		}
 
 		function keywords() {
-			var list = Object.keys( chosen );
-			( extra.value || '' ).split( ',' ).forEach( function ( k ) {
-				k = k.trim();
-				if ( k && list.indexOf( k ) === -1 ) {
-					list.push( k );
-				}
-			} );
-			return list;
+			return window.WHDKeywords ? window.WHDKeywords.chosen( picker ) : [];
 		}
 
 		function spec() {

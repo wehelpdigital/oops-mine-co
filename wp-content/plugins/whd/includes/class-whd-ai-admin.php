@@ -71,7 +71,9 @@ final class WHD_AI_Admin {
 
 		wp_enqueue_style( 'whd-admin', WHD_URL . 'admin/admin.css', [], WHD_VERSION );
 		wp_enqueue_style( 'whd-ai', WHD_URL . 'admin/ai.css', [ 'whd-admin' ], WHD_VERSION );
-		wp_enqueue_script( 'whd-ai', WHD_URL . 'admin/ai.js', [], WHD_VERSION, true );
+		wp_enqueue_style( 'whd-keyword-picker', WHD_URL . 'admin/keyword-picker.css', [], WHD_VERSION );
+		wp_enqueue_script( 'whd-keyword-picker', WHD_URL . 'admin/keyword-picker.js', [], WHD_VERSION, true );
+		wp_enqueue_script( 'whd-ai', WHD_URL . 'admin/ai.js', [ 'whd-keyword-picker' ], WHD_VERSION, true );
 
 		$post_id = $on_post ? (int) get_the_ID() : 0;
 		wp_localize_script( 'whd-ai', 'WHD_AI_DATA', [
@@ -850,11 +852,14 @@ final class WHD_AI_Admin {
 
 			<div class="whd-ai-panel__row">
 				<span class="whd-ai-panel__label"><?php esc_html_e( 'Keywords to work in', 'whd' ); ?></span>
-				<div class="whd-ai-chips" id="whd-ai-chips"></div>
-				<input type="text" class="whd-ai-panel__kw" id="whd-ai-keywords" placeholder="<?php esc_attr_e( 'or type your own, separated by commas', 'whd' ); ?>">
+				<div class="whd-kw" id="whd-ai-keywords" data-whd-keywords
+					data-placeholder="<?php esc_attr_e( 'Search your keywords, or type your own', 'whd' ); ?>"></div>
 				<p class="description">
-					<?php esc_html_e( 'Suggestions come from your keyword list, weighted towards this page and away from terms already used elsewhere. Click one to switch it on or off.', 'whd' ); ?>
+					<?php esc_html_e( 'Type to search the whole list — monthly volume and how hard each one is to rank for are shown beside it. A phrase that is not in your list works too: type it and press Enter.', 'whd' ); ?>
 					<a href="<?php echo esc_url( self::url( 'keywords' ) ); ?>"><?php esc_html_e( 'Manage the list', 'whd' ); ?></a>
+				</p>
+				<p class="whd-ai-suggest" id="whd-ai-suggest" hidden>
+					<span class="whd-ai-suggest__label"><?php esc_html_e( 'Suggested for this one:', 'whd' ); ?></span>
 				</p>
 			</div>
 
@@ -980,6 +985,13 @@ final class WHD_AI_Admin {
 			'callback'            => [ __CLASS__, 'rest_suggest' ],
 			'permission_callback' => $can_edit,
 		] );
+		register_rest_route( 'whd/v1', '/ai/keywords', [
+			'methods'             => 'GET',
+			'callback'            => [ __CLASS__, 'rest_keywords' ],
+			'permission_callback' => static function () {
+				return current_user_can( 'edit_posts' );
+			},
+		] );
 		register_rest_route( 'whd/v1', '/ai/photos', [
 			'methods'             => 'POST',
 			'callback'            => [ __CLASS__, 'rest_photos' ],
@@ -1000,6 +1012,43 @@ final class WHD_AI_Admin {
 	/** Assess a token minted on this screen, and hand back exactly what Google said. */
 	public static function rest_recaptcha_test( WP_REST_Request $r ) {
 		return new WP_REST_Response( WHD_AI::recaptcha_check( (string) $r->get_param( 'token' ), 'whd_admin_test' ), 200 );
+	}
+
+	/**
+	 * Search the keyword list.
+	 *
+	 * The picker asks as you type. With no search it answers with the ones worth suggesting —
+	 * highest volume, least used — which is what somebody staring at an empty box needs.
+	 */
+	public static function rest_keywords( WP_REST_Request $r ) {
+		if ( ! class_exists( 'WHD_AI_Keywords' ) ) {
+			return new WP_REST_Response( [ 'keywords' => [] ], 200 );
+		}
+		WHD_AI_Keywords::maybe_install();
+
+		$search = trim( (string) $r->get_param( 'search' ) );
+		$rows   = WHD_AI_Keywords::all( [
+			'search'  => $search,
+			'limit'   => min( 50, max( 1, (int) ( $r->get_param( 'limit' ) ?: 20 ) ) ),
+			'orderby' => 'volume',
+			'order'   => 'DESC',
+		] );
+
+		$out = [];
+		foreach ( $rows as $row ) {
+			$out[] = [
+				'keyword'    => (string) $row->keyword,
+				'volume'     => (int) $row->volume,
+				'difficulty' => (int) $row->difficulty,
+				'used'       => (int) $row->used,
+				'tags'       => (string) $row->tags,
+			];
+		}
+
+		return new WP_REST_Response( [
+			'keywords' => $out,
+			'total'    => WHD_AI_Keywords::count( $search ),
+		], 200 );
 	}
 
 	/**
