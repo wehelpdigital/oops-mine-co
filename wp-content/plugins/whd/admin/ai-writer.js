@@ -32,6 +32,13 @@
 	var draft = document.getElementById( 'whd-writer-draft' );
 	var again = document.getElementById( 'whd-writer-again' );
 	var imagesMode = document.getElementById( 'whd-writer-images-mode' );
+	var chosenBox = document.getElementById( 'whd-writer-chosen' );
+	var chosenList = document.getElementById( 'whd-writer-chosen-list' );
+	var chosenCount = document.getElementById( 'whd-writer-chosen-count' );
+	var chosenAdd = document.getElementById( 'whd-writer-chosen-add' );
+	var chosenClear = document.getElementById( 'whd-writer-chosen-clear' );
+	var chosenHint = document.getElementById( 'whd-writer-chosen-hint' );
+	var picked = [];
 	var saveStatus = document.getElementById( 'whd-writer-save-status' );
 	var savedBox = document.getElementById( 'whd-writer-saved' );
 
@@ -57,6 +64,109 @@
 
 	function keywords() {
 		return window.WHDKeywords ? window.WHDKeywords.chosen( picker ) : [];
+	}
+
+	/* ─── pictures chosen before there is anything to put them in ───
+	   Saying you will choose them yourself should hand you the library there and then. How many a
+	   piece wants is not known until it exists, but it is predictable enough from the length to be
+	   worth saying out loud: a hero, then every other section, four at the most. */
+
+	var WANTS = { short: 2, medium: 3, long: 4 };
+
+	function wants() {
+		return WANTS[ length.value ] || 3;
+	}
+
+	function fill( text, a, b ) {
+		return String( text ).replace( '%s', a ).replace( '%1$s', a ).replace( '%2$s', b );
+	}
+
+	function paintChosen() {
+		if ( ! chosenList ) {
+			return;
+		}
+		chosenList.innerHTML = '';
+		picked.forEach( function ( p, i ) {
+			var cell = document.createElement( 'span' );
+			cell.className = 'whd-writer__chosen-one';
+			cell.innerHTML = '<img src="' + p.url + '" alt="" />'
+				+ '<span class="whd-writer__chosen-no">' + ( i + 1 ) + '</span>'
+				+ '<button type="button" class="whd-writer__chosen-drop" aria-label="Remove">&times;</button>';
+			cell.querySelector( '.whd-writer__chosen-drop' ).addEventListener( 'click', function () {
+				picked.splice( i, 1 );
+				paintChosen();
+			} );
+			chosenList.appendChild( cell );
+		} );
+
+		chosenCount.textContent = ! picked.length ? T.pickNone
+			: ( 1 === picked.length ? T.pickOne : fill( T.pickMany, picked.length ) );
+		chosenClear.hidden = ! picked.length;
+		chosenHint.textContent = fill( T.pickHint, length.value, wants() );
+	}
+
+	/** The library, opened on the pictures already chosen so a second visit adds rather than replaces. */
+	function openPicker() {
+		if ( ! window.wp || ! wp.media ) {
+			return;
+		}
+		var lib = wp.media( {
+			title: 'Choose pictures',
+			button: { text: 'Use these' },
+			library: { type: 'image' },
+			multiple: 'add'
+		} );
+		lib.on( 'open', function () {
+			lib.content.mode( 'browse' );
+			var selection = lib.state().get( 'selection' );
+			picked.forEach( function ( p ) {
+				var one = wp.media.attachment( p.id );
+				one.fetch();
+				selection.add( one );
+			} );
+		} );
+		lib.on( 'select', function () {
+			picked = lib.state().get( 'selection' ).map( function ( one ) {
+				var a = one.toJSON();
+				return {
+					id: a.id,
+					url: ( a.sizes && a.sizes.thumbnail ? a.sizes.thumbnail.url : a.url ),
+					full: ( a.sizes && a.sizes.large ? a.sizes.large.url : a.url ),
+					alt: a.alt || a.title || '',
+					source: 'library'
+				};
+			} );
+			paintChosen();
+		} );
+		lib.open();
+	}
+
+	if ( chosenAdd ) {
+		chosenAdd.addEventListener( 'click', openPicker );
+	}
+	if ( chosenClear ) {
+		chosenClear.addEventListener( 'click', function () {
+			picked = [];
+			paintChosen();
+		} );
+	}
+	if ( length ) {
+		length.addEventListener( 'change', paintChosen );
+	}
+
+	if ( imagesMode ) {
+		imagesMode.addEventListener( 'change', function () {
+			var manual = 'manual' === imagesMode.value;
+			if ( chosenBox ) {
+				chosenBox.hidden = ! manual;
+			}
+			if ( manual ) {
+				paintChosen();
+				if ( ! picked.length ) {
+					openPicker();
+				}
+			}
+		} );
 	}
 
 	/* ─── writing ─── */
@@ -127,9 +237,20 @@
 			slots = 'none' === mode ? [] : ( r.slots || [] ).map( function ( slot ) {
 				return { key: slot.key, subject: slot.subject, heading: slot.heading, image: null };
 			} );
+			var spare = 0;
+			if ( 'manual' === mode && picked.length ) {
+				slots.forEach( function ( slot, i ) {
+					if ( picked[ i ] ) {
+						slot.image = picked[ i ];
+					}
+				} );
+				spare = Math.max( 0, picked.length - slots.length );
+			}
 			if ( slotsBox ) {
 				slotsBox.hidden = ! slots.length;
-				slotsStatus.textContent = 'manual' === mode && slots.length ? T.pickEach : '';
+				slotsStatus.textContent = 'manual' !== mode || ! slots.length ? ''
+					: ( spare ? fill( T.pickSpare, slots.length )
+						: ( taken().length < slots.length ? ( picked.length ? T.pickFew : T.pickEach ) : T.swapAny ) );
 				paintSlots();
 			}
 			result.hidden = false;
@@ -210,6 +331,10 @@
 		if ( ! frame ) {
 			frame = wp.media( { title: 'Choose a picture', button: { text: 'Use this one' }, multiple: false } );
 		}
+		frame.off( 'open' );
+		frame.on( 'open', function () {
+			frame.content.mode( 'browse' );
+		} );
 		frame.off( 'select' );
 		frame.on( 'select', function () {
 			var picked = frame.state().get( 'selection' ).first().toJSON();
@@ -316,6 +441,9 @@
 			result.hidden = true;
 			idea.value = '';
 			go.textContent = 'Write it';
+			/* Those pictures belonged to the piece that was just saved. */
+			picked = [];
+			paintChosen();
 		} ).catch( function ( e ) {
 			saveStatus.textContent = e.message;
 		} ).then( function () {

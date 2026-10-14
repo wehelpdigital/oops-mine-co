@@ -173,6 +173,12 @@ final class WHD_AI_Writer {
 				'faqs'     => __( 'questions', 'whd' ),
 				'pickEach' => __( 'Click each one to choose a picture.', 'whd' ),
 				'swapAny'  => __( 'Done — click any one to swap it.', 'whd' ),
+				'pickNone' => __( 'No pictures chosen yet', 'whd' ),
+				'pickOne'  => __( '1 picture chosen', 'whd' ),
+				'pickMany' => __( '%s pictures chosen', 'whd' ),
+				'pickHint' => __( 'They go in the order you choose them — the first one sits at the top of the page. A %1$s piece usually asks for about %2$s.', 'whd' ),
+				'pickFew'  => __( 'Click the empty ones to fill them.', 'whd' ),
+				'pickSpare' => __( 'This piece had room for %1$s of them; the rest were left out.', 'whd' ),
 			],
 		] );
 	}
@@ -271,6 +277,16 @@ final class WHD_AI_Writer {
 				</label>
 				<button type="button" class="button button-primary button-hero" id="whd-writer-go"><?php esc_html_e( 'Write it', 'whd' ); ?></button>
 				<span class="whd-writer__status" id="whd-writer-status" role="status"></span>
+			</div>
+
+			<div class="whd-writer__chosen" id="whd-writer-chosen" hidden>
+				<p class="whd-writer__chosen-head">
+					<span class="whd-writer__label" id="whd-writer-chosen-count"></span>
+					<button type="button" class="button button-small" id="whd-writer-chosen-add"><?php esc_html_e( 'Choose pictures', 'whd' ); ?></button>
+					<button type="button" class="button-link whd-writer__clear" id="whd-writer-chosen-clear" hidden><?php esc_html_e( 'Start again', 'whd' ); ?></button>
+				</p>
+				<div class="whd-writer__chosen-list" id="whd-writer-chosen-list"></div>
+				<p class="description" id="whd-writer-chosen-hint"></p>
 			</div>
 
 			<div class="whd-writer__saved" id="whd-writer-saved" role="status" hidden></div>
