@@ -209,6 +209,8 @@
 
 /* The line that says it saved. It sits outside the result box, which closes on a save, so it is
    the only thing left on screen pointing at what was just written. */
+.whd-writer__saved[hidden],
+.whd-writer__make [hidden] { display: none !important; }
 .whd-writer__saved {
 	display: flex;
 	align-items: center;

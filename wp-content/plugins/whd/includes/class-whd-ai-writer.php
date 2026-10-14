@@ -171,6 +171,8 @@ final class WHD_AI_Writer {
 				'words'    => __( 'words', 'whd' ),
 				'sections' => __( 'sections', 'whd' ),
 				'faqs'     => __( 'questions', 'whd' ),
+				'pickEach' => __( 'Click each one to choose a picture.', 'whd' ),
+				'swapAny'  => __( 'Done — click any one to swap it.', 'whd' ),
 			],
 		] );
 	}
@@ -253,6 +255,18 @@ final class WHD_AI_Writer {
 					<select id="whd-writer-faq">
 						<option value="1" selected><?php esc_html_e( 'Yes — with FAQ structured data', 'whd' ); ?></option>
 						<option value="0"><?php esc_html_e( 'No', 'whd' ); ?></option>
+					</select>
+				</label>
+				<label class="whd-writer__inline">
+					<span><?php esc_html_e( 'Pictures', 'whd' ); ?></span>
+					<select id="whd-writer-images-mode">
+						<?php if ( class_exists( 'WHD_AI_Images' ) && WHD_AI_Images::ready() ) : ?>
+							<option value="auto" selected><?php esc_html_e( 'Find or draw them for me', 'whd' ); ?></option>
+						<?php else : ?>
+							<option value="auto" selected><?php esc_html_e( 'Find them in my library', 'whd' ); ?></option>
+						<?php endif; ?>
+						<option value="manual"><?php esc_html_e( 'I will choose them myself', 'whd' ); ?></option>
+						<option value="none"><?php esc_html_e( 'No pictures', 'whd' ); ?></option>
 					</select>
 				</label>
 				<button type="button" class="button button-primary button-hero" id="whd-writer-go"><?php esc_html_e( 'Write it', 'whd' ); ?></button>

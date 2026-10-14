@@ -31,6 +31,7 @@
 	var publish = document.getElementById( 'whd-writer-publish' );
 	var draft = document.getElementById( 'whd-writer-draft' );
 	var again = document.getElementById( 'whd-writer-again' );
+	var imagesMode = document.getElementById( 'whd-writer-images-mode' );
 	var saveStatus = document.getElementById( 'whd-writer-save-status' );
 	var savedBox = document.getElementById( 'whd-writer-saved' );
 
@@ -122,18 +123,22 @@
 			body.innerHTML = r.html || '';
 			paintCheck( r.check );
 			countDesc();
-			slots = ( r.slots || [] ).map( function ( slot ) {
+			var mode = imagesMode ? imagesMode.value : 'auto';
+			slots = 'none' === mode ? [] : ( r.slots || [] ).map( function ( slot ) {
 				return { key: slot.key, subject: slot.subject, heading: slot.heading, image: null };
 			} );
 			if ( slotsBox ) {
 				slotsBox.hidden = ! slots.length;
-				slotsStatus.textContent = '';
+				slotsStatus.textContent = 'manual' === mode && slots.length ? T.pickEach : '';
 				paintSlots();
 			}
 			result.hidden = false;
 			status.textContent = '';
 			go.textContent = 'Write another';
 			result.scrollIntoView( { behavior: 'smooth', block: 'start' } );
+			if ( 'auto' === mode && slots.length ) {
+				fillAll();
+			}
 		} ).catch( function ( e ) {
 			status.textContent = e.message;
 		} ).then( function () {
@@ -220,43 +225,51 @@
 		frame.open();
 	}
 
-	if ( slotsAuto ) {
-		slotsAuto.addEventListener( 'click', function () {
-			var queue = slots.map( function ( s, i ) {
+	function fillAll() {
+		var queue = slots.map( function ( s, i ) {
 				return i;
 			} ).filter( function ( i ) {
 				return ! slots[ i ].image;
 			} );
-			if ( ! queue.length || ! doc ) {
+		if ( ! queue.length || ! doc ) {
+			return;
+		}
+		if ( slotsAuto ) {
+			slotsAuto.disabled = true;
+		}
+
+		function next() {
+			if ( ! queue.length ) {
+				if ( slotsAuto ) {
+					slotsAuto.disabled = false;
+				}
+				slotsStatus.textContent = T.swapAny;
 				return;
 			}
-			slotsAuto.disabled = true;
-
-			function next() {
-				if ( ! queue.length ) {
+			var i = queue.shift();
+			slotsStatus.textContent = 'Looking for ' + ( slots[ i ].heading || 'the one at the top' ) + '…';
+			api( 'write-image', {
+				doc: doc,
+				slot: { key: slots[ i ].key, subject: slots[ i ].subject, heading: slots[ i ].heading },
+				taken: taken(),
+				draw: !! D.canDraw
+			} ).then( function ( r ) {
+				slots[ i ].image = r;
+				paintSlots();
+				next();
+			} ).catch( function ( e ) {
+				slotsStatus.textContent = e.message;
+				if ( slotsAuto ) {
 					slotsAuto.disabled = false;
-					slotsStatus.textContent = 'Done — click any one to swap it.';
-					return;
 				}
-				var i = queue.shift();
-				slotsStatus.textContent = 'Looking for ' + ( slots[ i ].heading || 'the one at the top' ) + '…';
-				api( 'write-image', {
-					doc: doc,
-					slot: { key: slots[ i ].key, subject: slots[ i ].subject, heading: slots[ i ].heading },
-					taken: taken(),
-					draw: !! D.canDraw
-				} ).then( function ( r ) {
-					slots[ i ].image = r;
-					paintSlots();
-					next();
-				} ).catch( function ( e ) {
-					slotsStatus.textContent = e.message;
-					slotsAuto.disabled = false;
-				} );
-			}
+			} );
+		}
 
-			next();
-		} );
+		next();
+	}
+
+	if ( slotsAuto ) {
+		slotsAuto.addEventListener( 'click', fillAll );
 	}
 
 	/* ─── saving ─── */
