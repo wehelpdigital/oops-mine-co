@@ -23,6 +23,16 @@ final class WHD_AI_Writer {
 	const IDEA     = '_whd_ai_idea';       // what was asked for, kept so it can be rewritten
 	const KEYWORDS = '_whd_ai_keywords';
 	const FAQ      = '_whd_ai_faq';
+	/* Words that say nothing about which picture to use, however often they turn up in a heading. */
+	const STOPWORDS = [
+		'with', 'that', 'this', 'your', 'from', 'what', 'when', 'they', 'them', 'into', 'over',
+		'under', 'above', 'after', 'before', 'while', 'their', 'about', 'which', 'where', 'there',
+		'these', 'those', 'would', 'could', 'should', 'every', 'other', 'more', 'most', 'very',
+		'than', 'then', 'also', 'just', 'like', 'make', 'made', 'take', 'keep', 'need', 'want',
+		'know', 'think', 'look', 'good', 'best', 'right', 'left', 'long', 'year', 'years', 'time',
+		'times', 'work', 'works', 'page', 'piece', 'pieces', 'size', 'sizes', 'wear', 'wears',
+	];
+
 	const PAGE_POST = 'whd-ai-posts';
 	const PAGE_PAGE = 'whd-ai-pages';
 
@@ -141,6 +151,8 @@ final class WHD_AI_Writer {
 		}
 		wp_enqueue_style( 'whd-admin', WHD_URL . 'admin/admin.css', [], WHD_VERSION );
 		wp_enqueue_style( 'whd-ai-writer', WHD_URL . 'admin/ai-writer.css', [ 'whd-admin' ], WHD_VERSION );
+		// The manual route opens WordPress's own media window.
+		wp_enqueue_media();
 		wp_enqueue_style( 'whd-keyword-picker', WHD_URL . 'admin/keyword-picker.css', [], WHD_VERSION );
 		wp_enqueue_script( 'whd-keyword-picker', WHD_URL . 'admin/keyword-picker.js', [], WHD_VERSION, true );
 		wp_enqueue_script( 'whd-ai-writer', WHD_URL . 'admin/ai-writer.js', [ 'whd-keyword-picker' ], WHD_VERSION, true );
@@ -150,6 +162,7 @@ final class WHD_AI_Writer {
 			'rest'  => [ 'root' => esc_url_raw( rest_url( 'whd/v1/ai/' ) ), 'nonce' => wp_create_nonce( 'wp_rest' ) ],
 			'type'  => $type,
 			'ready' => WHD_AI::ready(),
+			'canDraw' => class_exists( 'WHD_AI_Images' ) && WHD_AI_Images::ready(),
 			'i18n'  => [
 				'writing'  => __( 'Writing — this takes a few seconds…', 'whd' ),
 				'saving'   => __( 'Saving…', 'whd' ),
@@ -261,6 +274,26 @@ final class WHD_AI_Writer {
 
 				<div class="whd-writer__check" id="whd-writer-check"></div>
 
+				<div class="whd-writer__images" id="whd-writer-images" hidden>
+					<p class="whd-writer__label">
+						<span id="whd-writer-images-count"></span>
+						<?php if ( class_exists( 'WHD_AI_Images' ) && WHD_AI_Images::ready() ) : ?>
+							<button type="button" class="button button-small" id="whd-writer-images-auto"><?php esc_html_e( 'Find or draw them', 'whd' ); ?></button>
+						<?php else : ?>
+							<button type="button" class="button button-small" id="whd-writer-images-auto"><?php esc_html_e( 'Find them in my library', 'whd' ); ?></button>
+						<?php endif; ?>
+						<span class="whd-writer__status" id="whd-writer-images-status" role="status"></span>
+					</p>
+					<div class="whd-writer__slots" id="whd-writer-slots"></div>
+					<p class="description">
+						<?php
+						echo class_exists( 'WHD_AI_Images' ) && WHD_AI_Images::ready()
+							? esc_html__( 'Your media library is searched first; anything it has no good match for is drawn in the look of your own photographs. Or click a slot to choose the picture yourself.', 'whd' )
+							: esc_html__( 'Your media library is searched for a match. Click a slot to choose the picture yourself.', 'whd' );
+						?>
+					</p>
+				</div>
+
 				<div class="whd-writer__preview">
 					<p class="whd-writer__label"><?php esc_html_e( 'The page itself', 'whd' ); ?></p>
 					<div class="whd-writer__body" id="whd-writer-body" contenteditable="true" spellcheck="true"></div>
@@ -351,14 +384,34 @@ JSON;
 			$user .= "\n\n" . __( 'Leave "faqs" as an empty list.', 'whd' );
 		}
 
-		$raw = WHD_AI::call( $system, $user, [ 'json' => true ] );
+		/*
+		 * Room for the whole thing and the thinking that precedes it. These models reason before
+		 * they answer out of the same allowance, so a budget sized for the page alone comes back
+		 * truncated — and half a JSON document is not a document.
+		 */
+		$budget = [ 'short' => 9000, 'medium' => 14000, 'long' => 22000 ][ $length ] ?? 14000;
+
+		$raw = WHD_AI::call( $system, $user, [ 'json' => true, 'max_tokens' => $budget ] );
 		if ( is_wp_error( $raw ) ) {
 			return $raw;
 		}
 
-		$doc = json_decode( trim( preg_replace( '/^```[a-z]*\s*|\s*```$/i', '', (string) $raw ) ), true );
+		$doc = self::decode( $raw );
 		if ( ! is_array( $doc ) || empty( $doc['sections'] ) ) {
-			return new WP_Error( 'whd_ai_shape', __( 'The model did not return a page in the shape asked for. Try again.', 'whd' ) );
+			// Once more before giving up: a mangled reply is usually a one-off.
+			$raw = WHD_AI::call( $system, $user, [ 'json' => true, 'max_tokens' => $budget ] );
+			if ( is_wp_error( $raw ) ) {
+				return $raw;
+			}
+			$doc = self::decode( $raw );
+		}
+		if ( ! is_array( $doc ) || empty( $doc['sections'] ) ) {
+			return new WP_Error(
+				'whd_ai_shape',
+				self::looks_cut_off( $raw )
+					? __( 'The reply was cut short, twice. Try a shorter length, or raise “Longest reply” in WHD → AI content.', 'whd' )
+					: __( 'The model did not return a page in the shape asked for, twice over. Try again, or reword the idea.', 'whd' )
+			);
 		}
 
 		$doc         = self::tidy( $doc, $keywords, $faq );
@@ -385,8 +438,49 @@ JSON;
 		}
 		$check['ok']  = empty( $check['issues'] ) && ! in_array( false, (array) ( $check['keywords'] ?? [] ), true );
 		$doc['check'] = $check;
+		$doc['slots'] = self::image_slots( $doc );
 
 		return $doc;
+	}
+
+	/**
+	 * Read the model's reply, forgiving the usual wrappers.
+	 *
+	 * Fences, a sentence of preamble, the whole thing inside a key of its own: none of it changes
+	 * what was meant, so none of it is worth failing over.
+	 */
+	private static function decode( $raw ) {
+		$text = trim( preg_replace( '/^```[a-z]*\s*|\s*```$/i', '', (string) $raw ) );
+		$doc  = json_decode( $text, true );
+
+		if ( ! is_array( $doc ) ) {
+			// Anything either side of the object is not ours to care about.
+			$first = strpos( $text, '{' );
+			$last  = strrpos( $text, '}' );
+			if ( false !== $first && false !== $last && $last > $first ) {
+				$doc = json_decode( substr( $text, $first, $last - $first + 1 ), true );
+			}
+		}
+		if ( ! is_array( $doc ) ) {
+			return null;
+		}
+		// Wrapped in a key of its own — {"page": {…}} — rather than returned flat.
+		if ( empty( $doc['sections'] ) ) {
+			foreach ( $doc as $value ) {
+				if ( is_array( $value ) && ! empty( $value['sections'] ) ) {
+					return $value;
+				}
+			}
+		}
+
+		return $doc;
+	}
+
+	/** Did the reply simply stop? Then the budget is the thing to change, not the wording. */
+	private static function looks_cut_off( $raw ): bool {
+		$text = rtrim( (string) $raw );
+
+		return '' !== $text && ! in_array( substr( $text, -1 ), [ '}', ']', '`' ], true );
 	}
 
 	/** Trim what came back to what will be saved. */
@@ -466,6 +560,233 @@ JSON;
 		return trim( $html );
 	}
 
+	/* ─────────────────────────── pictures ───────────────────────────
+	   A page of unbroken text is a page nobody finishes. How many it wants is worked out from how
+	   long it turned out to be, and then there are two ways to fill them: let this look through the
+	   media library and draw whatever is missing, or choose every one by hand. */
+
+	/**
+	 * The picture slots this piece wants: one at the top, then one every other section.
+	 *
+	 * @return array [ { key, subject, heading } ]
+	 */
+	public static function image_slots( array $doc ): array {
+		$sections = array_values( (array) ( $doc['sections'] ?? [] ) );
+		$slots    = [ [
+			'key'     => 'hero',
+			'subject' => (string) ( $doc['title'] ?? '' ),
+			'heading' => '',
+		] ];
+
+		for ( $i = 1; $i < count( $sections ); $i += 2 ) {
+			if ( count( $slots ) >= 4 ) {
+				break;
+			}
+			$slots[] = [
+				'key'     => 'section-' . $i,
+				'subject' => (string) ( $sections[ $i ]['heading'] ?? '' ),
+				'heading' => (string) ( $sections[ $i ]['heading'] ?? '' ),
+			];
+		}
+
+		return $slots;
+	}
+
+	/**
+	 * The closest thing in the media library, or nothing.
+	 *
+	 * Scored on the words shared with what the slot is about. The floor matters more than the
+	 * ceiling: a picture that merely exists is worse than no picture, so a weak match is refused
+	 * and the slot goes to the model instead.
+	 *
+	 * @return array|null { id, url, alt, score }
+	 */
+	public static function find_image( string $subject, array $keywords = [], array $taken = [] ) {
+		$words = array_values( array_unique( array_filter(
+			preg_split( '/[^a-z0-9]+/', strtolower( $subject . ' ' . implode( ' ', $keywords ) ) ),
+			static fn( $w ) => strlen( $w ) > 3 && ! in_array( $w, self::STOPWORDS, true )
+		) ) );
+		if ( ! $words ) {
+			return null;
+		}
+
+		/*
+		 * Every image, scored here rather than in SQL. A search that makes the database do the
+		 * matching wants every word to appear, which on a library of product shots means nothing
+		 * ever matches — "winter coat office" is four words no filename has all of.
+		 */
+		global $wpdb;
+		$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			"SELECT p.ID, p.post_title, p.post_excerpt, pm.meta_value AS alt, pf.meta_value AS file
+			 FROM {$wpdb->posts} p
+			 LEFT JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID AND pm.meta_key = '_wp_attachment_image_alt'
+			 LEFT JOIN {$wpdb->postmeta} pf ON pf.post_id = p.ID AND pf.meta_key = '_wp_attached_file'
+			 WHERE p.post_type = 'attachment' AND p.post_mime_type LIKE 'image/%'
+			 ORDER BY p.ID DESC LIMIT 400"
+		);
+
+		$haystacks = [];
+		foreach ( $rows as $image ) {
+			$haystacks[ (int) $image->ID ] = ' ' . trim( preg_replace(
+				'/[^a-z0-9]+/',
+				' ',
+				strtolower( implode( ' ', [
+					$image->post_title,
+					$image->post_excerpt,
+					(string) $image->alt,
+					(string) $image->file,
+				] ) )
+			) ) . ' ';
+		}
+
+		/*
+		 * A word that half the library carries tells you nothing about which picture to use —
+		 * "korean" is on nearly every alt text in this shop. Each word is weighed by how rare it
+		 * is, and the ones that are everywhere are dropped.
+		 */
+		/* Singular and plural are the same word to a reader, so they are the same word here. */
+		$variants = static function ( $word ) {
+			$forms = [ $word ];
+			if ( 's' === substr( $word, -1 ) ) {
+				$forms[] = substr( $word, 0, -1 );
+				if ( 'es' === substr( $word, -2 ) ) {
+					$forms[] = substr( $word, 0, -2 );
+				}
+			} else {
+				$forms[] = $word . 's';
+			}
+
+			return array_values( array_unique( array_filter( $forms, static fn( $f ) => strlen( $f ) > 3 ) ) );
+		};
+		$hit = static function ( $hay, $forms ) {
+			foreach ( $forms as $form ) {
+				if ( false !== strpos( $hay, ' ' . $form . ' ' ) ) {
+					return true;
+				}
+			}
+
+			return false;
+		};
+
+		$weights = [];
+		$total   = max( 1, count( $haystacks ) );
+		foreach ( $words as $word ) {
+			$forms = $variants( $word );
+			$seen  = 0;
+			foreach ( $haystacks as $hay ) {
+				$seen += $hit( $hay, $forms ) ? 1 : 0;
+			}
+			if ( ! $seen ) {
+				continue;
+			}
+			$share = $seen / $total;
+			if ( $share < 0.05 ) {
+				// Particular enough to carry a slot on its own: a post about coats wants the coat.
+				$weights[ $word ] = [ 1.5, $forms ];
+			} elseif ( $share < 0.25 ) {
+				$weights[ $word ] = [ 0.5, $forms ];    // common enough to be weak evidence on its own
+			}
+		}
+		if ( ! $weights ) {
+			return null;
+		}
+
+		$best = null;
+		foreach ( $rows as $image ) {
+			if ( in_array( (int) $image->ID, array_map( 'intval', $taken ), true ) ) {
+				continue;
+			}
+			$haystack = $haystacks[ (int) $image->ID ];
+
+			$score = 0;
+			foreach ( $weights as $weight ) {
+				// Whole words only: "coat" should not be satisfied by "coating".
+				$score += $hit( $haystack, $weight[1] ) ? $weight[0] : 0;
+			}
+			if ( $score && ( ! $best || $score > $best['score'] ) ) {
+				$best = [
+					'id'    => (int) $image->ID,
+					'url'   => wp_get_attachment_image_url( $image->ID, 'medium' ),
+					'full'  => wp_get_attachment_image_url( $image->ID, 'large' ),
+					'alt'   => (string) ( $image->alt ?: $image->post_title ),
+					'score' => $score,
+				];
+			}
+		}
+
+		/*
+		 * The floor, in weighted terms: one word that is particular to this picture plus anything
+		 * else, or two merely plausible ones. Below that it is a coincidence, and a coincidence on
+		 * the page is worse than a gap.
+		 */
+		return ( $best && $best['score'] >= 1.5 ) ? $best : null;
+	}
+
+	/**
+	 * Fill one slot: the library first, the model only where the library has nothing.
+	 *
+	 * @return array|WP_Error
+	 */
+	public static function fill_slot( array $slot, array $doc, array $taken = [], bool $may_draw = true ) {
+		$found = self::find_image( $slot['subject'], (array) ( $doc['keywords'] ?? [] ), $taken );
+		if ( $found ) {
+			$found['source'] = 'library';
+			$found['key']    = $slot['key'];
+
+			return $found;
+		}
+		if ( ! $may_draw || ! class_exists( 'WHD_AI_Images' ) || ! WHD_AI_Images::ready() ) {
+			return new WP_Error( 'whd_ai_writer_nopic', __( 'Nothing in the library fits, and drawing one is not available.', 'whd' ) );
+		}
+
+		$id = WHD_AI_Images::make(
+			sprintf(
+				/* translators: 1: what the picture is about, 2: the piece it belongs to */
+				__( '%1$s. The photograph sits beside writing about %2$s for an online womenswear boutique.', 'whd' ),
+				$slot['subject'],
+				(string) ( $doc['title'] ?? '' )
+			),
+			sanitize_title( $slot['subject'] ?: 'journal' ),
+			$slot['subject']
+		);
+		if ( is_wp_error( $id ) ) {
+			return $id;
+		}
+
+		return [
+			'id'     => (int) $id,
+			'url'    => wp_get_attachment_image_url( $id, 'medium' ),
+			'full'   => wp_get_attachment_image_url( $id, 'large' ),
+			'alt'    => $slot['subject'],
+			'score'  => 0,
+			'source' => 'drawn',
+			'key'    => $slot['key'],
+		];
+	}
+
+	/**
+	 * Put the chosen pictures into the copy.
+	 *
+	 * The first belongs to the page rather than to a paragraph, so it becomes the featured image.
+	 * The rest go in above the section they were chosen for.
+	 */
+	public static function place_images( string $html, array $images ): string {
+		foreach ( $images as $image ) {
+			if ( empty( $image['heading'] ) || empty( $image['full'] ) ) {
+				continue;
+			}
+			$figure = sprintf(
+				"\n<figure class=\"wp-block-image size-large\"><img src=\"%s\" alt=\"%s\" loading=\"lazy\" /></figure>\n",
+				esc_url( $image['full'] ),
+				esc_attr( $image['alt'] ?? '' )
+			);
+			$heading = preg_quote( $image['heading'], '#' );
+			$html    = preg_replace( '#(<h2[^>]*>\s*' . $heading . '\s*</h2>)#i', $figure . '$1', $html, 1 );
+		}
+
+		return $html;
+	}
+
 	/**
 	 * The questions as the page actually asks them.
 	 *
@@ -515,6 +836,13 @@ JSON;
 			return new WP_Error( 'whd_ai_empty', __( 'There is nothing here to save.', 'whd' ) );
 		}
 
+		/*
+		 * The pictures go in before the post is written rather than after: the body saved is then
+		 * the body with its figures in it, and nothing has to be edited twice.
+		 */
+		$images = array_values( array_filter( (array) ( $doc['images'] ?? [] ), static fn( $i ) => ! empty( $i['id'] ) ) );
+		$html   = self::place_images( $html, $images );
+
 		$id = wp_insert_post( [
 			'post_type'    => $type,
 			'post_status'  => $status,
@@ -526,6 +854,14 @@ JSON;
 
 		if ( is_wp_error( $id ) ) {
 			return $id;
+		}
+
+		// The one with no heading of its own belongs to the page: that is the featured image.
+		foreach ( $images as $image ) {
+			if ( empty( $image['heading'] ) ) {
+				set_post_thumbnail( $id, (int) $image['id'] );
+				break;
+			}
 		}
 
 		update_post_meta( $id, self::ORIGIN, 'ai' );
@@ -656,6 +992,11 @@ JSON;
 			'callback'            => [ __CLASS__, 'rest_compose' ],
 			'permission_callback' => $can,
 		] );
+		register_rest_route( 'whd/v1', '/ai/write-image', [
+			'methods'             => 'POST',
+			'callback'            => [ __CLASS__, 'rest_image' ],
+			'permission_callback' => $can,
+		] );
 		register_rest_route( 'whd/v1', '/ai/write-save', [
 			'methods'             => 'POST',
 			'callback'            => [ __CLASS__, 'rest_save' ],
@@ -676,6 +1017,29 @@ JSON;
 		}
 
 		return new WP_REST_Response( $doc, 200 );
+	}
+
+	/**
+	 * Fill one picture slot.
+	 *
+	 * One at a time from the browser: drawing takes the best part of fifteen seconds, and a single
+	 * request for four of them is a request that times out.
+	 */
+	public static function rest_image( WP_REST_Request $r ) {
+		$doc   = (array) $r->get_param( 'doc' );
+		$slot  = (array) $r->get_param( 'slot' );
+		$taken = array_map( 'intval', (array) $r->get_param( 'taken' ) );
+		if ( empty( $slot['key'] ) ) {
+			return new WP_REST_Response( [ 'message' => __( 'No slot was named.', 'whd' ) ], 400 );
+		}
+
+		$filled = self::fill_slot( $slot, $doc, $taken, (bool) $r->get_param( 'draw' ) );
+		if ( is_wp_error( $filled ) ) {
+			return new WP_REST_Response( [ 'message' => $filled->get_error_message() ], 400 );
+		}
+		$filled['heading'] = (string) ( $slot['heading'] ?? '' );
+
+		return new WP_REST_Response( $filled, 200 );
 	}
 
 	public static function rest_save( WP_REST_Request $r ) {

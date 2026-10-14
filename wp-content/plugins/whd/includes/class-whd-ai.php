@@ -897,6 +897,15 @@ final class WHD_AI {
 		$model = self::model();
 		$json  = ! empty( $options['json'] );
 
+		/*
+		 * The setting is sized for a product description. A caller that knows it is asking for
+		 * something longer says so here, or the reply comes back cut off part way through a
+		 * sentence — which, when JSON was asked for, is a reply that cannot be read at all.
+		 */
+		if ( ! empty( $options['max_tokens'] ) ) {
+			$o['max_tokens'] = min( 32000, max( 200, (int) $options['max_tokens'] ) );
+		}
+
 		if ( 'anthropic' === $o['provider'] ) {
 			$url  = 'https://api.anthropic.com/v1/messages';
 			$args = [

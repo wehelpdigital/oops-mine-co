@@ -348,6 +348,105 @@ final class WHD_AI_Images {
 	}
 
 	/**
+	 * Draw a picture that belongs to no product and put it in the library.
+	 *
+	 * The product path above always has the shop's own photographs to copy from. This one has
+	 * only words, so it leans on the house look instead — it is for a journal post or a page,
+	 * where nothing exists yet to be faithful to.
+	 *
+	 * @param string $prompt What to draw, in a sentence or two.
+	 * @param string $name   File name stem.
+	 * @param string $alt    Alt text for the library.
+	 * @return int|WP_Error Attachment id.
+	 */
+	public static function make( string $prompt, string $name = 'illustration', string $alt = '' ) {
+		if ( ! self::ready() ) {
+			return new WP_Error( 'whd_ai_images_off', __( 'Drawing pictures needs a Google AI key. Add one in WHD → AI content.', 'whd' ) );
+		}
+
+		$brief = sprintf(
+			"A photograph for an online boutique's journal.\n\nWHAT TO SHOW\n%s\n\nTHE LOOK\n%s\n\n"
+			. "RULES\n- one single photograph, landscape 3:2, nothing split or collaged\n"
+			. "- no text, no lettering, no logo, no watermark, no border\n"
+			. "- a real photograph, not a rendering or an illustration\n"
+			. '- nobody looking into the lens',
+			trim( $prompt ),
+			self::look()
+		);
+
+		$image = self::request( [ [ 'text' => $brief ] ] );
+		if ( is_wp_error( $image ) ) {
+			return $image;
+		}
+
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+		$ext  = 'image/png' === $image['mime'] ? 'png' : 'jpg';
+		$file = wp_upload_bits( sanitize_file_name( $name . '-' . wp_generate_password( 5, false ) . '.' . $ext ), null, $image['data'] );
+		if ( ! empty( $file['error'] ) ) {
+			return new WP_Error( 'whd_ai_images_write', $file['error'] );
+		}
+
+		$id = wp_insert_attachment( [
+			'post_mime_type' => $image['mime'],
+			'post_title'     => $alt ?: $name,
+			'post_status'    => 'inherit',
+		], $file['file'] );
+		if ( is_wp_error( $id ) || ! $id ) {
+			return is_wp_error( $id ) ? $id : new WP_Error( 'whd_ai_images_attach', __( 'The picture could not be added to the media library.', 'whd' ) );
+		}
+
+		wp_update_attachment_metadata( $id, wp_generate_attachment_metadata( $id, $file['file'] ) );
+		update_post_meta( $id, '_wp_attachment_image_alt', $alt ?: $name );
+		update_post_meta( $id, self::META, 1 );
+
+		return (int) $id;
+	}
+
+	/**
+	 * One call to the image model.
+	 *
+	 * @param array $parts inlineData references and the text brief, in the order the model reads them.
+	 * @return array|WP_Error { data: string, mime: string }
+	 */
+	private static function request( array $parts ) {
+		$key = (string) WHD_AI::get()['google_key'];
+
+		$response = wp_remote_post(
+			'https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode( self::model() ) . ':generateContent?key=' . rawurlencode( $key ),
+			[
+				// Drawing takes far longer than writing; the default thirty seconds times out mid-picture.
+				'timeout' => 180,
+				'headers' => [ 'Content-Type' => 'application/json' ],
+				'body'    => wp_json_encode( [ 'contents' => [ [ 'role' => 'user', 'parts' => $parts ] ] ] ),
+			]
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+		$code = (int) wp_remote_retrieve_response_code( $response );
+		$body = json_decode( wp_remote_retrieve_body( $response ), true );
+		if ( $code < 200 || $code >= 300 ) {
+			return new WP_Error( 'whd_ai_images_http', sprintf( '%d — %s', $code, $body['error']['message'] ?? __( 'the image model refused', 'whd' ) ) );
+		}
+
+		foreach ( (array) ( $body['candidates'][0]['content']['parts'] ?? [] ) as $part ) {
+			if ( ! empty( $part['inlineData']['data'] ) ) {
+				return [
+					'data' => base64_decode( $part['inlineData']['data'] ),
+					'mime' => (string) ( $part['inlineData']['mimeType'] ?? 'image/jpeg' ),
+				];
+			}
+		}
+
+		// A refusal comes back as words where the picture should be, so pass it on rather than
+		// reporting an empty success.
+		$said = trim( (string) ( $body['candidates'][0]['content']['parts'][0]['text'] ?? '' ) );
+
+		return new WP_Error( 'whd_ai_images_empty', $said ?: __( 'The model sent no picture back.', 'whd' ) );
+	}
+
+	/**
 	 * One call to the image model: the pictures we have, then the brief.
 	 *
 	 * @return array|WP_Error { data: string, mime: string }

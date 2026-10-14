@@ -118,6 +118,14 @@
 			body.innerHTML = r.html || '';
 			paintCheck( r.check );
 			countDesc();
+			slots = ( r.slots || [] ).map( function ( slot ) {
+				return { key: slot.key, subject: slot.subject, heading: slot.heading, image: null };
+			} );
+			if ( slotsBox ) {
+				slotsBox.hidden = ! slots.length;
+				slotsStatus.textContent = '';
+				paintSlots();
+			}
 			result.hidden = false;
 			status.textContent = '';
 			go.textContent = 'Write another';
@@ -135,6 +143,118 @@
 		} );
 	}
 
+	/* ─── pictures ───
+	   The piece says how many it wants. Fill them in one go, or click any slot and choose that one
+	   yourself; the two can be mixed, and a slot left empty is simply a slot left empty. */
+
+	var slotsBox = document.getElementById( 'whd-writer-images' );
+	var slotsList = document.getElementById( 'whd-writer-slots' );
+	var slotsCount = document.getElementById( 'whd-writer-images-count' );
+	var slotsAuto = document.getElementById( 'whd-writer-images-auto' );
+	var slotsStatus = document.getElementById( 'whd-writer-images-status' );
+	var slots = [];
+	var frame = null;
+
+	function taken() {
+		return slots.filter( function ( s ) {
+			return s.image;
+		} ).map( function ( s ) {
+			return s.image.id;
+		} );
+	}
+
+	function paintSlots() {
+		if ( ! slotsList ) {
+			return;
+		}
+		slotsList.innerHTML = '';
+		slots.forEach( function ( slot, i ) {
+			var cell = document.createElement( 'button' );
+			cell.type = 'button';
+			cell.className = 'whd-writer__slot' + ( slot.image ? ' is-filled' : '' );
+			cell.title = slot.heading || 'Top of the page';
+
+			if ( slot.image ) {
+				cell.innerHTML = '<img src="' + slot.image.url + '" alt="" />'
+					+ '<span class="whd-writer__slot-tag">' + ( slot.image.source === 'drawn' ? 'drawn' : 'from your library' ) + '</span>';
+			} else {
+				cell.innerHTML = '<span class="whd-writer__slot-empty">+</span>';
+			}
+			cell.innerHTML += '<span class="whd-writer__slot-where">' + ( slot.heading || 'Top of the page' ) + '</span>';
+			cell.addEventListener( 'click', function () {
+				choose( i );
+			} );
+			slotsList.appendChild( cell );
+		} );
+
+		var filled = taken().length;
+		slotsCount.textContent = slots.length === 1
+			? ( filled ? '1 picture, chosen' : 'This piece wants 1 picture' )
+			: ( 'This piece wants ' + slots.length + ' pictures' + ( filled ? ' — ' + filled + ' chosen' : '' ) );
+	}
+
+	/** WordPress's own media window, for the slot that was clicked. */
+	function choose( index ) {
+		if ( ! window.wp || ! wp.media ) {
+			return;
+		}
+		if ( ! frame ) {
+			frame = wp.media( { title: 'Choose a picture', button: { text: 'Use this one' }, multiple: false } );
+		}
+		frame.off( 'select' );
+		frame.on( 'select', function () {
+			var picked = frame.state().get( 'selection' ).first().toJSON();
+			slots[ index ].image = {
+				id: picked.id,
+				url: ( picked.sizes && picked.sizes.medium ? picked.sizes.medium.url : picked.url ),
+				full: ( picked.sizes && picked.sizes.large ? picked.sizes.large.url : picked.url ),
+				alt: picked.alt || picked.title || '',
+				source: 'library'
+			};
+			paintSlots();
+		} );
+		frame.open();
+	}
+
+	if ( slotsAuto ) {
+		slotsAuto.addEventListener( 'click', function () {
+			var queue = slots.map( function ( s, i ) {
+				return i;
+			} ).filter( function ( i ) {
+				return ! slots[ i ].image;
+			} );
+			if ( ! queue.length || ! doc ) {
+				return;
+			}
+			slotsAuto.disabled = true;
+
+			function next() {
+				if ( ! queue.length ) {
+					slotsAuto.disabled = false;
+					slotsStatus.textContent = 'Done — click any one to swap it.';
+					return;
+				}
+				var i = queue.shift();
+				slotsStatus.textContent = 'Looking for ' + ( slots[ i ].heading || 'the one at the top' ) + '…';
+				api( 'write-image', {
+					doc: doc,
+					slot: { key: slots[ i ].key, subject: slots[ i ].subject, heading: slots[ i ].heading },
+					taken: taken(),
+					draw: !! D.canDraw
+				} ).then( function ( r ) {
+					slots[ i ].image = r;
+					paintSlots();
+					next();
+				} ).catch( function ( e ) {
+					slotsStatus.textContent = e.message;
+					slotsAuto.disabled = false;
+				} );
+			}
+
+			next();
+		} );
+	}
+
 	/* ─── saving ─── */
 
 	function save( postStatus, button ) {
@@ -148,6 +268,16 @@
 		payload.title = title.value;
 		payload.meta_description = desc.value;
 		payload.html = body.innerHTML;
+		payload.images = slots.filter( function ( s ) {
+			return s.image;
+		} ).map( function ( s ) {
+			return {
+				id: s.image.id,
+				full: s.image.full || s.image.url,
+				alt: s.image.alt || '',
+				heading: s.heading
+			};
+		} );
 
 		api( 'write-save', {
 			doc: payload,
