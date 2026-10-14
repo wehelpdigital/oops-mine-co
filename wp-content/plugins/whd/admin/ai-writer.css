@@ -205,3 +205,24 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
+
+
+/* The line that says it saved. It sits outside the result box, which closes on a save, so it is
+   the only thing left on screen pointing at what was just written. */
+.whd-writer__saved {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 4px 14px;
+	margin: 0 0 18px;
+	padding: 13px 16px;
+	border: 1px solid #c6e1c6;
+	border-left: 4px solid #46954a;
+	border-radius: 3px;
+	background: #f4faf4;
+	font-size: 13px;
+	color: #1d2327;
+}
+.whd-writer__saved strong { font-weight: 600; }
+.whd-writer__saved a { color: #2271b1; text-decoration: none; font-weight: 500; }
+.whd-writer__saved a:hover { text-decoration: underline; }

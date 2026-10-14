@@ -259,6 +259,8 @@ final class WHD_AI_Writer {
 				<span class="whd-writer__status" id="whd-writer-status" role="status"></span>
 			</div>
 
+			<div class="whd-writer__saved" id="whd-writer-saved" role="status" hidden></div>
+
 			<div class="whd-writer__result" id="whd-writer-result" hidden>
 				<div class="whd-writer__meta">
 					<label class="whd-writer__field">

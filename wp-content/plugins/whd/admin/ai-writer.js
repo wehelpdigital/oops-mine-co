@@ -32,6 +32,7 @@
 	var draft = document.getElementById( 'whd-writer-draft' );
 	var again = document.getElementById( 'whd-writer-again' );
 	var saveStatus = document.getElementById( 'whd-writer-save-status' );
+	var savedBox = document.getElementById( 'whd-writer-saved' );
 
 	var doc = null;
 
@@ -104,6 +105,9 @@
 		go.disabled = true;
 		status.textContent = T.writing;
 		check.innerHTML = '';
+		if ( savedBox ) {
+			savedBox.hidden = true;
+		}
 
 		api( 'compose', {
 			idea: idea.value,
@@ -285,9 +289,15 @@
 			type: D.type,
 			status: postStatus
 		} ).then( function ( r ) {
-			saveStatus.innerHTML = ( postStatus === 'publish' ? 'Published' : 'Saved as a draft' )
-				+ ' — <a href="' + r.edit_url + '">edit</a>'
-				+ ( postStatus === 'publish' ? ' · <a href="' + r.view_url + '" target="_blank" rel="noopener">view</a>' : '' );
+			/* The result box closes on a save, so the confirmation cannot live inside it — the
+			   edit link is the one thing worth keeping on screen. */
+			saveStatus.textContent = '';
+			var where = savedBox || saveStatus;
+			where.innerHTML = '<strong>' + ( postStatus === 'publish' ? 'Published.' : 'Saved as a draft.' ) + '</strong> '
+				+ '<a href="' + r.edit_url + '">' + ( postStatus === 'publish' ? 'Edit it' : 'Open it' ) + '</a>'
+				+ ' · <a href="' + r.view_url + '" target="_blank" rel="noopener">'
+				+ ( postStatus === 'publish' ? 'View it' : 'Preview it' ) + '</a>';
+			where.hidden = false;
 			addRow( r, postStatus );
 			doc = null;
 			result.hidden = true;
