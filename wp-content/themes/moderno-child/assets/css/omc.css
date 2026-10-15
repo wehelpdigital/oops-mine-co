@@ -1782,6 +1782,19 @@
 		box-shadow: 0 6px 22px rgba(28, 20, 17, .26);
 	}
 }
+/* It is a marketing prompt, and it loses to anything that takes money.
+   On a phone the pill sits at bottom-right, which is exactly where the full-width Checkout button
+   ends: measured on /cart/ at 390px the pill covered the button from x238 to x369 of its x21–369.
+   A shopper reaching for Checkout hit a discount offer instead. It therefore stands down on the
+   two pages where paying is the whole point, and underneath the slide-out cart wherever that
+   opens — on a wide screen the tab is pinned to the right edge, which is the edge the drawer
+   comes in from. Everywhere else it stays. */
+@media (max-width: 767px) {
+	.woocommerce-cart .omc-disctab,
+	.woocommerce-checkout .omc-disctab { display: none; }
+}
+body:has(.js-cart-sidebar.c-shop-sidebar--active) .omc-disctab { display: none; }
+
 @media print { .omc-disctab { display: none; } }
 
 /* ─── Shared dialog shell (discount, and anything added later) ─── */

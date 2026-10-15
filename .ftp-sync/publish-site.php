@@ -1116,6 +1116,31 @@ $menu_post = static function ( $slug, $label = '', $post_type = 'page' ) {
 	}
 	return [ 'type' => 'post_type', 'object' => $post_type, 'object_id' => (int) $post->ID, 'title' => $label ?: get_the_title( $post ) ];
 };
+/**
+ * A headline cut down to something a menu column can hold.
+ *
+ * The first clause is the part that identifies the piece; a colon or a question mark is where the
+ * writer stopped saying what it is and started saying what is in it.
+ */
+function omc_menu_label( string $title, int $max = 38 ): string {
+	$title = trim( wp_strip_all_tags( $title ) );
+	if ( preg_match( '/^(.{10,}?[?])\s+\S/u', $title, $m ) ) {
+		$title = $m[1];
+	} elseif ( false !== mb_strpos( $title, ':' ) ) {
+		$head = trim( (string) mb_substr( $title, 0, mb_strpos( $title, ':' ) ) );
+		if ( mb_strlen( $head ) >= 10 ) {
+			$title = $head;
+		}
+	}
+	if ( mb_strlen( $title ) > $max ) {
+		$cut   = (string) mb_substr( $title, 0, $max );
+		$space = mb_strrpos( $cut, ' ' );
+		$title = rtrim( false !== $space && $space > 12 ? (string) mb_substr( $cut, 0, $space ) : $cut, " ,;:-" ) . '…';
+	}
+
+	return $title;
+}
+
 /** A plain link. */
 $menu_link = static function ( $label, $url ) {
 	return [ 'type' => 'custom', 'url' => $url, 'title' => $label ];
@@ -1142,6 +1167,15 @@ $new_arrivals_url = function_exists( 'omc_new_arrivals_url' ) ? omc_new_arrivals
 $blog_page        = (int) get_option( 'page_for_posts' );
 $journal_item     = $blog_page ? [ 'type' => 'post_type', 'object' => 'page', 'object_id' => $blog_page, 'title' => 'Journal' ] : $menu_link( 'Journal', home_url( '/blog/' ) );
 
+/* How long a column may be, and how short it may be before it stops being one.
+   "Shop by category" once stood with nothing under it but "Shop all": the menu was published
+   before import-catalog.php had made the terms, every category link resolved to null, and the
+   heading was left alone beside a column of eight. A heading with one link under it reads as a
+   mistake, so a column now has to earn its place. The ceiling keeps the other side of it: a
+   column of twelve next to one of four is the same imbalance the other way up. */
+const OMC_MENU_COLUMN_MIN = 3;
+const OMC_MENU_COLUMN_MAX = 8;
+
 /* Column 1 — the catalogue itself, straight from catalog.json so the menu and the taxonomy
    cannot drift apart. Groups flagged `menu` become columns, their children the links. */
 $catalog_cfg  = function_exists( 'omc_cat_config' ) ? omc_cat_config() : null;
@@ -1162,13 +1196,46 @@ foreach ( (array) ( $catalog_cfg['categories'] ?? [] ) as $catalog_group ) {
 	}
 }
 
-$column_category = $catalog_cols['Clothing'] ?? [];
-$column_category[] = $menu_link( 'Shop all', $shop_url );
-$column_category = array_values( array_filter( $column_category ) );
+/* Shop all goes on the end of real categories, never instead of them: on its own it is a
+   heading pointing at the page its own parent already points at. */
+$column_category = array_values( array_filter( $catalog_cols['Clothing'] ?? [] ) );
 
-/* Column 0 — what just landed */
-$column_new = $catalog_cols['New & Now'] ?? [];
-$column_new = array_values( array_filter( $column_new ) );
+/* The catalogue file says which groups become columns, but the file that owns the shop has
+   already changed once — catalog-2026.json carries the same groups without the flag — and when
+   the flag went, so did every category link, which is how the heading came to stand alone beside
+   "Shop all". The taxonomy is the thing that is actually true, so when the file yields nothing
+   the terms answer instead: the children of Clothing that have something in them, busiest first.
+   A category nobody can buy from is worse than a category nobody can see. */
+if ( ! $column_category ) {
+	$clothing = get_term_by( 'slug', 'clothing', 'product_cat' );
+	$children = $clothing && ! is_wp_error( $clothing ) ? get_terms( [
+		'taxonomy'   => 'product_cat',
+		'parent'     => (int) $clothing->term_id,
+		'hide_empty' => true,
+		'orderby'    => 'count',
+		'order'      => 'DESC',
+	] ) : [];
+	foreach ( is_wp_error( $children ) ? [] : (array) $children as $child ) {
+		$column_category[] = [
+			'type'      => 'taxonomy',
+			'object'    => 'product_cat',
+			'object_id' => (int) $child->term_id,
+			'title'     => html_entity_decode( $child->name, ENT_QUOTES, 'UTF-8' ),
+		];
+	}
+}
+
+if ( count( $column_category ) >= OMC_MENU_COLUMN_MIN ) {
+	$column_category = array_slice( $column_category, 0, OMC_MENU_COLUMN_MAX - 1 );
+	$column_category[] = $menu_link( 'Shop all', $shop_url );
+} else {
+	$column_category = [];
+}
+
+/* Column 0 — what just landed. Of the five in catalog.json only new-arrivals is a real term, so
+   this is usually one link, and one link is not a column. */
+$column_new = array_values( array_filter( $catalog_cols['New & Now'] ?? [] ) );
+$column_new = count( $column_new ) >= OMC_MENU_COLUMN_MIN ? array_slice( $column_new, 0, OMC_MENU_COLUMN_MAX ) : [];
 
 /* Column 2 — the style landing pages written from the keyword plan (only the ones that exist) */
 $style_order = [
@@ -1186,18 +1253,19 @@ $style_order = [
 $column_style = [];
 foreach ( $style_order as [ $pages, $terms, $label ] ) {
 	$item = $menu_style( $pages, $terms, $label );
-	if ( $item && count( $column_style ) < 8 ) {
+	if ( $item && count( $column_style ) < OMC_MENU_COLUMN_MAX ) {
 		$column_style[] = $item;
 	}
 }
 
-/* Column 3 — occasions (product categories created above) */
+/* Column 3 — occasions (product categories created above), when enough of them exist */
 $column_occasion = array_values( array_filter( [
 	$menu_term( 'casual' ),
 	$menu_term( 'workwear' ),
 	$menu_term( 'evening' ),
 	$menu_term( 'wedding-guest', 'Wedding guest' ),
 ] ) );
+$column_occasion = count( $column_occasion ) >= OMC_MENU_COLUMN_MIN ? $column_occasion : [];
 
 /* Column 4 — the journal landing plus the first style guides that exist */
 // array_merge, not +: the blog item already has a title ("Journal") and the column head uses that word.
@@ -1211,6 +1279,11 @@ foreach ( (array) ( $plan['pages'] ?? [] ) as $planned ) {
 	}
 	$item = $menu_post( sanitize_title( $planned['slug'] ), '', 'post' );
 	if ( $item ) {
+		/* A headline is written to be read on the page it belongs to. "Petite Fashion Over 50:
+		   Proportion Advice That Ages Well" wraps to three lines in a menu column and drags the
+		   whole panel out of shape; everything after the colon is the part a reader does not need
+		   in order to choose. */
+		$item['title'] = omc_menu_label( $item['title'] );
 		$column_journal[] = $item;
 	}
 }
