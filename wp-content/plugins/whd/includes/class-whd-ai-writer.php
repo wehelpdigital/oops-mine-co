@@ -409,7 +409,13 @@ JSON;
 				. "- every section heading is a phrase somebody might search, not a label like \"Introduction\" or \"Conclusion\"\n"
 				. "- no section called conclusion, summary or final thoughts\n"
 				. "- say nothing the shop cannot stand behind: no delivery times, no discounts, no stock claims, no named brands, no invented statistics\n"
-				. "- the meta description is a sentence, not a list of keywords\n\n"
+				. "- the meta description is a sentence, not a list of keywords, and runs 120 to 155 characters\n"
+				. "- the first keyword appears in the title, in the meta description, in the opening sentence and in\n"
+				. "  at least one section heading, reading each time as something a person would actually write\n"
+				. "- that keyword comes round about once every two hundred words: often enough to be the subject,\n"
+				. "  never often enough for a reader to notice it\n"
+				. "- most sentences stay under twenty words; no paragraph runs past a hundred and fifty\n"
+				. "- write in the active voice, and name who does the thing\n\n"
 				. "Return exactly this shape:\n%5\$s",
 				'whd'
 			),
@@ -940,6 +946,13 @@ JSON;
 		}
 		if ( ! empty( $doc['seo_title'] ) ) {
 			update_post_meta( $id, '_omc_seo_title', sanitize_text_field( $doc['seo_title'] ) );
+		}
+
+		/* The score box measures a page against its focus keyphrase, and the page already knows
+		   what it was written for — there is no reason to make somebody type it again. */
+		$aimed = array_values( array_filter( (array) ( $doc['keywords'] ?? [] ), 'is_scalar' ) );
+		if ( $aimed && class_exists( 'WHD_SEO' ) && '' === (string) get_post_meta( $id, WHD_SEO::KEYPHRASE, true ) ) {
+			update_post_meta( $id, WHD_SEO::KEYPHRASE, sanitize_text_field( (string) $aimed[0] ) );
 		}
 
 		if ( class_exists( 'WHD_AI_Keywords' ) ) {

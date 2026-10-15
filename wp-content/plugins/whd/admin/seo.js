@@ -23,6 +23,9 @@
 	var score = document.getElementById( 'whd-seo-score' );
 	var list = document.getElementById( 'whd-seo-checks' );
 	var refresh = document.getElementById( 'whd-seo-refresh' );
+	var seoTitle = document.getElementById( 'whd-seo-title' );
+	var seoDesc = document.getElementById( 'whd-seo-desc' );
+	var noindex = document.getElementById( 'whd-seo-noindex' );
 
 	/* ─── what the editor currently holds ─── */
 
@@ -88,7 +91,10 @@
 			keyphrase: keyphrase,
 			title: state.title,
 			content: state.content,
-			slug: state.slug
+			slug: state.slug,
+			seo_title: seoTitle ? seoTitle.value : null,
+			meta_description: seoDesc ? seoDesc.value : null,
+			noindex: noindex && noindex.checked ? 1 : 0
 		};
 
 		var signature = JSON.stringify( body );
@@ -143,6 +149,60 @@
 		html += '<p class="whd-seo__words">' + result.words + ' words</p>';
 		list.innerHTML = html;
 	}
+
+	/* ─── the result as a searcher would see it ─── */
+
+	var preview = document.getElementById( 'whd-seo-preview' );
+	var pvTitle = document.getElementById( 'whd-seo-preview-title' );
+	var pvDesc = document.getElementById( 'whd-seo-preview-desc' );
+	var pvUrl = document.getElementById( 'whd-seo-preview-url' );
+
+	function clip( text, max ) {
+		text = ( text || '' ).replace( /\s+/g, ' ' ).trim();
+		return text.length > max ? text.slice( 0, max - 1 ).replace( /\s\S*$/, '' ) + '…' : text;
+	}
+
+	function paintPreview() {
+		if ( ! preview ) {
+			return;
+		}
+		var state = editorState();
+		var title = ( seoTitle && seoTitle.value.trim() ) || state.title || '';
+		var desc = seoDesc ? seoDesc.value.trim() : '';
+
+		pvUrl.textContent = ( D.home || '' ) + ( state.slug ? state.slug + '/' : '' );
+		pvTitle.textContent = clip( title, 60 ) || ( T.noTitle || 'Untitled' );
+		pvDesc.textContent = desc ? clip( desc, 158 ) : ( T.noDesc || 'Google will write this itself from the copy.' );
+		pvDesc.className = 'whd-seo__preview-desc' + ( desc ? '' : ' is-empty' );
+
+		count( seoTitle, document.getElementById( 'whd-seo-title-count' ), 60, 30 );
+		count( seoDesc, document.getElementById( 'whd-seo-desc-count' ), 158, 100 );
+	}
+
+	function count( field, out, max, min ) {
+		if ( ! field || ! out ) {
+			return;
+		}
+		var n = field.value.trim().length;
+		out.textContent = n + ' / ' + max;
+		out.className = 'whd-seo__count' + ( n > max || ( n && n < min ) ? ' is-warn' : '' );
+	}
+
+	[ seoTitle, seoDesc ].forEach( function ( field ) {
+		if ( field ) {
+			field.addEventListener( 'input', function () {
+				paintPreview();
+				later();
+			} );
+		}
+	} );
+	if ( noindex ) {
+		noindex.addEventListener( 'change', function () {
+			last = '';
+			analyse();
+		} );
+	}
+	paintPreview();
 
 	/* ─── listening ─── */
 

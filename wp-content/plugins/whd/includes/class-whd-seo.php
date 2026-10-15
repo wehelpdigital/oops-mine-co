@@ -27,11 +27,13 @@ defined( 'ABSPATH' ) || exit;
 class WHD_SEO {
 
 	const KEYPHRASE = '_whd_focus_keyphrase';
+	const NOINDEX   = '_whd_noindex';
 	const SCORE     = '_whd_seo_score';
 	const TYPES     = [ 'post', 'page', 'product' ];
 
 	public static function init() {
 		add_action( 'add_meta_boxes', [ __CLASS__, 'meta_box' ] );
+		add_action( 'wp_head', [ __CLASS__, 'robots' ], 1 );
 		add_action( 'save_post', [ __CLASS__, 'save' ], 10, 2 );
 		add_action( 'admin_enqueue_scripts', [ __CLASS__, 'assets' ] );
 		add_action( 'rest_api_init', [ __CLASS__, 'rest' ] );
@@ -73,6 +75,39 @@ class WHD_SEO {
 				<input type="hidden" name="whd_seo_keyphrase" id="whd-seo-keyphrase-input" value="<?php echo esc_attr( $keyphrase ); ?>">
 			</p>
 
+			<p class="whd-seo__field">
+				<label class="whd-seo__label" for="whd-seo-title"><?php esc_html_e( 'SEO title', 'whd' ); ?></label>
+				<input type="text" class="widefat" id="whd-seo-title" name="whd_seo_title"
+					value="<?php echo esc_attr( (string) get_post_meta( $post->ID, '_omc_seo_title', true ) ); ?>"
+					placeholder="<?php echo esc_attr( get_the_title( $post ) ); ?>">
+				<span class="whd-seo__count" id="whd-seo-title-count"></span>
+				<span class="description"><?php esc_html_e( 'The headline in a search result. Left empty, the page title is used.', 'whd' ); ?></span>
+			</p>
+
+			<p class="whd-seo__field">
+				<label class="whd-seo__label" for="whd-seo-desc"><?php esc_html_e( 'Search snippet', 'whd' ); ?></label>
+				<textarea class="widefat" rows="3" id="whd-seo-desc" name="whd_seo_description"
+					placeholder="<?php esc_attr_e( 'What a searcher reads under the title.', 'whd' ); ?>"><?php
+						echo esc_textarea( (string) get_post_meta( $post->ID, '_omc_meta_description', true ) );
+					?></textarea>
+				<span class="whd-seo__count" id="whd-seo-desc-count"></span>
+			</p>
+
+			<div class="whd-seo__preview" id="whd-seo-preview" aria-hidden="true">
+				<span class="whd-seo__preview-url" id="whd-seo-preview-url"></span>
+				<span class="whd-seo__preview-title" id="whd-seo-preview-title"></span>
+				<span class="whd-seo__preview-desc" id="whd-seo-preview-desc"></span>
+			</div>
+
+			<p class="whd-seo__field whd-seo__field--tick">
+				<label>
+					<input type="checkbox" name="whd_seo_noindex" value="1" id="whd-seo-noindex"
+						<?php checked( '1', (string) get_post_meta( $post->ID, self::NOINDEX, true ) ); ?>>
+					<?php esc_html_e( 'Keep this page out of search', 'whd' ); ?>
+				</label>
+				<span class="description"><?php esc_html_e( 'For a cart, a checkout or an account page — somewhere useful to a shopper and no use at all in a search result. It is then not scored either.', 'whd' ); ?></span>
+			</p>
+
 			<div class="whd-seo__verdict" id="whd-seo-verdict">
 				<span class="whd-seo__bullet" id="whd-seo-bullet"></span>
 				<span class="whd-seo__score" id="whd-seo-score">—</span>
@@ -95,6 +130,24 @@ class WHD_SEO {
 		}
 		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE || ! current_user_can( 'edit_post', $post_id ) ) {
 			return;
+		}
+
+		foreach ( [ 'whd_seo_title' => '_omc_seo_title', 'whd_seo_description' => '_omc_meta_description' ] as $field => $meta ) {
+			if ( ! isset( $_POST[ $field ] ) ) {
+				continue;
+			}
+			$given = sanitize_textarea_field( wp_unslash( $_POST[ $field ] ) );
+			if ( '' === trim( $given ) ) {
+				delete_post_meta( $post_id, $meta );
+			} else {
+				update_post_meta( $post_id, $meta, $given );
+			}
+		}
+
+		if ( isset( $_POST['whd_seo_noindex'] ) ) {
+			update_post_meta( $post_id, self::NOINDEX, '1' );
+		} else {
+			delete_post_meta( $post_id, self::NOINDEX );
 		}
 
 		$keyphrase = isset( $_POST['whd_seo_keyphrase'] ) ? sanitize_text_field( wp_unslash( $_POST['whd_seo_keyphrase'] ) ) : '';
@@ -133,12 +186,30 @@ class WHD_SEO {
 		wp_enqueue_script( 'whd-seo', WHD_URL . 'admin/seo.js', [ 'whd-keyword-picker' ], WHD_VERSION, true );
 		wp_localize_script( 'whd-seo', 'WHD_SEO_DATA', [
 			'rest'  => [ 'root' => esc_url_raw( rest_url( 'whd/v1/seo/' ) ), 'nonce' => wp_create_nonce( 'wp_rest' ) ],
+			'home'  => trailingslashit( preg_replace( '#^https?://#', '', home_url( '/' ) ) ),
 			'i18n'  => [
 				'reading' => __( 'Reading the page…', 'whd' ),
 				'error'   => __( 'Could not read the page.', 'whd' ),
 				'noKey'   => __( 'Pick a focus keyphrase to see how the page measures up.', 'whd' ),
+				'noTitle' => __( 'Untitled', 'whd' ),
+				'noDesc'  => __( 'Google will write this itself from the copy.', 'whd' ),
 			],
 		] );
+	}
+
+	/**
+	 * Tell a crawler to stay away from the pages that asked to be left alone.
+	 *
+	 * follow, not nofollow: the page should not be listed, but the links on it still lead
+	 * somewhere worth going.
+	 */
+	public static function robots() {
+		if ( ! is_singular() ) {
+			return;
+		}
+		if ( '1' === (string) get_post_meta( get_queried_object_id(), self::NOINDEX, true ) ) {
+			echo '<meta name="robots" content="noindex,follow">' . "\n";
+		}
 	}
 
 	/* ─────────────────────────── the list column ─────────────────────────── */
@@ -204,6 +275,11 @@ class WHD_SEO {
 				$doc[ $field ] = (string) $given;
 			}
 		}
+		$told = $r->get_param( 'noindex' );
+		if ( null !== $told ) {
+			$doc['noindex'] = (bool) (int) $told;
+		}
+
 		$typed = $r->get_param( 'content' );
 		if ( null !== $typed ) {
 			$post  = $post_id ? get_post( $post_id ) : null;
@@ -241,7 +317,14 @@ class WHD_SEO {
 			$content .= ' ' . self::flatten( $landing );
 		}
 		if ( 'product' === $post->post_type ) {
-			$content .= ' ' . (string) $post->post_excerpt;
+			/* The short description is what a shopper reads first, directly under the name, so it
+			   is the opening paragraph — appending it after the long one had the check looking
+			   at the wrong end of the page and failing a hundred and forty products whose first
+			   line names the garment perfectly well. */
+			$short = trim( (string) $post->post_excerpt );
+			if ( '' !== $short ) {
+				$content = '<p>' . $short . '</p>' . $content;
+			}
 			$story = get_post_meta( $post_id, '_whd_story', true );
 			if ( $story ) {
 				$content .= ' ' . self::flatten( $story );
@@ -272,6 +355,7 @@ class WHD_SEO {
 			'meta_description' => (string) get_post_meta( $post_id, '_omc_meta_description', true ),
 			'seo_title'        => (string) get_post_meta( $post_id, '_omc_seo_title', true ),
 			'keyphrase'        => (string) $keyphrase,
+			'noindex'          => '1' === (string) get_post_meta( $post_id, self::NOINDEX, true ),
 		];
 	}
 
@@ -376,6 +460,24 @@ class WHD_SEO {
 	 * @return array { score, rating, words, groups[] }
 	 */
 	public static function analyse( array $doc ) {
+		/* A cart, a checkout, an account page: useful to a shopper, no use in a search result.
+		   Scoring one is noise, and a bad score against a page nobody should ever land on makes
+		   the number for the whole site meaningless. */
+		if ( ! empty( $doc['noindex'] ) ) {
+			return [
+				'score'   => 100,
+				'rating'  => 'good',
+				'label'   => __( 'Kept out of search', 'whd' ),
+				'words'   => 0,
+				'noindex' => true,
+				'groups'  => [ [
+					'id'     => 'page',
+					'label'  => __( 'The page', 'whd' ),
+					'checks' => [ self::check( 'noindex', 'good', __( 'This page is kept out of search on purpose, so none of the rest applies.', 'whd' ), 'page', 1 ) ],
+				] ],
+			];
+		}
+
 		$type      = (string) ( $doc['post_type'] ?? 'post' );
 		$keyphrase = trim( (string) ( $doc['keyphrase'] ?? '' ) );
 		$title     = (string) ( $doc['title'] ?? '' );
@@ -422,7 +524,7 @@ class WHD_SEO {
 			$headings = self::headings( $html );
 			$in_head  = false;
 			foreach ( $headings as $h ) {
-				if ( false !== mb_strpos( self::norm( $h ), $key_norm ) ) {
+				if ( self::has_phrase( $h, $keyphrase ) ) {
 					$in_head = true;
 					break;
 				}
@@ -435,7 +537,7 @@ class WHD_SEO {
 				: self::check( 'key_heading', 'ok', __( 'There are no subheadings to carry the keyphrase.', 'whd' ), 'keyphrase', 2 );
 
 			$checks[] = self::density( $text, $keyphrase, $count );
-			$checks[] = self::keyphrase_in_alt( $html, $key_norm );
+			$checks[] = self::keyphrase_in_alt( $html, $keyphrase );
 		}
 
 		/* ── the writing ── */
@@ -453,7 +555,7 @@ class WHD_SEO {
 		/* ── the page itself ── */
 
 		$checks[] = self::images( $html, $doc );
-		$checks[] = self::links( $html );
+		$checks[] = self::links( $html, $doc );
 		$checks[] = self::schema_for( $doc );
 
 		/* ── the house rules ── */
@@ -495,7 +597,7 @@ class WHD_SEO {
 	}
 
 	private static function contains( $id, $haystack, $needle, $group, $yes, $no, $weight = 1 ) {
-		$hit = '' !== $needle && false !== mb_strpos( self::norm( $haystack ), $needle );
+		$hit = self::has_phrase( $haystack, $needle );
 
 		return self::check( $id, $hit ? 'good' : 'bad', $hit ? $yes : $no, $group, $weight );
 	}
@@ -564,8 +666,16 @@ class WHD_SEO {
 		if ( ! $count ) {
 			return self::check( 'density', 'bad', __( 'There is no copy to measure.', 'whd' ), 'keyphrase', 2 );
 		}
-		$hits    = substr_count( self::norm( $text ), self::norm( $keyphrase ) );
-		$density = 100 * $hits * max( 1, count( self::word_list( $keyphrase ) ) ) / $count;
+		/* Word for word, plus the sentences that carry the phrase without lining it up. */
+		$hits = substr_count( ' ' . self::norm( $text ) . ' ', ' ' . self::norm( $keyphrase ) . ' ' );
+		if ( ! $hits ) {
+			foreach ( self::sentences( self::norm( $text ) ) as $sentence ) {
+				if ( self::has_phrase( $sentence, $keyphrase ) ) {
+					$hits++;
+				}
+			}
+		}
+		$density = 100 * $hits * max( 1, count( self::content_words( $keyphrase ) ) ) / $count;
 
 		if ( ! $hits ) {
 			return self::check( 'density', 'bad', __( 'The keyphrase never appears in the copy.', 'whd' ), 'keyphrase', 2 );
@@ -586,14 +696,14 @@ class WHD_SEO {
 			__( 'The keyphrase is used %1$d times (%2$s%%), which is about right.', 'whd' ), $hits, number_format_i18n( $density, 1 ) ), 'keyphrase', 2 );
 	}
 
-	private static function keyphrase_in_alt( $html, $key_norm ) {
+	private static function keyphrase_in_alt( $html, $keyphrase ) {
 		preg_match_all( '/<img[^>]*alt=["\']([^"\']*)["\']/i', $html, $m );
 		$alts = array_filter( array_map( 'trim', $m[1] ?? [] ) );
 		if ( ! $alts ) {
 			return self::check( 'key_alt', 'ok', __( 'No picture carries alt text for the keyphrase to sit in.', 'whd' ), 'keyphrase', 1 );
 		}
 		foreach ( $alts as $alt ) {
-			if ( '' !== $key_norm && false !== mb_strpos( self::norm( $alt ), $key_norm ) ) {
+			if ( self::has_phrase( $alt, $keyphrase ) ) {
 				return self::check( 'key_alt', 'good', __( 'A picture’s alt text carries the keyphrase.', 'whd' ), 'keyphrase', 1 );
 			}
 		}
@@ -847,7 +957,25 @@ class WHD_SEO {
 			_n( '%d picture, with alt text.', '%d pictures, all with alt text.', count( $imgs ), 'whd' ), count( $imgs ) ), 'page', 2 );
 	}
 
-	private static function links( $html ) {
+	private static function links( $html, array $doc = [] ) {
+		/* A product page is not a page of prose. Its links to the rest of the shop — the
+		   breadcrumb, the categories it sits in, the related row — are printed by the template,
+		   and nobody writes <a href> into a product description. Counting only the description
+		   marked 142 products as dead ends when every one of them links out. */
+		if ( 'product' === ( $doc['post_type'] ?? '' ) && ! empty( $doc['post_id'] ) ) {
+			$cats = wp_get_post_terms( (int) $doc['post_id'], 'product_cat', [ 'fields' => 'ids' ] );
+			$cats = is_wp_error( $cats ) ? [] : $cats;
+			if ( $cats ) {
+				return self::check( 'links', 'good', sprintf(
+					/* translators: %d: categories */
+					_n( 'Linked from %d category, plus the related row.', 'Linked from %d categories, plus the related row.', count( $cats ), 'whd' ),
+					count( $cats )
+				), 'page', 2 );
+			}
+
+			return self::check( 'links', 'bad', __( 'In no category, so nothing in the shop links to it.', 'whd' ), 'page', 2 );
+		}
+
 		preg_match_all( '/<a[^>]+href=["\']([^"\']+)["\']/i', $html, $m );
 		$home     = wp_parse_url( home_url(), PHP_URL_HOST );
 		$internal = 0;
@@ -989,8 +1117,74 @@ class WHD_SEO {
 		return trim( preg_replace( '/\s+/u', ' ', html_entity_decode( (string) $html, ENT_QUOTES, 'UTF-8' ) ) );
 	}
 
+	/**
+	 * One spelling to compare against.
+	 *
+	 * Hyphens become spaces: a slug writes full-zip as full-zip and a product name writes it as
+	 * Full-Zip, and a plain substring test called those two different things — which is how a
+	 * hundred and twenty products were told their keyphrase was missing from a web address that
+	 * contained it.
+	 */
 	private static function norm( $text ) {
-		return trim( preg_replace( '/\s+/u', ' ', mb_strtolower( self::plain( $text ) ) ) );
+		$text = str_replace( [ '-', '–', '—', '_', '’', "'" ], [ ' ', ' ', ' ', ' ', '', '' ], self::plain( $text ) );
+
+		return trim( preg_replace( '/\s+/u', ' ', mb_strtolower( $text ) ) );
+	}
+
+	/**
+	 * Is the keyphrase in this text?
+	 *
+	 * Word for word counts, and so does the phrase spread through a sentence: "a brushed flannel
+	 * overshirt with a jersey hood" is about a hooded flannel overshirt, and a check that says
+	 * otherwise is measuring word order rather than meaning. Yoast counts the second kind too.
+	 * Filler words are dropped, because "for" and "with" carry nothing.
+	 */
+	private static function has_phrase( $haystack, $keyphrase ) {
+		$needle = self::norm( $keyphrase );
+		if ( '' === $needle ) {
+			return false;
+		}
+		$hay = self::norm( $haystack );
+		if ( '' === $hay ) {
+			return false;
+		}
+		if ( false !== mb_strpos( ' ' . $hay . ' ', ' ' . $needle . ' ' ) ) {
+			return true;
+		}
+
+		$words = self::content_words( $needle );
+		if ( count( $words ) < 2 ) {
+			return false;
+		}
+		foreach ( self::sentences( $hay ) as $sentence ) {
+			$in = ' ' . $sentence . ' ';
+			$all = true;
+			foreach ( $words as $word ) {
+				if ( false === mb_strpos( $in, ' ' . $word ) ) {
+					$all = false;
+					break;
+				}
+			}
+			if ( $all ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/** The words in a phrase that carry its meaning. */
+	private static function content_words( $phrase ) {
+		static $filler = [ 'a', 'an', 'the', 'and', 'or', 'for', 'with', 'of', 'in', 'on', 'to',
+			'at', 'by', 'from', 'that', 'this', 'your', 'you', 'it', 'is', 'are', 'my', 'our' ];
+		$out = [];
+		foreach ( preg_split( '/\s+/u', self::norm( $phrase ), -1, PREG_SPLIT_NO_EMPTY ) as $w ) {
+			if ( ! in_array( $w, $filler, true ) ) {
+				$out[] = $w;
+			}
+		}
+
+		return $out;
 	}
 
 	private static function word_list( $text ) {
