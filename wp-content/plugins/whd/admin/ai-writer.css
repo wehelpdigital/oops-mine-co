@@ -35,6 +35,18 @@
 }
 .whd-writer__inline { display: flex; flex-direction: column; gap: 5px; font-size: 13px; }
 .whd-writer__inline span { font-weight: 600; color: #1d2327; }
+/* The button is the last thing you do, so it is the last thing on the form: under the length,
+   the questions, the picture choice and whatever those two reveal, not wedged between them. */
+.whd-writer__go {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	margin: 20px 0 0;
+	padding-top: 18px;
+	border-top: 1px solid #f0f0f1;
+}
+.whd-writer__row { border-top: 0; padding-top: 0; }
+
 .whd-writer__status { font-size: 13px; color: #646970; }
 .whd-writer__status a { color: #2271b1; }
 

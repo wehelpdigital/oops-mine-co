@@ -276,8 +276,6 @@ final class WHD_AI_Writer {
 						<option value="none"><?php esc_html_e( 'No pictures', 'whd' ); ?></option>
 					</select>
 				</label>
-				<button type="button" class="button button-primary button-hero" id="whd-writer-go"><?php esc_html_e( 'Write it', 'whd' ); ?></button>
-				<span class="whd-writer__status" id="whd-writer-status" role="status"></span>
 			</div>
 
 			<div class="whd-writer__ask" id="whd-writer-ask-row">
@@ -300,6 +298,11 @@ final class WHD_AI_Writer {
 				<div class="whd-writer__chosen-list" id="whd-writer-chosen-list"></div>
 				<p class="description" id="whd-writer-chosen-hint"></p>
 			</div>
+
+			<p class="whd-writer__go">
+				<button type="button" class="button button-primary button-hero" id="whd-writer-go"><?php esc_html_e( 'Write it', 'whd' ); ?></button>
+				<span class="whd-writer__status" id="whd-writer-status" role="status"></span>
+			</p>
 
 			<div class="whd-writer__saved" id="whd-writer-saved" role="status" hidden></div>
 
