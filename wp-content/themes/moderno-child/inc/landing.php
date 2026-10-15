@@ -585,10 +585,19 @@ function omc_landing_faq_schema() {
 	if ( ! $entities ) {
 		return;
 	}
+	/* The contact page is a page of questions and the way to reach somebody; saying only the
+	   first of those throws the second away. One node can hold both types. */
+	$doc  = omc_landing_data( get_queried_object_id() );
+	$kind = is_array( $doc ) ? (string) ( $doc['type'] ?? '' ) : '';
+	$type = 'contact' === $kind ? [ 'FAQPage', 'ContactPage' ] : 'FAQPage';
+
 	echo '<script type="application/ld+json">' . wp_json_encode( [
 		'@context'   => 'https://schema.org',
-		'@type'      => 'FAQPage',
+		'@type'      => $type,
 		'@id'        => get_permalink() . '#faq',
+		'url'        => get_permalink(),
+		'name'       => get_the_title(),
+		'isPartOf'   => [ '@id' => home_url( '/' ) . '#website' ],
 		'mainEntity' => $entities,
 	], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . '</script>' . "\n";
 }

@@ -19,7 +19,7 @@ define( 'OMC_DIR', get_stylesheet_directory() );
 define( 'OMC_URI', get_stylesheet_directory_uri() );
 
 /* Feature modules (each file is self-contained and hooks itself). */
-foreach ( [ 'video', 'landing', 'pdp', 'cart', 'social', 'perf' ] as $omc_module ) {
+foreach ( [ 'video', 'landing', 'pdp', 'cart', 'social', 'perf', 'schema' ] as $omc_module ) {
 	$omc_module_file = OMC_DIR . '/inc/' . $omc_module . '.php';
 	if ( file_exists( $omc_module_file ) ) {
 		require_once $omc_module_file;
@@ -1744,6 +1744,16 @@ function omc_schema() {
 			'about'    => [ '@id' => $home . '#organization' ],
 			'isPartOf' => [ '@id' => $home . '#website' ],
 		];
+	}
+
+	/**
+	 * Everything the page itself is, on top of who runs the site.
+	 *
+	 * @param array $graph Organization, plus WebSite and AboutPage where they apply.
+	 */
+	$graph = (array) apply_filters( 'omc_schema_graph', $graph );
+	if ( ! $graph ) {
+		return;
 	}
 
 	echo '<script type="application/ld+json">' . wp_json_encode( [ '@context' => 'https://schema.org', '@graph' => $graph ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . '</script>' . "\n";

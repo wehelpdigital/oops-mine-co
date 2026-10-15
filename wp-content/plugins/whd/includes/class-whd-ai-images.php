@@ -88,6 +88,11 @@ final class WHD_AI_Images {
 		return max( 0, self::rows( $product_id ) - count( self::gallery( $product_id ) ) );
 	}
 
+	/* The long edge and the quality a drawn picture is stored at. The model returns far more
+	   than a product card or a journal column can show, and the difference is only weight. */
+	const MAX_EDGE = 1600;
+	const QUALITY  = 82;
+
 	/* ─────────────────────────── the brief ─────────────────────────── */
 
 	/**
@@ -412,8 +417,7 @@ final class WHD_AI_Images {
 			return is_wp_error( $id ) ? $id : new WP_Error( 'whd_ai_images_attach', __( 'The picture could not be added to the media library.', 'whd' ) );
 		}
 
-		wp_update_attachment_metadata( $id, wp_generate_attachment_metadata( $id, $file['file'] ) );
-		update_post_meta( $id, '_wp_attachment_image_alt', $alt ?: $name );
+		self::settle( (int) $id, $file['file'], $alt ?: $name );
 		update_post_meta( $id, self::META, 1 );
 
 		return (int) $id;
@@ -559,12 +563,75 @@ final class WHD_AI_Images {
 			return is_wp_error( $id ) ? $id : new WP_Error( 'whd_ai_images_attach', __( 'The picture could not be added to the media library.', 'whd' ) );
 		}
 
-		wp_update_attachment_metadata( $id, wp_generate_attachment_metadata( $id, $file['file'] ) );
-		update_post_meta( $id, '_wp_attachment_image_alt', $alt );
+		$terms = wp_get_post_terms( $product->get_id(), 'product_cat', [ 'fields' => 'names' ] );
+		$leaf  = ! is_wp_error( $terms ) && $terms ? html_entity_decode( (string) end( $terms ), ENT_QUOTES, 'UTF-8' ) : '';
+		self::settle(
+			(int) $id,
+			$file['file'],
+			$alt,
+			sprintf(
+				/* translators: 1: product name, 2: category, 3: the shop's name */
+				__( '%1$s%2$s from %3$s, drawn in the look of our own photographs.', 'whd' ),
+				$product->get_name(),
+				$leaf ? ', ' . lcfirst( $leaf ) : '',
+				rtrim( (string) get_bloginfo( 'name' ), '.' )
+			)
+		);
 		// So a later audit can tell at a glance which pictures were drawn and which were taken.
 		update_post_meta( $id, self::META, 1 );
 
 		return (int) $id;
+	}
+
+	/**
+	 * Settle a freshly drawn picture into the library: weight, alt, description.
+	 *
+	 * What comes back from the model is a full-size PNG or JPEG around 700 KB — three quarters of
+	 * which is detail nobody looking at a 600px product card will ever see, paid for by whoever
+	 * is on a phone. It is re-encoded to the same long edge the rest of the catalogue uses before
+	 * the thumbnails are built, so every derived size comes from the lighter original.
+	 *
+	 * The description is the field the media library leaves blank and nothing else fills. It is
+	 * written from what the picture is of, because that is the only thing we actually know.
+	 *
+	 * @param int    $id   Attachment just inserted.
+	 * @param string $file Path on disk.
+	 * @param string $alt  What the picture shows.
+	 * @param string $desc Longer sentence, or empty to derive one from the alt.
+	 */
+	private static function settle( int $id, string $file, string $alt, string $desc = '' ) {
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+
+		$editor = wp_get_image_editor( $file );
+		if ( ! is_wp_error( $editor ) ) {
+			$size = $editor->get_size();
+			if ( max( (int) $size['width'], (int) $size['height'] ) > self::MAX_EDGE ) {
+				$editor->resize(
+					$size['width'] >= $size['height'] ? self::MAX_EDGE : null,
+					$size['height'] > $size['width'] ? self::MAX_EDGE : null,
+					false
+				);
+			}
+			$editor->set_quality( self::QUALITY );
+			$saved = $editor->save( $file, (string) get_post_mime_type( $id ) );
+			if ( is_wp_error( $saved ) ) {
+				// A picture that will not re-encode is still a picture; keep the original.
+				$saved = null;
+			}
+		}
+
+		wp_update_attachment_metadata( $id, wp_generate_attachment_metadata( $id, $file ) );
+		update_post_meta( $id, '_wp_attachment_image_alt', $alt );
+
+		if ( '' === $desc ) {
+			$desc = sprintf(
+				/* translators: 1: what the picture shows, 2: the shop's name */
+				__( '%1$s. Drawn for %2$s in the look of our own photographs.', 'whd' ),
+				rtrim( $alt, '.' ),
+				rtrim( (string) get_bloginfo( 'name' ), '.' )
+			);
+		}
+		wp_update_post( [ 'ID' => $id, 'post_content' => $desc ] );
 	}
 
 	/** Append, never replace: a drawn picture goes after everything somebody photographed. */
