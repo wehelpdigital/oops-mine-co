@@ -101,7 +101,14 @@
 				return w.toLowerCase() === word.toLowerCase();
 			} );
 			if ( ! already ) {
+				/* A focus keyphrase is one phrase. data-max lets a screen say so, and the newest
+				   choice replaces the oldest rather than being refused — picking again is how
+				   somebody changes their mind. */
+				var max = parseInt( root.getAttribute( 'data-max' ), 10 ) || 0;
 				chosen.push( word );
+				if ( max > 0 ) {
+					chosen = chosen.slice( -max );
+				}
 				paintTokens();
 				announce();
 			}
