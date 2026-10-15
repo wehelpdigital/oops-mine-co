@@ -1926,6 +1926,58 @@ body:has(.js-cart-sidebar.c-shop-sidebar--active) .omc-disctab { display: none; 
 	}
 }
 
+/* ─── How it arrives ───
+   show() takes the hidden attribute off, so the panel goes from display:none to displayed and
+   every animation below starts from the beginning on its own — no class to add, no frame to
+   wait for. The backdrop fades, the panel rises, and inside the split one the photograph settles
+   out of a slow push-in while the copy comes up a line at a time. Short enough that somebody
+   reaching for the close button is not waiting on it. ─── */
+@keyframes omc-modal-veil {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+@keyframes omc-modal-rise {
+	from { opacity: 0; transform: translateY(14px) scale(.985); }
+	to { opacity: 1; transform: none; }
+}
+@keyframes omc-modal-settle {
+	from { transform: scale(1.07); }
+	to { transform: scale(1); }
+}
+@keyframes omc-modal-line {
+	from { opacity: 0; transform: translateY(9px); }
+	to { opacity: 1; transform: none; }
+}
+
+.omc-modal__backdrop { animation: omc-modal-veil .26s var(--omc-ease) both; }
+.omc-modal__panel { animation: omc-modal-rise .42s var(--omc-ease) both; }
+
+.omc-modal__figure img { animation: omc-modal-settle .9s var(--omc-ease) both; }
+
+/* The copy follows the panel in, a beat behind it and a beat apart from itself. */
+.omc-modal__panel--split .omc-modal__body > * {
+	animation: omc-modal-line .4s var(--omc-ease) both;
+}
+.omc-modal__panel--split .omc-modal__body > :nth-child(1) { animation-delay: .14s; }
+.omc-modal__panel--split .omc-modal__body > :nth-child(2) { animation-delay: .19s; }
+.omc-modal__panel--split .omc-modal__body > :nth-child(3) { animation-delay: .23s; }
+.omc-modal__panel--split .omc-modal__body > :nth-child(4) { animation-delay: .27s; }
+.omc-modal__panel--split .omc-modal__body > :nth-child(5) { animation-delay: .31s; }
+.omc-modal__panel--split .omc-modal__body > :nth-child(n+6) { animation-delay: .35s; }
+
+/* A reveal that is hidden must stay hidden: the stagger sets both, and `both` would otherwise
+   hold the last frame of a thing that is not supposed to be on screen yet. */
+.omc-modal__panel--split .omc-modal__body > [hidden] { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+	.omc-modal__backdrop,
+	.omc-modal__panel,
+	.omc-modal__figure img,
+	.omc-modal__panel--split .omc-modal__body > * {
+		animation: none;
+	}
+}
+
 /* The form sits left with the copy rather than centred under it. */
 .omc-modal__panel--split .omc-news__row { justify-content: flex-start; }
 .omc-modal__panel--split .omc-modal__code { text-align: center; }
