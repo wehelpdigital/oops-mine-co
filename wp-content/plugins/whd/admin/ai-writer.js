@@ -32,6 +32,10 @@
 	var draft = document.getElementById( 'whd-writer-draft' );
 	var again = document.getElementById( 'whd-writer-again' );
 	var imagesMode = document.getElementById( 'whd-writer-images-mode' );
+	var askRow = document.getElementById( 'whd-writer-ask-row' );
+	var ask = document.getElementById( 'whd-writer-ask' );
+	var slotsNote = document.getElementById( 'whd-writer-images-note' );
+	var slotsNoteWas = slotsNote ? slotsNote.textContent : '';
 	var chosenBox = document.getElementById( 'whd-writer-chosen' );
 	var chosenList = document.getElementById( 'whd-writer-chosen-list' );
 	var chosenCount = document.getElementById( 'whd-writer-chosen-count' );
@@ -160,6 +164,9 @@
 			if ( chosenBox ) {
 				chosenBox.hidden = ! manual;
 			}
+			if ( askRow ) {
+				askRow.hidden = 'auto' !== imagesMode.value;
+			}
 			if ( manual ) {
 				paintChosen();
 				if ( ! picked.length ) {
@@ -245,6 +252,11 @@
 					}
 				} );
 				spare = Math.max( 0, picked.length - slots.length );
+			}
+			if ( slotsNote ) {
+				slotsNote.textContent = ( 'auto' === mode && ask && ask.value.trim() )
+					? ( T.noteAsk || slotsNoteWas )
+					: slotsNoteWas;
 			}
 			if ( slotsBox ) {
 				slotsBox.hidden = ! slots.length;
@@ -377,7 +389,8 @@
 				doc: doc,
 				slot: { key: slots[ i ].key, subject: slots[ i ].subject, heading: slots[ i ].heading },
 				taken: taken(),
-				draw: !! D.canDraw
+				draw: !! D.canDraw,
+				ask: ask ? ask.value : ''
 			} ).then( function ( r ) {
 				slots[ i ].image = r;
 				paintSlots();

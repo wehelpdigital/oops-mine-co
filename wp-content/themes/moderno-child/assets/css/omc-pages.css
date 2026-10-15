@@ -365,6 +365,19 @@
 .single-post .c-post,
 .single-post .c-post--sidebar { max-width: none; }
 
+/* One column, and everything sits in it.
+   The copy was capped per child at 760 while pictures were left the whole 820, so a photograph
+   began 30px left of the paragraph above it and ended 30px right of it — which reads as a mistake
+   rather than as emphasis. Capping each kind of child instead meant fighting the parent theme for
+   it: :is(.entry-content, …) figure:not():not():not() is five classes deep and wins on specificity
+   against anything readable written here. Narrowing the box itself needs no such argument — the
+   measure is stated once, and copy, pictures, tables and embeds all take it by being inside. */
+.single-post .c-post__content {
+	max-width: 760px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
 .single-post .c-post__content > * { max-width: 760px; }
 
 .single-post .c-page__meta { display: none; }

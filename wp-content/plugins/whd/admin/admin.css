@@ -55,3 +55,16 @@
 .whd-log { max-width: 1040px; }
 .whd-log td { font-size: 12px; }
 .whd-log td:nth-child(2) { text-transform: capitalize; color: #9c6f63; }
+
+
+/* ─── what a drawn product photograph should show ─── */
+
+.whd-ai-photos__ask { margin: 10px 0 12px; max-width: 540px; }
+.whd-ai-panel__sublabel {
+	display: block;
+	margin: 0 0 4px;
+	font-size: 12px;
+	font-weight: 600;
+	color: #1d2327;
+}
+.whd-ai-photos__ask .description { display: block; margin-top: 4px; }

@@ -942,6 +942,12 @@ final class WHD_AI_Admin {
 			<?php elseif ( ! $have ) : ?>
 				<p class="description"><?php esc_html_e( 'Add one real photograph first. Every drawn picture is made from the ones already here, so with none there is nothing to copy the product from.', 'whd' ); ?></p>
 			<?php else : ?>
+				<p class="whd-ai-photos__ask">
+					<label class="whd-ai-panel__sublabel" for="whd-ai-photos-ask"><?php esc_html_e( 'What these should show', 'whd' ); ?></label>
+					<input type="text" class="large-text" id="whd-ai-photos-ask" maxlength="300"
+						placeholder="<?php esc_attr_e( 'e.g. worn open over a white tee, on a quiet street in autumn light', 'whd' ); ?>">
+					<span class="description"><?php esc_html_e( 'Optional. Left empty, they follow the product and your house look.', 'whd' ); ?></span>
+				</p>
 				<p>
 					<button type="button" class="button" id="whd-ai-photos-go" <?php disabled( ! $missing ); ?>>
 						<?php
@@ -1062,7 +1068,11 @@ final class WHD_AI_Admin {
 			return new WP_REST_Response( [ 'message' => __( 'Image drawing is not available.', 'whd' ) ], 400 );
 		}
 		$post_id = (int) $r->get_param( 'post_id' );
-		$result  = WHD_AI_Images::fill( $post_id, max( 1, (int) $r->get_param( 'count' ) ) );
+		$result  = WHD_AI_Images::fill(
+			$post_id,
+			max( 1, (int) $r->get_param( 'count' ) ),
+			mb_substr( sanitize_textarea_field( (string) $r->get_param( 'ask' ) ), 0, 300 )
+		);
 		if ( is_wp_error( $result ) ) {
 			return new WP_REST_Response( [ 'message' => $result->get_error_message() ], 400 );
 		}

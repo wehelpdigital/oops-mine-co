@@ -91,6 +91,20 @@ final class WHD_AI_Images {
 	/* ─────────────────────────── the brief ─────────────────────────── */
 
 	/**
+	 * What was asked for this time, as its own block in the prompt.
+	 *
+	 * The look is a setting — it describes the shop's photography and rarely changes. This is the
+	 * other half, and it belongs to one run: what this particular set is of. It goes near the top
+	 * of the prompt, above the house look, because a model weighs the first thing it reads most.
+	 */
+	public static function asked( string $ask ): string {
+		$ask = trim( wp_strip_all_tags( $ask ) );
+
+		return '' === $ask ? '' : "ASKED FOR\n" . $ask . "\n\n";
+	}
+
+
+	/**
 	 * The look every picture has to sit inside.
 	 *
 	 * Editable, because the day the shop's photography changes this is the one line that has to
@@ -123,7 +137,7 @@ final class WHD_AI_Images {
 	}
 
 	/** What the picture has to show, written for a model rather than for a reader. */
-	public static function prompt( $product, int $index, bool $beauty ): string {
+	public static function prompt( $product, int $index, bool $beauty, string $ask = '' ): string {
 		$casting = self::casting();
 		$scene   = $casting[ $index % count( $casting ) ];
 
@@ -143,7 +157,8 @@ final class WHD_AI_Images {
 
 		return sprintf(
 			"A new photograph for an online boutique, of a product we already have pictures of.\n\n"
-			. "PRODUCT\n%s\n\nWHO AND WHERE\n%s\n\nWHAT TO SHOW\n%s\n\nTHE LOOK\n%s\n\n"
+			. "%5\$s"
+			. "PRODUCT\n%1\$s\n\nWHO AND WHERE\n%2\$s\n\nWHAT TO SHOW\n%3\$s\n\nTHE LOOK\n%4\$s\n\n"
 			. "RULES\n- one single photograph, portrait 4:5, nothing split or collaged\n"
 			. "- a different person from the reference images and from the others in this set: different age, different hair, different build\n"
 			. "- relaxed and unposed, not looking into the lens\n"
@@ -153,7 +168,8 @@ final class WHD_AI_Images {
 			implode( "\n", $facts ),
 			$scene,
 			$subject,
-			self::look()
+			self::look(),
+			self::asked( $ask )
 		);
 	}
 
@@ -166,7 +182,7 @@ final class WHD_AI_Images {
 	 * @param int $count      How many to make. Defaults to however many rows are short.
 	 * @return array|WP_Error { made: int[], skipped: string[] }
 	 */
-	public static function fill( $product_id, $count = 0 ) {
+	public static function fill( $product_id, $count = 0, string $ask = '' ) {
 		if ( ! self::ready() ) {
 			return new WP_Error( 'whd_ai_images_off', __( 'Drawing pictures needs a Google AI key. Add one in WHD → AI content.', 'whd' ) );
 		}
@@ -194,7 +210,7 @@ final class WHD_AI_Images {
 
 		for ( $i = 0; $i < $count; $i++ ) {
 			// Count from the pictures already there, so a second run casts somebody new again.
-			$image = self::draw( $product, self::prompt( $product, count( $have ) + $i, $beauty ) );
+			$image = self::draw( $product, self::prompt( $product, count( $have ) + $i, $beauty, $ask ) );
 			if ( is_wp_error( $image ) ) {
 				$skipped[] = $image->get_error_message();
 				continue;
@@ -359,19 +375,20 @@ final class WHD_AI_Images {
 	 * @param string $alt    Alt text for the library.
 	 * @return int|WP_Error Attachment id.
 	 */
-	public static function make( string $prompt, string $name = 'illustration', string $alt = '' ) {
+	public static function make( string $prompt, string $name = 'illustration', string $alt = '', string $ask = '' ) {
 		if ( ! self::ready() ) {
 			return new WP_Error( 'whd_ai_images_off', __( 'Drawing pictures needs a Google AI key. Add one in WHD → AI content.', 'whd' ) );
 		}
 
 		$brief = sprintf(
-			"A photograph for an online boutique's journal.\n\nWHAT TO SHOW\n%s\n\nTHE LOOK\n%s\n\n"
+			"A photograph for an online boutique's journal.\n\n%3\$sWHAT TO SHOW\n%1\$s\n\nTHE LOOK\n%2\$s\n\n"
 			. "RULES\n- one single photograph, landscape 3:2, nothing split or collaged\n"
 			. "- no text, no lettering, no logo, no watermark, no border\n"
 			. "- a real photograph, not a rendering or an illustration\n"
 			. '- nobody looking into the lens',
 			trim( $prompt ),
-			self::look()
+			self::look(),
+			self::asked( $ask )
 		);
 
 		$image = self::request( [ [ 'text' => $brief ] ] );

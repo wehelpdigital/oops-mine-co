@@ -294,3 +294,13 @@
 	cursor: pointer;
 }
 .whd-writer__chosen-drop:hover { background: #b32d2e; }
+
+
+/* ─── a line about what the pictures should be of ─── */
+
+.whd-writer__ask {
+	margin: 14px 0 0;
+	max-width: 680px;
+}
+.whd-writer__ask .whd-writer__field { margin: 0; }
+.whd-writer__ask .description { display: block; margin-top: 5px; }

@@ -179,6 +179,7 @@ final class WHD_AI_Writer {
 				'pickHint' => __( 'They go in the order you choose them — the first one sits at the top of the page. A %1$s piece usually asks for about %2$s.', 'whd' ),
 				'pickFew'  => __( 'Click the empty ones to fill them.', 'whd' ),
 				'pickSpare' => __( 'This piece had room for %1$s of them; the rest were left out.', 'whd' ),
+				'noteAsk'  => __( 'Drawn to match what you asked for, rather than taken from your library. Click any one to choose a picture yourself instead.', 'whd' ),
 			],
 		] );
 	}
@@ -279,6 +280,17 @@ final class WHD_AI_Writer {
 				<span class="whd-writer__status" id="whd-writer-status" role="status"></span>
 			</div>
 
+			<div class="whd-writer__ask" id="whd-writer-ask-row">
+				<label class="whd-writer__field">
+					<span class="whd-writer__label"><?php esc_html_e( 'What the pictures should show', 'whd' ); ?></span>
+					<input type="text" class="large-text" id="whd-writer-ask" maxlength="300"
+						placeholder="<?php esc_attr_e( 'e.g. a woman on a quiet street in autumn light, warm cream tones', 'whd' ); ?>">
+					<span class="description">
+						<?php esc_html_e( 'Optional. Say this and the pictures are drawn to match it. Leave it empty and your library is searched first, and only what it has no match for is drawn.', 'whd' ); ?>
+					</span>
+				</label>
+			</div>
+
 			<div class="whd-writer__chosen" id="whd-writer-chosen" hidden>
 				<p class="whd-writer__chosen-head">
 					<span class="whd-writer__label" id="whd-writer-chosen-count"></span>
@@ -317,7 +329,7 @@ final class WHD_AI_Writer {
 						<span class="whd-writer__status" id="whd-writer-images-status" role="status"></span>
 					</p>
 					<div class="whd-writer__slots" id="whd-writer-slots"></div>
-					<p class="description">
+					<p class="description" id="whd-writer-images-note">
 						<?php
 						echo class_exists( 'WHD_AI_Images' ) && WHD_AI_Images::ready()
 							? esc_html__( 'Your media library is searched first; anything it has no good match for is drawn in the look of your own photographs. Or click a slot to choose the picture yourself.', 'whd' )
@@ -759,15 +771,27 @@ JSON;
 	 *
 	 * @return array|WP_Error
 	 */
-	public static function fill_slot( array $slot, array $doc, array $taken = [], bool $may_draw = true ) {
-		$found = self::find_image( $slot['subject'], (array) ( $doc['keywords'] ?? [] ), $taken );
+	public static function fill_slot( array $slot, array $doc, array $taken = [], bool $may_draw = true, string $ask = '' ) {
+		$ask = trim( $ask );
+		$can_draw = $may_draw && class_exists( 'WHD_AI_Images' ) && WHD_AI_Images::ready();
+
+		/*
+		 * Asking for something specific means the library is not what you want. Searching it first
+		 * would hand back whatever happened to match the heading and quietly ignore what was
+		 * asked for. Only when nothing can be drawn does the ask become extra words to search on.
+		 */
+		$hunt = ( '' !== $ask && $can_draw )
+			? ''
+			: trim( $slot['subject'] . ( '' !== $ask ? ' ' . $ask : '' ) );
+
+		$found = '' === $hunt ? null : self::find_image( $hunt, (array) ( $doc['keywords'] ?? [] ), $taken );
 		if ( $found ) {
 			$found['source'] = 'library';
 			$found['key']    = $slot['key'];
 
 			return $found;
 		}
-		if ( ! $may_draw || ! class_exists( 'WHD_AI_Images' ) || ! WHD_AI_Images::ready() ) {
+		if ( ! $can_draw ) {
 			return new WP_Error( 'whd_ai_writer_nopic', __( 'Nothing in the library fits, and drawing one is not available.', 'whd' ) );
 		}
 
@@ -779,7 +803,8 @@ JSON;
 				(string) ( $doc['title'] ?? '' )
 			),
 			sanitize_title( $slot['subject'] ?: 'journal' ),
-			$slot['subject']
+			$slot['subject'],
+			$ask
 		);
 		if ( is_wp_error( $id ) ) {
 			return $id;
@@ -1065,7 +1090,13 @@ JSON;
 			return new WP_REST_Response( [ 'message' => __( 'No slot was named.', 'whd' ) ], 400 );
 		}
 
-		$filled = self::fill_slot( $slot, $doc, $taken, (bool) $r->get_param( 'draw' ) );
+		$filled = self::fill_slot(
+			$slot,
+			$doc,
+			$taken,
+			(bool) $r->get_param( 'draw' ),
+			mb_substr( sanitize_textarea_field( (string) $r->get_param( 'ask' ) ), 0, 300 )
+		);
 		if ( is_wp_error( $filled ) ) {
 			return new WP_REST_Response( [ 'message' => $filled->get_error_message() ], 400 );
 		}

@@ -454,7 +454,12 @@
 			if ( status ) {
 				status.textContent = ( T.drawing || 'Drawing…' ) + ' ' + ( made + 1 ) + '/' + left;
 			}
-			api( 'photos', 'POST', { post_id: postId, count: 1 } ).then( function ( r ) {
+			var ask = document.getElementById( 'whd-ai-photos-ask' );
+			api( 'photos', 'POST', {
+				post_id: postId,
+				count: 1,
+				ask: ask ? ask.value : ''
+			} ).then( function ( r ) {
 				( r.made || [] ).forEach( function ( picture ) {
 					var img = document.createElement( 'img' );
 					img.src = picture.url;
