@@ -323,15 +323,17 @@
 	});
 })();
 
-/* Header tagline: cross-fade the phrases stacked under the logo.
+/* Cross-fade a stack of phrases: the tagline under the logo, and the stylist heading that asks
+   a different question every few seconds. Both stack their phrases in one grid cell, so nothing
+   around them moves as they change.
    One phrase, or a reduced-motion preference, means the first line simply stays. */
 (function () {
 	'use strict';
 	var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 	if (reduce) { return; }
 
-	document.querySelectorAll('.js-omc-tagline').forEach(function (strip) {
-		var items = strip.querySelectorAll('.omc-tagline__item');
+	document.querySelectorAll('.js-omc-tagline, .js-omc-phrases').forEach(function (strip) {
+		var items = strip.querySelectorAll('.omc-tagline__item, .omc-phrases__item');
 		if (items.length < 2) { return; }
 		var speed = Math.max(1200, parseInt(strip.getAttribute('data-speed'), 10) || 3600);
 		var at = 0, timer = null;

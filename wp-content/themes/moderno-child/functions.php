@@ -396,6 +396,20 @@ function omc_stylist_band() {
 	return apply_filters( 'omc_stylist_band', [
 		'eyebrow' => __( 'The stylist', 'moderno-child' ),
 		'title'   => __( 'Not sure what’s <em>perfect</em>?', 'moderno-child' ),
+		/*
+		 * The heading asks a different question every few seconds, because the stylist answers
+		 * more than one. The first is the one that prints without JavaScript and the one a
+		 * screen reader is given; the rest cross-fade over it.
+		 *
+		 * Each is a question the stylist can actually answer — nothing here promises a fit, a
+		 * delivery or a discount.
+		 */
+		'titles'  => [
+			__( 'Not sure what’s <em>perfect</em>?', 'moderno-child' ),
+			__( 'Can’t picture how it <em>sits</em>?', 'moderno-child' ),
+			__( 'Torn between <em>two</em>?', 'moderno-child' ),
+			__( 'Wondering what goes <em>with it</em>?', 'moderno-child' ),
+		],
 		'text'    => __( 'Try our digital stylist, free, and we’ll recommend what’s best for you.', 'moderno-child' ),
 		'button'  => __( 'Start the stylist', 'moderno-child' ),
 		'figure'  => file_exists( $figure ) ? [

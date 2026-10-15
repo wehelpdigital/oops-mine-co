@@ -150,7 +150,27 @@ get_header();
 			<div class="l-section__container omc-stylist__inner">
 				<div class="omc-stylist__copy">
 					<p class="omc-eyebrow omc-stylist__eyebrow"><?php echo esc_html( $omc_sty['eyebrow'] ); ?></p>
-					<h2 class="omc-section__title" id="omc-stylist-title"><?php echo wp_kses( $omc_sty['title'], [ 'em' => [] ] ); ?></h2>
+					<?php
+					/* One question, or several that cross-fade. The first prints as the heading
+					   whatever happens, so the band reads the same with JavaScript off. */
+					$omc_sty_titles = array_values( array_filter( (array) ( $omc_sty['titles'] ?? [] ) ) );
+					if ( ! $omc_sty_titles ) {
+						$omc_sty_titles = [ $omc_sty['title'] ];
+					}
+					?>
+					<h2 class="omc-section__title<?php echo count( $omc_sty_titles ) > 1 ? ' omc-phrases js-omc-phrases' : ''; ?>"
+						id="omc-stylist-title" data-speed="4200">
+						<?php if ( count( $omc_sty_titles ) > 1 ) : ?>
+							<?php foreach ( $omc_sty_titles as $omc_i => $omc_sty_title ) : ?>
+								<span class="omc-phrases__item<?php echo 0 === $omc_i ? ' is-on' : ''; ?>"
+									<?php echo 0 === $omc_i ? '' : 'aria-hidden="true"'; ?>><?php
+									echo wp_kses( $omc_sty_title, [ 'em' => [] ] );
+								?></span>
+							<?php endforeach; ?>
+						<?php else : ?>
+							<?php echo wp_kses( $omc_sty_titles[0], [ 'em' => [] ] ); ?>
+						<?php endif; ?>
+					</h2>
 					<p class="omc-stylist__text"><?php echo esc_html( $omc_sty['text'] ); ?></p>
 					<button type="button" class="omc-btn omc-btn--solid omc-stylist__go" data-whd-stylist>
 						<?php echo esc_html( $omc_sty['button'] ); ?>

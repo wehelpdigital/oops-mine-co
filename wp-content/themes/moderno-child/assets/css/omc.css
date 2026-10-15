@@ -2003,15 +2003,33 @@ body:has(.js-cart-sidebar.c-shop-sidebar--active) .omc-disctab { display: none; 
 	pointer-events: none;
 	user-select: none;
 }
-.omc-tagline__item {
+.omc-tagline__item,
+.omc-phrases__item {
 	grid-area: 1 / 1;
 	opacity: 0;
 	transform: translateY(3px);
 	transition: opacity .5s var(--omc-ease), transform .5s var(--omc-ease);
 }
-.omc-tagline__item.is-on {
+.omc-tagline__item.is-on,
+.omc-phrases__item.is-on {
 	opacity: 1;
 	transform: none;
+}
+
+/* ─── A heading that asks more than one question ───
+   The same stack as the tagline, at heading size: every phrase in one grid cell, so the
+   band is as tall as the longest of them and nothing below it moves as they change. The
+   rise is a little longer than the taglines because the type is a great deal bigger and a
+   3px nudge on a 34px line reads as a twitch. ─── */
+.omc-phrases { display: grid; }
+.omc-phrases__item {
+	transform: translateY(8px);
+	transition: opacity .6s var(--omc-ease), transform .6s var(--omc-ease);
+}
+@media (prefers-reduced-motion: reduce) {
+	/* No JavaScript runs, so the first phrase is the only one shown — and it must be shown. */
+	.omc-phrases__item { transition: none; transform: none; }
+	.omc-phrases__item:first-child { opacity: 1; }
 }
 
 /* The mark and the line become one centred block. */
