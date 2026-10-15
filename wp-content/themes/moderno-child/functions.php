@@ -1502,36 +1502,58 @@ function omc_discount_tab() {
 
 	<div class="omc-modal omc-modal--discount" id="omc-discount" role="dialog" aria-modal="true" aria-labelledby="omc-discount-title" hidden>
 		<div class="omc-modal__backdrop" data-omc-modal-close></div>
-		<div class="omc-modal__panel" role="document">
+		<div class="omc-modal__panel omc-modal__panel--split" role="document">
 			<button type="button" class="omc-modal__close" data-omc-modal-close aria-label="<?php esc_attr_e( 'Close', 'moderno-child' ); ?>">&times;</button>
-			<p class="omc-eyebrow"><?php esc_html_e( 'For the list', 'moderno-child' ); ?></p>
-			<h2 class="omc-modal__title" id="omc-discount-title">
-				<?php
-				echo $amount
-					/* translators: %s: discount amount, e.g. 15% */
-					? esc_html( sprintf( __( 'Take %s off your first order', 'moderno-child' ), $amount ) )
-					: esc_html__( 'Join the list', 'moderno-child' );
-				?>
-			</h2>
-			<p class="omc-modal__text">
-				<?php esc_html_e( 'One email when a new rack goes up, one before we go live, and the code below to use whenever you are ready. Nothing else.', 'moderno-child' ); ?>
-			</p>
+
 			<?php
-			omc_newsletter_form( [
-				'source' => 'discount',
-				'button' => $code ? __( 'Send me the code', 'moderno-child' ) : __( 'Join the list', 'moderno-child' ),
-				'after'  => '#omc-discount .omc-modal__reveal',
-			] );
-			?>
-			<?php if ( $code ) : ?>
-				<div class="omc-modal__reveal" hidden>
-					<p class="omc-modal__code-label"><?php esc_html_e( 'Your code', 'moderno-child' ); ?></p>
-					<p class="omc-modal__code"><?php echo esc_html( $code ); ?></p>
-					<p class="omc-modal__code-note"><?php esc_html_e( 'Enter it at checkout. It is in your inbox too.', 'moderno-child' ); ?></p>
-					<a class="omc-btn omc-btn--solid" href="<?php echo esc_url( omc_shop_url() ); ?>"><?php esc_html_e( 'Start shopping', 'moderno-child' ); ?></a>
+			/**
+			 * The photograph beside the offer.
+			 *
+			 * A boutique asking for an email address should look like a boutique while it does
+			 * it. The picture is one of the shop's own, carries the monogram like every other
+			 * photograph on the site, and is decorative — the offer is in the words beside it.
+			 *
+			 * @param string $image Upload-relative path.
+			 */
+			$omc_disc_img = apply_filters( 'omc_discount_image', omc_images()['edit_b'] ?? '' );
+			if ( $omc_disc_img ) :
+				?>
+				<div class="omc-modal__figure" aria-hidden="true">
+					<?php echo omc_image( $omc_disc_img, 'large', [ 'alt' => '', 'loading' => 'lazy', 'decoding' => 'async' ] ); ?>
 				</div>
 			<?php endif; ?>
-			<p class="omc-modal__small"><?php esc_html_e( 'Unsubscribe from any email, any time.', 'moderno-child' ); ?></p>
+
+			<div class="omc-modal__body">
+				<p class="omc-eyebrow"><?php esc_html_e( 'For the list', 'moderno-child' ); ?></p>
+				<h2 class="omc-modal__title" id="omc-discount-title">
+					<?php
+					echo $amount
+						/* translators: %s: discount amount, e.g. 15% */
+						? esc_html( sprintf( __( 'Take %s off your first order', 'moderno-child' ), $amount ) )
+						: esc_html__( 'Join the list', 'moderno-child' );
+					?>
+				</h2>
+				<span class="omc-modal__rule" aria-hidden="true"></span>
+				<p class="omc-modal__text">
+					<?php esc_html_e( 'One email when a new rack goes up, one before we go live, and the code below to use whenever you are ready. Nothing else.', 'moderno-child' ); ?>
+				</p>
+				<?php
+				omc_newsletter_form( [
+					'source' => 'discount',
+					'button' => $code ? __( 'Send me the code', 'moderno-child' ) : __( 'Join the list', 'moderno-child' ),
+					'after'  => '#omc-discount .omc-modal__reveal',
+				] );
+				?>
+				<?php if ( $code ) : ?>
+					<div class="omc-modal__reveal" hidden>
+						<p class="omc-modal__code-label"><?php esc_html_e( 'Your code', 'moderno-child' ); ?></p>
+						<p class="omc-modal__code"><?php echo esc_html( $code ); ?></p>
+						<p class="omc-modal__code-note"><?php esc_html_e( 'Enter it at checkout. It is in your inbox too.', 'moderno-child' ); ?></p>
+						<a class="omc-btn omc-btn--solid" href="<?php echo esc_url( omc_shop_url() ); ?>"><?php esc_html_e( 'Start shopping', 'moderno-child' ); ?></a>
+					</div>
+				<?php endif; ?>
+				<p class="omc-modal__small"><?php esc_html_e( 'Unsubscribe from any email, any time.', 'moderno-child' ); ?></p>
+			</div>
 		</div>
 	</div>
 	<?php

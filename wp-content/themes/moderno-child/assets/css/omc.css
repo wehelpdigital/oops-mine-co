@@ -52,6 +52,7 @@
 .omc-cat__media::after,
 .omc-card__media::after,
 .whd-story__figure::after,
+.omc-modal__figure::after,
 .c-product-grid__thumb-wrap::after {
 	content: "";
 	position: absolute;
@@ -1860,6 +1861,74 @@ body:has(.js-cart-sidebar.c-shop-sidebar--active) .omc-disctab { display: none; 
 	color: var(--omc-ink);
 }
 .omc-modal__code-note { margin: 8px 0 14px; font: 400 13px/1.5 var(--omc-sans); color: var(--omc-muted); }
+
+/* ─── The discount dialog, as a boutique would do it ───────────────────────
+   A cream box with a form in it asked for an email the way a utility would.
+   The photograph does the work the words cannot: it says what the shop sells
+   before anybody reads a line of it. Split in two on a wide screen, a band
+   across the top on a narrow one — never hidden, because the picture is the
+   reason the dialog looks like anything at all. ────────────────────────── */
+.omc-modal__panel--split {
+	width: min(880px, 100%);
+	padding: 0;
+	overflow: hidden;
+	text-align: left;
+	background: var(--omc-cream);
+}
+.omc-modal__panel--split .omc-modal__close {
+	top: 10px;
+	right: 14px;
+	z-index: 2;
+	color: var(--omc-ink);
+}
+.omc-modal__figure {
+	position: relative;
+	--omc-wm: 54px;
+	--omc-wm-inset: 14px;
+	overflow: hidden;
+	background: var(--omc-sand);
+	/* A band on a phone: tall enough to read as a photograph, short enough to
+	   leave the form above the fold on a small screen. */
+	height: 190px;
+}
+.omc-modal__figure img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center 28%;
+	display: block;
+}
+.omc-modal__body { padding: clamp(26px, 4vw, 40px); }
+.omc-modal__rule {
+	display: block;
+	width: 44px;
+	height: 1px;
+	margin: 16px 0 0;
+	background: var(--omc-rose);
+}
+.omc-modal__panel--split .omc-modal__title { margin-top: 10px; }
+.omc-modal__panel--split .omc-modal__text { margin-top: 14px; }
+
+@media (min-width: 720px) {
+	.omc-modal__panel--split {
+		display: grid;
+		grid-template-columns: 0.82fr 1fr;
+		align-items: stretch;
+	}
+	.omc-modal__figure {
+		height: auto;
+		min-height: 420px;
+	}
+	.omc-modal__body {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+	}
+}
+
+/* The form sits left with the copy rather than centred under it. */
+.omc-modal__panel--split .omc-news__row { justify-content: flex-start; }
+.omc-modal__panel--split .omc-modal__code { text-align: center; }
 
 
 /* ─── Header tagline ───────────────────────────────────────────────────────
