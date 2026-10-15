@@ -167,6 +167,7 @@ final class WHD_AI_Images {
 			. "RULES\n- one single photograph, portrait 4:5, nothing split or collaged\n"
 			. "- a different person from the reference images and from the others in this set: different age, different hair, different build\n"
 			. "- relaxed and unposed, not looking into the lens\n"
+			. "- frame her whole head: the top of the hair is inside the picture, and the face is not cut off by any edge\n"
 			. "- no text, no lettering, no logo, no watermark, no border\n"
 			. "- hands, faces and seams all intact; nothing distorted\n"
 			. '- it has to look like a photograph, not a rendering or an illustration',
@@ -388,6 +389,7 @@ final class WHD_AI_Images {
 		$brief = sprintf(
 			"A photograph for an online boutique's journal.\n\n%3\$sWHAT TO SHOW\n%1\$s\n\nTHE LOOK\n%2\$s\n\n"
 			. "RULES\n- one single photograph, landscape 3:2, nothing split or collaged\n"
+			. "- if somebody is in the picture, her whole head is in it too: not cropped at the top, not cut off by an edge\n"
 			. "- no text, no lettering, no logo, no watermark, no border\n"
 			. "- a real photograph, not a rendering or an illustration\n"
 			. '- nobody looking into the lens',
