@@ -316,3 +316,7 @@
 }
 .whd-writer__ask .whd-writer__field { margin: 0; }
 .whd-writer__ask .description { display: block; margin-top: 5px; }
+
+/* The score of what was just written, beside the links to it. */
+.whd-writer__scored { font-size: 12px; color: #50575e; }
+.whd-writer__saved .whd-seo-dot { margin: 0 2px; }

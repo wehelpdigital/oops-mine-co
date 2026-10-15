@@ -151,6 +151,8 @@ final class WHD_AI_Writer {
 		}
 		wp_enqueue_style( 'whd-admin', WHD_URL . 'admin/admin.css', [], WHD_VERSION );
 		wp_enqueue_style( 'whd-ai-writer', WHD_URL . 'admin/ai-writer.css', [ 'whd-admin' ], WHD_VERSION );
+		// The saved line shows the score, which borrows the dot from the SEO box.
+		wp_enqueue_style( 'whd-seo', WHD_URL . 'admin/seo.css', [ 'whd-admin' ], WHD_VERSION );
 		// The manual route opens WordPress's own media window.
 		wp_enqueue_media();
 		wp_enqueue_style( 'whd-keyword-picker', WHD_URL . 'admin/keyword-picker.css', [], WHD_VERSION );
@@ -831,6 +833,145 @@ JSON;
 	}
 
 	/**
+	 * Link the piece into the rest of the site.
+	 *
+	 * A page that links nowhere is a dead end: nothing passes through it, and a reader who
+	 * finishes it has to go back the way they came. The model will not do this on its own — it
+	 * has no idea what else the site has — so it is done afterwards, from what is published.
+	 *
+	 * Conservative on purpose. Only a phrase another page is actually aimed at counts, only its
+	 * first appearance is linked, never inside a heading or a link that already exists, and three
+	 * is the most any piece gets. Anything looser turns prose into a page of blue words.
+	 *
+	 * @param string $html  The body as it stands.
+	 * @param int    $skip  The page being written, which should not link to itself.
+	 */
+	public static function link_up( string $html, int $skip = 0 ): string {
+		global $wpdb;
+
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT m.post_id, m.meta_value AS phrase
+				 FROM {$wpdb->postmeta} m
+				 INNER JOIN {$wpdb->posts} p ON p.ID = m.post_id
+				 WHERE m.meta_key = %s AND m.meta_value <> ''
+				   AND p.post_status = 'publish' AND p.post_type IN ( 'post', 'page' )
+				   AND m.post_id <> %d",
+				class_exists( 'WHD_SEO' ) ? WHD_SEO::KEYPHRASE : '_whd_focus_keyphrase',
+				$skip
+			),
+			ARRAY_A
+		);
+		if ( ! $rows ) {
+			return $html;
+		}
+
+		// Longest phrase first: "korean winter coat" should win over "winter coat".
+		usort( $rows, static fn( $a, $b ) => mb_strlen( $b['phrase'] ) <=> mb_strlen( $a['phrase'] ) );
+
+		$added = 0;
+		foreach ( $rows as $row ) {
+			if ( $added >= 3 ) {
+				break;
+			}
+			$phrase = trim( (string) $row['phrase'] );
+			if ( mb_strlen( $phrase ) < 8 ) {
+				continue;
+			}
+			$url = get_permalink( (int) $row['post_id'] );
+			if ( ! $url ) {
+				continue;
+			}
+
+			/* Inside a paragraph, not inside a heading, a figure, or another link. The lookahead
+			   counts the tags ahead: an even number of <a ...> openings means we are outside one. */
+			$pattern = '#(?<![\w>])(' . preg_quote( $phrase, '#' ) . ')(?![^<]*</a>)(?![^<]*</h[1-6]>)(?![^<]*</figcaption>)#iu';
+			$done    = 0;
+			$html    = preg_replace_callback(
+				$pattern,
+				static function ( $m ) use ( $url, &$done ) {
+					if ( $done ) {
+						return $m[0];
+					}
+					$done = 1;
+
+					return '<a href="' . esc_url( $url ) . '">' . $m[1] . '</a>';
+				},
+				$html,
+				1
+			);
+			$added += $done;
+		}
+
+		return $html;
+	}
+
+	/**
+	 * Where to go next, when the copy linked nowhere on its own.
+	 *
+	 * Linking a phrase inside a sentence only works when another page happens to be aimed at a
+	 * phrase this one happens to say, which is rarer than it sounds — most pieces came back with
+	 * no links at all. A short list at the end is the honest alternative: it is useful to a
+	 * reader, it is what every magazine does, and it means nothing published here is a dead end.
+	 *
+	 * @param array $keywords What this piece is about.
+	 * @param int   $skip     The page being written.
+	 */
+	public static function read_next( array $keywords, int $skip = 0 ): string {
+		$wanted = [];
+		foreach ( $keywords as $phrase ) {
+			foreach ( preg_split( '/[^\p{L}\p{N}]+/u', mb_strtolower( (string) $phrase ), -1, PREG_SPLIT_NO_EMPTY ) as $w ) {
+				if ( mb_strlen( $w ) >= 4 ) {
+					$wanted[ rtrim( $w, 's' ) ] = true;
+				}
+			}
+		}
+		if ( ! $wanted ) {
+			return '';
+		}
+
+		$candidates = get_posts( [
+			'post_type'      => [ 'post', 'page' ],
+			'post_status'    => 'publish',
+			'posts_per_page' => 120,
+			'post__not_in'   => $skip ? [ $skip ] : [],
+			'orderby'        => 'date',
+			'order'          => 'DESC',
+		] );
+
+		$scored = [];
+		foreach ( $candidates as $other ) {
+			// The title is what the link will say, so the title is what it is judged on.
+			$words = [];
+			foreach ( preg_split( '/[^\p{L}\p{N}]+/u', mb_strtolower( get_the_title( $other ) ), -1, PREG_SPLIT_NO_EMPTY ) as $w ) {
+				if ( mb_strlen( $w ) >= 4 ) {
+					$words[ rtrim( $w, 's' ) ] = true;
+				}
+			}
+			$shared = count( array_intersect_key( $words, $wanted ) );
+			if ( $shared ) {
+				$scored[] = [ 'post' => $other, 'shared' => $shared ];
+			}
+		}
+		if ( ! $scored ) {
+			return '';
+		}
+
+		usort( $scored, static fn( $a, $b ) => $b['shared'] <=> $a['shared'] );
+
+		$items = '';
+		foreach ( array_slice( $scored, 0, 3 ) as $pick ) {
+			$items .= sprintf(
+				'<li><a href="%s">%s</a></li>',
+				esc_url( (string) get_permalink( $pick['post'] ) ),
+				esc_html( get_the_title( $pick['post'] ) )
+			);
+		}
+
+		return '<h2>' . esc_html__( 'Read next', 'whd' ) . '</h2><ul>' . $items . '</ul>';
+	}
+
+	/**
 	 * Put the chosen pictures into the copy.
 	 *
 	 * The first belongs to the page rather than to a paragraph, so it becomes the featured image.
@@ -908,6 +1049,12 @@ JSON;
 		 */
 		$images = array_values( array_filter( (array) ( $doc['images'] ?? [] ), static fn( $i ) => ! empty( $i['id'] ) ) );
 		$html   = self::place_images( $html, $images );
+		$html   = self::link_up( $html );
+
+		/* Nothing linked out of its own accord, so give the reader somewhere to go. */
+		if ( false === mb_stripos( $html, '<a href' ) ) {
+			$html .= self::read_next( (array) ( $doc['keywords'] ?? [] ) );
+		}
 
 		$id = wp_insert_post( [
 			'post_type'    => $type,
@@ -959,12 +1106,25 @@ JSON;
 			WHD_AI_Keywords::mark_used( (array) ( $doc['keywords'] ?? [] ) );
 		}
 
+		/* Score what was just written, so the screen can say how it did rather than leaving
+		   somebody to open the page and look. */
+		$scored = null;
+		if ( class_exists( 'WHD_SEO' ) ) {
+			$scored = WHD_SEO::analyse( WHD_SEO::doc_from_post( $id ) );
+			update_post_meta( $id, WHD_SEO::SCORE, (int) $scored['score'] );
+		}
+
 		return [
 			'id'        => (int) $id,
 			'edit_url'  => get_edit_post_link( $id, 'raw' ),
 			'view_url'  => get_permalink( $id ),
 			'status'    => $status,
 			'title'     => $title,
+			'seo'       => $scored ? [
+				'score'  => (int) $scored['score'],
+				'rating' => (string) $scored['rating'],
+				'label'  => (string) $scored['label'],
+			] : null,
 		];
 	}
 

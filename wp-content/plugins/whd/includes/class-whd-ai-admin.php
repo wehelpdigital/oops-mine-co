@@ -1128,6 +1128,69 @@ final class WHD_AI_Admin {
 	 * search-snippet values. Long and short descriptions go into the editor in the browser instead,
 	 * so they travel through the normal save and never overwrite an edit in progress.
 	 */
+	/**
+	 * Fill in whatever the page is still missing, and score it.
+	 *
+	 * Only ever fills a blank: a snippet somebody wrote by hand is not improved by being
+	 * replaced with one assembled from the product description.
+	 *
+	 * @return array { keyphrase: string, description: string, score: int, rating: string, label: string }
+	 */
+	public static function finish_seo( $post_id, array $keywords = [] ) {
+		$out = [ 'keyphrase' => '', 'description' => '' ];
+		$post = get_post( $post_id );
+		if ( ! $post ) {
+			return $out;
+		}
+
+		if ( class_exists( 'WHD_SEO' ) && '' === (string) get_post_meta( $post_id, WHD_SEO::KEYPHRASE, true ) ) {
+			$phrase = $keywords ? (string) $keywords[0] : WHD_SEO::researched_for( $post_id );
+			if ( '' === $phrase && 'product' === $post->post_type ) {
+				// A product ranks for what it is, and its name says what it is.
+				$name   = html_entity_decode( get_the_title( $post ), ENT_QUOTES, 'UTF-8' );
+				$name   = preg_replace( '/[^\p{L}\p{N}\s-]+/u', ' ', $name );
+				$words  = preg_split( '/\s+/u', mb_strtolower( trim( $name ) ), -1, PREG_SPLIT_NO_EMPTY );
+				$phrase = $words ? trim( implode( ' ', array_slice( $words, -4 ) ) ) : '';
+			}
+			if ( '' !== $phrase ) {
+				update_post_meta( $post_id, WHD_SEO::KEYPHRASE, sanitize_text_field( $phrase ) );
+				$out['keyphrase'] = $phrase;
+			}
+		}
+
+		if ( '' === trim( (string) get_post_meta( $post_id, '_omc_meta_description', true ) ) ) {
+			$source = 'product' === $post->post_type
+				? ( (string) $post->post_excerpt ?: (string) $post->post_content )
+				: (string) $post->post_content;
+			$source = trim( preg_replace( '/\s+/u', ' ', wp_strip_all_tags( $source ) ) );
+			if ( '' !== $source ) {
+				$name    = html_entity_decode( get_the_title( $post ), ENT_QUOTES, 'UTF-8' );
+				$snippet = false === mb_stripos( mb_substr( $source, 0, 60 ), mb_substr( $name, 0, 20 ) )
+					? $name . '. ' . $source
+					: $source;
+				if ( mb_strlen( $snippet ) > 156 ) {
+					$cut     = mb_substr( $snippet, 0, 156 );
+					$stop    = mb_strrpos( $cut, '. ' );
+					$snippet = false !== $stop && $stop > 90
+						? mb_substr( $cut, 0, $stop + 1 )
+						: rtrim( mb_substr( $cut, 0, (int) mb_strrpos( $cut, ' ' ) ), ' ,;:-' ) . '…';
+				}
+				update_post_meta( $post_id, '_omc_meta_description', $snippet );
+				$out['description'] = $snippet;
+			}
+		}
+
+		if ( class_exists( 'WHD_SEO' ) ) {
+			$result          = WHD_SEO::analyse( WHD_SEO::doc_from_post( $post_id ) );
+			$out['score']    = (int) $result['score'];
+			$out['rating']   = (string) $result['rating'];
+			$out['label']    = (string) $result['label'];
+			update_post_meta( $post_id, WHD_SEO::SCORE, (int) $result['score'] );
+		}
+
+		return $out;
+	}
+
 	public static function rest_apply( WP_REST_Request $r ) {
 		$post_id = (int) $r->get_param( 'post_id' );
 		$target  = sanitize_key( (string) $r->get_param( 'target' ) );
@@ -1180,6 +1243,14 @@ final class WHD_AI_Admin {
 				return new WP_REST_Response( [ 'message' => __( 'That one is applied in the editor, not here.', 'whd' ) ], 400 );
 		}
 
+		/*
+		 * Whatever was written, the page should leave with the fields the score box measures.
+		 * Writing a product story and then being told the page has no focus keyphrase is the
+		 * machine asking you to finish its own work.
+		 */
+		$chosen = array_values( array_filter( (array) $r->get_param( 'keywords' ), 'is_scalar' ) );
+		$filled = WHD_AI_Admin::finish_seo( $post_id, $chosen );
+
 		WHD_AI_Keywords::mark_used( (array) $r->get_param( 'keywords' ) );
 
 		/*
@@ -1196,7 +1267,16 @@ final class WHD_AI_Admin {
 			];
 		}
 
-		return new WP_REST_Response( [ 'message' => $message, 'photos' => $photos ], 200 );
+		if ( ! empty( $filled['score'] ) ) {
+			$message .= ' ' . sprintf(
+				/* translators: 1: score out of 100, 2: what that score is called */
+				__( 'SEO score %1$d — %2$s.', 'whd' ),
+				$filled['score'],
+				$filled['label']
+			);
+		}
+
+		return new WP_REST_Response( [ 'message' => $message, 'photos' => $photos, 'seo' => $filled ], 200 );
 	}
 
 	public static function rest_suggest( WP_REST_Request $r ) {

@@ -444,7 +444,11 @@
 			   edit link is the one thing worth keeping on screen. */
 			saveStatus.textContent = '';
 			var where = savedBox || saveStatus;
-			where.innerHTML = '<strong>' + ( postStatus === 'publish' ? 'Published.' : 'Saved as a draft.' ) + '</strong> '
+			var scored = r.seo && r.seo.score
+				? ' <span class="whd-seo-dot whd-seo-dot--' + r.seo.rating + '">' + r.seo.score + '</span>'
+					+ ' <span class="whd-writer__scored">SEO ' + r.seo.label.toLowerCase() + '</span>'
+				: '';
+			where.innerHTML = '<strong>' + ( postStatus === 'publish' ? 'Published.' : 'Saved as a draft.' ) + '</strong>' + scored + ' '
 				+ '<a href="' + r.edit_url + '">' + ( postStatus === 'publish' ? 'Edit it' : 'Open it' ) + '</a>'
 				+ ' · <a href="' + r.view_url + '" target="_blank" rel="noopener">'
 				+ ( postStatus === 'publish' ? 'View it' : 'Preview it' ) + '</a>';
