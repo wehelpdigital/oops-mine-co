@@ -13,7 +13,7 @@
  * Usage:
  *   php .ftp-sync/fix-page-seo.php --dry-run
  *   php .ftp-sync/fix-page-seo.php
- *   OMC_DB=live php .ftp-sync/fix-page-seo.php      (production write — the owner runs this)
+ *   php .ftp-sync/fix-page-seo.php --live      (production write — the owner runs this)
  */
 
 $argv = $_SERVER['argv'] ?? [];
@@ -26,8 +26,28 @@ foreach ( $argv as $a ) {
 	}
 }
 
+/*
+ * `--live` is the same thing as OMC_DB=live, set here rather than by the caller.
+ *
+ * The environment-variable form is bash syntax; PowerShell has no inline prefix for it and
+ * fails before PHP is reached, and setting it by hand leaves it set for everything else typed
+ * into that window afterwards. This has to happen before wp-config.php is read.
+ */
+if ( in_array( '--live', $argv, true ) ) {
+	putenv( 'OMC_DB=live' );
+}
+
 $_SERVER['HTTP_HOST'] = getenv( 'OMC_DB' ) === 'live' ? 'oopsmineco.com' : 'oopsmine.test';
 require __DIR__ . '/../wp-load.php';
+
+/* Say out loud which database this is about to write to. */
+printf(
+	"%s  →  %s
+
+",
+	getenv( 'OMC_DB' ) === 'live' ? 'LIVE database' : 'local database',
+	home_url( '/' )
+);
 
 if ( ! class_exists( 'WHD_SEO' ) ) {
 	exit( "The WHD plugin is not active, so there is nothing to score against.\n" );

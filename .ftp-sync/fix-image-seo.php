@@ -23,7 +23,7 @@
  *   php .ftp-sync/fix-image-seo.php --dry-run
  *   php .ftp-sync/fix-image-seo.php --text
  *   php .ftp-sync/fix-image-seo.php --compress --limit=20
- *   OMC_DB=live php .ftp-sync/fix-image-seo.php --text        (production write — the owner runs this)
+ *   php .ftp-sync/fix-image-seo.php --live --text        (production write — the owner runs this)
  */
 
 $argv = $_SERVER['argv'] ?? [];
@@ -50,8 +50,28 @@ const OMC_IMG_MAX_EDGE = 1600;
 const OMC_IMG_QUALITY  = 82;
 const OMC_IMG_HEAVY    = 300 * 1024;
 
+/*
+ * `--live` is the same thing as OMC_DB=live, set here rather than by the caller.
+ *
+ * The environment-variable form is bash syntax; PowerShell has no inline prefix for it and
+ * fails before PHP is reached, and setting it by hand leaves it set for everything else typed
+ * into that window afterwards. This has to happen before wp-config.php is read.
+ */
+if ( in_array( '--live', $argv, true ) ) {
+	putenv( 'OMC_DB=live' );
+}
+
 $_SERVER['HTTP_HOST'] = getenv( 'OMC_DB' ) === 'live' ? 'oopsmineco.com' : 'oopsmine.test';
 require __DIR__ . '/../wp-load.php';
+
+/* Say out loud which database this is about to write to. */
+printf(
+	"%s  →  %s
+
+",
+	getenv( 'OMC_DB' ) === 'live' ? 'LIVE database' : 'local database',
+	home_url( '/' )
+);
 require_once ABSPATH . 'wp-admin/includes/image.php';
 
 /* ─────────────────────────── what a picture is of ─────────────────────────── */
