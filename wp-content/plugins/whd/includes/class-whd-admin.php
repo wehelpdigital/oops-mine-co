@@ -430,6 +430,13 @@ final class WHD_Admin {
 		   saved, because a half-reported funnel is harder to read than none at all — but each
 		   one can be switched off, and the list says in plain words what fires it. */
 		echo '<tr><th>' . esc_html__( 'Meta Pixel events', 'whd' ) . '</th><td>';
+		/* The commonest way to conclude the pixel is broken: test it while signed in, with the
+		   setting below quietly keeping your own visits out of the data. */
+		if ( $s['fb_pixel_id'] && $s['exclude_admins'] ) {
+			echo '<p class="whd-note whd-note--warn">'
+				. esc_html__( 'Administrators are excluded below, so none of this fires while you are signed in. To check it in Meta Events Manager, open the site in a private window.', 'whd' )
+				. '</p>';
+		}
 		if ( ! $s['fb_pixel_id'] ) {
 			echo '<p class="description">' . esc_html__( 'Add a pixel ID above and the events appear here. Nothing is sent until there is one.', 'whd' ) . '</p>';
 		}

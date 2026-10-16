@@ -80,3 +80,13 @@
 	.whd-pixel-events label { grid-template-columns: 20px 1fr; }
 	.whd-pixel-events span { grid-column: 2; }
 }
+
+/* A warning that belongs next to the thing it is about, not in a banner at the top. */
+.whd-note--warn {
+	margin: 0 0 10px;
+	padding: 9px 12px;
+	border-left: 4px solid #dba617;
+	background: #fcf9e8;
+	font-size: 12px;
+	color: #1d2327;
+}
