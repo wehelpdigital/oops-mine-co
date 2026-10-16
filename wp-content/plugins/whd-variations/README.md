@@ -30,15 +30,18 @@ WHD → **Variation tiers** holds the display options:
 - hide options that don't exist for the chosen higher level (instead of greying them out);
 - auto-pick a level that has a single remaining option;
 - number the levels and show the chosen value next to the label;
-- show only this grid on products it built (on by default).
+- show only this grid, not WooCommerce's Variations tab (on by default).
 
 That last one is about the product screen, not the shop. WooCommerce's own **Variations** tab sits at priority 60 and
 this one at 65 — two tabs with nearly the same name, side by side, both editing the same rows. They are two views of
 one set of variations, not two systems: the grid is rebuilt from the product's real attributes and variations every
-time it opens, and writes real variations back. On a product the grid built (it has a `_whdv_tiers` row), WooCommerce's
-tab is hidden and the panel says so. Products built any other way keep it, and so does every product if the setting is
-turned off — which is what to do when you need per-variation weight, shipping class, description or downloadable
-files, none of which the grid edits.
+time it opens, and writes real variations back.
+
+So the native tab is hidden on any variable product the grid can show **whole**. A product using a custom
+(per-product) attribute keeps it, because the grid only works with global ones and would silently leave that attribute
+out; so does a product with more variation attributes than `WHDV_MAX_LEVELS`. Turning the setting off brings the tab
+back everywhere, which is what to do when a variation needs a weight, a shipping class, a description or a
+downloadable file — the four things the grid does not edit.
 
 Everything else — swatches, price and stock updates, add to cart, quick view — is WooCommerce's own behaviour (and the
 theme's / the Variation Swatches plugin's), so it keeps working with or without this plugin.

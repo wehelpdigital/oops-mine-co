@@ -30,19 +30,39 @@ final class WHDV_Admin {
 	}
 
 	/**
-	 * Did this grid build this product's variations?
+	 * Can the grid show this product whole?
 	 *
-	 * True only once the grid has been used and saved, which is what writes the meta. Of the
-	 * shop's variable products most came in through the catalogue import and were never near
-	 * the grid — those keep WooCommerce's own tab, because it is the only editor they have.
+	 * Only global attributes become tiers, and only WHDV_MAX_LEVELS of them. A product that
+	 * breaks either rule has variations the grid will not draw, and WooCommerce's tab is then
+	 * the only place to reach them — so it stays.
+	 *
+	 * Scoping this to products the grid had already built was the obvious guess and the useless
+	 * one: every product carrying that meta is a draft, so on the live shop the rule never fired
+	 * once and both tabs kept showing on all 105 published products.
 	 */
-	public static function grid_owns( $post_id ) {
-		return (bool) get_post_meta( (int) $post_id, WHDV_Model::META, true );
+	public static function grid_can_show( $post_id ) {
+		$product = $post_id ? wc_get_product( $post_id ) : null;
+		if ( ! $product || ! $product->is_type( 'variable' ) ) {
+			return false; // nothing else shows WooCommerce's Variations tab anyway
+		}
+
+		$levels = 0;
+		foreach ( $product->get_attributes() as $attr ) {
+			if ( ! $attr->get_variation() ) {
+				continue;
+			}
+			if ( ! $attr->is_taxonomy() ) {
+				return false; // a custom, per-product attribute: the grid ignores it
+			}
+			$levels++;
+		}
+
+		return $levels <= WHDV_MAX_LEVELS;
 	}
 
 	/** Is WooCommerce's own Variations tab being hidden on this product? */
 	public static function replaces_wc_tab( $post_id ) {
-		return ! empty( WHDV_Plugin::settings()['hide_wc_variations'] ) && self::grid_owns( $post_id );
+		return ! empty( WHDV_Plugin::settings()['hide_wc_variations'] ) && self::grid_can_show( $post_id );
 	}
 
 	public static function tab( $tabs ) {
@@ -55,8 +75,8 @@ final class WHDV_Admin {
 
 		/* Two tabs called almost the same thing, side by side, both editing the same variations:
 		   "Variations" at priority 60 and this one at 65. They are two views of one set of rows,
-		   not two systems, but nothing on the screen said so. Where the grid is the one that
-		   built them, it is the only one shown. */
+		   not two systems, but nothing on the screen said so. Where the grid can show the product
+		   whole, it is the only one shown. */
 		if ( self::replaces_wc_tab( self::current_product_id() ) ) {
 			unset( $tabs['variations'] );
 		}
@@ -72,7 +92,7 @@ final class WHDV_Admin {
 					<?php
 					printf(
 						/* translators: %s: link to the settings screen */
-						esc_html__( 'This grid builds the variations, so WooCommerce\'s own Variations tab is hidden here. Per-variation weight, shipping class, description and downloadable files live on that tab — %s to show it again.', 'whd-variations' ),
+						esc_html__( 'Variations are edited here, so WooCommerce\'s own Variations tab is hidden. It is still the only place to set a per-variation weight, shipping class, description or downloadable file — %s to show it again.', 'whd-variations' ),
 						'<a href="' . esc_url( admin_url( 'admin.php?page=whd-variations' ) ) . '">' . esc_html__( 'turn this off in the settings', 'whd-variations' ) . '</a>'
 					);
 					?>
@@ -215,7 +235,7 @@ final class WHDV_Admin {
 			'hide_unavailable' => [ __( 'Hide options that don’t exist for the chosen level', 'whd-variations' ), __( 'Off = they stay visible but greyed out (WooCommerce default).', 'whd-variations' ) ],
 			'auto_select'      => [ __( 'Auto-pick a level with a single remaining option', 'whd-variations' ), '' ],
 			'step_labels'      => [ __( 'Number the levels and show the chosen value next to the label', 'whd-variations' ), '' ],
-			'hide_wc_variations' => [ __( 'Show only this grid on products it built', 'whd-variations' ), __( 'Hides WooCommerce’s own Variations tab on a product whose variations came from the grid, so there is one tab for the job instead of two similarly named ones. Products built any other way keep that tab. Turn this off if you need the per-variation weight, shipping class, description or downloadable files, which only WooCommerce’s tab can edit.', 'whd-variations' ) ],
+			'hide_wc_variations' => [ __( 'Show only this grid, not WooCommerce’s Variations tab', 'whd-variations' ), __( 'One tab for the job instead of two with nearly the same name. WooCommerce’s own Variations tab is hidden on any variable product this grid can show whole; a product using a custom (per-product) attribute, or more levels than the grid has, keeps it. Turn this off if you need a per-variation weight, shipping class, description or downloadable file — only WooCommerce’s tab edits those.', 'whd-variations' ) ],
 		];
 		if ( isset( $_POST['whdv_settings_nonce'] ) && wp_verify_nonce( sanitize_key( wp_unslash( $_POST['whdv_settings_nonce'] ) ), 'whdv_settings' ) ) {
 			$new = [];
