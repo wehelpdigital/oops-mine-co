@@ -236,14 +236,39 @@
 	content: "";
 	position: absolute;
 	inset: 0;
-	/* a steady dark wash plus a heavier foot: the copy sits over photographs that keep changing, so
-	   the wash has to hold for the lightest of them rather than the one on screen now */
-	background:
-		linear-gradient(180deg, rgba(58, 43, 38, .38) 0%, rgba(58, 43, 38, .46) 45%, rgba(58, 43, 38, .82) 100%),
-		radial-gradient(ellipse 62% 58% at 50% 68%, rgba(58, 43, 38, .36), rgba(58, 43, 38, 0) 72%);
+	/* The wash is gone: a flat scrim over the whole photograph was muddying it, and the
+	   photographs now have enough going on to be worth seeing. What is left is a soft foot —
+	   the band behind the buttons and the press credit, where white type would otherwise sit on
+	   pale pavement — and it fades out before it reaches the middle of the picture. */
+	background: linear-gradient(180deg,
+		rgba(58, 43, 38, .22) 0%,
+		rgba(58, 43, 38, .06) 26%,
+		rgba(58, 43, 38, 0) 46%,
+		rgba(58, 43, 38, .34) 82%,
+		rgba(58, 43, 38, .58) 100%);
 	z-index: 1;
 }
-.omc-hero__content > * { text-shadow: 0 2px 28px rgba(58, 43, 38, .35); }
+/* The wash came off the photograph and the headline promptly stopped being readable — white
+   serif over a sunlit pavement measures 1.4:1, which is not type, it is decoration. So the
+   shade is now only where the words are: a soft ellipse behind the copy that fades out well
+   before the edges, leaving the picture itself untouched. */
+.omc-hero__content::before {
+	content: "";
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	translate: -50% -50%;
+	width: min(1180px, 108%);
+	height: 128%;
+	background: radial-gradient(ellipse 54% 50% at 50% 50%,
+		rgba(42, 31, 27, .62) 0%,
+		rgba(42, 31, 27, .44) 46%,
+		rgba(42, 31, 27, .16) 72%,
+		rgba(42, 31, 27, 0) 100%);
+	z-index: -1;
+	pointer-events: none;
+}
+.omc-hero__content > * { text-shadow: 0 2px 22px rgba(42, 31, 27, .6), 0 1px 4px rgba(42, 31, 27, .35); }
 .omc-hero .omc-eyebrow--light { color: var(--omc-pink); }
 .omc-hero__logo { display: block; width: clamp(120px, 11vw, 168px); height: auto; margin: 0 auto 22px; filter: drop-shadow(0 6px 28px rgba(58, 43, 38, .35)); }
 /* The theme's .l-section__container centres a 1170px column (fluid + padded on small screens);
@@ -1225,10 +1250,14 @@
 	/* svh is the viewport with the browser's own bars showing, which is what a phone actually has;
 	   vh stays first for anything that does not know the unit. */
 	.omc-hero { min-height: 70vh; min-height: 70svh; align-items: center; }
+	/* A phone shows a tall slice of the picture with the copy across the middle of it, so it
+	   needs more help than a wide screen does — but still a foot rather than a sheet. */
 	.omc-hero::after {
-		background:
-			linear-gradient(180deg, rgba(58, 43, 38, .46) 0%, rgba(58, 43, 38, .54) 45%, rgba(58, 43, 38, .84) 100%),
-			radial-gradient(ellipse 85% 52% at 50% 52%, rgba(58, 43, 38, .4), rgba(58, 43, 38, 0) 75%);
+		background: linear-gradient(180deg,
+			rgba(58, 43, 38, .30) 0%,
+			rgba(58, 43, 38, .16) 30%,
+			rgba(58, 43, 38, .22) 58%,
+			rgba(58, 43, 38, .60) 100%);
 	}
 	/* The hero photographs are landscape with the subject right of centre, and a phone crops a
 	   3:2 frame to something near portrait — so only the horizontal matters, and 56% cut the
