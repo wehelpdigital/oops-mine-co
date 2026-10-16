@@ -162,7 +162,15 @@ final class WHD_AI_Writer {
 	/* ─────────────────────────── the screens ─────────────────────────── */
 
 	public static function assets( $hook ) {
-		if ( ! in_array( $hook, [ 'toplevel_page_' . self::PAGE_POST, 'toplevel_page_' . self::PAGE_PAGE ], true ) ) {
+		/*
+		 * Which screen this is, from the screen itself rather than from the hook name. The hook
+		 * carries where the item sits in the menu — "toplevel_page_…" for a top-level one,
+		 * something else once it moves under a parent — so matching on it meant that moving
+		 * these two under one AI Writer menu silently stopped the page screen loading its own
+		 * JavaScript, leaving a screen that rendered and did nothing.
+		 */
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- reading which admin screen this is
+		if ( ! in_array( $page, [ self::PAGE_POST, self::PAGE_PAGE ], true ) ) {
 			return;
 		}
 		wp_enqueue_style( 'whd-admin', WHD_URL . 'admin/admin.css', [], WHD_VERSION );
@@ -175,7 +183,7 @@ final class WHD_AI_Writer {
 		wp_enqueue_script( 'whd-keyword-picker', WHD_URL . 'admin/keyword-picker.js', [], WHD_VERSION, true );
 		wp_enqueue_script( 'whd-ai-writer', WHD_URL . 'admin/ai-writer.js', [ 'whd-keyword-picker' ], WHD_VERSION, true );
 
-		$type = ( 'toplevel_page_' . self::PAGE_POST ) === $hook ? 'post' : 'page';
+		$type = self::PAGE_POST === $page ? 'post' : 'page';
 		wp_localize_script( 'whd-ai-writer', 'WHD_AI_WRITER', [
 			'rest'  => [ 'root' => esc_url_raw( rest_url( 'whd/v1/ai/' ) ), 'nonce' => wp_create_nonce( 'wp_rest' ) ],
 			'type'  => $type,

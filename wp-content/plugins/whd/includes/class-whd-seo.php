@@ -837,13 +837,26 @@ class WHD_SEO {
 		}
 		$density = 100 * $hits * max( 1, count( self::content_words( $keyphrase ) ) ) / $count;
 
+		/*
+		 * How often it is actually said, which is a different question from how much of the page
+		 * it accounts for. The weighted figure above is the right one for asking whether a page
+		 * mentions its phrase enough — a four-word name said once in two hundred words reads as
+		 * about right, and dropping the weighting marked twenty-seven products thin that are not.
+		 *
+		 * It is the wrong one for asking whether a page says it too often. A five-word product
+		 * name said twice in a three-hundred-word description came out at 3.0% and was called
+		 * stuffing, when twice is simply how often you name the thing you are describing.
+		 * Stuffing is a count against the length of the page, whatever the phrase is.
+		 */
+		$rate = 100 * $hits / $count;
+
 		if ( ! $hits ) {
 			return self::check( 'density', 'bad', __( 'The keyphrase never appears in the copy.', 'whd' ), 'keyphrase', 2 );
 		}
-		if ( $density > 3 ) {
+		if ( $rate > 2 ) {
 			return self::check( 'density', 'bad', sprintf(
-				/* translators: 1: times used, 2: density */
-				__( 'The keyphrase is used %1$d times (%2$s%%) — that reads as stuffing.', 'whd' ), $hits, number_format_i18n( $density, 1 ) ), 'keyphrase', 2 );
+				/* translators: 1: times used, 2: how many words the copy runs to */
+				__( 'The keyphrase is used %1$d times in %2$d words — that reads as stuffing.', 'whd' ), $hits, $count ), 'keyphrase', 2 );
 		}
 		if ( $density < 0.5 ) {
 			return self::check( 'density', 'ok', sprintf(

@@ -3,7 +3,7 @@
  * Plugin Name: WHD — Popups, Emails & Tracking
  * Plugin URI:  https://wehelpdigital.com
  * Description: Marketing toolkit for Oops, Mine Co.: exit-intent and welcome popups with a drag-and-drop editor and cookie-based countdowns, a drag-and-drop email builder for every WooCommerce trigger (including abandoned-cart recovery), a newsletter list with phone capture, integrations that push subscribers to Mailchimp, Klaviyo or a webhook and send SMS through Twilio, a tracking-scripts module (GA4, Search Console, Meta Pixel), size charts, product stories, and an AI copywriter that writes against your own brief, rules and keyword list.
- * Version:     1.12.1
+ * Version:     1.13.0
  * Author:      We Help Digital
  * Text Domain: whd
  * Requires at least: 6.4
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'WHD_VERSION', '1.12.1' );
+define( 'WHD_VERSION', '1.13.0' );
 define( 'WHD_FILE', __FILE__ );
 define( 'WHD_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WHD_URL', plugin_dir_url( __FILE__ ) );
@@ -35,6 +35,7 @@ require_once WHD_DIR . 'includes/class-whd-ai-keywords.php';
 require_once WHD_DIR . 'includes/class-whd-ai-images.php';
 require_once WHD_DIR . 'includes/class-whd-ai-admin.php';
 require_once WHD_DIR . 'includes/class-whd-ai-writer.php';
+require_once WHD_DIR . 'includes/class-whd-ai-products.php';
 require_once WHD_DIR . 'includes/class-whd-seo.php';
 require_once WHD_DIR . 'includes/class-whd-product-admin.php';
 require_once WHD_DIR . 'includes/class-whd-admin.php';
@@ -82,6 +83,9 @@ final class WHD_Plugin {
 		WHD_Admin::init();
 		WHD_AI_Admin::init();
 		WHD_AI_Writer::init();
+		if ( class_exists( 'WooCommerce' ) ) {
+			WHD_AI_Products::init();
+		}
 		WHD_SEO::init();
 		if ( class_exists( 'WooCommerce' ) ) {
 			WHD_Product_Admin::init();

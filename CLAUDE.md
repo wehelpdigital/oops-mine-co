@@ -224,6 +224,21 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
 - Abandoned carts: table `{prefix}whd_carts`, guests captured by an inline checkout script → AJAX, cron
   `whd_cart_cron` (custom 15-min schedule), restore links `?whd_recover=<token>`, unsubscribe `?whd_unsub=`.
   Subscribers: table `{prefix}whd_subscribers`. Activation creates both tables and default designs.
+- **AI Writer** is one top-level menu with three screens: AI Posts (`whd-ai-posts`, also the parent slug), AI Pages
+  (`whd-ai-pages`) and **Bulk products** (`whd-ai-products`, `WHD_AI_Products`, WooCommerce only). Admin assets key off
+  `$_GET['page']`, never the hook name — the hook carries where an item sits in the menu, so matching on it breaks the
+  moment a screen moves under a parent.
+- Bulk products: a table of rows where only the photographs are required. Three REST steps per row, driven one row at a
+  time from `admin/ai-products.js` — `look` (a vision call describing the item as facts), `write` (facts → name, both
+  descriptions, SEO title, snippet, per-image alt/title/caption/description) and `make` (a **draft** `WC_Product_Simple`,
+  pictures dressed and attached, attributes, category, `WHD_AI_Admin::finish_seo()`, score). `WHD_AI_Images::make()`
+  draws a second photograph when the writer asks for one. Gotchas the first real run found: a draft WooCommerce saves
+  has **no `post_name`** until published, so the slug is set explicitly or `key_slug` fails on every product; Gemini's
+  reasoning comes out of `max_tokens`, so the write step needs a budget far above the reply length or the JSON arrives
+  truncated and unreadable; and the keyphrase is derived from the product's own name, never from the researched keyword
+  list — that list is passed as vocabulary only (handing products topic phrases put a hundred of them in competition).
+- `WHD_AI::call()` takes `$options['images']` (attachment IDs or paths) and sends them as vision parts for all three
+  providers; `WHD_AI::picture_part()` resizes a copy to `VISION_EDGE` first so a phone photo is not sent whole.
 - Admin: menu `WHD`; editor screen `admin.php?page=whd-editor&type=popup|email&id=<id>` (vanilla JS in
   `admin/editor.js`) talks to REST `whd/v1/design|render|test-email` (`manage_options`). Popups print in `wp_footer`
   at priority 5 — it must stay below 20 or their assets never enqueue. `?whd_preview=<popup id>` shows a popup to admins.

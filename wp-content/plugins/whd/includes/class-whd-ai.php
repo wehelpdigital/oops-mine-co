@@ -28,6 +28,10 @@ final class WHD_AI {
 	const OPTION     = 'whd_ai';
 	const LOG_OPTION = 'whd_ai_log';
 	const LOG_MAX    = 25;
+	/* The long edge a picture is cut to before it is sent. Bigger buys nothing: the models
+	   read a garment's cut, colour and fabric perfectly well at this size, and a phone photo
+	   sent whole is several megabytes of base64 on every call. */
+	const VISION_EDGE = 1024;
 
 	/* ─────────────────────────── settings ─────────────────────────── */
 
@@ -896,10 +900,72 @@ final class WHD_AI {
 	 *                        supports it. Callers that parse the reply should set it.
 	 * @return string|WP_Error The reply, or an error with something a human can act on.
 	 */
+	/**
+	 * One picture, small enough to send and encoded the way an API wants it.
+	 *
+	 * A shop photograph off a phone is four thousand pixels wide and several megabytes, and no
+	 * model reads it any better for that — it is resized to a long edge of VISION_EDGE first,
+	 * through a copy, so the file in the media library is left exactly as it was.
+	 *
+	 * @param int|string $image An attachment ID, or a path to a file on disk.
+	 * @return array|null [ mime, data (base64) ], or null when it cannot be read.
+	 */
+	public static function picture_part( $image ) {
+		$file = is_numeric( $image ) ? get_attached_file( (int) $image ) : (string) $image;
+		if ( ! $file || ! file_exists( $file ) ) {
+			return null;
+		}
+		$mime = is_numeric( $image ) ? (string) get_post_mime_type( (int) $image ) : (string) wp_check_filetype( $file )['type'];
+		if ( 0 !== strpos( $mime, 'image/' ) ) {
+			return null;
+		}
+
+		$send = $file;
+		$temp = '';
+		$editor = wp_get_image_editor( $file );
+		if ( ! is_wp_error( $editor ) ) {
+			$size = $editor->get_size();
+			if ( max( (int) $size['width'], (int) $size['height'] ) > self::VISION_EDGE ) {
+				$editor->resize(
+					$size['width'] >= $size['height'] ? self::VISION_EDGE : null,
+					$size['height'] > $size['width'] ? self::VISION_EDGE : null,
+					false
+				);
+				$editor->set_quality( 82 );
+				$temp  = wp_tempnam( 'whd-vision' );
+				$saved = $editor->save( $temp, 'image/jpeg' );
+				if ( ! is_wp_error( $saved ) && ! empty( $saved['path'] ) ) {
+					$send = $saved['path'];
+					$temp = $saved['path'];
+					$mime = 'image/jpeg';
+				}
+			}
+		}
+
+		$bytes = file_get_contents( $send ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- a local file, not a URL
+		if ( $temp && file_exists( $temp ) ) {
+			wp_delete_file( $temp );
+		}
+		if ( false === $bytes || '' === $bytes ) {
+			return null;
+		}
+
+		return [ 'mime' => $mime, 'data' => base64_encode( $bytes ) ];
+	}
+
 	public static function call( $system, $user, array $options = [] ) {
 		$o     = self::get();
 		$model = self::model();
 		$json  = ! empty( $options['json'] );
+
+		/* Pictures to look at, if the caller sent any. */
+		$pictures = [];
+		foreach ( (array) ( $options['images'] ?? [] ) as $image ) {
+			$part = self::picture_part( $image );
+			if ( $part ) {
+				$pictures[] = $part;
+			}
+		}
 
 		/*
 		 * The setting is sized for a product description. A caller that knows it is asking for
@@ -911,6 +977,14 @@ final class WHD_AI {
 		}
 
 		if ( 'anthropic' === $o['provider'] ) {
+			$content = $user;
+			if ( $pictures ) {
+				$content = [];
+				foreach ( $pictures as $p ) {
+					$content[] = [ 'type' => 'image', 'source' => [ 'type' => 'base64', 'media_type' => $p['mime'], 'data' => $p['data'] ] ];
+				}
+				$content[] = [ 'type' => 'text', 'text' => $user ];
+			}
 			$url  = 'https://api.anthropic.com/v1/messages';
 			$args = [
 				'headers' => [
@@ -923,10 +997,17 @@ final class WHD_AI {
 					'max_tokens'  => (int) $o['max_tokens'],
 					'temperature' => (float) $o['temperature'],
 					'system'      => $system,
-					'messages'    => [ [ 'role' => 'user', 'content' => $user ] ],
+					'messages'    => [ [ 'role' => 'user', 'content' => $content ] ],
 				] ),
 			];
 		} elseif ( 'openai' === $o['provider'] ) {
+			$chat = $user;
+			if ( $pictures ) {
+				$chat = [ [ 'type' => 'text', 'text' => $user ] ];
+				foreach ( $pictures as $p ) {
+					$chat[] = [ 'type' => 'image_url', 'image_url' => [ 'url' => 'data:' . $p['mime'] . ';base64,' . $p['data'] ] ];
+				}
+			}
 			$url  = 'https://api.openai.com/v1/chat/completions';
 			$args = [
 				'headers' => [
@@ -940,7 +1021,7 @@ final class WHD_AI {
 					'response_format' => $json ? [ 'type' => 'json_object' ] : null,
 					'messages'        => [
 						[ 'role' => 'system', 'content' => $system ],
-						[ 'role' => 'user', 'content' => $user ],
+						[ 'role' => 'user', 'content' => $chat ],
 					],
 				] ) ),
 			];
@@ -962,11 +1043,15 @@ final class WHD_AI {
 			if ( $json ) {
 				$config['responseMimeType'] = 'application/json';
 			}
+			$parts = [ [ 'text' => $user ] ];
+			foreach ( $pictures as $p ) {
+				$parts[] = [ 'inline_data' => [ 'mime_type' => $p['mime'], 'data' => $p['data'] ] ];
+			}
 			$args = [
 				'headers' => [ 'Content-Type' => 'application/json' ],
 				'body'    => wp_json_encode( [
 					'systemInstruction' => [ 'parts' => [ [ 'text' => $system ] ] ],
-					'contents'          => [ [ 'role' => 'user', 'parts' => [ [ 'text' => $user ] ] ] ],
+					'contents'          => [ [ 'role' => 'user', 'parts' => $parts ] ],
 					'generationConfig'  => $config,
 				] ),
 			];
@@ -974,7 +1059,7 @@ final class WHD_AI {
 			return new WP_Error( 'whd_ai_off', __( 'No AI provider is connected.', 'whd' ) );
 		}
 
-		$args['timeout'] = 90;
+		$args['timeout'] = $pictures ? 180 : 90;
 		$response        = wp_remote_post( $url, $args );
 
 		if ( is_wp_error( $response ) ) {
