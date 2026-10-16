@@ -1033,11 +1033,27 @@ final class WHD_AI_Admin {
 		WHD_AI_Keywords::maybe_install();
 
 		$search = trim( (string) $r->get_param( 'search' ) );
-		$rows   = WHD_AI_Keywords::all( [
+		$tag    = trim( (string) $r->get_param( 'tag' ) );
+
+		/*
+		 * Two callers, two appetites. The autocomplete under the field wants the twenty worth
+		 * suggesting; the browse window wants to page through all of them, in whatever order the
+		 * person is looking for — which is the whole reason it exists, since "the top twenty by
+		 * volume" is no way to find a phrase you half remember.
+		 */
+		$browse  = (bool) $r->get_param( 'browse' );
+		$orderby = (string) ( $r->get_param( 'orderby' ) ?: 'volume' );
+		$order   = strtoupper( (string) ( $r->get_param( 'order' ) ?: 'DESC' ) );
+		$limit   = (int) ( $r->get_param( 'limit' ) ?: ( $browse ? 200 : 20 ) );
+		$limit   = min( $browse ? 500 : 50, max( 1, $limit ) );
+
+		$rows = WHD_AI_Keywords::all( [
 			'search'  => $search,
-			'limit'   => min( 50, max( 1, (int) ( $r->get_param( 'limit' ) ?: 20 ) ) ),
-			'orderby' => 'volume',
-			'order'   => 'DESC',
+			'tag'     => $tag,
+			'limit'   => $limit,
+			'offset'  => max( 0, (int) $r->get_param( 'offset' ) ),
+			'orderby' => $orderby,
+			'order'   => $order,
 		] );
 
 		$out = [];
@@ -1053,7 +1069,8 @@ final class WHD_AI_Admin {
 
 		return new WP_REST_Response( [
 			'keywords' => $out,
-			'total'    => WHD_AI_Keywords::count( $search ),
+			'total'    => WHD_AI_Keywords::count( $search, $tag ),
+			'offset'   => max( 0, (int) $r->get_param( 'offset' ) ),
 		], 200 );
 	}
 

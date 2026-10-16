@@ -121,3 +121,96 @@
 	font-size: 12px;
 	color: #787c82;
 }
+
+/* ─── Browse all ───
+   The field's autocomplete answers with twenty; this is the other several hundred. A window
+   rather than a longer menu, because looking through a list and typing at a list are different
+   jobs and the second one should not grow a scrollbar. */
+
+.whd-kw__browse { margin-top: 7px; }
+
+.whd-kwb {
+	position: fixed;
+	inset: 0;
+	z-index: 160000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+	background: rgba(28, 20, 17, .5);
+}
+.whd-kwb__panel {
+	display: flex;
+	flex-direction: column;
+	width: min(760px, 100%);
+	max-height: min(80vh, 760px);
+	background: #fff;
+	border-radius: 4px;
+	box-shadow: 0 24px 70px rgba(28, 20, 17, .3);
+	overflow: hidden;
+}
+.whd-kwb__head {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 15px 18px;
+	border-bottom: 1px solid #e2e4e7;
+}
+.whd-kwb__title { margin: 0; font-size: 15px; font-weight: 600; }
+.whd-kwb__close {
+	margin-left: auto;
+	border: 0;
+	background: none;
+	font-size: 22px;
+	line-height: 1;
+	cursor: pointer;
+	color: #646970;
+}
+.whd-kwb__close:hover { color: #1d2327; }
+
+.whd-kwb__tools {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+	padding: 12px 18px;
+	border-bottom: 1px solid #f0f0f1;
+	background: #fbfbfc;
+}
+.whd-kwb__search { flex: 1 1 240px; }
+.whd-kwb__tick { display: flex; align-items: center; gap: 5px; font-size: 12px; white-space: nowrap; }
+
+.whd-kwb__list { flex: 1 1 auto; overflow: auto; padding: 4px 0; }
+.whd-kwb__row {
+	display: grid;
+	grid-template-columns: 22px 1fr 76px 58px 72px;
+	align-items: center;
+	gap: 8px;
+	padding: 7px 18px;
+	font-size: 13px;
+	cursor: pointer;
+	border-bottom: 1px solid #f6f7f7;
+}
+.whd-kwb__row:hover { background: #f6f7f7; }
+.whd-kwb__row.is-already { opacity: .55; cursor: default; }
+.whd-kwb__word { color: #1d2327; }
+.whd-kwb__vol, .whd-kwb__sd, .whd-kwb__used { font-size: 11px; color: #646970; text-align: right; }
+.whd-kwb__used.is-free { color: #46954a; }
+.whd-kwb__empty { padding: 26px 18px; margin: 0; color: #646970; font-size: 13px; }
+.whd-kwb__more { margin: 10px 18px; }
+
+.whd-kwb__foot {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 13px 18px;
+	border-top: 1px solid #e2e4e7;
+	background: #fbfbfc;
+}
+.whd-kwb__count { font-size: 12px; color: #646970; }
+.whd-kwb__cancel { margin-left: auto; }
+
+@media (max-width: 600px) {
+	.whd-kwb__row { grid-template-columns: 22px 1fr 64px; }
+	.whd-kwb__sd, .whd-kwb__used { display: none; }
+}
