@@ -757,6 +757,9 @@
 	border-radius: 0;
 }
 .omc-newsletter__input:focus { outline: 2px solid var(--omc-rose); outline-offset: 1px; }
+/* The modals ask for a first name too: it sits beside the address and drops under it on a phone. */
+.omc-newsletter__input--name { flex: 0 1 150px; }
+@media (max-width: 600px) { .omc-newsletter__input--name { flex-basis: 100%; } }
 .omc-newsletter__note { flex-basis: 100%; margin: 6px 0 0; min-height: 1.4em; font: 500 13px/1.4 var(--omc-sans); color: var(--omc-rose-dark); }
 .omc-newsletter__note.is-error { color: #8a4a3d; }
 

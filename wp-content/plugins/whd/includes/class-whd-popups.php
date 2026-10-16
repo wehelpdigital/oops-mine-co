@@ -109,7 +109,7 @@ final class WHD_Popups {
 				[ 'type' => 'heading', 'props' => [ 'text' => 'Oops, you found us.', 'level' => 'h2', 'align' => 'center', 'color' => '#3a2b26' ] ],
 				[ 'type' => 'text', 'props' => [ 'text' => 'Take 10% off your first order and get first look at every new drop. One unexpected find at a time.', 'align' => 'center', 'size' => 16, 'color' => '#4a3f3a' ] ],
 				[ 'type' => 'form', 'props' => [
-					'show_name'         => 0,
+					'show_name'         => 1,
 					'show_phone'        => 1,
 					'name_placeholder'  => 'First name',
 					'email_placeholder' => 'Your email',

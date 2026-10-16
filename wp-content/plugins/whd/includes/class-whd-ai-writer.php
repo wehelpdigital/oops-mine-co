@@ -57,23 +57,39 @@ final class WHD_AI_Writer {
 		if ( ! current_user_can( 'edit_posts' ) ) {
 			return;
 		}
+		/*
+		 * One menu, two screens under it. They were two top-level items sitting next to each
+		 * other in the sidebar, which read as two unrelated tools rather than one writer with a
+		 * choice of what to write. The slugs are unchanged, so every link and bookmark still
+		 * lands where it did.
+		 *
+		 * The parent carries the same slug and callback as AI Posts, which is how a top-level
+		 * item gets a name of its own instead of repeating its first child's.
+		 */
 		add_menu_page(
-			__( 'AI Posts', 'whd' ),
-			__( 'AI Posts', 'whd' ),
+			__( 'AI Writer', 'whd' ),
+			__( 'AI Writer', 'whd' ),
 			'edit_posts',
 			self::PAGE_POST,
 			[ __CLASS__, 'screen_posts' ],
 			'dashicons-edit-large',
 			27
 		);
-		add_menu_page(
+		add_submenu_page(
+			self::PAGE_POST,
+			__( 'AI Posts', 'whd' ),
+			__( 'AI Posts', 'whd' ),
+			'edit_posts',
+			self::PAGE_POST,
+			[ __CLASS__, 'screen_posts' ]
+		);
+		add_submenu_page(
+			self::PAGE_POST,
 			__( 'AI Pages', 'whd' ),
 			__( 'AI Pages', 'whd' ),
 			'edit_pages',
 			self::PAGE_PAGE,
-			[ __CLASS__, 'screen_pages' ],
-			'dashicons-media-document',
-			28
+			[ __CLASS__, 'screen_pages' ]
 		);
 	}
 

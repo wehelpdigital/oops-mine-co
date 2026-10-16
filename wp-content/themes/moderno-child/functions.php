@@ -1442,6 +1442,7 @@ function omc_live_reminder_modal() {
 			<?php
 			omc_newsletter_form( [
 				'source' => 'fb_live',
+				'name'   => true,
 				'button' => $live['button'],
 				'after'  => '#omc-live-reminder .omc-livemodal__link',
 			] );
@@ -1554,6 +1555,7 @@ function omc_discount_tab() {
 				<?php
 				omc_newsletter_form( [
 					'source' => 'discount',
+					'name'   => true,
 					'button' => $code ? __( 'Send me the code', 'moderno-child' ) : __( 'Join the list', 'moderno-child' ),
 					'after'  => '#omc-discount .omc-modal__reveal',
 				] );
@@ -1585,6 +1587,14 @@ function omc_newsletter_form( $args = [] ) {
 		'button'      => __( 'Join the list', 'moderno-child' ),
 		'source'      => 'newsletter', // passed to `omc_newsletter_subscribed` and picks the success message (fb_live = the live card)
 		'after'       => '',           // CSS selector of an element to reveal once the sign-up succeeded
+		/*
+		 * Ask for a first name as well. On in the modals, where somebody has already stopped to
+		 * read something, and off in the forms that sit in a footer or at the end of a section,
+		 * where a second box is one more reason to walk away. Without it every profile at the
+		 * email platform arrives with an address and nothing to greet them by.
+		 */
+		'name'        => false,
+		'name_label'  => __( 'First name', 'moderno-child' ),
 	] );
 	$field_id = 'omc-newsletter-email' . ( $count > 1 ? '-' . $count : '' ); // several forms can share a page (footer, live card, band)
 	?>
@@ -1592,6 +1602,10 @@ function omc_newsletter_form( $args = [] ) {
 		<input type="hidden" name="action" value="omc_subscribe">
 		<input type="hidden" name="nonce" value="<?php echo esc_attr( wp_create_nonce( 'omc_newsletter' ) ); ?>">
 		<input type="hidden" name="source" value="<?php echo esc_attr( $a['source'] ); ?>">
+		<?php if ( $a['name'] ) : ?>
+			<label class="screen-reader-text" for="<?php echo esc_attr( $field_id ); ?>-name"><?php echo esc_html( $a['name_label'] ); ?></label>
+			<input class="omc-newsletter__input omc-newsletter__input--name" id="<?php echo esc_attr( $field_id ); ?>-name" type="text" name="name" placeholder="<?php echo esc_attr( $a['name_label'] ); ?>" autocomplete="given-name">
+		<?php endif; ?>
 		<label class="screen-reader-text" for="<?php echo esc_attr( $field_id ); ?>"><?php esc_html_e( 'Email address', 'moderno-child' ); ?></label>
 		<input class="omc-newsletter__input" id="<?php echo esc_attr( $field_id ); ?>" type="email" name="email" placeholder="<?php echo esc_attr( $a['placeholder'] ); ?>" required autocomplete="email">
 		<button class="omc-btn omc-btn--solid" type="submit"><?php echo esc_html( $a['button'] ); ?></button>
@@ -1615,12 +1629,13 @@ function omc_subscribe_ajax() {
 		? preg_replace( '/[^a-z0-9:_-]/', '', strtolower( sanitize_text_field( wp_unslash( $_POST['source'] ) ) ) )
 		: 'newsletter';
 	$source = $source ?: 'newsletter';
+	$name   = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
 	$list   = get_option( 'omc_newsletter_subscribers', [] );
 	if ( ! isset( $list[ $email ] ) ) {
 		$list[ $email ] = current_time( 'mysql' );
 		update_option( 'omc_newsletter_subscribers', $list, false );
 	}
-	do_action( 'omc_newsletter_subscribed', $email, $source );
+	do_action( 'omc_newsletter_subscribed', $email, $source, $name );
 	$message = 'fb_live' === $source
 		? __( 'You’re in. We’ll send you the link before we go live — see you there.', 'moderno-child' )
 		: __( 'You’re on the list. Your next “Oops, Mine” moment is coming.', 'moderno-child' );

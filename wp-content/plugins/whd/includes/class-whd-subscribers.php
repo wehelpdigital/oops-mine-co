@@ -50,14 +50,14 @@ final class WHD_Subscribers {
 
 	public static function init() {
 		add_action( 'init', [ __CLASS__, 'maybe_upgrade' ], 5 );
-		add_action( 'omc_newsletter_subscribed', [ __CLASS__, 'on_theme_subscribe' ], 10, 2 );
+		add_action( 'omc_newsletter_subscribed', [ __CLASS__, 'on_theme_subscribe' ], 10, 3 );
 		add_action( 'wp_ajax_whd_subscribe', [ __CLASS__, 'ajax' ] );
 		add_action( 'wp_ajax_nopriv_whd_subscribe', [ __CLASS__, 'ajax' ] );
 		add_action( 'admin_post_whd_export_subscribers', [ __CLASS__, 'export' ] );
 	}
 
-	public static function on_theme_subscribe( $email, $source = 'website' ) {
-		self::add( $email, '', $source ? sanitize_key( $source ) : 'website' );
+	public static function on_theme_subscribe( $email, $source = 'website', $name = '' ) {
+		self::add( $email, sanitize_text_field( (string) $name ), $source ? sanitize_key( $source ) : 'website' );
 	}
 
 	/**
