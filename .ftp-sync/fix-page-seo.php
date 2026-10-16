@@ -239,6 +239,39 @@ function omc_seo_snippet( $post, $keyphrase ) {
 	return $body;
 }
 
+/**
+ * The pages that hold no copy of their own.
+ *
+ * The front page, the shop, the journal index and the video hub are built by a template out of
+ * products, posts and videos, so there is nothing for a rule to read and nothing to pick a
+ * phrase from. Each line below is a phrase the page can honestly claim — unclaimed by any other
+ * page — with a title and a snippet that say the same thing a searcher typed.
+ *
+ * slug => [ keyphrase, SEO title (30–60 chars), search snippet (120–155) ]
+ */
+const OMC_KEY_PAGES = [
+	'home'   => [
+		'korean fashion brand',
+		'Oops, Mine Co. — A Korean Fashion Brand',
+		'An independent Korean fashion brand: Korean and Thai dresses, skirts, denim and accessories, chosen with intention and claimed on instinct.',
+	],
+	'shop'   => [
+		'korean fashion online shopping',
+		'Korean Fashion Online Shopping | Oops, Mine Co.',
+		'Korean fashion online shopping, piece by piece: knitwear, pleated skirts, coats and everyday separates, chosen one rack at a time.',
+	],
+	'blog'   => [
+		'petite fashion blog',
+		'The Journal — A Petite Fashion Blog',
+		'A petite fashion blog and style journal: how pieces sit, what to wear them with, and what we are reaching for this season.',
+	],
+	'videos' => [
+		'korean fashion and style',
+		'Style Videos: Korean Fashion and Style in Motion',
+		'Short styling videos from the boutique — Korean fashion and style in motion: how each piece moves, what it is made of, and what we wore it with.',
+	],
+];
+
 /* ─────────────────────────── the run ─────────────────────────── */
 
 $posts = get_posts( [
@@ -269,6 +302,32 @@ foreach ( $posts as $post ) {
 	}
 	$stat['seen']++;
 	$before[] = WHD_SEO::analyse( WHD_SEO::doc_from_post( $post->ID ) )['score'];
+
+	/* a page written by hand, above */
+	if ( 'page' === $post->post_type && isset( OMC_KEY_PAGES[ $post->post_name ] ) ) {
+		[ $key_phrase, $key_title, $key_snippet ] = OMC_KEY_PAGES[ $post->post_name ];
+		foreach ( [
+			WHD_SEO::KEYPHRASE        => $key_phrase,
+			'_omc_seo_title'          => $key_title,
+			'_omc_meta_description'   => $key_snippet,
+		] as $meta_key => $value ) {
+			if ( (string) get_post_meta( $post->ID, $meta_key, true ) === $value ) {
+				continue;
+			}
+			$stat[ WHD_SEO::KEYPHRASE === $meta_key ? 'keyphrase' : ( '_omc_seo_title' === $meta_key ? 'seo_title' : 'snippet' ) ]++;
+			if ( ! $dry ) {
+				update_post_meta( $post->ID, $meta_key, $value );
+			}
+		}
+		$GLOBALS['omc_seo_claimed'][ mb_strtolower( $key_phrase ) ] = $post->ID;
+		$score = WHD_SEO::analyse( WHD_SEO::doc_from_post( $post->ID ) )['score'];
+		if ( ! $dry ) {
+			update_post_meta( $post->ID, WHD_SEO::SCORE, $score );
+		}
+		$after[] = $score;
+		$show[]  = sprintf( '%s: "%s" — %d', $post->post_name, $key_phrase, $score );
+		continue;
+	}
 
 	/* a page that exists to do a job */
 	if ( 'page' === $post->post_type && in_array( $post->post_name, OMC_NOT_FOR_SEARCH, true ) ) {

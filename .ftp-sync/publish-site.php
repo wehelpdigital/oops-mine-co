@@ -985,6 +985,10 @@ foreach ( $files as $file ) {
 			'_omc_landing'          => wp_json_encode( $doc, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
 			'_omc_meta_description' => trim( (string) ( $doc['meta_description'] ?? '' ) ),
 			'_omc_seo_title'        => trim( (string) ( $doc['seo_title'] ?? '' ) ),
+			/* The phrase the document says it was written for. Left to be guessed from the
+			   keyword list, the FAQ ended up measured against a phrase it never says. A policy
+			   page names none, and an empty value is the right answer for it. */
+			'_whd_focus_keyphrase'  => trim( (string) ( $doc['primary_keyword'] ?? '' ) ),
 		],
 	] );
 	$content_log['pages'][ $result['action'] ] ++;

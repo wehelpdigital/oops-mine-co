@@ -360,6 +360,49 @@ class WHD_SEO {
 
 	/* ─────────────────────────── what is being read ─────────────────────────── */
 
+	/**
+	 * Is this a page whose content is a list the template builds?
+	 *
+	 * The front page, the blog index, the shop and the video hub. They are real pages with real
+	 * jobs, and not one of them has a word in the editor — so the checks that ask an article
+	 * whether it is long enough, broken up enough and illustrated are asking the wrong page.
+	 */
+	public static function is_index_page( $post_id ) {
+		$post_id = (int) $post_id;
+		if ( ! $post_id ) {
+			return false;
+		}
+		if ( $post_id === (int) get_option( 'page_on_front' ) || $post_id === (int) get_option( 'page_for_posts' ) ) {
+			return true;
+		}
+		if ( function_exists( 'wc_get_page_id' ) && $post_id === (int) wc_get_page_id( 'shop' ) ) {
+			return true;
+		}
+
+		return in_array(
+			(string) get_post_meta( $post_id, '_wp_page_template', true ),
+			[ 'templates/page-videos.php', 'templates/page-home.php' ],
+			true
+		);
+	}
+
+	/** The pages nobody illustrates: a returns policy, terms, privacy, a size guide. */
+	public static function is_policy_page( $post_id ) {
+		$landing = get_post_meta( (int) $post_id, '_omc_landing', true );
+		$decoded = is_string( $landing ) ? json_decode( $landing, true ) : $landing;
+		$kind    = is_array( $decoded ) ? (string) ( $decoded['type'] ?? '' ) : '';
+
+		if ( in_array( $kind, [ 'policy', 'sizeguide', 'contact', 'faq' ], true ) ) {
+			return true;
+		}
+
+		return in_array(
+			(string) get_post_meta( (int) $post_id, '_wp_page_template', true ),
+			[ 'templates/page-policy.php', 'templates/page-contact.php', 'templates/page-faq.php' ],
+			true
+		);
+	}
+
 	/** Everything the analyser needs about a saved post. */
 	public static function doc_from_post( $post_id, $keyphrase = null ) {
 		$post = $post_id ? get_post( $post_id ) : null;
@@ -408,7 +451,7 @@ class WHD_SEO {
 			$keyphrase = self::researched_for( $post_id );
 		}
 
-		return [
+		$doc = [
 			'post_id'          => (int) $post_id,
 			'post_type'        => $post->post_type,
 			'title'            => (string) $post->post_title,
@@ -418,7 +461,22 @@ class WHD_SEO {
 			'seo_title'        => (string) get_post_meta( $post_id, '_omc_seo_title', true ),
 			'keyphrase'        => (string) $keyphrase,
 			'noindex'          => '1' === (string) get_post_meta( $post_id, self::NOINDEX, true ),
+			'is_index'         => self::is_index_page( $post_id ),
+			'is_policy'        => self::is_policy_page( $post_id ),
 		];
+
+		/**
+		 * What the page's template puts on the page that its copy does not contain.
+		 *
+		 * The About page prints a full-bleed photograph and two buttons into the shop, and not a
+		 * word of it is in post_content — so the checks that count pictures and links were
+		 * reading a page that does not exist, the same way products were marked as dead ends
+		 * before their categories were counted. A theme knows what its own templates render.
+		 *
+		 * @param array $doc     The document about to be measured.
+		 * @param int   $post_id The post it was built from.
+		 */
+		return apply_filters( 'whd_seo_document', $doc, (int) $post_id );
 	}
 
 	/**
@@ -432,6 +490,15 @@ class WHD_SEO {
 		if ( ! $keywords ) {
 			$landing = get_post_meta( $post_id, '_omc_landing', true );
 			$decoded = is_string( $landing ) ? json_decode( $landing, true ) : $landing;
+
+			/* The document says which phrase it was written for, and that is not always the
+			   first of its keywords. The FAQ is the one page where the two differ: it answers
+			   "cute clothes near me" in its snippet, its opening line and its first heading,
+			   and was being measured against "korean clothes store near me" — a phrase it
+			   never says — so four checks failed on a page that had done the work. */
+			if ( is_array( $decoded ) && '' !== trim( (string) ( $decoded['primary_keyword'] ?? '' ) ) ) {
+				return (string) $decoded['primary_keyword'];
+			}
 			$keywords = is_array( $decoded ) ? ( $decoded['keywords'] ?? [] ) : [];
 		}
 		$keywords = array_values( array_filter( (array) $keywords, 'is_scalar' ) );
@@ -562,10 +629,23 @@ class WHD_SEO {
 
 		$checks = [];
 
+		/* What kind of page this is, before anything is measured against it — these were worked
+		   out further down the method and so were false for every keyphrase check above them. */
+		$index  = ! empty( $doc['is_index'] );
+		$policy = ! empty( $doc['is_policy'] );
+
 		/* ── the keyphrase ── */
 
 		if ( '' === $keyphrase ) {
-			$checks[] = self::check( 'keyphrase', 'bad', __( 'No focus keyphrase. Pick one and everything below is measured against it.', 'whd' ), 'keyphrase', 3 );
+			/*
+			 * A returns policy, a privacy notice, the terms: people reach these from a link on
+			 * the page they were already reading, not from a search, and giving one a focus
+			 * keyphrase means picking a phrase it has no business ranking for. Asking for one is
+			 * how a privacy policy ends up aimed at "asian gift store near me".
+			 */
+			$checks[] = ! empty( $doc['is_policy'] )
+				? self::check( 'keyphrase', 'good', __( 'No focus keyphrase, which is right for a page like this — people arrive from a link, not a search.', 'whd' ), 'keyphrase', 3 )
+				: self::check( 'keyphrase', 'bad', __( 'No focus keyphrase. Pick one and everything below is measured against it.', 'whd' ), 'keyphrase', 3 );
 		} else {
 			$checks[] = self::keyphrase_known( $keyphrase, (int) ( $doc['post_id'] ?? 0 ) );
 			$checks[] = self::contains( 'key_title', $seo_title, $key_norm, 'keyphrase',
@@ -574,11 +654,13 @@ class WHD_SEO {
 			$checks[] = self::contains( 'key_meta', $meta, $key_norm, 'keyphrase',
 				__( 'The keyphrase is in the search snippet.', 'whd' ),
 				__( 'The keyphrase is not in the search snippet.', 'whd' ), 2 );
+			if ( ! $index ) {
 			$checks[] = self::contains( 'key_slug', str_replace( '-', ' ', $slug ), $key_norm, 'keyphrase',
 				__( 'The keyphrase is in the web address.', 'whd' ),
 				__( 'The keyphrase is not in the web address.', 'whd' ), 2 );
+			}
 
-			$first = self::first_paragraph( $html, $text );
+			$first = $index ? $seo_title . ' ' . $meta : self::first_paragraph( $html, $text );
 			$checks[] = self::contains( 'key_first', $first, $key_norm, 'keyphrase',
 				__( 'The keyphrase appears in the opening paragraph.', 'whd' ),
 				__( 'The keyphrase is not in the opening paragraph — say early what the page is about.', 'whd' ), 2 );
@@ -591,33 +673,49 @@ class WHD_SEO {
 					break;
 				}
 			}
-			$checks[] = $headings
+			$checks[] = $index
+				? null
+				: ( $headings
 				? self::check( 'key_heading', $in_head ? 'good' : 'ok',
 					$in_head
 						? __( 'The keyphrase appears in a subheading.', 'whd' )
 						: __( 'No subheading uses the keyphrase.', 'whd' ), 'keyphrase', 2 )
-				: self::check( 'key_heading', 'ok', __( 'There are no subheadings to carry the keyphrase.', 'whd' ), 'keyphrase', 2 );
+				: self::check( 'key_heading', 'ok', __( 'There are no subheadings to carry the keyphrase.', 'whd' ), 'keyphrase', 2 ) );
 
-			$checks[] = self::density( $text, $keyphrase, $count );
-			$checks[] = self::keyphrase_in_alt( $html, $keyphrase );
+			if ( ! $index ) {
+				$checks[] = self::density( $text, $keyphrase, $count );
+			}
+			if ( ! $index && ! $policy ) {
+				$checks[] = self::keyphrase_in_alt( $html, $keyphrase );
+			}
 		}
 
 		/* ── the writing ── */
 
-		$checks[] = self::length( $count, $type );
+		if ( ! $index ) {
+			$checks[] = self::length( $count, $type );
+		}
 		$checks[] = self::meta_length( $meta );
 		$checks[] = self::title_length( $seo_title );
-		$checks[] = self::subheading_spread( $html, $count );
-		$checks[] = self::paragraph_length( $html );
-		$checks[] = self::sentence_length( $sentences );
-		$checks[] = self::passive_voice( $sentences );
-		$checks[] = self::transitions( $sentences );
-		$checks[] = self::reading_ease( $words, $sentences );
+		if ( ! $index ) {
+			$checks[] = self::subheading_spread( $html, $count );
+			$checks[] = self::paragraph_length( $html );
+			$checks[] = self::sentence_length( $sentences );
+			$checks[] = self::passive_voice( $sentences );
+			$checks[] = self::transitions( $sentences );
+			$checks[] = self::reading_ease( $words, $sentences );
+		}
 
 		/* ── the page itself ── */
 
-		$checks[] = self::images( $html, $doc );
-		$checks[] = self::links( $html, $doc );
+		/* An index page's pictures and links are the products and posts it lists, and a returns
+		   policy is not improved by a photograph. Neither is asked. */
+		if ( ! $index && ! $policy ) {
+			$checks[] = self::images( $html, $doc );
+		}
+		if ( ! $index ) {
+			$checks[] = self::links( $html, $doc );
+		}
 		$checks[] = self::schema_for( $doc );
 
 		/* ── the house rules ── */
