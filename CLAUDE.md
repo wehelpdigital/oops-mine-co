@@ -228,7 +228,10 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   `WHDV_MAX_LEVELS` (3) tiers per product, ordered = the attribute positions. Every enabled combination in the grid is a
   real `product_variation`, so cart, stock, orders, the theme's cards/quick view and the Variation Swatches plugin all
   keep working. Nothing is stored in a parallel structure except `_whdv_tiers` (level order + per-level-1 group images).
-- Admin: product screen → Product data → **Variation tiers** tab (`WHDV_Admin`, `admin/tiers.js`, vanilla JS, state in
+- Admin: product screen → Product data → **Variation tiers** tab. WooCommerce's own **Variations** tab is hidden on a
+  product the grid built (`_whdv_tiers` present) — two adjacent tabs with nearly the same name read as two systems when
+  they are two views of one set of rows; setting `hide_wc_variations` (default on) turns that off, which is needed for
+  per-variation weight / shipping class / description / downloadable files. `WHDV_Admin`, `admin/tiers.js`, vanilla JS, state in
   the hidden `whdv_state` JSON field). The app switches the product type to *variable* and re-clicks its own tab
   (WooCommerce's type-change handler jumps to the first tab). Options can be existing terms (autocomplete) or new
   ones; a level can be a new global attribute (created with the swatch type — color/image/button/select). Swatch

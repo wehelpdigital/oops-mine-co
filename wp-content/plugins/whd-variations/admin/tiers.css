@@ -64,3 +64,14 @@ tr.whdv-off td.whdv-table__on { opacity: 1; }
 	.whdv-add__input { min-width: 0; flex: 1 1 100%; }
 	.whdv-in { max-width: none; }
 }
+
+/* Why WooCommerce's own Variations tab is not on this product. */
+#whdv_product_data .whdv-owns {
+	margin: 0;
+	padding: 10px 12px;
+	border-left: 3px solid #2271b1;
+	background: #f0f6fc;
+	color: #1d2327;
+	font-size: 13px;
+	line-height: 1.5;
+}

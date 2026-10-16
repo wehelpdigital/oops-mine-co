@@ -20,6 +20,31 @@ final class WHDV_Admin {
 
 	/* ───────────── product screen ───────────── */
 
+	/** The product being edited, from wherever the screen has put it. */
+	public static function current_product_id() {
+		if ( ! empty( $GLOBALS['post'] ) && $GLOBALS['post'] instanceof WP_Post ) {
+			return (int) $GLOBALS['post']->ID;
+		}
+
+		return isset( $_GET['post'] ) ? (int) $_GET['post'] : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- reading which product is open, not acting on it
+	}
+
+	/**
+	 * Did this grid build this product's variations?
+	 *
+	 * True only once the grid has been used and saved, which is what writes the meta. Of the
+	 * shop's variable products most came in through the catalogue import and were never near
+	 * the grid — those keep WooCommerce's own tab, because it is the only editor they have.
+	 */
+	public static function grid_owns( $post_id ) {
+		return (bool) get_post_meta( (int) $post_id, WHDV_Model::META, true );
+	}
+
+	/** Is WooCommerce's own Variations tab being hidden on this product? */
+	public static function replaces_wc_tab( $post_id ) {
+		return ! empty( WHDV_Plugin::settings()['hide_wc_variations'] ) && self::grid_owns( $post_id );
+	}
+
 	public static function tab( $tabs ) {
 		$tabs['whdv'] = [
 			'label'    => __( 'Variation tiers', 'whd-variations' ),
@@ -27,12 +52,32 @@ final class WHDV_Admin {
 			'class'    => [ 'show_if_simple', 'show_if_variable' ],
 			'priority' => 65,
 		];
+
+		/* Two tabs called almost the same thing, side by side, both editing the same variations:
+		   "Variations" at priority 60 and this one at 65. They are two views of one set of rows,
+		   not two systems, but nothing on the screen said so. Where the grid is the one that
+		   built them, it is the only one shown. */
+		if ( self::replaces_wc_tab( self::current_product_id() ) ) {
+			unset( $tabs['variations'] );
+		}
+
 		return $tabs;
 	}
 
 	public static function panel() {
 		?>
 		<div id="whdv_product_data" class="panel woocommerce_options_panel hidden">
+			<?php if ( self::replaces_wc_tab( self::current_product_id() ) ) : ?>
+				<p class="whdv-owns">
+					<?php
+					printf(
+						/* translators: %s: link to the settings screen */
+						esc_html__( 'This grid builds the variations, so WooCommerce\'s own Variations tab is hidden here. Per-variation weight, shipping class, description and downloadable files live on that tab — %s to show it again.', 'whd-variations' ),
+						'<a href="' . esc_url( admin_url( 'admin.php?page=whd-variations' ) ) . '">' . esc_html__( 'turn this off in the settings', 'whd-variations' ) . '</a>'
+					);
+					?>
+				</p>
+			<?php endif; ?>
 			<div id="whdv-app" class="whdv-app"><p class="whdv-loading"><?php esc_html_e( 'Loading tiers…', 'whd-variations' ); ?></p></div>
 			<?php wp_nonce_field( 'whdv_save', 'whdv_nonce' ); ?>
 			<input type="hidden" name="whdv_state" id="whdv-state" value="">
@@ -170,6 +215,7 @@ final class WHDV_Admin {
 			'hide_unavailable' => [ __( 'Hide options that don’t exist for the chosen level', 'whd-variations' ), __( 'Off = they stay visible but greyed out (WooCommerce default).', 'whd-variations' ) ],
 			'auto_select'      => [ __( 'Auto-pick a level with a single remaining option', 'whd-variations' ), '' ],
 			'step_labels'      => [ __( 'Number the levels and show the chosen value next to the label', 'whd-variations' ), '' ],
+			'hide_wc_variations' => [ __( 'Show only this grid on products it built', 'whd-variations' ), __( 'Hides WooCommerce’s own Variations tab on a product whose variations came from the grid, so there is one tab for the job instead of two similarly named ones. Products built any other way keep that tab. Turn this off if you need the per-variation weight, shipping class, description or downloadable files, which only WooCommerce’s tab can edit.', 'whd-variations' ) ],
 		];
 		if ( isset( $_POST['whdv_settings_nonce'] ) && wp_verify_nonce( sanitize_key( wp_unslash( $_POST['whdv_settings_nonce'] ) ), 'whdv_settings' ) ) {
 			$new = [];
