@@ -127,7 +127,13 @@
    rather than a longer menu, because looking through a list and typing at a list are different
    jobs and the second one should not grow a scrollbar. */
 
-.whd-kw__browse { margin-top: 7px; }
+/* .wp-core-ui .button sets margin: 0 and outranks a single class, so the button sat flush
+   against the field with nothing between them. Matching that specificity, and a little more
+   room than the 7px that never applied. */
+.whd-kw .whd-kw__browse {
+	display: inline-block;
+	margin-top: 10px;
+}
 
 .whd-kwb {
 	position: fixed;
