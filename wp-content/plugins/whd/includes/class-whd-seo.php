@@ -39,9 +39,19 @@ class WHD_SEO {
 		add_action( 'rest_api_init', [ __CLASS__, 'rest' ] );
 
 		foreach ( self::TYPES as $type ) {
-			add_filter( 'manage_' . ( 'post' === $type ? '' : $type . '_' ) . 'posts_columns', [ __CLASS__, 'column' ] );
-			add_action( 'manage_' . ( 'post' === $type ? '' : $type . '_' ) . 'posts_custom_column', [ __CLASS__, 'column_value' ], 10, 2 );
+			$slug = 'post' === $type ? '' : $type . '_';
+			add_filter( 'manage_' . $slug . 'posts_columns', [ __CLASS__, 'column' ] );
+			add_action( 'manage_' . $slug . 'posts_custom_column', [ __CLASS__, 'column_value' ], 10, 2 );
+			add_filter( 'manage_edit-' . $type . '_sortable_columns', [ __CLASS__, 'sortable' ] );
 		}
+		add_action( 'pre_get_posts', [ __CLASS__, 'sort_by_score' ] );
+
+		/*
+		 * Keep the number true. The meta box only posts from the editor, so a quick edit, a bulk
+		 * edit or anything written by a script left the column showing a score from whenever the
+		 * page was last opened by hand — which is worse than showing none.
+		 */
+		add_action( 'save_post', [ __CLASS__, 'rescore' ], 99, 2 );
 	}
 
 	/* ─────────────────────────── where it appears ─────────────────────────── */
@@ -226,13 +236,65 @@ class WHD_SEO {
 		return isset( $out['whd_seo'] ) ? $out : $out + [ 'whd_seo' => __( 'SEO', 'whd' ) ];
 	}
 
+	/** The column sorts, so the worst pages can be found without opening any of them. */
+	public static function sortable( $columns ) {
+		$columns['whd_seo'] = 'whd_seo';
+
+		return $columns;
+	}
+
+	public static function sort_by_score( $query ) {
+		if ( ! is_admin() || ! $query->is_main_query() || 'whd_seo' !== $query->get( 'orderby' ) ) {
+			return;
+		}
+		// A page with no score yet sorts as though it had none, rather than vanishing.
+		$query->set( 'meta_key', self::SCORE );
+		$query->set( 'orderby', 'meta_value_num' );
+	}
+
+	/** Score a post whenever it is saved, however it was saved. */
+	public static function rescore( $post_id, $post ) {
+		if ( ! $post instanceof WP_Post || ! in_array( $post->post_type, self::TYPES, true ) ) {
+			return;
+		}
+		if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
+			return;
+		}
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			return;
+		}
+		if ( in_array( $post->post_status, [ 'auto-draft', 'trash' ], true ) ) {
+			return;
+		}
+
+		$result = self::analyse( self::doc_from_post( $post_id ) );
+		update_post_meta( $post_id, self::SCORE, (int) $result['score'] );
+	}
+
 	public static function column_value( $column, $post_id ) {
 		if ( 'whd_seo' !== $column ) {
 			return;
 		}
 		$score = get_post_meta( $post_id, self::SCORE, true );
+
+		/*
+		 * Nothing has scored this one yet — so score it now and keep the answer. Capped per
+		 * request because reading a page properly is not free, and twenty of them at once would
+		 * be felt; the rest fill in over the next screenful or two, or all at once from the
+		 * command line.
+		 */
 		if ( '' === $score ) {
-			echo '<span class="whd-seo-dot whd-seo-dot--none" title="' . esc_attr__( 'Not scored yet', 'whd' ) . '">–</span>';
+			static $worked = 0;
+			if ( $worked < 8 ) {
+				$worked++;
+				$result = self::analyse( self::doc_from_post( $post_id ) );
+				$score  = (int) $result['score'];
+				update_post_meta( $post_id, self::SCORE, $score );
+			}
+		}
+
+		if ( '' === $score ) {
+			echo '<span class="whd-seo-dot whd-seo-dot--none" title="' . esc_attr__( 'Not scored yet — reload to work it out', 'whd' ) . '">–</span>';
 			return;
 		}
 		$score  = (int) $score;
