@@ -215,6 +215,12 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   `templates/wc-email.php`) and `woocommerce_email_subject_{id}`; disabled triggers keep WooCommerce defaults.
   `abandoned_cart` and `welcome_subscriber` are custom triggers sent with `wp_mail()`. Merge tags come from
   `WHD_Emails::context()`; `preview_context()` fabricates data when the store has no orders.
+- Email platform (`WHD_Integrations`, option `whd_integrations`): Mailchimp / Klaviyo / webhook. Two paths, and the
+  difference is consent — a sign-up (popup, newsletter form, stylist, checkout box ticked) goes through
+  `WHD_Subscribers` and joins the list; everything else the shop learns (an order without the tick, an abandoned
+  cart, a back-in-stock request, the contact form, a new account, a review) goes through `WHD_Contacts::hand_over()`
+  as a Klaviyo *profile* with no list behind it. The setting `list_everyone` (WHD → Integrations → "Who joins the
+  list", default off) sends all of them to the list instead. Live is on Klaviyo, list `RexmCz`, single opt-in.
 - Abandoned carts: table `{prefix}whd_carts`, guests captured by an inline checkout script → AJAX, cron
   `whd_cart_cron` (custom 15-min schedule), restore links `?whd_recover=<token>`, unsubscribe `?whd_unsub=`.
   Subscribers: table `{prefix}whd_subscribers`. Activation creates both tables and default designs.

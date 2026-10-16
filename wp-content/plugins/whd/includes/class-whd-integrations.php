@@ -36,6 +36,7 @@ final class WHD_Integrations {
 	public static function defaults() {
 		return [
 			'email_provider'         => 'none',
+			'list_everyone'          => 0,
 			'mailchimp_api_key'      => '',
 			'mailchimp_list_id'      => '',
 			'mailchimp_double_optin' => 0,
@@ -53,6 +54,18 @@ final class WHD_Integrations {
 
 	public static function get() {
 		return wp_parse_args( get_option( self::OPTION, [] ), self::defaults() );
+	}
+
+	/**
+	 * Does everyone whose address the shop learns go on the mailing list?
+	 *
+	 * Off, which is the default, means a buyer who did not tick the box at the checkout — and
+	 * anyone who only asked a question, opened an account or wanted a size back — reaches the
+	 * platform as a profile with no list behind it. The shop can segment and run flows on them;
+	 * it just cannot send them a campaign. On, everybody joins the list.
+	 */
+	public static function list_everyone(): bool {
+		return ! empty( self::get()['list_everyone'] );
 	}
 
 	public static function email_providers() {
@@ -97,6 +110,7 @@ final class WHD_Integrations {
 			$out[ $key ] = empty( $clear[ $key ] ) ? self::keep_secret( $input[ $key ] ?? '', $old[ $key ] ) : '';
 		}
 
+		$out['list_everyone']          = empty( $input['list_everyone'] ) ? 0 : 1;
 		$out['mailchimp_list_id']      = sanitize_text_field( $input['mailchimp_list_id'] ?? '' );
 		$out['mailchimp_double_optin'] = empty( $input['mailchimp_double_optin'] ) ? 0 : 1;
 		$out['mailchimp_tags']         = implode( ', ', array_filter( array_map( 'sanitize_text_field', array_map( 'trim', explode( ',', (string) ( $input['mailchimp_tags'] ?? '' ) ) ) ) ) );
@@ -866,6 +880,8 @@ final class WHD_Integrations {
 			echo '<option value="' . esc_attr( $value ) . '" ' . selected( $o['email_provider'], $value, false ) . '>' . esc_html( $label ) . '</option>';
 		}
 		echo '</select><p class="description">' . esc_html__( 'New subscribers are pushed a few seconds after they sign up, in the background.', 'whd' ) . '</p></td></tr>';
+		echo '<tr><th>' . esc_html__( 'Who joins the list', 'whd' ) . '</th><td><label><input type="checkbox" name="' . esc_attr( self::field( 'list_everyone' ) ) . '" value="1" ' . checked( $o['list_everyone'], 1, false ) . '> ' . esc_html__( 'Add everyone whose address we learn, not only those who asked', 'whd' ) . '</label>'
+			. '<p class="description">' . esc_html__( 'Off: a sign-up form, the popup or a ticked box at the checkout puts somebody on the list. Everyone else — a buyer who left the box unticked, a question through the contact form, a new account, a back-in-stock request — goes across as a profile instead, which flows and segments can still use. On: all of them join the list and can be sent campaigns. Sending campaigns to people who did not ask is what gets a sending account suspended, so leave this off unless you know the rules you are trading under.', 'whd' ) . '</p></td></tr>';
 		echo '</tbody></table>';
 
 		// Mailchimp
