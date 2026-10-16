@@ -45,6 +45,26 @@ printf(
 $delete  = in_array( '--delete', $argv, true );
 
 /*
+ * The trap in --live.
+ *
+ * OMC_DB=live points the database at production, but wp_get_upload_dir() still answers with
+ * the folder on THIS machine, because it is derived from where WordPress is installed rather
+ * than from anything in the database. Deleting with both set would take the rows off the live
+ * site, delete the matching files from the local copy, and leave the real ones on the server
+ * orphaned — the worst of all three outcomes, and silently.
+ *
+ * So against live this removes database rows only, and prints the files for the FTP tool to
+ * take off the server afterwards.
+ */
+$rows_only = getenv( 'OMC_DB' ) === 'live';
+if ( $rows_only && $orphans ) {
+	$orphans = false;
+	echo "--orphans is ignored against live: the files it would scan are the ones on this machine.
+
+";
+}
+
+/*
  * Ids to spare whatever the reasoning says. A low attachment id collides with every price
  * and every count in the database, so a second pass that searches for the number rather than
  * for a reference will flag them — and one of them really is referenced by Elementor. Three
@@ -201,8 +221,22 @@ $all = get_posts( [
 
 $uploads = wp_get_upload_dir();
 $unused  = [];
+
+/*
+ * One file, two records. An import run twice leaves two attachments pointing at the same
+ * file — the WooCommerce placeholder on live is exactly this — and the one nothing points at
+ * looks deletable while its twin is what the shop actually uses. Removing the row is
+ * harmless; removing the file breaks the twin. So a file shared with any other attachment is
+ * never offered for deletion at all.
+ */
+$file_users = [];
+foreach ( $wpdb->get_col( "SELECT meta_value FROM {$wpdb->postmeta} WHERE meta_key = '_wp_attached_file'" ) as $one ) {
+	$one = strtolower( (string) $one );
+	$file_users[ $one ] = ( $file_users[ $one ] ?? 0 ) + 1;
+}
 $kept    = 0;
 $bytes   = 0;
+$shared  = [];
 
 foreach ( $all as $id ) {
 	$file = (string) get_post_meta( $id, '_wp_attached_file', true );
@@ -243,6 +277,12 @@ foreach ( $all as $id ) {
 	}
 	if ( in_array( (int) $id, $spare, true ) ) {
 		$kept++;
+		continue;
+	}
+
+	if ( ( $file_users[ strtolower( $file ) ] ?? 0 ) > 1 ) {
+		$kept++;
+		$shared[] = $file;
 		continue;
 	}
 
@@ -324,11 +364,25 @@ $gone = 0;
 $freed = 0;
 foreach ( $unused as $u ) {
 	$freed += $u['bytes'];
-	if ( wp_delete_attachment( $u['id'], true ) ) {
+	// false: leave the files alone, because the ones reachable from here are the local copies.
+	if ( wp_delete_attachment( $u['id'], ! $rows_only ) ) {
 		$gone++;
 	}
 }
 printf( "\n%d attachments removed, %s freed\n", $gone, size_format( $freed ) );
+
+/* Against live the files are still sitting on the server, so say which ones and how to take
+   them off. The list is a plain file because the next step is a different tool. */
+if ( $rows_only && $gone ) {
+	$list = __DIR__ . '/../remove-from-live.txt';
+	$paths = array_map( static fn( $u ) => 'wp-content/uploads/' . $u['file'], $unused );
+	file_put_contents( $list, implode( "\n", $paths ) . "\n" );
+	printf(
+		"\nThe rows are gone from live. The files are still on the server — %d of them, listed in\n  %s\nTake them off with:  node .ftp-sync/server.mjs rm <path> [path…]\n",
+		count( $paths ),
+		$list
+	);
+}
 
 /*
  * The crops left behind when a picture was replaced: still on disk, in no attachment record,
