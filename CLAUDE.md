@@ -289,8 +289,13 @@ run or approve — it is a production write, and the agent harness blocks it.
 
 - **Kaspersky on the dev PC intercepts TLS** and re-signs certificates, and rotates them. The FTP tool therefore pins the
   fingerprint it sees; a "does not match the pinned fingerprint" error with issuer still *Kaspersky* and subject
-  `autoconfig.rs5-sgp.serverhostgroup.com` just needs `node .ftp-sync/server.mjs pin`. A different issuer/subject
-  would be a real problem.
+  `autoconfig.rs5-sgp.serverhostgroup.com` just needs `node .ftp-sync/server.mjs pin`. A different issuer is **not**
+  automatically an attack — when Kaspersky stops intercepting, the host's own Let's Encrypt certificate appears
+  instead (seen once as `CN=YR2`, chaining to ISRG Root X1), and pinning that is strictly better than pinning a
+  re-signed one. Check before re-pinning rather than guessing either way:
+  `(echo QUIT; sleep 3) | openssl s_client -starttls ftp -connect ftp.oopsmineco.com:21 | grep -E "subject=|issuer=|Verify return"`.
+  Same subject, a real CA and `Verify return code: 0 (ok)` is the benign case. An unknown issuer, a changed subject,
+  or a chain that does not verify is the real problem — stop and ask.
 - `db-pull` **destroys local-only database content** (pages, settings) — it is for refreshing from live, not merging.
 - The FTP tool refuses git-tracked files unless `--force` (uploading them dirties the server's git tree); uploads never
   touch `wp-config.php`, `.htaccess` or `.git/`.
