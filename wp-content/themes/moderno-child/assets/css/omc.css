@@ -2056,8 +2056,21 @@ body:has(.js-cart-sidebar.c-shop-sidebar--active) .omc-disctab { display: none; 
    band is as tall as the longest of them and nothing below it moves as they change. The
    rise is a little longer than the taglines because the type is a great deal bigger and a
    3px nudge on a 34px line reads as a twitch. ─── */
-.omc-phrases { display: grid; }
+/* A grid container does not fill its parent the way a plain heading does — on a phone this
+   left the heading 196px wide inside a 350px column, and every phrase wrapped. */
+.omc-phrases {
+	display: grid;
+	width: 100%;
+	justify-items: inherit;
+	/* A shade under a full section title: these have to clear the column on one line at every
+	   width, and the band is narrower than a full-width heading because she stands beside it. */
+	font-size: clamp(23px, 2.9vw, 40px);
+}
 .omc-phrases__item {
+	/* One line, always. The cell is as tall as its tallest phrase, so a single question that
+	   wrapped made the band two lines deep for all four — and left a gap under the three that
+	   did not. */
+	white-space: nowrap;
 	transform: translateY(8px);
 	transition: opacity .6s var(--omc-ease), transform .6s var(--omc-ease);
 }

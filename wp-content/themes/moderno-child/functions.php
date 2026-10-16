@@ -408,7 +408,7 @@ function omc_stylist_band() {
 			__( 'Not sure what’s <em>perfect</em>?', 'moderno-child' ),
 			__( 'Can’t picture how it <em>sits</em>?', 'moderno-child' ),
 			__( 'Torn between <em>two</em>?', 'moderno-child' ),
-			__( 'Wondering what goes <em>with it</em>?', 'moderno-child' ),
+			__( 'What goes <em>with it</em>?', 'moderno-child' ),
 		],
 		'text'    => __( 'Try our digital stylist, free, and we’ll recommend what’s best for you.', 'moderno-child' ),
 		'button'  => __( 'Start the stylist', 'moderno-child' ),
