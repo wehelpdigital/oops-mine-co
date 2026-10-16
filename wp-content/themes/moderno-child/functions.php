@@ -135,7 +135,7 @@ add_filter( 'body_class', function ( $classes ) {
  */
 function omc_images() {
 	return apply_filters( 'omc_images', [
-		'hero'       => 'omc-2026/omc-hero-black-midi-skirt.webp',   // long black coat, city street
+		'hero'       => 'omc-2026/omc-hero-street-stride.webp',   // camel coat, mid-stride on a sunlit autumn street
 		'edit_a'     => 'omc-2026/omc-edit-collar-sweatshirt.webp',  // brown check midi skirt at a cafe window
 		'edit_b'     => 'omc-2026/omc-edit-green-knit.webp',         // striped cardigan over a cream skirt
 		'story'      => 'omc-2026/omc-story-black-coat.webp',        // pink striped cardigan — blurred, darkened backdrop of the story band
@@ -469,9 +469,9 @@ function omc_usp_items() {
 function omc_hero_images() {
 	$images = omc_images();
 	return array_values( array_filter( apply_filters( 'omc_hero_images', [
-		$images['hero'],                    // two women in knit dresses, blush tones
-		'omc-2026/omc-hero-white-dress.webp',          // camel knit midi dress, cobbled street
-		'omc-2026/omc-hero-pleated-skirt-light.webp',  // black button-front midi dress, boutique window
+		$images['hero'],                                 // camel coat, mid-stride on an autumn street
+		'omc-2026/omc-hero-pleat-turn.webp',    // pleated midi skirt caught mid-turn
+		'omc-2026/omc-hero-market-two.webp',    // two friends on a market street
 	] ) ) );
 }
 

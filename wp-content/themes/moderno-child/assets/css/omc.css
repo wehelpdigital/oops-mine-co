@@ -215,7 +215,10 @@
 	width: 100%;
 	height: 100%;
 }
-.omc-hero__media img { object-fit: cover; object-position: 62% 28%; }
+/* Tuned for the hero photographs, which are landscape and put their subject right of centre.
+   A phone crops a 3:2 frame down to something nearly portrait, so the same percentage cuts
+   the woman in half at the edge; shifting right keeps her in the picture. */
+.omc-hero__media img { object-fit: cover; object-position: 64% 32%; }
 /* hero slideshow: the photos stack; the active one is sharp, the others sit blurred and faded underneath,
    so each change is a soft blur-through dissolve with a slow drift (assets/js/omc.js, .js-omc-fade) */
 .omc-hero__media--fade .omc-hero__img {
@@ -1227,7 +1230,10 @@
 			linear-gradient(180deg, rgba(58, 43, 38, .46) 0%, rgba(58, 43, 38, .54) 45%, rgba(58, 43, 38, .84) 100%),
 			radial-gradient(ellipse 85% 52% at 50% 52%, rgba(58, 43, 38, .4), rgba(58, 43, 38, 0) 75%);
 	}
-	.omc-hero__media img { object-position: 56% 10%; }
+	/* The hero photographs are landscape with the subject right of centre, and a phone crops a
+	   3:2 frame to something near portrait — so only the horizontal matters, and 56% cut the
+	   woman in half at the edge. */
+	.omc-hero__media img { object-position: 74% 50%; }
 	/* Centred, with the foot left clear for the credit pinned in the corner. */
 	.omc-hero__content {
 		padding-top: clamp(28px, 5vh, 48px);
