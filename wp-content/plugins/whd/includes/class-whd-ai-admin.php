@@ -247,6 +247,28 @@ final class WHD_AI_Admin {
 		echo '</select>';
 		echo '<p class="description">' . esc_html__( 'Used by the “Draw the missing photographs” button on a product. It always goes to Google, whichever provider writes your words, so a Google key has to be set above for it to work.', 'whd' ) . '</p></td></tr>';
 
+		/*
+		 * Unasked, the model returns about 1400 pixels across — fine on a product card, and
+		 * nowhere near enough for a photograph that runs the full width of a screen. Asking costs
+		 * time and bandwidth, so it is a choice rather than a default.
+		 */
+		echo '<tr><th><label for="whd-ai-image-size">' . esc_html__( 'Size of drawn pictures', 'whd' ) . '</label></th><td>';
+		echo '<select id="whd-ai-image-size" name="' . esc_attr( self::field( 'image_size' ) ) . '">';
+		foreach ( [
+			'1K' => __( '1K — about 1,400px across. Quick. Right for product photographs.', 'whd' ),
+			'2K' => __( '2K — about 2,700px. Sharp on a laptop screen.', 'whd' ),
+			'4K' => __( '4K — about 5,500px. For anything full-width; slower and much heavier.', 'whd' ),
+		] as $id => $label ) {
+			printf(
+				'<option value="%s"%s>%s</option>',
+				esc_attr( $id ),
+				selected( $id, WHD_AI_Images::size(), false ),
+				esc_html( $label )
+			);
+		}
+		echo '</select>';
+		echo '<p class="description">' . esc_html__( 'A 4K frame takes about half a minute to draw and arrives as several megabytes, which is then cut down to the size the page needs.', 'whd' ) . '</p></td></tr>';
+
 		echo '<tr><th><label for="whd-ai-image-brief">' . esc_html__( 'How your photographs look', 'whd' ) . '</label></th><td>';
 		echo '<textarea class="large-text" rows="3" id="whd-ai-image-brief" name="' . esc_attr( self::field( 'image_brief' ) ) . '" placeholder="' . esc_attr( WHD_AI_Images::look() ) . '">' . esc_textarea( (string) ( $o['image_brief'] ?? '' ) ) . '</textarea>';
 		echo '<p class="description">' . esc_html__( 'One or two lines describing the light, the colours and the kind of room your product pictures are shot in. Every drawn picture is told to match it. Leave blank for the description shown here.', 'whd' ) . '</p></td></tr>';

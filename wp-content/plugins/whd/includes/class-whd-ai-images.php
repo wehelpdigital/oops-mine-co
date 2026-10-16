@@ -42,6 +42,20 @@ final class WHD_AI_Images {
 	}
 
 	/**
+	 * How large to ask for: 1K, 2K or 4K.
+	 *
+	 * Unasked, the model returns about 1,400 pixels across. That is plenty for a product card and
+	 * nowhere near enough for a photograph that runs the full width of a screen — the first set of
+	 * heroes came back at 1,264 and looked soft for exactly that reason, because the request had
+	 * never said otherwise.
+	 */
+	public static function size(): string {
+		$set = strtoupper( (string) ( WHD_AI::get()['image_size'] ?? '' ) );
+
+		return in_array( $set, [ '1K', '2K', '4K' ], true ) ? $set : '1K';
+	}
+
+	/**
 	 * Drawing pictures goes through Google whichever provider writes the words.
 	 *
 	 * The other two houses either have no image endpoint or a different one; rather than pretend,
@@ -381,7 +395,13 @@ final class WHD_AI_Images {
 	 * @param string $alt    Alt text for the library.
 	 * @return int|WP_Error Attachment id.
 	 */
-	public static function make( string $prompt, string $name = 'illustration', string $alt = '', string $ask = '' ) {
+	/**
+	 * Draw something and put it in the media library.
+	 *
+	 * @param array $options aspect ("16:9"), size ("1K"|"2K"|"4K"), max_edge (how wide to keep
+	 *                       the stored file), quality.
+	 */
+	public static function make( string $prompt, string $name = 'illustration', string $alt = '', string $ask = '', array $options = [] ) {
 		if ( ! self::ready() ) {
 			return new WP_Error( 'whd_ai_images_off', __( 'Drawing pictures needs a Google AI key. Add one in WHD → AI content.', 'whd' ) );
 		}
@@ -398,7 +418,13 @@ final class WHD_AI_Images {
 			self::asked( $ask )
 		);
 
-		$image = self::request( [ [ 'text' => $brief ] ] );
+		$image = self::request(
+			[ [ 'text' => $brief ] ],
+			array_filter( [
+				'aspectRatio' => $options['aspect'] ?? '',
+				'imageSize'   => $options['size'] ?? self::size(),
+			] )
+		);
 		if ( is_wp_error( $image ) ) {
 			return $image;
 		}
@@ -419,7 +445,14 @@ final class WHD_AI_Images {
 			return is_wp_error( $id ) ? $id : new WP_Error( 'whd_ai_images_attach', __( 'The picture could not be added to the media library.', 'whd' ) );
 		}
 
-		self::settle( (int) $id, $file['file'], $alt ?: $name );
+		self::settle(
+			(int) $id,
+			$file['file'],
+			$alt ?: $name,
+			'',
+			(int) ( $options['max_edge'] ?? self::MAX_EDGE ),
+			(int) ( $options['quality'] ?? self::QUALITY )
+		);
 		update_post_meta( $id, self::META, 1 );
 
 		return (int) $id;
@@ -431,16 +464,29 @@ final class WHD_AI_Images {
 	 * @param array $parts inlineData references and the text brief, in the order the model reads them.
 	 * @return array|WP_Error { data: string, mime: string }
 	 */
-	private static function request( array $parts ) {
+	/**
+	 * One call to the image model.
+	 *
+	 * @param array $parts        inlineData references and the text brief, in reading order.
+	 * @param array $image_config aspectRatio ("16:9", "4:5"…) and imageSize ("1K", "2K", "4K").
+	 *                            Sending nothing gets whatever the model feels like, which is
+	 *                            about 1400 across — fine for a product card, not nearly enough
+	 *                            for a photograph that runs the full width of a screen.
+	 * @return array|WP_Error { data: string, mime: string }
+	 */
+	private static function request( array $parts, array $image_config = [] ) {
 		$key = (string) WHD_AI::get()['google_key'];
 
 		$response = wp_remote_post(
 			'https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode( self::model() ) . ':generateContent?key=' . rawurlencode( $key ),
 			[
-				// Drawing takes far longer than writing; the default thirty seconds times out mid-picture.
-				'timeout' => 180,
+				// Drawing takes far longer than writing, and a 4K frame is eight megabytes of it.
+				'timeout' => 300,
 				'headers' => [ 'Content-Type' => 'application/json' ],
-				'body'    => wp_json_encode( [ 'contents' => [ [ 'role' => 'user', 'parts' => $parts ] ] ] ),
+				'body'    => wp_json_encode( array_filter( [
+					'contents'         => [ [ 'role' => 'user', 'parts' => $parts ] ],
+					'generationConfig' => $image_config ? [ 'imageConfig' => $image_config ] : null,
+				] ) ),
 			]
 		);
 
@@ -499,10 +545,13 @@ final class WHD_AI_Images {
 		$response = wp_remote_post(
 			'https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode( self::model() ) . ':generateContent?key=' . rawurlencode( $key ),
 			[
-				// Drawing takes far longer than writing; the default thirty seconds times out mid-picture.
-				'timeout' => 180,
+				// Drawing takes far longer than writing, and a 4K frame is eight megabytes of it.
+				'timeout' => 300,
 				'headers' => [ 'Content-Type' => 'application/json' ],
-				'body'    => wp_json_encode( [ 'contents' => [ [ 'role' => 'user', 'parts' => $parts ] ] ] ),
+				'body'    => wp_json_encode( array_filter( [
+					'contents'         => [ [ 'role' => 'user', 'parts' => $parts ] ],
+					'generationConfig' => $image_config ? [ 'imageConfig' => $image_config ] : null,
+				] ) ),
 			]
 		);
 
@@ -601,20 +650,22 @@ final class WHD_AI_Images {
 	 * @param string $alt  What the picture shows.
 	 * @param string $desc Longer sentence, or empty to derive one from the alt.
 	 */
-	private static function settle( int $id, string $file, string $alt, string $desc = '' ) {
+	private static function settle( int $id, string $file, string $alt, string $desc = '', int $max_edge = 0, int $quality = 0 ) {
+		$max_edge = $max_edge ?: self::MAX_EDGE;
+		$quality  = $quality ?: self::QUALITY;
 		require_once ABSPATH . 'wp-admin/includes/image.php';
 
 		$editor = wp_get_image_editor( $file );
 		if ( ! is_wp_error( $editor ) ) {
 			$size = $editor->get_size();
-			if ( max( (int) $size['width'], (int) $size['height'] ) > self::MAX_EDGE ) {
+			if ( max( (int) $size['width'], (int) $size['height'] ) > $max_edge ) {
 				$editor->resize(
-					$size['width'] >= $size['height'] ? self::MAX_EDGE : null,
-					$size['height'] > $size['width'] ? self::MAX_EDGE : null,
+					$size['width'] >= $size['height'] ? $max_edge : null,
+					$size['height'] > $size['width'] ? $max_edge : null,
 					false
 				);
 			}
-			$editor->set_quality( self::QUALITY );
+			$editor->set_quality( $quality );
 			$saved = $editor->save( $file, (string) get_post_mime_type( $id ) );
 			if ( is_wp_error( $saved ) ) {
 				// A picture that will not re-encode is still a picture; keep the original.

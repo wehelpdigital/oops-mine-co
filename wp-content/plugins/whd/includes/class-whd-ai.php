@@ -51,6 +51,8 @@ final class WHD_AI {
 			'model'           => '',
 			// Pictures come from a different model from the words, and always from Google.
 			'image_model'     => '',
+			// 1K, 2K or 4K. 1K is what the model gives unasked, and is plenty for a product card.
+			'image_size'      => '1K',
 			'image_brief'     => '',
 			'max_tokens'      => 1600,
 			'temperature'     => 0.7,
@@ -408,6 +410,8 @@ final class WHD_AI {
 
 		$image_model         = sanitize_text_field( $input['image_model'] ?? '' );
 		$out['image_model']  = ( class_exists( 'WHD_AI_Images' ) && isset( WHD_AI_Images::models()[ $image_model ] ) ) ? $image_model : '';
+		$image_size          = strtoupper( sanitize_text_field( $input['image_size'] ?? '' ) );
+		$out['image_size']   = in_array( $image_size, [ '1K', '2K', '4K' ], true ) ? $image_size : '1K';
 		$out['image_brief']  = sanitize_textarea_field( $input['image_brief'] ?? '' );
 
 		$version                  = sanitize_key( $input['recaptcha_version'] ?? 'v2' );
