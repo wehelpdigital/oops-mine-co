@@ -426,7 +426,30 @@ final class WHD_Admin {
 		echo '<tr><th><label for="ga4_id">' . esc_html__( 'Google Analytics 4 — Measurement ID', 'whd' ) . '</label></th><td><input class="regular-text" id="ga4_id" name="' . esc_attr( $f( 'ga4_id' ) ) . '" value="' . esc_attr( $s['ga4_id'] ) . '" placeholder="G-XXXXXXXXXX"></td></tr>';
 		echo '<tr><th><label for="gsc">' . esc_html__( 'Google Search Console — verification', 'whd' ) . '</label></th><td><input class="regular-text" id="gsc" name="' . esc_attr( $f( 'gsc_verification' ) ) . '" value="' . esc_attr( $s['gsc_verification'] ) . '" placeholder="content value, or paste the whole <meta> tag"><p class="description">' . esc_html__( 'Choose the “HTML tag” method in Search Console; the tag is printed for all visitors, including Google’s verifier.', 'whd' ) . '</p></td></tr>';
 		echo '<tr><th><label for="fb">' . esc_html__( 'Meta (Facebook) Pixel ID', 'whd' ) . '</label></th><td><input class="regular-text" id="fb" name="' . esc_attr( $f( 'fb_pixel_id' ) ) . '" value="' . esc_attr( $s['fb_pixel_id'] ) . '" placeholder="1234567890"></td></tr>';
-		echo '<tr><th>' . esc_html__( 'Exclude administrators', 'whd' ) . '</th><td><label><input type="checkbox" name="' . esc_attr( $f( 'exclude_admins' ) ) . '" value="1" ' . checked( $s['exclude_admins'], 1, false ) . '> ' . esc_html__( 'Don’t track logged-in administrators (keeps your own visits out of the data).', 'whd' ) . '</label></td></tr>';
+		/* Which of Meta's standard events to send. Everything is on the moment a pixel id is
+		   saved, because a half-reported funnel is harder to read than none at all — but each
+		   one can be switched off, and the list says in plain words what fires it. */
+		echo '<tr><th>' . esc_html__( 'Meta Pixel events', 'whd' ) . '</th><td>';
+		if ( ! $s['fb_pixel_id'] ) {
+			echo '<p class="description">' . esc_html__( 'Add a pixel ID above and the events appear here. Nothing is sent until there is one.', 'whd' ) . '</p>';
+		}
+		echo '<input type="hidden" name="' . esc_attr( $f( 'fb_events_present' ) ) . '" value="1">';
+		echo '<fieldset class="whd-pixel-events">';
+		foreach ( WHD_Scripts::events() as $key => $event ) {
+			printf(
+				'<label><input type="checkbox" name="%1$s[]" value="%2$s" %3$s> <code>%4$s</code> <span>%5$s</span></label>',
+				esc_attr( $f( 'fb_events' ) ),
+				esc_attr( $key ),
+				checked( in_array( $key, (array) $s['fb_events'], true ), true, false ),
+				esc_html( $event[0] ),
+				esc_html( $event[1] )
+			);
+		}
+		echo '</fieldset>';
+		echo '<p class="description">' . esc_html__( 'PageView is always sent — it is what the pixel is for. Purchase is sent on the order-received page with the order total.', 'whd' ) . '</p>';
+		echo '</td></tr>';
+
+				echo '<tr><th>' . esc_html__( 'Exclude administrators', 'whd' ) . '</th><td><label><input type="checkbox" name="' . esc_attr( $f( 'exclude_admins' ) ) . '" value="1" ' . checked( $s['exclude_admins'], 1, false ) . '> ' . esc_html__( 'Don’t track logged-in administrators (keeps your own visits out of the data).', 'whd' ) . '</label></td></tr>';
 		foreach ( [ 'head_extra' => __( 'Extra <head> code', 'whd' ), 'body_extra' => __( 'Code after <body> opens', 'whd' ), 'footer_extra' => __( 'Code before </body>', 'whd' ) ] as $k => $label ) {
 			echo '<tr><th><label for="' . esc_attr( $k ) . '">' . esc_html( $label ) . '</label></th><td><textarea class="large-text code" rows="5" id="' . esc_attr( $k ) . '" name="' . esc_attr( $f( $k ) ) . '">' . esc_textarea( $s[ $k ] ) . '</textarea></td></tr>';
 		}

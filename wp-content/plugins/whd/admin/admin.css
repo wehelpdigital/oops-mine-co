@@ -68,3 +68,15 @@
 	color: #1d2327;
 }
 .whd-ai-photos__ask .description { display: block; margin-top: 4px; }
+
+/* ─── Meta Pixel events ───
+   A column of switches, each one saying in plain words what sets it off, so nobody has to know
+   what InitiateCheckout means before deciding whether they want it. */
+.whd-pixel-events { display: grid; gap: 7px; margin: 0 0 10px; }
+.whd-pixel-events label { display: grid; grid-template-columns: 20px 150px 1fr; align-items: baseline; gap: 6px; font-size: 13px; }
+.whd-pixel-events code { font-size: 12px; background: #f0f0f1; padding: 1px 6px; border-radius: 2px; }
+.whd-pixel-events span { color: #646970; font-size: 12px; }
+@media (max-width: 782px) {
+	.whd-pixel-events label { grid-template-columns: 20px 1fr; }
+	.whd-pixel-events span { grid-column: 2; }
+}

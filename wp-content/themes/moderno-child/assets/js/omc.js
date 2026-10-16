@@ -246,6 +246,13 @@
 						form.classList.add('is-done');
 						var after = form.getAttribute('data-after') && document.querySelector(form.getAttribute('data-after'));
 						if (after) { after.hidden = false; } /* e.g. the live card reveals its "open the live" button */
+						/* Anything that wants to know somebody joined — the Meta Pixel, among
+						   others — hears it here rather than guessing from a form submission
+						   that might have failed. The source says which form it was. */
+						var src = form.querySelector('[name="source"]');
+						document.dispatchEvent(new CustomEvent('omc:subscribed', {
+							detail: { source: src ? src.value : '' }
+						}));
 					} else {
 						note.textContent = (res && res.data && res.data.message) || 'Something went wrong. Please try again.';
 						note.classList.add('is-error');
