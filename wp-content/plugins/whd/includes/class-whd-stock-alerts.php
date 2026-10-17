@@ -159,7 +159,7 @@ final class WHD_Stock_Alerts {
 		 * @param int    $product_id
 		 * @param int    $variation_id
 		 */
-		do_action( 'whd_stock_alert_requested', $email, $product_id, $variation_id );
+		do_action( 'whd_stock_alert_requested', $email, $product_id, $variation_id, $name );
 
 		return [ 'id' => $id, 'already' => false ];
 	}
@@ -277,6 +277,9 @@ final class WHD_Stock_Alerts {
 			</p>
 			<form class="whd-stock__form" method="post">
 				<input type="hidden" name="variation_id" value="0">
+				<label class="screen-reader-text" for="whd-stock-name"><?php esc_html_e( 'First name', 'whd' ); ?></label>
+				<input type="text" id="whd-stock-name" name="name" autocomplete="given-name"
+					placeholder="<?php esc_attr_e( 'First name', 'whd' ); ?>">
 				<label class="screen-reader-text" for="whd-stock-email"><?php esc_html_e( 'Your email', 'whd' ); ?></label>
 				<input type="email" id="whd-stock-email" name="email" required
 					value="<?php echo esc_attr( $email ); ?>"

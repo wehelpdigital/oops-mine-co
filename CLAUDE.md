@@ -221,6 +221,15 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   cart, a back-in-stock request, the contact form, a new account, a review) goes through `WHD_Contacts::hand_over()`
   as a Klaviyo *profile* with no list behind it. The setting `list_everyone` (WHD → Integrations → "Who joins the
   list", default off) sends all of them to the list instead. Live is on Klaviyo, list `RexmCz`, single opt-in.
+- **The sign-up code is never shown on screen.** Every modal that offers a discount — the welcome popup, the exit
+  popup, the theme's discount modal and the Facebook Live card — asks for a first name and an email and says to look
+  in the inbox. `WHD_Subscribers::send_welcome()` sends it, and re-sends on a repeat sign-up whose source is in
+  `CODE_SOURCES`, so that promise stays true for somebody who fills the form in twice. The code and its value come
+  from the merge tags `welcome_coupon` / `welcome_discount` (`WHD_Emails::welcome_coupon()` prefers `exit_coupon` and
+  skips a code WooCommerce no longer has) rather than being typed into copy — the modals used to promise 15% while
+  the email sent a 10% code. The exit popup's countdown was removed with the same change: the coupon has no expiry,
+  so it counted down to nothing. Saved designs beat the plugin defaults, so changing any of this also needs
+  `.ftp-sync/fix-signup-designs.php` (idempotent, dry run by default, `--live --apply` for production).
 - Abandoned carts: table `{prefix}whd_carts`, guests captured by an inline checkout script → AJAX, cron
   `whd_cart_cron` (custom 15-min schedule), restore links `?whd_recover=<token>`, unsubscribe `?whd_unsub=`.
   Subscribers: table `{prefix}whd_subscribers`. Activation creates both tables and default designs.

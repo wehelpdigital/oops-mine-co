@@ -16,6 +16,15 @@ final class WHD_Subscribers {
 	/** Bump when the table changes; `whd_db_version` upgrades old installs on init. */
 	const DB_VERSION = 2;
 
+	/**
+	 * The sign-ups that were offered a discount code, and so are owed the email carrying it.
+	 *
+	 * A ticked box at the checkout, a back-in-stock request or a question through the contact
+	 * form joins the list without being promised anything, and re-sending a welcome to one of
+	 * those every time they come back would be noise.
+	 */
+	const CODE_SOURCES = [ 'popup', 'welcome', 'exit_intent', 'discount', 'newsletter', 'fb_live' ];
+
 	public static function table() {
 		global $wpdb;
 		return $wpdb->prefix . 'whd_subscribers';
@@ -129,6 +138,19 @@ final class WHD_Subscribers {
 			if ( $update || empty( $row->synced_at ) ) {
 				do_action( 'whd_subscriber_added', $id, $email, $name ?: (string) $row->name, $source ?: (string) $row->source, $phone ?: (string) $row->phone, $consent ?: (int) $row->sms_consent );
 			}
+
+			/*
+			 * Somebody filling the form in again is asking for the code again.
+			 *
+			 * The modals no longer print it on the screen — they say to look in the inbox — so
+			 * a second sign-up that quietly sent nothing would be the site telling a lie. The
+			 * welcome email goes out again, and only for a sign-up that was offered a code:
+			 * a checkout tick or a back-in-stock request has not asked for one.
+			 */
+			if ( in_array( (string) $source, self::CODE_SOURCES, true ) ) {
+				self::send_welcome( $email, $name ?: (string) $row->name );
+			}
+
 			return $id;
 		}
 
@@ -145,12 +167,31 @@ final class WHD_Subscribers {
 		if ( ! $id ) {
 			return false;
 		}
-		if ( class_exists( 'WHD_Emails' ) ) {
-			$ctx = WHD_Emails::context( [ 'data' => [ 'email' => $email, 'first_name' => $name ?: __( 'there', 'whd' ), 'customer_name' => $name, 'unsubscribe_url' => class_exists( 'WHD_Cart' ) ? WHD_Cart::unsubscribe_url( $email ) : '' ] ] );
-			WHD_Emails::send_custom( 'welcome_subscriber', $ctx, $email );
-		}
+		self::send_welcome( $email, $name );
 		do_action( 'whd_subscriber_added', $id, $email, $name, $source, $phone, $consent );
 		return $id;
+	}
+
+	/**
+	 * The welcome email, which is where the discount code lives.
+	 *
+	 * None of the sign-up modals print the code on the screen any more — they say to look in
+	 * the inbox — so this is the only way anybody gets one, and both the first sign-up and a
+	 * repeat go through here.
+	 */
+	public static function send_welcome( $email, $name = '' ) {
+		if ( ! class_exists( 'WHD_Emails' ) ) {
+			return;
+		}
+		$ctx = WHD_Emails::context( [
+			'data' => [
+				'email'           => $email,
+				'first_name'      => $name ?: __( 'there', 'whd' ),
+				'customer_name'   => $name,
+				'unsubscribe_url' => class_exists( 'WHD_Cart' ) ? WHD_Cart::unsubscribe_url( $email ) : '',
+			],
+		] );
+		WHD_Emails::send_custom( 'welcome_subscriber', $ctx, $email );
 	}
 
 	/** Store numbers in one shape (E.164) so the SMS gateway accepts them. */

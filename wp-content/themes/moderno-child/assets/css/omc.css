@@ -1903,6 +1903,8 @@ body:has(.js-cart-sidebar.c-shop-sidebar--active) .omc-disctab { display: none; 
 	color: var(--omc-ink);
 }
 .omc-modal__code-note { margin: 8px 0 14px; font: 400 13px/1.5 var(--omc-sans); color: var(--omc-muted); }
+/* The code goes by email now, so what sat where the big code used to is a sentence. */
+.omc-modal__sent { margin: 8px 0 16px; font: 400 15px/1.6 var(--omc-sans); color: var(--omc-text); }
 
 /* ─── The discount dialog, as a boutique would do it ───────────────────────
    A cream box with a form in it asked for an email the way a utility would.

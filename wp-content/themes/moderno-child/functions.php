@@ -1561,10 +1561,19 @@ function omc_discount_tab() {
 				] );
 				?>
 				<?php if ( $code ) : ?>
+					<?php
+					/*
+					 * The code is not printed here any more.
+					 *
+					 * It used to appear in the panel the moment the form was sent, which meant
+					 * the email address bought nothing: read the code, close the modal, never
+					 * open an email. Now the address is what the code is sent to, and this says
+					 * where to look for it.
+					 */
+					?>
 					<div class="omc-modal__reveal" hidden>
-						<p class="omc-modal__code-label"><?php esc_html_e( 'Your code', 'moderno-child' ); ?></p>
-						<p class="omc-modal__code"><?php echo esc_html( $code ); ?></p>
-						<p class="omc-modal__code-note"><?php esc_html_e( 'Enter it at checkout. It is in your inbox too.', 'moderno-child' ); ?></p>
+						<p class="omc-modal__code-label"><?php esc_html_e( 'Check your email', 'moderno-child' ); ?></p>
+						<p class="omc-modal__sent"><?php esc_html_e( 'Your code is on its way. Open the email from us and enter the code at checkout — it does not expire, so there is no rush.', 'moderno-child' ); ?></p>
 						<a class="omc-btn omc-btn--solid" href="<?php echo esc_url( omc_shop_url() ); ?>"><?php esc_html_e( 'Start shopping', 'moderno-child' ); ?></a>
 					</div>
 				<?php endif; ?>
@@ -1636,9 +1645,19 @@ function omc_subscribe_ajax() {
 		update_option( 'omc_newsletter_subscribers', $list, false );
 	}
 	do_action( 'omc_newsletter_subscribed', $email, $source, $name );
-	$message = 'fb_live' === $source
-		? __( 'You’re in. We’ll send you the link before we go live — see you there.', 'moderno-child' )
-		: __( 'You’re on the list. Your next “Oops, Mine” moment is coming.', 'moderno-child' );
+	/*
+	 * What they are told depends on what they were promised. Somebody who filled in the discount
+	 * modal was promised a code, and the code is in the email now rather than on the screen, so
+	 * the line has to send them there — "You're on the list" leaves them hunting for a code that
+	 * is not in front of them.
+	 */
+	if ( 'fb_live' === $source ) {
+		$message = __( 'You’re in. We’ll send you the link before we go live — see you there.', 'moderno-child' );
+	} elseif ( 'discount' === $source ) {
+		$message = __( 'Sent — check your email for the code.', 'moderno-child' );
+	} else {
+		$message = __( 'You’re on the list. Your next “Oops, Mine” moment is coming.', 'moderno-child' );
+	}
 	wp_send_json_success( [ 'message' => $message, 'source' => $source ] );
 }
 add_action( 'wp_ajax_omc_subscribe', 'omc_subscribe_ajax' );

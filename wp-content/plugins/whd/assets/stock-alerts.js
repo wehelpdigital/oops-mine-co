@@ -90,7 +90,9 @@
 				nonce: D.nonce,
 				product_id: $box.attr( 'data-product' ),
 				variation_id: $variationField.val(),
-				email: email
+				email: email,
+				// Optional, but it is the difference between a profile with a name and one without.
+				name: $form.find( 'input[name="name"]' ).val() || ''
 			} ).done( function ( res ) {
 				if ( res && res.success ) {
 					$note.text( res.data.message ).addClass( 'is-ok' );

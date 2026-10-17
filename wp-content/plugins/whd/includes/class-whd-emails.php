@@ -140,7 +140,7 @@ final class WHD_Emails {
 			'abandoned_cart_3'          => [ '10% off to finish the look', [ $brand, $heading( 'Here’s 10% off to finish the look.' ), $text( 'Last note about your bag, {first_name}. Use the code below at checkout and make it yours.' ), $b( 'coupon', [ 'code' => '{coupon_code}', 'note' => '10% off your order', 'color' => '#9c6f63' ] ), $b( 'cart_items', [ 'show_images' => 1 ] ), $button( 'Finish my order', '{recovery_url}' ), $text( 'One unexpected find at a time.<br>— {site_name}' ) ] ],
 			'stylist_edit'              => [ 'Your edit from Oops, Mine Co.', [ $brand, $heading( 'Chosen for you, {first_name}.' ), $text( 'Here is the edit from your answers — the pieces on the rail now that we would have put in your hands. Each one links straight through.' ), $b( 'cart_items', [ 'show_images' => 1 ] ), $button( 'See everything on the rail', '{shop_url}' ), $text( 'Runs here are small, so an edit is a snapshot of today rather than a promise about next week.<br>— {site_name}' ) ] ],
 			'back_in_stock'             => [ '{product_name} is back — the size you wanted', [ $brand, $heading( 'It came back, {first_name}.' ), $text( 'You asked to hear when <strong>{product_name}</strong> returned in <strong>{variation}</strong>. It has, and these go out in small runs — so this is worth opening now rather than later.' ), $button( 'Take another look', '{product_url}' ), $text( 'If you have already found something else, <a href="{cancel_url}">let us know</a> and we will stop watching this one for you.' ), $signoff ] ],
-			'welcome_subscriber'        => [ 'Welcome to Oops, Mine Co.', [ $brand, $heading( 'Found with intention. Claimed on instinct.' ), $text( 'Thanks for joining the list. Expect new arrivals, quiet restocks and the occasional note — never noise.' ), $b( 'coupon', [ 'code' => '{coupon_code}', 'note' => '10% off your first order', 'color' => '#b98b7e' ] ), $button( 'Shop new arrivals', '{shop_url}' ), $signoff ] ],
+			'welcome_subscriber'        => [ 'Your code is inside', [ $brand, $heading( 'Found with intention. Claimed on instinct.' ), $text( 'Thanks for joining the list, {first_name}. Here is the code we promised — expect new arrivals, quiet restocks and the occasional note, never noise.' ), $b( 'coupon', [ 'code' => '{welcome_coupon}', 'note' => '{welcome_discount} off your first order', 'color' => '#b98b7e' ] ), $button( 'Shop new arrivals', '{shop_url}' ), $signoff ] ],
 			'new_order'                 => [ '[{site_name}] New order #{order_number} from {customer_name}', [ $brand, $heading( 'New order #{order_number}' ), $text( '{customer_name} ({email}) placed an order on {order_date}. Status: {order_status}.' ), $items, $summary, $button( 'Open in WooCommerce', '{admin_order_url}' ) ] ],
 			'cancelled_order'           => [ '[{site_name}] Order #{order_number} cancelled', [ $brand, $heading( 'Order #{order_number} was cancelled' ), $text( 'Order from {customer_name} ({email}) has been cancelled.' ), $items, $summary ] ],
 			'failed_order'              => [ '[{site_name}] Order #{order_number} failed', [ $brand, $heading( 'Payment failed for order #{order_number}' ), $text( '{customer_name} ({email}) attempted to pay but the payment failed.' ), $items, $summary, $button( 'Open in WooCommerce', '{admin_order_url}' ) ] ],
@@ -222,6 +222,49 @@ final class WHD_Emails {
 		return WHD_Blocks::render( $design, 'email', self::context( $args ) );
 	}
 
+	/* ─────────────────────────── the sign-up coupon ─────────────────────────── */
+
+	/**
+	 * The code somebody gets for joining the list.
+	 *
+	 * WHD → Settings holds two: one for an abandoned cart and one offered on the way out. The
+	 * second is the one every sign-up modal promises, so it is the one the welcome email sends.
+	 * A code that has been renamed or deleted in WooCommerce is not offered at all — promising a
+	 * discount that will be refused at checkout is worse than promising none.
+	 */
+	public static function welcome_coupon(): string {
+		$settings = WHD_Plugin::settings();
+		foreach ( [ $settings['exit_coupon'] ?? '', $settings['cart_coupon'] ?? '' ] as $code ) {
+			$code = trim( (string) $code );
+			if ( '' === $code ) {
+				continue;
+			}
+			if ( ! function_exists( 'wc_get_coupon_id_by_code' ) || wc_get_coupon_id_by_code( $code ) ) {
+				return $code;
+			}
+		}
+
+		return '';
+	}
+
+	/** What that code is worth, read off the coupon — "15%", or empty when it is a fixed amount. */
+	public static function welcome_discount(): string {
+		$code = self::welcome_coupon();
+		if ( '' === $code || ! function_exists( 'wc_get_coupon_id_by_code' ) ) {
+			return '';
+		}
+		$id = wc_get_coupon_id_by_code( $code );
+		if ( ! $id ) {
+			return '';
+		}
+		$coupon = new WC_Coupon( $id );
+		if ( 'percent' !== $coupon->get_discount_type() ) {
+			return '';
+		}
+
+		return rtrim( rtrim( (string) $coupon->get_amount(), '0' ), '.' ) . '%';
+	}
+
 	/* ─────────────────────────── merge context ─────────────────────────── */
 
 	/**
@@ -240,6 +283,18 @@ final class WHD_Emails {
 			'my_account_url' => $wc ? wc_get_page_permalink( 'myaccount' ) : home_url( '/my-account/' ),
 			'coupon_code'    => $settings['cart_coupon'],
 			'exit_coupon'    => $settings['exit_coupon'] ?? 'STAY15', // exit-intent code (WHD → Settings)
+			/*
+			 * The code a sign-up is promised, and what it is worth.
+			 *
+			 * Every modal on the site offers a discount for an email address, and the email that
+			 * follows has to carry the same code the modal promised. It did not: the modals read
+			 * exit_coupon (STAY15, 15%) and the welcome email printed cart_coupon (OOPS10, 10%),
+			 * so a shopper was shown one number and sent another. Both now come from here, and
+			 * the amount is read off the coupon rather than typed into the copy, so changing the
+			 * coupon changes every place that quotes it.
+			 */
+			'welcome_coupon'   => self::welcome_coupon(),
+			'welcome_discount' => self::welcome_discount(),
 			'year'           => date_i18n( 'Y' ),
 			'first_name'     => __( 'there', 'whd' ),
 			'customer_name'  => '',

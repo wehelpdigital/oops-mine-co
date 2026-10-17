@@ -40,7 +40,7 @@ final class WHD_Contacts {
 		add_action( 'whd_cart_captured', [ __CLASS__, 'on_cart' ], 10, 2 );
 
 		// Somebody waiting for a size.
-		add_action( 'whd_stock_alert_requested', [ __CLASS__, 'on_stock_alert' ], 10, 3 );
+		add_action( 'whd_stock_alert_requested', [ __CLASS__, 'on_stock_alert' ], 10, 4 );
 
 		// A question through the contact form (the theme hands it over).
 		add_action( 'omc_contact_message', [ __CLASS__, 'on_contact_message' ] );
@@ -256,12 +256,13 @@ final class WHD_Contacts {
 	}
 
 	/** Somebody waiting on a size — the one thing they did ask to hear about. */
-	public static function on_stock_alert( $email, $product_id, $variation_id = 0 ) {
+	public static function on_stock_alert( $email, $product_id, $variation_id = 0, $name = '' ) {
 		$product = function_exists( 'wc_get_product' ) ? wc_get_product( (int) $product_id ) : null;
 		$item    = $variation_id && function_exists( 'wc_get_product' ) ? wc_get_product( (int) $variation_id ) : null;
 
 		self::hand_over( [
 			'email'      => $email,
+			'first_name' => (string) $name,
 			'source'     => 'back_in_stock',
 			'properties' => [
 				'Waiting For'       => $product ? $product->get_name() : '',

@@ -95,11 +95,29 @@ final class WHD_Popups {
 			return [
 				'settings' => array_merge( $settings, [ 'delay' => 5, 'cookie_days' => 3, 'show_on' => 'not_checkout' ] ),
 				'blocks'   => [
+					/*
+					 * This used to print the code on the screen under a fifteen-minute
+					 * countdown. Two things were wrong with that. The code does not expire —
+					 * the coupon has no end date, so the clock was counting down to nothing —
+					 * and a code shown to anyone who nudges the mouse at the browser chrome is
+					 * a code that needs no email address. It is asked for and sent instead.
+					 */
 					[ 'type' => 'heading', 'props' => [ 'text' => 'Wait, before you go', 'level' => 'h2', 'align' => 'center', 'color' => '#3a2b26' ] ],
-					[ 'type' => 'text', 'props' => [ 'text' => 'Take 15% off the pieces you paused on. This code lasts 15 minutes.', 'align' => 'center', 'size' => 16, 'color' => '#4a3f3a' ] ],
-					[ 'type' => 'countdown', 'props' => [ 'minutes' => 15, 'label' => 'Your code ends in', 'expired' => 'This code has ended', 'color' => '#3a2b26', 'hide_on_expire' => 0 ] ],
-					[ 'type' => 'coupon', 'props' => [ 'code' => '{exit_coupon}', 'note' => 'Use at checkout', 'color' => '#9c6f63' ] ],
-					[ 'type' => 'button', 'props' => [ 'text' => 'Back to my bag', 'url' => '{cart_url}', 'align' => 'center', 'bg' => '#3a2b26', 'color' => '#f7f2ed', 'radius' => 0, 'full' => 1 ] ],
+					[ 'type' => 'text', 'props' => [ 'text' => 'Take {welcome_discount} off the pieces you paused on. Leave your name and email and the code is in your inbox before you are.', 'align' => 'center', 'size' => 16, 'color' => '#4a3f3a' ] ],
+					[ 'type' => 'form', 'props' => [
+						'show_name'         => 1,
+						'show_phone'        => 0,
+						'name_placeholder'  => 'First name',
+						'email_placeholder' => 'Your email',
+						'button_text'       => 'Email me the code',
+						'consent_text'      => WHD_Blocks::default_consent_text(),
+						'success_text'      => 'Sent — check your email for the code, then use it at checkout.',
+						'source'            => 'exit_intent',
+						'bg'                => '#3a2b26',
+						'color'             => '#f7f2ed',
+						'radius'            => 0,
+					] ],
+					[ 'type' => 'text', 'props' => [ 'text' => 'No noise — new arrivals, quiet restocks and the odd note.', 'align' => 'center', 'size' => 13, 'color' => '#8a7d76' ] ],
 				],
 			];
 		}
@@ -107,7 +125,7 @@ final class WHD_Popups {
 			'settings' => array_merge( $settings, [ 'delay' => 6, 'cookie_days' => 14 ] ),
 			'blocks'   => [
 				[ 'type' => 'heading', 'props' => [ 'text' => 'Oops, you found us.', 'level' => 'h2', 'align' => 'center', 'color' => '#3a2b26' ] ],
-				[ 'type' => 'text', 'props' => [ 'text' => 'Take 10% off your first order and get first look at every new drop. One unexpected find at a time.', 'align' => 'center', 'size' => 16, 'color' => '#4a3f3a' ] ],
+				[ 'type' => 'text', 'props' => [ 'text' => 'Take {welcome_discount} off your first order and get first look at every new drop. One unexpected find at a time.', 'align' => 'center', 'size' => 16, 'color' => '#4a3f3a' ] ],
 				[ 'type' => 'form', 'props' => [
 					'show_name'         => 1,
 					'show_phone'        => 1,
@@ -116,7 +134,8 @@ final class WHD_Popups {
 					'phone_placeholder' => 'Mobile (optional)',
 					'button_text'       => 'Send my code',
 					'consent_text'      => WHD_Blocks::default_consent_text(),
-					'success_text'      => 'You’re in — use code <b>{coupon_code}</b> at checkout.',
+					/* The code goes by email, so it is not printed here. */
+					'success_text'      => 'You’re in — check your email for the code, then use it at checkout.',
 					'source'            => 'popup',
 					'bg'                => '#3a2b26',
 					'color'             => '#f7f2ed',
