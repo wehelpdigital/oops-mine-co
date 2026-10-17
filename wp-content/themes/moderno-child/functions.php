@@ -1598,7 +1598,7 @@ function omc_newsletter_form( $args = [] ) {
 	] );
 	$field_id = 'omc-newsletter-email' . ( $count > 1 ? '-' . $count : '' ); // several forms can share a page (footer, live card, band)
 	?>
-	<form class="omc-newsletter__form js-omc-newsletter <?php echo esc_attr( $a['class'] ); ?>" method="post" action="<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>" novalidate<?php echo $a['after'] ? ' data-after="' . esc_attr( $a['after'] ) . '"' : ''; ?>>
+	<form class="omc-newsletter__form js-omc-newsletter<?php echo $a['name'] ? ' omc-newsletter__form--named' : ''; ?> <?php echo esc_attr( $a['class'] ); ?>" method="post" action="<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>" novalidate<?php echo $a['after'] ? ' data-after="' . esc_attr( $a['after'] ) . '"' : ''; ?>>
 		<input type="hidden" name="action" value="omc_subscribe">
 		<input type="hidden" name="nonce" value="<?php echo esc_attr( wp_create_nonce( 'omc_newsletter' ) ); ?>">
 		<input type="hidden" name="source" value="<?php echo esc_attr( $a['source'] ); ?>">
