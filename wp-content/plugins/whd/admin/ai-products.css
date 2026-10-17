@@ -17,10 +17,16 @@
 	margin-left: 4px;
 }
 
-.whd-aip__c-img   { width: 190px; }
-.whd-aip__c-num   { width: 78px; }
-.whd-aip__c-state { width: 290px; }
-.whd-aip__c-x     { width: 32px; text-align: right; }
+/* Every column is sized, because the table is laid out fixed: leave one without a width and
+   the others take what is left, which turned "Name", "SKU" and "Category" into single columns
+   of stacked letters the moment the command box arrived. */
+.whd-aip__c-img   { width: 150px; }
+.whd-aip__c-name  { width: 150px; }
+.whd-aip__c-num   { width: 68px; }
+.whd-aip__c-sku   { width: 90px; }
+.whd-aip__c-cat   { width: 120px; }
+.whd-aip__c-state { width: 230px; }
+.whd-aip__c-x     { width: 30px; text-align: right; }
 
 .whd-aip__table td {
 	vertical-align: top;
@@ -35,6 +41,21 @@
 
 .whd-aip__in--num {
 	text-align: right;
+}
+
+/* The command box: the widest thing on the row, because it is where the work goes. */
+.whd-aip__c-cmd   { width: 270px; }
+
+.whd-aip__cmd {
+	min-height: 54px;
+	resize: vertical;
+	line-height: 1.45;
+	font-size: 12.5px;
+}
+
+.whd-aip__cmd::placeholder {
+	color: #8c8f94;
+	font-size: 12px;
 }
 
 .whd-aip__thumbs {

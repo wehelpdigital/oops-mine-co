@@ -82,6 +82,7 @@ final class WHD_AI_Products {
 				'edit'        => __( 'Open it', 'whd' ),
 				'remove'      => __( 'Remove this row', 'whd' ),
 				'confirmRun'  => __( 'This will create %d draft product(s). Carry on?', 'whd' ),
+				'commandHint' => __( 'e.g. comes in black, cream and navy — XS to XL — 1450, sale 999 — runs small, linen blend', 'whd' ),
 			],
 		] );
 	}
@@ -106,6 +107,9 @@ final class WHD_AI_Products {
 			<p class="whd-intro">
 				<?php esc_html_e( 'One row per piece. Drop the photographs in and leave the rest blank: the model looks at each picture, works out what the thing is, and writes the name, both descriptions, the search snippet and the alt text on every image. Anything you do fill in is kept exactly as you typed it — your price, your SKU, your name for it. Everything is created as a draft, so nothing reaches the shop until you say so.', 'whd' ); ?>
 			</p>
+			<p class="whd-intro">
+				<?php esc_html_e( 'The Commands box is for everything a field has no room for, written the way you would say it: “comes in black, cream and navy, XS to XL, 1450, runs small”. Options to choose between become real variations, built the same way the Variation tiers grid builds them, so the product opens in that grid afterwards. Anything that is about the piece rather than the listing — a fabric, a fit note — goes into the writing instead.', 'whd' ); ?>
+			</p>
 
 			<?php if ( ! WHD_AI::ready() ) : ?>
 				<div class="whd-note whd-note--warn">
@@ -122,13 +126,13 @@ final class WHD_AI_Products {
 				<thead>
 					<tr>
 						<th class="whd-aip__c-img"><?php esc_html_e( 'Photographs', 'whd' ); ?> <span class="whd-aip__req"><?php esc_html_e( 'required', 'whd' ); ?></span></th>
-						<th><?php esc_html_e( 'Name', 'whd' ); ?></th>
+						<th class="whd-aip__c-name"><?php esc_html_e( 'Name', 'whd' ); ?></th>
 						<th class="whd-aip__c-num"><?php esc_html_e( 'Price', 'whd' ); ?></th>
 						<th class="whd-aip__c-num"><?php esc_html_e( 'Sale', 'whd' ); ?></th>
 						<th class="whd-aip__c-num"><?php esc_html_e( 'Stock', 'whd' ); ?></th>
-						<th><?php esc_html_e( 'SKU', 'whd' ); ?></th>
-						<th><?php esc_html_e( 'Category', 'whd' ); ?></th>
-						<th><?php esc_html_e( 'Anything we should know', 'whd' ); ?></th>
+						<th class="whd-aip__c-sku"><?php esc_html_e( 'SKU', 'whd' ); ?></th>
+						<th class="whd-aip__c-cat"><?php esc_html_e( 'Category', 'whd' ); ?></th>
+						<th class="whd-aip__c-cmd"><?php esc_html_e( 'Commands', 'whd' ); ?></th>
 						<th class="whd-aip__c-state"><?php esc_html_e( 'State', 'whd' ); ?></th>
 						<th class="whd-aip__c-x"><span class="screen-reader-text"><?php esc_html_e( 'Remove', 'whd' ); ?></span></th>
 					</tr>
@@ -171,7 +175,7 @@ final class WHD_AI_Products {
 		$known = array_filter( [
 			'name'     => (string) ( $hints['name'] ?? '' ),
 			'category' => (string) ( $hints['category_name'] ?? '' ),
-			'notes'    => (string) ( $hints['notes'] ?? '' ),
+			'commands' => self::commands( $hints ),
 		] );
 
 		$user = "Look at the photograph or photographs and describe the item as facts. It is usually a garment; it may be an accessory or something for the skin.\n\n"
@@ -233,9 +237,10 @@ final class WHD_AI_Products {
 		$vocabulary = self::vocabulary( $facts );
 
 		$given = array_filter( [
-			'name'  => (string) ( $hints['name'] ?? '' ),
-			'notes' => (string) ( $hints['notes'] ?? '' ),
+			'name'     => (string) ( $hints['name'] ?? '' ),
+			'commands' => self::commands( $hints ),
 		] );
+		$levels = min( 3, defined( 'WHDV_MAX_LEVELS' ) ? (int) WHDV_MAX_LEVELS : 3 );
 
 		$user = "Write the shop page for this piece, from these facts and nothing else.\n\n"
 			. "FACTS\n" . wp_json_encode( self::without( $facts, [ 'image_ids' ] ) ) . "\n\n"
@@ -250,7 +255,10 @@ final class WHD_AI_Products {
 			. '"attributes":{"Colour":"","Fabric":"","Fit":""},'
 			. '"care":"one sentence, hedged — general advice for this fabric, never a care label you have not read",'
 			. '"images":[{"alt":"what this photograph shows, for somebody who cannot see it","title":"a short title","caption":"","description":"a sentence"}],'
-			. '"second_shot":"if a second photograph would help, one sentence describing what it should show; otherwise an empty string"'
+			. '"second_shot":"if a second photograph would help, one sentence describing what it should show; otherwise an empty string",'
+			. '"plan":{"type":"simple or variable",'
+			. '"levels":[{"label":"Colour","options":["Black","Cream"]}],'
+			. '"price":"","sale":"","stock":"","sku":"","category":"","tags":[]}'
 			. "}\n\n"
 			. "Rules:\n"
 			. "- The product name must appear word for word in all of these: the first sentence of \"short\", \"seo_title\", \"meta_description\", one of the two <h3> subheadings, and the \"alt\" of the first picture.\n"
@@ -259,7 +267,20 @@ final class WHD_AI_Products {
 			. "- One entry in \"images\" per photograph in the facts, in the same order.\n"
 			. "- Never state a measurement, a delivery time, a discount, a stock figure, a review count, a brand or a person's name.\n"
 			. "- Never say where it was made unless the shop said so above.\n"
-			. '- Write as the shop, to one person, the way the house rules say.';
+			. "- Write as the shop, to one person, the way the house rules say.\n\n"
+			. "THE PLAN is how the product is built, and it is where the shop's commands are obeyed.\n"
+			. "- \"variable\" only when the commands name options to choose between — colours, sizes, lengths.\n"
+			. "  A piece that comes one way is \"simple\" and \"levels\" is empty. If the commands are empty,\n"
+			. "  \"levels\" is empty: the colour you can see in the photograph is a fact about the piece, not a\n"
+			. "  choice a shopper makes, and it belongs in the copy.\n"
+			. "- A level needs two or more options. One option is not a choice.\n"
+			. sprintf( "- At most %d levels, in the order a shopper picks them: colour first, then size.\n", $levels )
+			. "- Use the shop's own words for an option. \"S, M, L\" stays \"S\", \"M\", \"L\"; do not invent sizes,\n"
+			. "  colours or a size run that was not asked for.\n"
+			. "- price, sale, stock, sku, category and tags: fill one only when the commands say so. Leave the\n"
+			. "  rest empty rather than guessing — an invented price is worse than no price.\n"
+			. '- Anything in the commands that is about the writing, not the building — a fabric, a fit note, what '
+			. 'to call it — belongs in the copy above, not here.';
 
 		/*
 		 * A generous budget, because these models reason before they answer and the reasoning is
@@ -344,19 +365,21 @@ final class WHD_AI_Products {
 		$product->set_description( (string) ( $draft['description'] ?? '' ) );
 		$product->set_catalog_visibility( 'visible' );
 
-		$price = self::money( $hints['price'] ?? '' );
+		/* The row's fields first, then anything the commands asked for. */
+		$plan  = is_array( $draft['plan'] ?? null ) ? $draft['plan'] : [];
+		$price = self::money( self::pick( $hints, $plan, 'price' ) );
 		if ( '' !== $price ) {
 			$product->set_regular_price( $price );
 		}
-		$sale = self::money( $hints['sale'] ?? '' );
+		$sale = self::money( self::pick( $hints, $plan, 'sale' ) );
 		if ( '' !== $sale ) {
 			$product->set_sale_price( $sale );
 		}
-		$sku = sanitize_text_field( (string) ( $hints['sku'] ?? '' ) );
+		$sku = sanitize_text_field( self::pick( $hints, $plan, 'sku' ) );
 		if ( '' !== $sku && function_exists( 'wc_get_product_id_by_sku' ) && ! wc_get_product_id_by_sku( $sku ) ) {
 			$product->set_sku( $sku );
 		}
-		$stock = (string) ( $hints['stock'] ?? '' );
+		$stock = self::pick( $hints, $plan, 'stock' );
 		if ( '' !== trim( $stock ) ) {
 			$product->set_manage_stock( true );
 			$product->set_stock_quantity( (int) $stock );
@@ -370,7 +393,7 @@ final class WHD_AI_Products {
 			}
 		}
 
-		$category = self::category_for( $hints, (string) ( $draft['category_guess'] ?? '' ) );
+		$category = self::category_for( $hints, self::pick( $hints, $plan, 'category' ) ?: (string) ( $draft['category_guess'] ?? '' ) );
 		if ( $category ) {
 			$product->set_category_ids( [ $category ] );
 		}
@@ -380,7 +403,28 @@ final class WHD_AI_Products {
 			return is_wp_error( $id ) ? $id : new WP_Error( 'whd_aip_save', __( 'The product could not be saved.', 'whd' ) );
 		}
 
-		self::attributes( (int) $id, (array) ( $draft['attributes'] ?? [] ), (string) ( $draft['care'] ?? '' ) );
+		/*
+		 * The descriptive attributes, minus anything that is about to become a tier. Left in,
+		 * a product built from "comes in black, cream and navy" ended up listing Colour twice:
+		 * once as the swatch row a shopper chooses from, and once as a flat line of text saying
+		 * what the model saw in the photograph.
+		 */
+		$tier_labels = [];
+		foreach ( (array) ( $plan['levels'] ?? [] ) as $level ) {
+			if ( is_array( $level ) && '' !== trim( (string) ( $level['label'] ?? '' ) ) ) {
+				$tier_labels[] = mb_strtolower( trim( (string) $level['label'] ) );
+			}
+		}
+		self::attributes( (int) $id, (array) ( $draft['attributes'] ?? [] ), (string) ( $draft['care'] ?? '' ), $tier_labels );
+
+		/*
+		 * The options the commands asked for, as real variations — and only ever from a command.
+		 * Nobody who left the box empty is asking for a variable product, however many colours
+		 * the model can see in the photograph.
+		 */
+		$variations = '' !== self::commands( $hints )
+			? self::build_variations( (int) $id, $plan, $price, $sale, $stock )
+			: [ 'made' => 0, 'notices' => [] ];
 
 		/* Where it came from, and what it is aimed at. */
 		if ( class_exists( 'WHD_AI_Writer' ) ) {
@@ -398,14 +442,22 @@ final class WHD_AI_Products {
 			: [];
 
 		return [
-			'id'     => (int) $id,
-			'name'   => $name,
-			'edit'   => get_edit_post_link( $id, 'raw' ),
-			'images' => count( $ids ),
-			'drawn'  => $drawn,
-			'score'  => (int) ( $seo['score'] ?? 0 ),
-			'rating' => (string) ( $seo['rating'] ?? '' ),
-			'house'  => (array) ( $draft['house']['issues'] ?? [] ),
+			'id'         => (int) $id,
+			'name'       => $name,
+			'edit'       => get_edit_post_link( $id, 'raw' ),
+			'images'     => count( $ids ),
+			'drawn'      => $drawn,
+			'score'      => (int) ( $seo['score'] ?? 0 ),
+			'rating'     => (string) ( $seo['rating'] ?? '' ),
+			'house'      => (array) ( $draft['house']['issues'] ?? [] ),
+			'variations' => (int) $variations['made'],
+			'tiers'      => array_values( array_filter( array_map(
+				static function ( $level ) {
+					return is_array( $level ) ? (string) ( $level['label'] ?? '' ) : '';
+				},
+				(array) ( $plan['levels'] ?? [] )
+			) ) ),
+			'notices'    => $variations['notices'],
 		];
 	}
 
@@ -414,6 +466,125 @@ final class WHD_AI_Products {
 	/** The voice, the rules and the banned words the rest of the writing already uses. */
 	private static function system(): string {
 		return WHD_AI::system_prompt();
+	}
+
+	/**
+	 * What the shop typed into the row's command box.
+	 *
+	 * Free text, on purpose. "Comes in black, cream and navy, XS to XL, 1450, runs small" is how
+	 * somebody actually describes a piece, and asking them to put each part in its own little
+	 * field is how a bulk screen stops being quicker than doing it by hand. The model reads it
+	 * both ways: as facts for the copy, and as instructions for how to build the product.
+	 */
+	private static function commands( array $hints ): string {
+		$text = (string) ( $hints['commands'] ?? ( $hints['notes'] ?? '' ) );
+
+		return trim( preg_replace( '/[ \t]+/', ' ', $text ) );
+	}
+
+	/**
+	 * A value the shop typed into the row wins over one the model read out of the commands.
+	 *
+	 * Both are the shop talking; the field is just the less ambiguous of the two.
+	 */
+	private static function pick( array $hints, array $plan, string $key ): string {
+		$typed = trim( (string) ( $hints[ $key ] ?? '' ) );
+
+		return '' !== $typed ? $typed : trim( (string) ( $plan[ $key ] ?? '' ) );
+	}
+
+	/**
+	 * Build the options the commands asked for, as real WooCommerce variations.
+	 *
+	 * Handed to the Variation Tiers model rather than done here: it already knows how to create
+	 * a global attribute, find or make each term, switch the product to variable and reconcile
+	 * the combinations — and a product built through it opens in the Variation tiers grid like
+	 * any other, instead of being a second kind of variable product nothing else understands.
+	 *
+	 * @return array{made:int,notices:string[]}
+	 */
+	private static function build_variations( int $product_id, array $plan, string $price, string $sale, string $stock ): array {
+		$out = [ 'made' => 0, 'notices' => [] ];
+
+		/*
+		 * A level is a choice, so it needs at least two things to choose between.
+		 *
+		 * Asked to describe a photograph with no commands at all, the model still volunteered
+		 * "Colour: Black" — and that built a variable product with exactly one variation, which
+		 * moved the price off the parent and left the shop page showing no price at all. One
+		 * option is a fact about the piece, not a choice a shopper makes.
+		 */
+		$levels = array_values( array_filter( (array) ( $plan['levels'] ?? [] ), static function ( $level ) {
+			if ( ! is_array( $level ) || '' === trim( (string) ( $level['label'] ?? '' ) ) ) {
+				return false;
+			}
+			$options = array_filter( array_map( 'trim', array_map( 'strval', (array) ( $level['options'] ?? [] ) ) ) );
+
+			return count( array_unique( $options ) ) > 1;
+		} ) );
+		if ( ! $levels ) {
+			return $out;
+		}
+		if ( ! class_exists( 'WHDV_Model' ) ) {
+			$out['notices'][] = __( 'The commands asked for options, but the Variation Tiers plugin is not active, so it was left as a single piece.', 'whd' );
+			return $out;
+		}
+
+		$max   = defined( 'WHDV_MAX_LEVELS' ) ? (int) WHDV_MAX_LEVELS : 3;
+		$state = [ 'levels' => [], 'combos' => [], 'groups' => [], 'dirty' => true ];
+
+		foreach ( array_slice( $levels, 0, $max ) as $level ) {
+			$options = [];
+			foreach ( (array) $level['options'] as $option ) {
+				$name = trim( wp_strip_all_tags( is_array( $option ) ? (string) ( $option['name'] ?? '' ) : (string) $option ) );
+				if ( '' === $name ) {
+					continue;
+				}
+				$key = sanitize_title( $name );
+				if ( '' === $key || isset( $options[ $key ] ) ) {
+					continue;
+				}
+				$options[ $key ] = [ 'key' => $key, 'name' => $name ];
+			}
+			if ( $options ) {
+				$state['levels'][] = [
+					'label'   => sanitize_text_field( (string) $level['label'] ),
+					'type'    => 'select',
+					'options' => array_values( $options ),
+				];
+			}
+		}
+		if ( ! $state['levels'] ) {
+			return $out;
+		}
+
+		/* Every combination, on, carrying the row's price and stock. */
+		$keys = [ [] ];
+		foreach ( $state['levels'] as $level ) {
+			$next = [];
+			foreach ( $keys as $so_far ) {
+				foreach ( $level['options'] as $option ) {
+					$next[] = array_merge( $so_far, [ $option['key'] ] );
+				}
+			}
+			$keys = $next;
+		}
+		foreach ( $keys as $combo ) {
+			$state['combos'][ implode( '|', $combo ) ] = [
+				'on'            => 1,
+				'sku'           => '',
+				'regular_price' => $price,
+				'sale_price'    => $sale,
+				'stock'         => $stock,
+				'image'         => 0,
+			];
+		}
+
+		$result          = WHDV_Model::apply( $product_id, $state );
+		$out['made']     = (int) ( $result['created'] ?? 0 ) + (int) ( $result['updated'] ?? 0 );
+		$out['notices']  = array_values( (array) ( $result['notices'] ?? [] ) );
+
+		return $out;
 	}
 
 	/** Words shoppers use for this kind of thing, from the researched list. */
@@ -482,7 +653,7 @@ final class WHD_AI_Products {
 	}
 
 	/** What the model saw, as product attributes somebody can filter on later. */
-	private static function attributes( int $id, array $pairs, string $care ) {
+	private static function attributes( int $id, array $pairs, string $care, array $skip = [] ) {
 		$keep = [];
 		foreach ( $pairs as $label => $value ) {
 			$label = sanitize_text_field( (string) $label );
@@ -490,6 +661,9 @@ final class WHD_AI_Products {
 			$value = sanitize_text_field( (string) $value );
 			if ( '' === $label || '' === $value ) {
 				continue;
+			}
+			if ( in_array( mb_strtolower( $label ), $skip, true ) ) {
+				continue; // a shopper chooses this one; it is not a line of text about the piece
 			}
 			$attribute = new WC_Product_Attribute();
 			$attribute->set_name( $label );

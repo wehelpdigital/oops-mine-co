@@ -61,7 +61,8 @@
 			'<td class="whd-aip__c-num"><input type="text" class="whd-aip__in whd-aip__in--num" data-f="stock"></td>' +
 			'<td><input type="text" class="whd-aip__in" data-f="sku"></td>' +
 			'<td><select class="whd-aip__in" data-f="category">' + options + '</select></td>' +
-			'<td><input type="text" class="whd-aip__in" data-f="notes" placeholder="' + escape( 'e.g. runs small, linen blend' ) + '"></td>' +
+			'<td><textarea class="whd-aip__in whd-aip__cmd" data-f="commands" rows="2" placeholder="' +
+				escape( i18n.commandHint || '' ) + '"></textarea></td>' +
 			'<td class="whd-aip__c-state"><span class="whd-aip__state" data-state></span></td>' +
 			'<td class="whd-aip__c-x"><button type="button" class="button-link whd-aip__x" data-remove title="' + escape( i18n.remove || 'Remove' ) + '">&times;</button></td>';
 
@@ -204,13 +205,20 @@
 				var note = document.createElement( 'span' );
 				note.className = 'whd-aip__score';
 				note.textContent = ' · SEO ' + made.score + ' · ' + made.images + ' photo' + ( made.images === 1 ? '' : 's' ) +
-					( made.drawn ? ' (' + made.drawn + ' drawn)' : '' );
+					( made.drawn ? ' (' + made.drawn + ' drawn)' : '' ) +
+					( made.variations
+						? ' · ' + made.variations + ' variation' + ( made.variations === 1 ? '' : 's' ) +
+							( made.tiers && made.tiers.length ? ' (' + made.tiers.join( ' → ' ) + ')' : '' )
+						: '' );
 				el.appendChild( note );
 
-				if ( made.house && made.house.length ) {
+				/* Anything the build had to say — a new attribute created, an option skipped. */
+				var said = ( made.house || [] ).map( function ( i ) { return i.detail; } )
+					.concat( made.notices || [] );
+				if ( said.length ) {
 					var warn = document.createElement( 'div' );
 					warn.className = 'whd-aip__warn';
-					warn.textContent = made.house.map( function ( i ) { return i.detail; } ).join( ' ' );
+					warn.textContent = said.join( ' ' );
 					el.appendChild( warn );
 				}
 

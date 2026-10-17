@@ -241,7 +241,14 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   time from `admin/ai-products.js` — `look` (a vision call describing the item as facts), `write` (facts → name, both
   descriptions, SEO title, snippet, per-image alt/title/caption/description) and `make` (a **draft** `WC_Product_Simple`,
   pictures dressed and attached, attributes, category, `WHD_AI_Admin::finish_seo()`, score). `WHD_AI_Images::make()`
-  draws a second photograph when the writer asks for one. Gotchas the first real run found: a draft WooCommerce saves
+  draws a second photograph when the writer asks for one. Each row has a **Commands** box — free text, read both as
+  facts for the copy ("runs small, linen blend") and as instructions for the build ("black, cream and navy, XS to XL,
+  1450, sale 999"). The write step returns a `plan` (type, levels, price/sale/stock/sku/category) and `make()` hands
+  any levels to `WHDV_Model::apply()`, so a product built here opens in the Variation tiers grid like any other.
+  Variations are built **only when the command box is non-empty** and a level has two or more options: left to its
+  own devices the model offers "Colour: Black" off the photograph, which made a variable product with one variation
+  and moved the price off the parent, so the shop page showed no price. A tier's label is also skipped when the
+  descriptive attributes are written, or the product lists Colour twice. Other gotchas the first real run found: a draft WooCommerce saves
   has **no `post_name`** until published, so the slug is set explicitly or `key_slug` fails on every product; Gemini's
   reasoning comes out of `max_tokens`, so the write step needs a budget far above the reply length or the JSON arrives
   truncated and unreadable; and the keyphrase is derived from the product's own name, never from the researched keyword
