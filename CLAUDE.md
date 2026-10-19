@@ -220,12 +220,31 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   `WHD_Subscribers` and joins the list; everything else the shop learns (an order without the tick, an abandoned
   cart, a back-in-stock request, the contact form, a new account, a review) goes through `WHD_Contacts::hand_over()`
   as a Klaviyo *profile* with no list behind it. The setting `list_everyone` (WHD → Integrations → "Who joins the
-  list", default off) sends all of them to the list instead. Live is on Klaviyo, list `RexmCz`, single opt-in.
+  list", default off) sends all of them to the list instead. Live is on Klaviyo, list `RexmCz` ("OopsMineCo.Com
+  Subscribers"), single opt-in. The account also has `SNvVK5` "Email List" (local points there for tests),
+  `UAVPfy` "Preview List" and `WpmGL3` "Text Messaging List", which is **double opt-in**: a List ID pointing at a
+  list like that gives profiles consent = SUBSCRIBED and *no* list membership, which looks exactly like a broken
+  push. "Test connection" now names the list and fails on a double opt-in one. The private key has no
+  data-privacy scope, so test profiles cannot be deleted through the API — remove them from the list instead.
   Pushes run in the same request once the response has gone (`fastcgi_finish_request` / `litespeed_finish_request`),
   with a one-off cron event behind them as the retry: WP-Cron only fires on a later page view, and a coming-soon
   shop gets almost none, so a cron-only push sat in the queue for hours. Every sign-up pushes again — `synced_at`
   cannot tell whether the profile still exists at Klaviyo. API results *and* failed automation emails are in
   WHD → Integrations → "Last API calls".
+- **Meta Pixel + Conversions API** (`WHD_Scripts` for the browser side, `WHD_Capi` for the server side; settings
+  in `whd_scripts`: `fb_pixel_id` — live `4575941526022691` — `fb_capi_token`, `fb_test_code`). Every pixel event
+  (PageView, ViewContent, ViewCategory, Search, AddToCart, InitiateCheckout, AddPaymentInfo, Purchase, Lead,
+  CompleteRegistration) is also sent from the server with the **same event_id**, so Meta counts it once: page events
+  print `fbq(…,{eventID})` and queue the server copy; redirect events (non-AJAX add to cart, registration, order
+  placed) send the server copy at once and park the id for the next page; AJAX AddToCart returns its id in the
+  cart fragments (`whd-capi-atc`, harmless as a selector); Lead ids come back in the sign-up answers (theme filter
+  `omc_subscribe_response`, WHD popup answer) and pixel.js listens to both `omc:subscribed` and `whd:subscribed`.
+  Purchase uses `order.<id>` and is also sent on payment/processing, once per order (`_whd_capi_purchase`), with
+  the checkout's IP/UA and `_fbp`/`_fbc` kept on the order. One batched Graph call per request, after the response
+  closes (`WHD_Plugin::after_response()`, which is shared with Klaviyo — only one place may close the connection).
+  Admins are excluded like the pixel. Never send synthetic events without a Test events code that is *live in
+  Events Manager*: Meta processes a non-matching code as a real event. The "Send a test event" button refuses to
+  run without a code for that reason.
 - **Automation emails must come from the shop's domain.** `WHD_Emails::sender()` uses the WHD sender only when it is
   on the site's domain, else WooCommerce's (`hello@oopsmineco.com`), and keeps the typed address as Reply-To. The
   sender used to default to the admin's Gmail address: mail claiming gmail.com sent from the host fails DMARC and

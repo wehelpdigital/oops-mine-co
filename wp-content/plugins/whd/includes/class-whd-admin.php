@@ -177,7 +177,7 @@ final class WHD_Admin {
 		self::card( __( 'Abandoned carts', 'whd' ), sprintf( __( '%1$d waiting · %2$d reminded · %3$d recovered', 'whd' ), $stats['active'], $stats['sent'], $stats['recovered'] ), admin_url( 'admin.php?page=whd-carts' ) );
 		self::card( __( 'Subscribers', 'whd' ), sprintf( _n( '%d address', '%d addresses', WHD_Subscribers::count(), 'whd' ), WHD_Subscribers::count() ), admin_url( 'admin.php?page=whd-subscribers' ) );
 		self::card( __( 'Integrations', 'whd' ), implode( ' · ', WHD_Integrations::status_lines() ), admin_url( 'admin.php?page=whd-integrations' ) );
-		self::card( __( 'Tracking', 'whd' ), implode( ' · ', array_filter( [ $s['ga4_id'] ? 'GA4' : '', $s['gsc_verification'] ? 'Search Console' : '', $s['fb_pixel_id'] ? 'Meta Pixel' : '' ] ) ) ?: __( 'Nothing configured yet', 'whd' ), admin_url( 'admin.php?page=whd-scripts' ) );
+		self::card( __( 'Tracking', 'whd' ), implode( ' · ', array_filter( [ $s['ga4_id'] ? 'GA4' : '', $s['gsc_verification'] ? 'Search Console' : '', $s['fb_pixel_id'] ? 'Meta Pixel' : '', WHD_Capi::enabled() ? 'Conversions API' : '' ] ) ) ?: __( 'Nothing configured yet', 'whd' ), admin_url( 'admin.php?page=whd-scripts' ) );
 		echo '</div></div>';
 	}
 
@@ -419,6 +419,10 @@ final class WHD_Admin {
 	public static function page_scripts() {
 		$s = WHD_Scripts::get();
 		self::header( __( 'Tracking scripts', 'whd' ), __( 'Paste your IDs and the snippets are printed on every page (purchase events are sent to GA4 and the Meta Pixel on the order-received page). Raw snippets go in the boxes at the bottom.', 'whd' ) );
+		$notice = WHD_Capi::take_notice();
+		if ( $notice ) {
+			echo '<div class="notice notice-' . ( $notice['ok'] ? 'success' : 'warning' ) . ' is-dismissible"><p>' . esc_html( $notice['message'] ) . '</p></div>';
+		}
 		echo '<form method="post" action="options.php" class="whd-form">';
 		settings_fields( 'whd_scripts_group' );
 		$f = fn( $k ) => WHD_Scripts::OPTION . '[' . $k . ']';
@@ -426,6 +430,31 @@ final class WHD_Admin {
 		echo '<tr><th><label for="ga4_id">' . esc_html__( 'Google Analytics 4 — Measurement ID', 'whd' ) . '</label></th><td><input class="regular-text" id="ga4_id" name="' . esc_attr( $f( 'ga4_id' ) ) . '" value="' . esc_attr( $s['ga4_id'] ) . '" placeholder="G-XXXXXXXXXX"></td></tr>';
 		echo '<tr><th><label for="gsc">' . esc_html__( 'Google Search Console — verification', 'whd' ) . '</label></th><td><input class="regular-text" id="gsc" name="' . esc_attr( $f( 'gsc_verification' ) ) . '" value="' . esc_attr( $s['gsc_verification'] ) . '" placeholder="content value, or paste the whole <meta> tag"><p class="description">' . esc_html__( 'Choose the “HTML tag” method in Search Console; the tag is printed for all visitors, including Google’s verifier.', 'whd' ) . '</p></td></tr>';
 		echo '<tr><th><label for="fb">' . esc_html__( 'Meta (Facebook) Pixel ID', 'whd' ) . '</label></th><td><input class="regular-text" id="fb" name="' . esc_attr( $f( 'fb_pixel_id' ) ) . '" value="' . esc_attr( $s['fb_pixel_id'] ) . '" placeholder="1234567890"></td></tr>';
+
+		/* Conversions API. The token is a password: never printed back, a blank box keeps it. */
+		$token = (string) $s['fb_capi_token'];
+		echo '<tr><th><label for="fb_capi">' . esc_html__( 'Conversions API access token', 'whd' ) . '</label></th><td>';
+		echo '<input class="regular-text" type="password" autocomplete="new-password" id="fb_capi" name="' . esc_attr( $f( 'fb_capi_token' ) ) . '" value="" placeholder="' . esc_attr( '' !== $token ? __( 'Saved — leave blank to keep it', 'whd' ) : __( 'Paste the token', 'whd' ) ) . '">';
+		if ( '' !== $token ) {
+			echo ' <code class="whd-secret">' . esc_html( substr( $token, 0, 4 ) . str_repeat( '•', 12 ) . substr( $token, -3 ) ) . '</code>';
+			echo ' <label class="whd-clear"><input type="checkbox" name="' . esc_attr( $f( 'fb_capi_clear' ) ) . '" value="1"> ' . esc_html__( 'Remove the saved token', 'whd' ) . '</label>';
+		}
+		echo '<p class="description">' . esc_html__( 'Events Manager → your pixel → Settings → Conversions API → Generate access token. With a token, every event below is also sent from the server — ad blockers and Safari cannot stop that copy — and Meta matches it to the browser’s by a shared event ID, so nothing is counted twice.', 'whd' ) . '</p>';
+		if ( WHD_Capi::enabled() ) {
+			$last = (int) get_option( 'whd_capi_last_ok', 0 );
+			echo '<p class="description">' . esc_html(
+				$last
+					/* translators: %s: time ago, e.g. "5 minutes" */
+					? sprintf( __( 'Meta last confirmed receiving server events %s ago (checked at most once an hour). Failures are listed under WHD → Integrations → Last API calls.', 'whd' ), human_time_diff( $last ) )
+					: __( 'No server event has been confirmed by Meta yet. Open the site in a private window, then reload this screen; failures are listed under WHD → Integrations → Last API calls.', 'whd' )
+			) . '</p>';
+		}
+		echo '</td></tr>';
+		echo '<tr><th><label for="fb_test">' . esc_html__( 'Test event code', 'whd' ) . '</label></th><td><input class="regular-text code" id="fb_test" name="' . esc_attr( $f( 'fb_test_code' ) ) . '" value="' . esc_attr( $s['fb_test_code'] ) . '" placeholder="TEST12345">';
+		if ( '' !== (string) $s['fb_test_code'] ) {
+			echo '<p class="whd-note whd-note--warn">' . esc_html__( 'Every server event is currently sent with this test code. Clear the box once you are done testing.', 'whd' ) . '</p>';
+		}
+		echo '<p class="description">' . esc_html__( 'Only while testing: copy the code from Events Manager → Test events, save, and server events show up on that tab as they happen.', 'whd' ) . '</p></td></tr>';
 		/* Which of Meta's standard events to send. Everything is on the moment a pixel id is
 		   saved, because a half-reported funnel is harder to read than none at all — but each
 		   one can be switched off, and the list says in plain words what fires it. */
@@ -462,6 +491,15 @@ final class WHD_Admin {
 		}
 		echo '</tbody></table>';
 		submit_button();
+		echo '</form>';
+
+		// Its own form: forms cannot nest, and this one posts somewhere else.
+		echo '<h2 class="whd-h2">' . esc_html__( 'Check the Conversions API', 'whd' ) . '</h2>';
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="whd-test">';
+		wp_nonce_field( 'whd_capi_test' );
+		echo '<input type="hidden" name="action" value="whd_capi_test">';
+		echo '<p class="whd-muted">' . esc_html__( 'Sends one PageView from the server with the test event code above. Open Events Manager → Test events first, so the code is live there.', 'whd' ) . '</p>';
+		submit_button( __( 'Send a test event', 'whd' ), 'secondary', 'whd_capi_test_submit', false, ( WHD_Capi::enabled() && '' !== (string) $s['fb_test_code'] ) ? [] : [ 'disabled' => 'disabled' ] );
 		echo '</form></div>';
 	}
 

@@ -1658,7 +1658,15 @@ function omc_subscribe_ajax() {
 	} else {
 		$message = __( 'You’re on the list. Your next “Oops, Mine” moment is coming.', 'moderno-child' );
 	}
-	wp_send_json_success( [ 'message' => $message, 'source' => $source ] );
+	/**
+	 * The answer the form receives. The WHD plugin adds `event_id` — the id of the Lead it reported to
+	 * Meta from the server — so the browser's pixel sends the same event rather than a second one.
+	 *
+	 * @param array  $data   message, source.
+	 * @param string $email  The address.
+	 * @param string $source Which form.
+	 */
+	wp_send_json_success( apply_filters( 'omc_subscribe_response', [ 'message' => $message, 'source' => $source ], $email, $source ) );
 }
 add_action( 'wp_ajax_omc_subscribe', 'omc_subscribe_ajax' );
 add_action( 'wp_ajax_nopriv_omc_subscribe', 'omc_subscribe_ajax' );

@@ -6,16 +6,24 @@
  * button answers over AJAX and stays put, and a newsletter form reports back in place.
  *
  * Both fire on something that has actually happened — WooCommerce's own added_to_cart event, and
- * the theme's omc:subscribed — rather than on a click, which may yet fail.
+ * the theme's omc:subscribed (or the popups' whd:subscribed) — rather than on a click, which may
+ * yet fail.
+ *
+ * The server sends its own copy of each (Conversions API) and hands back the id it used, so the two
+ * are one event to Meta rather than two.
  */
 ( function () {
 	'use strict';
 
 	var S = window.WHD_PIXEL || {};
 
-	function track( event, params ) {
+	function track( event, params, id ) {
 		if ( window.fbq ) {
-			window.fbq( 'track', event, params || {} );
+			if ( id ) {
+				window.fbq( 'track', event, params || {}, { eventID: String( id ) } );
+			} else {
+				window.fbq( 'track', event, params || {} );
+			}
 		}
 	}
 
@@ -32,7 +40,7 @@
 					params.contents = [ { id: String( id ), quantity: qty } ];
 				}
 			}
-			track( 'AddToCart', params );
+			track( 'AddToCart', params, fragments && fragments[ 'whd-capi-atc' ] );
 		} );
 	}
 
@@ -47,11 +55,14 @@
 	   The theme announces a successful subscribe on the document. Listening for the submit
 	   instead would count the ones that bounced. */
 	if ( S.lead ) {
-		document.addEventListener( 'omc:subscribed', function ( e ) {
+		var lead = function ( e ) {
+			var d = e.detail || {};
 			track( 'Lead', {
-				content_name: ( e.detail && e.detail.source ) || 'newsletter',
+				content_name: d.source || 'newsletter',
 				currency: S.currency
-			} );
-		} );
+			}, d.event_id );
+		};
+		document.addEventListener( 'omc:subscribed', lead );  // the theme's newsletter forms and modals
+		document.addEventListener( 'whd:subscribed', lead );  // the welcome and exit popups
 	}
 }() );

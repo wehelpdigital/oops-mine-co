@@ -2,8 +2,8 @@
 /**
  * Plugin Name: WHD — Popups, Emails & Tracking
  * Plugin URI:  https://wehelpdigital.com
- * Description: Marketing toolkit for Oops, Mine Co.: exit-intent and welcome popups with a drag-and-drop editor and cookie-based countdowns, a drag-and-drop email builder for every WooCommerce trigger (including abandoned-cart recovery), a newsletter list with phone capture, integrations that push subscribers to Mailchimp, Klaviyo or a webhook and send SMS through Twilio, a tracking-scripts module (GA4, Search Console, Meta Pixel), size charts, product stories, and an AI copywriter that writes against your own brief, rules and keyword list.
- * Version:     1.14.0
+ * Description: Marketing toolkit for Oops, Mine Co.: exit-intent and welcome popups with a drag-and-drop editor and cookie-based countdowns, a drag-and-drop email builder for every WooCommerce trigger (including abandoned-cart recovery), a newsletter list with phone capture, integrations that push subscribers to Mailchimp, Klaviyo or a webhook and send SMS through Twilio, a tracking-scripts module (GA4, Search Console, Meta Pixel and Conversions API), size charts, product stories, and an AI copywriter that writes against your own brief, rules and keyword list.
+ * Version:     1.15.0
  * Author:      We Help Digital
  * Text Domain: whd
  * Requires at least: 6.4
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'WHD_VERSION', '1.14.0' );
+define( 'WHD_VERSION', '1.15.0' );
 define( 'WHD_FILE', __FILE__ );
 define( 'WHD_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WHD_URL', plugin_dir_url( __FILE__ ) );
@@ -22,6 +22,7 @@ require_once WHD_DIR . 'includes/class-whd-popups.php';
 require_once WHD_DIR . 'includes/class-whd-emails.php';
 require_once WHD_DIR . 'includes/class-whd-cart.php';
 require_once WHD_DIR . 'includes/class-whd-scripts.php';
+require_once WHD_DIR . 'includes/class-whd-capi.php';
 require_once WHD_DIR . 'includes/class-whd-subscribers.php';
 require_once WHD_DIR . 'includes/class-whd-integrations.php';
 require_once WHD_DIR . 'includes/class-whd-contacts.php';
@@ -65,6 +66,7 @@ final class WHD_Plugin {
 		add_action( 'init', [ __CLASS__, 'maybe_upgrade' ], 5 );
 
 		WHD_Scripts::init();
+		WHD_Capi::init();
 		WHD_Popups::init();
 		WHD_Subscribers::init();
 		WHD_Integrations::init();
@@ -90,6 +92,58 @@ final class WHD_Plugin {
 		if ( class_exists( 'WooCommerce' ) ) {
 			WHD_Product_Admin::init();
 		}
+	}
+
+	/** @var callable[] Work waiting for the visitor to have their answer. */
+	private static $after = [];
+
+	/** @var bool|null Whether this request's response was closed early (null: not tried yet). */
+	private static $closed = null;
+
+	/**
+	 * Run something once the response has gone back to the browser.
+	 *
+	 * PHP-FPM and LiteSpeed can close the connection and keep working, so a call to Klaviyo or Meta
+	 * never holds a page or a form open. Each job is told whether that worked: where it did not, the
+	 * visitor is still waiting, and a job can choose to leave its work to cron instead.
+	 *
+	 * One place does the closing because it can only happen once — two modules each closing the
+	 * connection would leave the second one believing it had failed.
+	 *
+	 * @param callable $job Receives one bool: true when the response was already closed.
+	 */
+	public static function after_response( callable $job ) {
+		self::$after[] = $job;
+		if ( ! has_action( 'shutdown', [ __CLASS__, 'run_after_response' ] ) ) {
+			add_action( 'shutdown', [ __CLASS__, 'run_after_response' ], PHP_INT_MAX ); // last: nothing else wants the response after this
+		}
+	}
+
+	public static function run_after_response() {
+		if ( ! self::$after ) {
+			return;
+		}
+		$closed = self::close_response();
+		while ( self::$after ) {
+			$job = array_shift( self::$after );
+			call_user_func( $job, $closed );
+		}
+	}
+
+	/** Close the connection and keep running. False where the server offers no way to do that (the CLI included). */
+	private static function close_response(): bool {
+		if ( null !== self::$closed ) {
+			return self::$closed;
+		}
+		self::$closed = false;
+		if ( function_exists( 'fastcgi_finish_request' ) ) {
+			ignore_user_abort( true );
+			self::$closed = (bool) fastcgi_finish_request();
+		} elseif ( function_exists( 'litespeed_finish_request' ) ) {
+			ignore_user_abort( true );
+			self::$closed = (bool) litespeed_finish_request();
+		}
+		return self::$closed;
 	}
 
 	public static function load_textdomain() {

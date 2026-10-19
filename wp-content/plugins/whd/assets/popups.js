@@ -64,7 +64,11 @@
 				}
 				cookie.set(SUBSCRIBED, '1', 90);
 				document.dispatchEvent(new CustomEvent('whd:subscribed', {
-					detail: { email: data.get('email'), source: form.getAttribute('data-source') || 'popup' }
+					detail: {
+						email: data.get('email'),
+						source: form.getAttribute('data-source') || 'popup',
+						event_id: (res.data && res.data.event_id) || '' // the server's Lead, so the pixel's is the same one
+					}
 				}));
 				replaceWithSuccess(form);
 			})

@@ -90,11 +90,13 @@ final class WHD_Subscribers {
 		if ( ! $id ) {
 			self::answer( false, __( 'That address could not be saved. Please try again.', 'whd' ), 400 );
 		}
-		self::answer( true, __( 'You’re on the list.', 'whd' ) );
+		// Meta's Lead, sent from the server; its id goes back so the browser's pixel reports the same one.
+		$event_id = class_exists( 'WHD_Capi' ) ? WHD_Capi::lead( $email, $source ?: 'popup', $name ) : '';
+		self::answer( true, __( 'You’re on the list.', 'whd' ), 200, $event_id ? [ 'event_id' => $event_id ] : [] );
 	}
 
-	private static function answer( $ok, $message, $status = 200 ) {
-		wp_send_json( [ 'success' => (bool) $ok, 'data' => [ 'message' => $message ], 'message' => $message ], $status );
+	private static function answer( $ok, $message, $status = 200, array $extra = [] ) {
+		wp_send_json( [ 'success' => (bool) $ok, 'data' => array_merge( [ 'message' => $message ], $extra ), 'message' => $message ], $status );
 	}
 
 	/**

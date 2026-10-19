@@ -51,6 +51,8 @@ final class WHD_Scripts {
 			'fb_pixel_id'      => '',
 			// Every standard event the shop can honestly report, all on once a pixel id is set.
 			'fb_events'        => array_keys( self::events() ),
+			'fb_capi_token'    => '', // Conversions API access token; with it every event is also sent from the server
+			'fb_test_code'     => '', // Events Manager → Test events, only while testing
 			'head_extra'       => '',
 			'body_extra'       => '',
 			'footer_extra'     => '',
@@ -67,6 +69,12 @@ final class WHD_Scripts {
 		$out   = self::defaults();
 		$out['ga4_id']           = preg_match( '/^G-[A-Z0-9]{4,20}$/i', trim( $input['ga4_id'] ?? '' ) ) ? strtoupper( trim( $input['ga4_id'] ) ) : '';
 		$out['fb_pixel_id']      = preg_replace( '/\D+/', '', $input['fb_pixel_id'] ?? '' );
+
+		// The token is a password: a blank box keeps the stored one, and it is never printed back.
+		$stored_token = (string) ( get_option( self::OPTION, [] )['fb_capi_token'] ?? '' );
+		$new_token    = preg_replace( '/[^A-Za-z0-9_|-]/', '', (string) ( $input['fb_capi_token'] ?? '' ) );
+		$out['fb_capi_token'] = ! empty( $input['fb_capi_clear'] ) ? '' : ( '' !== $new_token ? $new_token : $stored_token );
+		$out['fb_test_code']  = preg_replace( '/[^A-Za-z0-9]/', '', (string) ( $input['fb_test_code'] ?? '' ) );
 
 		/*
 		 * Unticked boxes are not posted, so an empty array means every event was switched off —
@@ -103,14 +111,24 @@ final class WHD_Scripts {
 		add_action( 'wp_footer', [ __CLASS__, 'page_events' ], 98 );
 		add_action( 'wp_enqueue_scripts', [ __CLASS__, 'pixel_assets' ] );
 		add_action( 'woocommerce_add_to_cart', [ __CLASS__, 'note_add_to_cart' ], 10, 6 );
+		add_filter( 'woocommerce_add_to_cart_fragments', [ __CLASS__, 'cart_fragment' ] );
 		add_action( 'woocommerce_created_customer', [ __CLASS__, 'note_registration' ] );
 		add_action( 'woocommerce_checkout_order_processed', [ __CLASS__, 'note_payment_info' ] );
 	}
 
-	private static function tracking_off() {
+	/**
+	 * Is this request one nobody should be tracked on?
+	 *
+	 * An AJAX call goes through admin-ajax.php, which counts as "admin" — but a visitor signing up or
+	 * adding to the basket is exactly what the server events are for, so AJAX is not excluded here.
+	 */
+	public static function tracking_off() {
 		$s = self::get();
-		return is_admin() || is_customize_preview() || ( $s['exclude_admins'] && current_user_can( 'manage_options' ) );
+		return ( is_admin() && ! wp_doing_ajax() ) || is_customize_preview() || ( $s['exclude_admins'] && current_user_can( 'manage_options' ) );
 	}
+
+	/** @var string The AddToCart this AJAX request reported, for the browser's copy to reuse. */
+	private static $atc_id = '';
 
 	public static function head() {
 		$s = self::get();
@@ -127,7 +145,10 @@ final class WHD_Scripts {
 		}
 		if ( $s['fb_pixel_id'] ) {
 			$id = esc_js( $s['fb_pixel_id'] );
-			echo "<!-- WHD: Meta Pixel -->\n<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','{$id}');fbq('track','PageView');</script>\n";
+			// One id for the browser's PageView and the server's copy, so Meta counts the visit once.
+			$pv = WHD_Capi::new_id( 'pv' );
+			WHD_Capi::track( 'PageView', $pv );
+			echo "<!-- WHD: Meta Pixel -->\n<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','{$id}');fbq('track','PageView',{},{eventID:'" . esc_js( $pv ) . "'});</script>\n";
 		}
 		if ( $s['head_extra'] ) {
 			echo "<!-- WHD: custom head -->\n" . $s['head_extra'] . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput -- admin-provided script
@@ -157,16 +178,24 @@ final class WHD_Scripts {
 		}
 	}
 
-	/** GA4 + Pixel purchase events on the thank-you page (once per order). */
 	/**
 	 * One fbq call, written safely.
 	 *
-	 * @param string $event Meta's name for it.
+	 * @param string $event  Meta's name for it.
 	 * @param array  $params What to send with it.
+	 * @param string $id     The event_id its server copy carries, so Meta counts the two once.
 	 */
-	private static function fire( $event, array $params = [] ) {
+	private static function fire( $event, array $params = [], $id = '' ) {
 		echo "<script>if(window.fbq){fbq('track'," . wp_json_encode( $event )
-			. ( $params ? ',' . wp_json_encode( $params ) : '' ) . ");}</script>\n";
+			. ',' . ( $params ? wp_json_encode( $params ) : '{}' )
+			. ( $id ? ',' . wp_json_encode( [ 'eventID' => $id ] ) : '' ) . ");}</script>\n";
+	}
+
+	/** Report an event in the page and from the server, under one id. */
+	private static function both( $event, array $params = [], array $person = [] ) {
+		$id = WHD_Capi::new_id( strtolower( $event ) );
+		WHD_Capi::track( $event, $id, $params, $person );
+		self::fire( $event, $params, $id );
 	}
 
 	/** A product as Meta wants to hear about it. */
@@ -195,19 +224,19 @@ final class WHD_Scripts {
 		}
 
 		if ( self::sends( 'view_content' ) && function_exists( 'is_product' ) && is_product() ) {
-			self::fire( 'ViewContent', self::product_params( wc_get_product( get_queried_object_id() ) ) );
+			self::both( 'ViewContent', self::product_params( wc_get_product( get_queried_object_id() ) ) );
 		}
 
 		if ( self::sends( 'view_category' ) && function_exists( 'is_shop' ) && ( is_shop() || is_product_category() || is_product_tag() ) ) {
 			$term = is_shop() ? null : get_queried_object();
-			self::fire( 'ViewCategory', [
+			self::both( 'ViewCategory', [
 				'content_type'     => 'product_group',
 				'content_category' => $term && ! is_wp_error( $term ) ? $term->name : __( 'Shop', 'whd' ),
 			] );
 		}
 
 		if ( self::sends( 'search' ) && is_search() ) {
-			self::fire( 'Search', [ 'search_string' => (string) get_search_query() ] );
+			self::both( 'Search', [ 'search_string' => (string) get_search_query() ] );
 		}
 
 		if ( self::sends( 'initiate_checkout' ) && function_exists( 'is_checkout' ) && is_checkout() && ! is_order_received_page() && WC()->cart && ! WC()->cart->is_empty() ) {
@@ -215,7 +244,7 @@ final class WHD_Scripts {
 			foreach ( WC()->cart->get_cart() as $line ) {
 				$ids[] = (string) $line['product_id'];
 			}
-			self::fire( 'InitiateCheckout', [
+			self::both( 'InitiateCheckout', [
 				'content_type' => 'product',
 				'content_ids'  => $ids,
 				'num_items'    => WC()->cart->get_cart_contents_count(),
@@ -225,13 +254,33 @@ final class WHD_Scripts {
 		}
 
 		/* Things that happened on the request before this one: an add to cart without AJAX, an
-		   account just created, an order just placed. Each is read once and cleared. */
+		   account just created, an order just placed. Each is read once and cleared. Their server
+		   copies went when they happened; the id parked with them makes the browser's the same event. */
 		foreach ( [ 'whd_px_cart' => 'AddToCart', 'whd_px_reg' => 'CompleteRegistration', 'whd_px_pay' => 'AddPaymentInfo' ] as $key => $event ) {
 			$waiting = self::take( $key );
-			if ( $waiting ) {
-				self::fire( $event, is_array( $waiting ) ? $waiting : [] );
+			if ( ! $waiting ) {
+				continue;
+			}
+			if ( is_array( $waiting ) && array_key_exists( 'params', $waiting ) ) {
+				self::fire( $event, (array) $waiting['params'], (string) ( $waiting['id'] ?? '' ) );
+			} else {
+				self::fire( $event, is_array( $waiting ) ? $waiting : [] ); // parked before event ids existed
 			}
 		}
+	}
+
+	/**
+	 * Report something that ended in a redirect: the server copy now, the browser's on the next page.
+	 *
+	 * @param string $key    Where it is parked.
+	 * @param string $event  Meta's name.
+	 * @param array  $params custom_data.
+	 * @param array  $person Who did it, when the event knows.
+	 */
+	private static function park_event( $key, $event, array $params, array $person = [] ) {
+		$id = WHD_Capi::new_id( strtolower( $event ) );
+		WHD_Capi::track( $event, $id, $params, $person );
+		self::park( $key, [ 'params' => $params, 'id' => $id ] );
 	}
 
 	/** Park an event for the next page view, since this one is a redirect. */
@@ -269,7 +318,7 @@ final class WHD_Scripts {
 	 * a redirect, so the event waits for the page that follows.
 	 */
 	public static function note_add_to_cart( $key, $product_id, $quantity, $variation_id = 0, $variation = [], $cart_item_data = [] ) {
-		if ( ! self::sends( 'add_to_cart' ) || wp_doing_ajax() ) {
+		if ( ! self::sends( 'add_to_cart' ) ) {
 			return;
 		}
 		$product = wc_get_product( $variation_id ?: $product_id );
@@ -278,13 +327,42 @@ final class WHD_Scripts {
 			$params['value'] = (float) $params['value'] * max( 1, (int) $quantity );
 			$params['contents'] = [ [ 'id' => (string) ( $variation_id ?: $product_id ), 'quantity' => (int) $quantity ] ];
 		}
-		self::park( 'whd_px_cart', $params ?: true );
+
+		/*
+		 * The AJAX button: the browser fires its own AddToCart when WooCommerce reports success, so
+		 * only the server copy goes from here — and its id rides back in the cart fragments for the
+		 * browser to reuse (cart_fragment()).
+		 */
+		if ( wp_doing_ajax() ) {
+			self::$atc_id = WHD_Capi::new_id( 'addtocart' );
+			WHD_Capi::track( 'AddToCart', self::$atc_id, $params );
+			return;
+		}
+		self::park_event( 'whd_px_cart', 'AddToCart', $params );
+	}
+
+	/**
+	 * Hand the AddToCart id to the browser with WooCommerce's own answer.
+	 *
+	 * WooCommerce applies each fragment as `$( key ).replaceWith( value )`; no element is called
+	 * <whd-capi-atc>, so this key changes nothing on the page and is only read by pixel.js.
+	 */
+	public static function cart_fragment( $fragments ) {
+		if ( self::$atc_id && is_array( $fragments ) ) {
+			$fragments['whd-capi-atc'] = self::$atc_id;
+		}
+		return $fragments;
 	}
 
 	public static function note_registration( $customer_id ) {
-		if ( self::sends( 'complete_registration' ) ) {
-			self::park( 'whd_px_reg', [ 'status' => 'customer' ] );
+		if ( ! self::sends( 'complete_registration' ) ) {
+			return;
 		}
+		$user = get_userdata( $customer_id );
+		self::park_event( 'whd_px_reg', 'CompleteRegistration', [ 'status' => 'customer' ], $user ? [
+			'email'       => $user->user_email,
+			'external_id' => 'user:' . $user->ID,
+		] : [] );
 	}
 
 	/** The order was placed, which is the moment payment details were handed over. */
@@ -293,10 +371,14 @@ final class WHD_Scripts {
 			return;
 		}
 		$order = wc_get_order( $order_id );
-		self::park( 'whd_px_pay', $order ? [
+		if ( ! $order ) {
+			self::park( 'whd_px_pay', true );
+			return;
+		}
+		self::park_event( 'whd_px_pay', 'AddPaymentInfo', [
 			'value'    => (float) $order->get_total(),
 			'currency' => $order->get_currency(),
-		] : true );
+		], WHD_Capi::order_person( $order ) );
 	}
 
 	/**
@@ -321,10 +403,12 @@ final class WHD_Scripts {
 		] );
 	}
 
+	/** GA4 + Pixel purchase events on the thank-you page (once per order), and the server copy. */
 	public static function purchase_event( $order_id ) {
 		if ( self::tracking_off() ) {
 			return;
 		}
+		WHD_Capi::purchase( $order_id ); // once per order on its own; also sent when the payment lands
 		$s     = self::get();
 		$order = wc_get_order( $order_id );
 		if ( ! $order || ( ! $s['ga4_id'] && ! $s['fb_pixel_id'] ) || $order->get_meta( '_whd_tracked' ) ) {
@@ -343,7 +427,8 @@ final class WHD_Scripts {
 			echo "if(window.gtag){gtag('event','purchase'," . wp_json_encode( $payload ) . ');}';
 		}
 		if ( $s['fb_pixel_id'] ) {
-			echo "if(window.fbq){fbq('track','Purchase',{value:" . (float) $order->get_total() . ",currency:'" . esc_js( $order->get_currency() ) . "',content_type:'product',content_ids:" . wp_json_encode( array_column( $items, 'item_id' ) ) . '});}';
+			// "order.<id>" is the server copy's event_id too (WHD_Capi::purchase), so the sale counts once.
+			echo "if(window.fbq){fbq('track','Purchase',{value:" . (float) $order->get_total() . ",currency:'" . esc_js( $order->get_currency() ) . "',content_type:'product',content_ids:" . wp_json_encode( array_column( $items, 'item_id' ) ) . "},{eventID:'order." . (int) $order->get_id() . "'});}";
 		}
 		echo '</script>';
 	}

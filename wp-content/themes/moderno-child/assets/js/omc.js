@@ -251,7 +251,7 @@
 						   that might have failed. The source says which form it was. */
 						var src = form.querySelector('[name="source"]');
 						document.dispatchEvent(new CustomEvent('omc:subscribed', {
-							detail: { source: src ? src.value : '' }
+							detail: { source: src ? src.value : '', event_id: res.data.event_id || '' } /* event_id: the server's copy of the Lead, so the pixel's is the same event */
 						}));
 					} else {
 						note.textContent = (res && res.data && res.data.message) || 'Something went wrong. Please try again.';

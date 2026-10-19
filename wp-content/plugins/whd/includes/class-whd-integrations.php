@@ -211,52 +211,30 @@ final class WHD_Integrations {
 	   sat in the queue until the next visitor, which could be hours. Somebody filling in the form and
 	   then looking in Klaviyo found nothing there.
 
-	   So the push also runs in the same request, once the answer has gone back to the browser: PHP-FPM
-	   and LiteSpeed can both close the connection and keep working. The cron event stays as the
-	   retry — it is cleared only after a push that worked — and is all that runs where the server
-	   cannot finish a response early, the CLI included. */
+	   So the push also runs in the same request, once the answer has gone back to the browser
+	   (WHD_Plugin::after_response). The cron event stays as the retry — it is cleared only after a
+	   push that worked — and is all that runs where the server cannot close a response early, the
+	   CLI included. */
 
-	/** @var array[] [ hook, args ] pairs waiting for the end of this request. */
+	/** @var bool[] Pushes already waiting for the end of this request, keyed by hook + args. */
 	private static $deferred = [];
 
 	private static function after_response( string $hook, array $args ) {
-		foreach ( self::$deferred as $job ) {
-			if ( $job === [ $hook, $args ] ) {
-				return;
+		$key = $hook . ':' . md5( serialize( $args ) );
+		if ( isset( self::$deferred[ $key ] ) ) {
+			return;
+		}
+		self::$deferred[ $key ] = true;
+		WHD_Plugin::after_response( function ( $closed ) use ( $hook, $args, $key ) {
+			unset( self::$deferred[ $key ] );
+			if ( ! $closed ) {
+				return; // the visitor would wait on the API; the cron event does it instead
 			}
-		}
-		self::$deferred[] = [ $hook, $args ];
-		if ( ! has_action( 'shutdown', [ __CLASS__, 'run_deferred' ] ) ) {
-			add_action( 'shutdown', [ __CLASS__, 'run_deferred' ], PHP_INT_MAX ); // last: nothing else wants the response after this
-		}
-	}
-
-	/** Send the browser its answer, then push. */
-	public static function run_deferred() {
-		$jobs           = self::$deferred;
-		self::$deferred = [];
-		if ( ! $jobs || ! self::finish_response() ) {
-			return; // the visitor would wait on the API; the cron event does it instead
-		}
-		foreach ( $jobs as list( $hook, $args ) ) {
 			$ok = self::SYNC_HOOK === $hook ? self::sync_subscriber( (int) $args[0] ) : self::push_contact( $args[0] );
 			if ( $ok ) {
 				wp_clear_scheduled_hook( $hook, $args );
 			}
-		}
-	}
-
-	/** Close the connection and keep running. False where the server offers no way to do that. */
-	private static function finish_response(): bool {
-		if ( function_exists( 'fastcgi_finish_request' ) ) {
-			ignore_user_abort( true );
-			return (bool) fastcgi_finish_request();
-		}
-		if ( function_exists( 'litespeed_finish_request' ) ) {
-			ignore_user_abort( true );
-			return (bool) litespeed_finish_request();
-		}
-		return false;
+		} );
 	}
 
 	/** Push one subscriber row to the configured provider. */
@@ -707,7 +685,7 @@ final class WHD_Integrations {
 				if ( '' === $o['klaviyo_api_key'] ) {
 					return [ false, __( 'Add your Klaviyo private API key first.', 'whd' ) ];
 				}
-				$path = '' !== $o['klaviyo_list_id'] ? 'lists/' . rawurlencode( $o['klaviyo_list_id'] ) . '/' : 'lists/';
+				$path = '' !== $o['klaviyo_list_id'] ? 'lists/' . rawurlencode( $o['klaviyo_list_id'] ) . '/?fields[list]=name,opt_in_process' : 'lists/';
 				$res  = self::klaviyo_request( $o, $path );
 				if ( ! self::finish( 'klaviyo', 'connection test', $res ) ) {
 					return [ false, self::error_message( $res ) ];
@@ -717,9 +695,24 @@ final class WHD_Integrations {
 				}
 				$data = json_decode( wp_remote_retrieve_body( $res ), true );
 				$name = $data['data']['attributes']['name'] ?? '';
+				/*
+				 * Say which list, and how it takes people in. A double opt-in list accepts the
+				 * sign-up, marks the profile subscribed, and then keeps it out of the list until a
+				 * confirmation is clicked — so the shop sees "subscribed" in Klaviyo and an empty
+				 * list. The shop's SMS list is double opt-in, and pointing this box at a list like
+				 * that looks exactly like a broken integration.
+				 */
+				$double = 'double_opt_in' === ( $data['data']['attributes']['opt_in_process'] ?? '' );
+				if ( $double ) {
+					return [ false, sprintf(
+						/* translators: %s: Klaviyo list name. */
+						__( 'Connected, but “%s” is a double opt-in list: sign-ups are marked subscribed and stay out of the list until they click a confirmation. Use your single opt-in email list here, or switch this one to single opt-in in Klaviyo.', 'whd' ),
+						$name
+					) ];
+				}
 				return [ true, '' !== $name ? sprintf(
 					/* translators: %s: Klaviyo list name. */
-					__( 'Klaviyo is connected. List: %s.', 'whd' ),
+					__( 'Klaviyo is connected. List: %s (single opt-in).', 'whd' ),
 					$name
 				) : __( 'Klaviyo is connected.', 'whd' ) ];
 
