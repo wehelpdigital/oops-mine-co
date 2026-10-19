@@ -477,7 +477,18 @@ final class WHD_Admin {
 		echo '<tr><th><label for="xc">' . esc_html__( 'Exit-intent coupon', 'whd' ) . '</label></th><td><input class="regular-text" id="xc" name="whd_settings[exit_coupon]" value="' . esc_attr( $s['exit_coupon'] ) . '" placeholder="STAY15"><p class="description">' . esc_html__( 'Offered by the exit-intent popup to keep a leaving visitor. Create the coupon in WooCommerce first.', 'whd' ) . '</p></td></tr>';
 		echo '<tr><th><label for="fst">' . esc_html__( 'Free shipping threshold', 'whd' ) . '</label></th><td><input type="number" step="1" min="0" id="fst" name="whd_settings[free_shipping_threshold]" value="' . esc_attr( $s['free_shipping_threshold'] ) . '"><p class="description">' . esc_html__( 'The cart progress bar counts up to this amount (“you are $15 away from free shipping”). Set the matching free-shipping method in WooCommerce → Shipping; 0 hides the bar.', 'whd' ) . '</p></td></tr>';
 		echo '<tr><th><label for="fn">' . esc_html__( 'Sender name (automations)', 'whd' ) . '</label></th><td><input class="regular-text" id="fn" name="whd_settings[from_name]" value="' . esc_attr( $s['from_name'] ) . '"></td></tr>';
-		echo '<tr><th><label for="fe">' . esc_html__( 'Sender email (automations)', 'whd' ) . '</label></th><td><input class="regular-text" id="fe" type="email" name="whd_settings[from_email]" value="' . esc_attr( $s['from_email'] ) . '"></td></tr>';
+		list( $from, $reply ) = WHD_Emails::sender();
+		$sender_note          = $reply
+			? sprintf(
+				/* translators: 1: address on the shop's domain actually used, 2: the shop's domain, 3: address typed in this box */
+				__( 'Sent from %1$s, with replies going to %3$s. Mail has to come from an address on %2$s — the server can only sign mail for that domain, and Gmail refuses mail claiming to be from gmail.com that Gmail did not send.', 'whd' ),
+				$from,
+				WHD_Emails::site_domain(),
+				$reply
+			)
+			/* translators: %s: the shop's domain */
+			: sprintf( __( 'Use an address on %s, so the mail passes the checks Gmail and other inboxes run.', 'whd' ), WHD_Emails::site_domain() );
+		echo '<tr><th><label for="fe">' . esc_html__( 'Sender email (automations)', 'whd' ) . '</label></th><td><input class="regular-text" id="fe" type="email" name="whd_settings[from_email]" value="' . esc_attr( $s['from_email'] ) . '"><p class="description">' . esc_html( $sender_note ) . '</p></td></tr>';
 		echo '</tbody></table>';
 		submit_button();
 		echo '</form></div>';

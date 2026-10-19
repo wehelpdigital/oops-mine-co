@@ -221,6 +221,15 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   cart, a back-in-stock request, the contact form, a new account, a review) goes through `WHD_Contacts::hand_over()`
   as a Klaviyo *profile* with no list behind it. The setting `list_everyone` (WHD → Integrations → "Who joins the
   list", default off) sends all of them to the list instead. Live is on Klaviyo, list `RexmCz`, single opt-in.
+  Pushes run in the same request once the response has gone (`fastcgi_finish_request` / `litespeed_finish_request`),
+  with a one-off cron event behind them as the retry: WP-Cron only fires on a later page view, and a coming-soon
+  shop gets almost none, so a cron-only push sat in the queue for hours. Every sign-up pushes again — `synced_at`
+  cannot tell whether the profile still exists at Klaviyo. API results *and* failed automation emails are in
+  WHD → Integrations → "Last API calls".
+- **Automation emails must come from the shop's domain.** `WHD_Emails::sender()` uses the WHD sender only when it is
+  on the site's domain, else WooCommerce's (`hello@oopsmineco.com`), and keeps the typed address as Reply-To. The
+  sender used to default to the admin's Gmail address: mail claiming gmail.com sent from the host fails DMARC and
+  Gmail rejects it outright, so the welcome email (the only place the sign-up code lives) never arrived.
 - **The sign-up code is never shown on screen.** Every modal that offers a discount — the welcome popup, the exit
   popup, the theme's discount modal and the Facebook Live card — asks for a first name and an email and says to look
   in the inbox. `WHD_Subscribers::send_welcome()` sends it, and re-sends on a repeat sign-up whose source is in

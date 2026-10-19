@@ -436,9 +436,56 @@ final class WHD_Emails {
 		$subject  = wp_strip_all_tags( WHD_Blocks::merge( $design['settings']['subject'] ?: get_bloginfo( 'name' ), $ctx ) );
 		$html     = WHD_Blocks::render( $design, 'email', $ctx );
 		$headers  = [ 'Content-Type: text/html; charset=UTF-8' ];
-		if ( is_email( $settings['from_email'] ) ) {
-			$headers[] = 'From: ' . sanitize_text_field( $settings['from_name'] ) . ' <' . $settings['from_email'] . '>';
+		list( $from, $reply_to ) = self::sender();
+		$headers[] = 'From: ' . sanitize_text_field( $settings['from_name'] ?: get_bloginfo( 'name' ) ) . ' <' . $from . '>';
+		if ( $reply_to ) {
+			$headers[] = 'Reply-To: ' . $reply_to;
 		}
-		return wp_mail( $to, $subject, $html, $headers );
+
+		$error = null;
+		$catch = function ( $e ) use ( &$error ) {
+			$error = $e;
+		};
+		add_action( 'wp_mail_failed', $catch );
+		$sent = wp_mail( $to, $subject, $html, $headers );
+		remove_action( 'wp_mail_failed', $catch );
+		if ( ! $sent && class_exists( 'WHD_Integrations' ) ) {
+			// Shown under WHD → Integrations → Last API calls, the one place an owner already looks.
+			WHD_Integrations::log( 'email', 0, sprintf( '%s to %s — not sent: %s', $id, $to, is_wp_error( $error ) ? $error->get_error_message() : 'wp_mail() refused it' ) );
+		}
+		return $sent;
+	}
+
+	/**
+	 * The address the automations send from, and where replies go: [ from, reply-to ].
+	 *
+	 * The From address has to be on the shop's own domain. The host signs mail for that domain
+	 * and no other, so a Gmail address in the sender box makes mail that fails gmail.com's DMARC
+	 * check, and Gmail refuses it outright ("Unauthenticated email from gmail.com is not accepted")
+	 * rather than filing it under spam. The welcome email carries the sign-up code, so that was
+	 * the code never arriving. An address on another domain is kept as the Reply-To, so answers
+	 * still reach the inbox somebody typed in; the mail itself goes from WooCommerce's sender if
+	 * that one is on the domain, and otherwise from the address WordPress itself would use.
+	 */
+	public static function sender() {
+		$wanted = sanitize_email( (string) ( WHD_Plugin::settings()['from_email'] ?? '' ) );
+		if ( is_email( $wanted ) && self::own_domain( $wanted ) ) {
+			return [ $wanted, '' ];
+		}
+		$woo  = sanitize_email( (string) get_option( 'woocommerce_email_from_address', '' ) );
+		$from = is_email( $woo ) && self::own_domain( $woo ) ? $woo : 'wordpress@' . self::site_domain();
+		return [ $from, is_email( $wanted ) ? $wanted : '' ];
+	}
+
+	/** The shop's host without "www.", e.g. oopsmineco.com. */
+	public static function site_domain() {
+		return preg_replace( '/^www\./', '', strtolower( (string) wp_parse_url( home_url(), PHP_URL_HOST ) ) );
+	}
+
+	/** Is this address on the shop's domain (or the domain the shop is a subdomain of)? */
+	public static function own_domain( $email ) {
+		$domain = strtolower( (string) substr( (string) strrchr( (string) $email, '@' ), 1 ) );
+		$host   = self::site_domain();
+		return '' !== $domain && ( $domain === $host || str_ends_with( $host, '.' . $domain ) );
 	}
 }

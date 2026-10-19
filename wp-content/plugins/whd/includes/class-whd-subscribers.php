@@ -103,7 +103,8 @@ final class WHD_Subscribers {
 	 * A brand-new address is inserted and greeted with the welcome email; a
 	 * known address keeps its row and picks up a phone number, SMS consent or
 	 * name it did not have. Either way `whd_subscriber_added` fires so the
-	 * integrations layer can push the row to the email platform.
+	 * integrations layer can push the row to the email platform — on every
+	 * sign-up, not just the first.
 	 *
 	 * @return int|false Row id, or false when the address is unusable.
 	 */
@@ -135,9 +136,17 @@ final class WHD_Subscribers {
 				$update['synced_at'] = null; // new details → send it to the platform again
 				$wpdb->update( self::table(), $update, [ 'id' => $id ] ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			}
-			if ( $update || empty( $row->synced_at ) ) {
-				do_action( 'whd_subscriber_added', $id, $email, $name ?: (string) $row->name, $source ?: (string) $row->source, $phone ?: (string) $row->phone, $consent ?: (int) $row->sms_consent );
-			}
+
+			/*
+			 * Every sign-up goes to the platform, not only the first.
+			 *
+			 * `synced_at` says the address reached the platform once. It cannot say the profile is
+			 * still there: somebody may have deleted it, suppressed it or unsubscribed it since, and
+			 * a known address filling the form in again used to be dropped on the floor — the form
+			 * said "you're in" and the list never heard of them. The push is idempotent, and a
+			 * fresh sign-up is fresh consent, so it simply goes again.
+			 */
+			do_action( 'whd_subscriber_added', $id, $email, $name ?: (string) $row->name, $source ?: (string) $row->source, $phone ?: (string) $row->phone, $consent ?: (int) $row->sms_consent );
 
 			/*
 			 * Somebody filling the form in again is asking for the code again.

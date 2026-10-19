@@ -5,8 +5,9 @@
  * Twilio.
  *
  *  settings → WHD → Integrations, stored in the option `whd_integrations`
- *  sync     → `whd_subscriber_added` schedules a one-off cron event so the
- *             visitor's own request never waits for a third-party API
+ *  sync     → `whd_subscriber_added` pushes once the visitor's response has
+ *             been sent (so nobody waits for a third-party API), with a
+ *             one-off cron event behind it as the retry
  *  log      → the last 20 API results live in `whd_integrations_log`
  *
  * Keys are kept in the options table as plain text, exactly like every other
@@ -189,7 +190,7 @@ final class WHD_Integrations {
 	/* ─────────────────────────── subscriber sync ─────────────────────────── */
 
 	/**
-	 * Queue the push. Never call the provider inside the visitor's request:
+	 * Queue the push. Never call the provider while the visitor waits:
 	 * a slow API would hold the newsletter form open.
 	 */
 	public static function on_subscriber_added( $id, $email = '', $name = '', $source = '', $phone = '', $sms_consent = 0 ) {
@@ -201,6 +202,61 @@ final class WHD_Integrations {
 		if ( ! wp_next_scheduled( self::SYNC_HOOK, [ $id ] ) ) {
 			wp_schedule_single_event( time() + max( 0, $delay ), self::SYNC_HOOK, [ $id ] );
 		}
+		self::after_response( self::SYNC_HOOK, [ $id ] );
+	}
+
+	/* ─────────────────────────── after the response ───────────────────────────
+	   WP-Cron is not a clock. A scheduled event runs when somebody next loads a page after it falls
+	   due, so on a shop with little traffic — and one in "coming soon" has almost none — the sign-up
+	   sat in the queue until the next visitor, which could be hours. Somebody filling in the form and
+	   then looking in Klaviyo found nothing there.
+
+	   So the push also runs in the same request, once the answer has gone back to the browser: PHP-FPM
+	   and LiteSpeed can both close the connection and keep working. The cron event stays as the
+	   retry — it is cleared only after a push that worked — and is all that runs where the server
+	   cannot finish a response early, the CLI included. */
+
+	/** @var array[] [ hook, args ] pairs waiting for the end of this request. */
+	private static $deferred = [];
+
+	private static function after_response( string $hook, array $args ) {
+		foreach ( self::$deferred as $job ) {
+			if ( $job === [ $hook, $args ] ) {
+				return;
+			}
+		}
+		self::$deferred[] = [ $hook, $args ];
+		if ( ! has_action( 'shutdown', [ __CLASS__, 'run_deferred' ] ) ) {
+			add_action( 'shutdown', [ __CLASS__, 'run_deferred' ], PHP_INT_MAX ); // last: nothing else wants the response after this
+		}
+	}
+
+	/** Send the browser its answer, then push. */
+	public static function run_deferred() {
+		$jobs           = self::$deferred;
+		self::$deferred = [];
+		if ( ! $jobs || ! self::finish_response() ) {
+			return; // the visitor would wait on the API; the cron event does it instead
+		}
+		foreach ( $jobs as list( $hook, $args ) ) {
+			$ok = self::SYNC_HOOK === $hook ? self::sync_subscriber( (int) $args[0] ) : self::push_contact( $args[0] );
+			if ( $ok ) {
+				wp_clear_scheduled_hook( $hook, $args );
+			}
+		}
+	}
+
+	/** Close the connection and keep running. False where the server offers no way to do that. */
+	private static function finish_response(): bool {
+		if ( function_exists( 'fastcgi_finish_request' ) ) {
+			ignore_user_abort( true );
+			return (bool) fastcgi_finish_request();
+		}
+		if ( function_exists( 'litespeed_finish_request' ) ) {
+			ignore_user_abort( true );
+			return (bool) litespeed_finish_request();
+		}
+		return false;
 	}
 
 	/** Push one subscriber row to the configured provider. */
@@ -255,6 +311,7 @@ final class WHD_Integrations {
 		if ( ! wp_next_scheduled( self::CONTACT_HOOK, [ $contact ] ) ) {
 			wp_schedule_single_event( time() + max( 0, $delay ), self::CONTACT_HOOK, [ $contact ] );
 		}
+		self::after_response( self::CONTACT_HOOK, [ $contact ] );
 	}
 
 	/** Send one queued contact. */
