@@ -236,6 +236,10 @@ final class WHD_AI_Studio {
 
 		$status = $post ? (string) $post->post_status : 'auto-draft';
 		wp_localize_script( 'whd-ai-studio', 'WHD_AI_STUDIO', [
+			// A copy made a moment ago to write into: the run it was made for starts on arrival.
+			'autorun'   => $post_id ? self::take_run( $post_id ) : null,
+			// Only a product that exists in the database can be copied; a new one has nothing to copy yet.
+			'canCopy'   => 'auto-draft' !== $status && current_user_can( 'edit_products' ),
 			'rest'      => [
 				'root'  => esc_url_raw( rest_url( 'whd/v1/ai/studio/' ) ),
 				'nonce' => wp_create_nonce( 'wp_rest' ),
@@ -307,10 +311,20 @@ final class WHD_AI_Studio {
 			'again'       => __( 'Generate again', 'whd' ),
 			'needPhoto'   => __( 'Choose at least one photograph first.', 'whd' ),
 			'needWork'    => __( 'Tick something to write, or choose some new pictures.', 'whd' ),
-			/* translators: %s: list of fields */
-			'confirm'     => __( 'This replaces what is in these fields now: %s. Nothing is saved until you press Update. Carry on?', 'whd' ),
+			'modalTitle'  => __( 'This product already has content', 'whd' ),
+			'modalLead'   => __( 'Generating would replace what is in:', 'whd' ),
 			/* translators: %d: number of variations */
-			'confirmVars' => __( 'This product has %d variations. Building the ones in your notes replaces them when you press Update. Carry on?', 'whd' ),
+			'modalVars'   => __( 'its %d variations, when you press Update', 'whd' ),
+			'copyTitle'   => __( 'Write into a copy', 'whd' ),
+			'copyNote'    => __( 'A draft copy of this product, as it was last saved, gets the new content. This one stays exactly as it is — delete the copy if you do not like it.', 'whd' ),
+			'copyOff'     => __( 'Save the product once to be able to write into a copy instead.', 'whd' ),
+			'overTitle'   => __( 'Overwrite this product', 'whd' ),
+			'overNote'    => __( 'The fields listed are replaced on this screen. Nothing is saved until you press Update.', 'whd' ),
+			'cancel'      => __( 'Cancel', 'whd' ),
+			'copying'     => __( 'Making the copy…', 'whd' ),
+			'copied'      => __( 'Copy made — opening it…', 'whd' ),
+			/* translators: %s: name of the product this one was copied from */
+			'isCopy'      => __( 'This is a copy of “%s”. The new content is being written into it; the original stays as it was. Press Update when you are happy with it.', 'whd' ),
 			'stepLook'    => __( 'Reading the photographs', 'whd' ),
 			'stepZoom'    => __( 'Zooming in on the details', 'whd' ),
 			'stepWrite'   => __( 'Writing the page', 'whd' ),
@@ -365,6 +379,85 @@ final class WHD_AI_Studio {
 			'done'        => __( 'Done', 'whd' ),
 			'deleteImage' => __( 'Delete image', 'whd' ),
 		];
+	}
+
+	/* ─────────────────────────── writing into a copy ─────────────────────────── */
+
+	/**
+	 * Duplicate the product, and leave this run waiting on the copy.
+	 *
+	 * For a product that already has words on it, overwriting is not the only way to try what the
+	 * AI would do. The copy is WooCommerce's own Duplicate — draft, "(Copy)" on the name, the same
+	 * photographs, categories and variations — so it is a product like any other, and deleting it
+	 * afterwards is the whole of the undo.
+	 *
+	 * The run itself happens on the copy's own screen, so everything still goes through its fields
+	 * and its Update: this hands over the settings and the page picks them up on arrival.
+	 *
+	 * @param array $run images, parts, keywords, notes, count, shots — what the panel had chosen.
+	 * @return array|WP_Error { id, name, edit }
+	 */
+	public static function copy( int $post_id, array $run ) {
+		$product = wc_get_product( $post_id );
+		if ( ! $product || 'auto-draft' === get_post_status( $post_id ) ) {
+			return new WP_Error( 'whd_studio_no_copy', __( 'Save the product once first — a product that has never been saved has nothing to copy.', 'whd' ) );
+		}
+		if ( ! current_user_can( 'edit_products' ) ) {
+			return new WP_Error( 'whd_studio_no_copy', __( 'You are not allowed to create products.', 'whd' ) );
+		}
+		if ( ! class_exists( 'WC_Admin_Duplicate_Product' ) ) {
+			// Loaded by WooCommerce's admin, and a REST request is not the admin.
+			include_once WC_ABSPATH . 'includes/admin/class-wc-admin-duplicate-product.php';
+		}
+		$copy = ( new WC_Admin_Duplicate_Product() )->product_duplicate( $product );
+		if ( ! $copy || ! $copy->get_id() ) {
+			return new WP_Error( 'whd_studio_copy_failed', __( 'The copy could not be made.', 'whd' ) );
+		}
+
+		set_transient( self::run_key( $copy->get_id() ), [
+			'from'     => $post_id,
+			'images'   => self::image_ids( $run['images'] ?? [] ),
+			'parts'    => self::parts( $run['parts'] ?? [] ),
+			'keywords' => WHD_AI::clean_keywords( (array) ( $run['keywords'] ?? [] ) ),
+			'notes'    => self::commands( $run['notes'] ?? '' ),
+			'count'    => max( 0, min( self::TOTAL_MAX, (int) ( $run['count'] ?? 0 ) ) ),
+			'shots'    => array_map( static fn( $s ) => [ 'mode' => $s['mode'], 'ask' => $s['ask'] ], self::shots( $run['shots'] ?? [] ) ),
+		], HOUR_IN_SECONDS );
+
+		return [
+			'id'   => $copy->get_id(),
+			'name' => html_entity_decode( $copy->get_name(), ENT_QUOTES, 'UTF-8' ),
+			'edit' => add_query_arg( 'whd_studio', 'run', get_edit_post_link( $copy->get_id(), 'raw' ) ),
+		];
+	}
+
+	/** The run left waiting on a copy, once: taking it removes it, so a reload does not start it again. */
+	private static function take_run( int $post_id ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- only says whether to look; the run is keyed to this user
+		if ( ! isset( $_GET['whd_studio'] ) || 'run' !== sanitize_key( wp_unslash( $_GET['whd_studio'] ) ) ) {
+			return null;
+		}
+		$run = get_transient( self::run_key( $post_id ) );
+		if ( ! is_array( $run ) ) {
+			return null;
+		}
+		delete_transient( self::run_key( $post_id ) );
+
+		$run['photos'] = [];
+		foreach ( $run['images'] as $id ) {
+			$thumb = wp_get_attachment_image_url( $id, 'thumbnail' );
+			if ( $thumb ) {
+				$run['photos'][] = [ 'id' => (int) $id, 'thumb' => $thumb ];
+			}
+		}
+		$run['fromName'] = html_entity_decode( get_the_title( (int) $run['from'] ), ENT_QUOTES, 'UTF-8' );
+		unset( $run['images'] );
+
+		return $run;
+	}
+
+	private static function run_key( int $post_id ): string {
+		return 'whd_studio_run_' . get_current_user_id() . '_' . $post_id;
 	}
 
 	/* ─────────────────────────── step one: look ─────────────────────────── */
@@ -1599,7 +1692,7 @@ final class WHD_AI_Studio {
 		$dressed = 0;
 		$first   = true;
 		foreach ( $finals as $id => $slot ) {
-			$dressed += (int) self::dress( $id, is_array( $words[ $slot ] ?? null ) ? $words[ $slot ] : [], $name, $first, $rewrite );
+			$dressed += (int) self::dress( $id, is_array( $words[ $slot ] ?? null ) ? $words[ $slot ] : [], $name, $first, $rewrite, $post_id );
 			$first    = false;
 		}
 
@@ -1678,13 +1771,40 @@ final class WHD_AI_Studio {
 		return count( $sections );
 	}
 
+	/** Is this picture the main image or in the gallery of any product but this one (or its variations)? */
+	private static function shared( int $id, int $post_id ): bool {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- two indexed reads per picture, on a button press
+		$users = $wpdb->get_col( $wpdb->prepare(
+			"SELECT DISTINCT post_id FROM {$wpdb->postmeta}
+			 WHERE post_id <> %d AND ( ( meta_key = '_thumbnail_id' AND meta_value = %d )
+			    OR ( meta_key = '_product_image_gallery' AND FIND_IN_SET( %d, meta_value ) ) )",
+			$post_id,
+			$id,
+			$id
+		) );
+		foreach ( (array) $users as $user ) {
+			$owner = get_post( (int) $user );
+			if ( $owner && (int) $owner->post_parent !== $post_id && 'revision' !== $owner->post_type ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/** One picture's alt, title, caption and description. */
-	private static function dress( int $id, array $w, string $name, bool $first, bool $rewrite ): bool {
+	private static function dress( int $id, array $w, string $name, bool $first, bool $rewrite, int $post_id = 0 ): bool {
 		if ( ! current_user_can( 'edit_post', $id ) ) {
 			return false;
 		}
 		$drawn = (bool) get_post_meta( $id, WHD_AI_Images::META, true );
-		$force = $rewrite || $drawn;
+		/*
+		 * A photograph another product also shows keeps its words, and only its empty fields are
+		 * filled. A copy made to write into shares every one of the original's photographs, so
+		 * rewriting them would rename the original's pictures after the copy — which is exactly
+		 * what writing into a copy promises not to do.
+		 */
+		$force = ( $rewrite || $drawn ) && ! self::shared( $id, $post_id );
 
 		$alt = sanitize_text_field( (string) ( $w['alt'] ?? '' ) ) ?: $name;
 		/* The first picture is the one a search engine reads, so it says what the thing is called
@@ -2441,13 +2561,17 @@ final class WHD_AI_Studio {
 			$id = (int) $r->get_param( 'post_id' );
 			return $id && 'product' === get_post_type( $id ) && current_user_can( 'edit_post', $id );
 		};
-		foreach ( [ 'look', 'inspect', 'write', 'repair', 'draw', 'check', 'discard', 'finish' ] as $step ) {
+		foreach ( [ 'copy', 'look', 'inspect', 'write', 'repair', 'draw', 'check', 'discard', 'finish' ] as $step ) {
 			register_rest_route( 'whd/v1', '/ai/studio/' . $step, [
 				'methods'             => 'POST',
 				'callback'            => [ __CLASS__, 'rest_' . $step ],
 				'permission_callback' => $can,
 			] );
 		}
+	}
+
+	public static function rest_copy( WP_REST_Request $r ) {
+		return self::answer( self::copy( (int) $r->get_param( 'post_id' ), (array) ( $r->get_json_params() ?: [] ) ) );
 	}
 
 	public static function rest_look( WP_REST_Request $r ) {

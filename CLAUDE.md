@@ -313,7 +313,12 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   loose colour name beats the reference ("red plaid" drew bright tartan for a muted rust ombre), so colours are
   named precisely and the brief says colours come from the photographs; with two colourways in the photos, each
   shot names one and its photo goes first, the other labelled "cut and details only"; and a single request that
-  wrote and repaired took 130 s, which is why repair is a separate step.
+  wrote and repaired took 130 s, which is why repair is a separate step. When a ticked field already has content,
+  Generate opens a `<dialog>` (appended to `body` — the panel sits inside `form#post`): **Write into a copy**
+  (default; `copy` step = WooCommerce's own `WC_Admin_Duplicate_Product::product_duplicate()`, the run's settings
+  parked in a per-user transient keyed to the copy, picked up once by `?whd_studio=run` on the copy's screen and
+  started on `load`), **Overwrite**, or Cancel. A duplicate **shares the original's attachments**, so `dress()`
+  never rewrites alt/title on a photo another product also uses (`shared()`) — it only fills empty fields there.
 - **Who appears in drawn pictures** is one list, `WHD_AI_Images::people()` (filter `whd_ai_image_people`): young
   women with a stated age (23–30) and background — Korean, Thai, Japanese, Chinese, Filipina, alternating with
   white — plus `age_rule()` (22–32) in every brief. Product sets offset the list by product id; journal, page and

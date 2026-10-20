@@ -351,6 +351,10 @@
 		if ( has( 'categories' ) && ticked.length ) {
 			out.push( T.fCats );
 		}
+		var chart = document.querySelector( 'select[name="whd_size_chart"]' );
+		if ( has( 'size_chart' ) && chart && '0' !== chart.value ) {
+			out.push( T.fChart );
+		}
 		var seoTitle = document.getElementById( 'whd-seo-title' );
 		var seoDesc = document.getElementById( 'whd-seo-desc' );
 		if ( has( 'seo' ) && ( ( seoTitle && seoTitle.value.trim() ) || ( seoDesc && seoDesc.value.trim() ) ) ) {
@@ -761,7 +765,12 @@
 
 	/* ─────────────────────────── the run ─────────────────────────── */
 
-	function run() {
+	/*
+	 * Generate. When the run would replace something already on the product, ask first — and offer
+	 * to write into a copy instead, so trying the AI on a finished product never costs the finished
+	 * product. `skipAsk` is for the copy's own screen, where replacing is the point.
+	 */
+	function run( skipAsk ) {
 		if ( busy ) {
 			return;
 		}
@@ -776,14 +785,135 @@
 			return;
 		}
 		var replacing = filled( chosen );
-		if ( replacing.length && ! window.confirm( fmt( T.confirm, replacing.join( ', ' ) ) ) ) {
-			return;
-		}
 		var existing = window.WHDV_App && window.WHDV_App.existing ? window.WHDV_App.existing() : 0;
-		if ( chosen.indexOf( 'product_data' ) !== -1 && notes && existing && ! window.confirm( fmt( T.confirmVars, existing ) ) ) {
+		if ( chosen.indexOf( 'product_data' ) !== -1 && notes && existing ) {
+			replacing.push( fmt( T.modalVars, existing ) );
+		}
+		if ( ! replacing.length || skipAsk ) {
+			start( chosen, notes );
 			return;
 		}
+		ask( replacing ).then( function ( choice ) {
+			if ( 'overwrite' === choice ) {
+				start( chosen, notes );
+			} else if ( 'copy' === choice ) {
+				intoCopy( chosen, notes );
+			}
+		} );
+	}
 
+	/**
+	 * The question, as a modal: write into a copy, overwrite, or neither.
+	 *
+	 * A <dialog> on the body rather than in the panel: the panel sits inside the product's own form,
+	 * and a form inside a form is no form at all. Escape and Cancel both answer "neither".
+	 *
+	 * @return {Promise<string>} 'copy', 'overwrite' or ''.
+	 */
+	function ask( replacing ) {
+		return new Promise( function ( resolve ) {
+			var dialog = document.createElement( 'dialog' );
+			dialog.className = 'whd-studio-modal';
+			dialog.setAttribute( 'aria-labelledby', 'whd-studio-modal-h' );
+			dialog.setAttribute( 'aria-describedby', 'whd-studio-modal-lead' );
+			dialog.innerHTML = '<h2 class="whd-studio-modal__h" id="whd-studio-modal-h">' + esc( T.modalTitle ) + '</h2>' +
+				'<p class="whd-studio-modal__lead" id="whd-studio-modal-lead">' + esc( T.modalLead ) + '</p>' +
+				'<ul class="whd-studio-modal__list">' + replacing.map( function ( r ) {
+					return '<li>' + esc( r ) + '</li>';
+				} ).join( '' ) + '</ul>' +
+				'<div class="whd-studio-modal__choices">' +
+					'<button type="button" class="whd-studio-modal__choice is-safe" data-choice="copy"' + ( D.canCopy ? '' : ' disabled' ) + '>' +
+						'<span class="whd-studio-modal__choice-t">' + esc( T.copyTitle ) + '</span>' +
+						'<span class="whd-studio-modal__choice-d">' + esc( D.canCopy ? T.copyNote : T.copyOff ) + '</span>' +
+					'</button>' +
+					'<button type="button" class="whd-studio-modal__choice" data-choice="overwrite">' +
+						'<span class="whd-studio-modal__choice-t">' + esc( T.overTitle ) + '</span>' +
+						'<span class="whd-studio-modal__choice-d">' + esc( T.overNote ) + '</span>' +
+					'</button>' +
+				'</div>' +
+				'<p class="whd-studio-modal__foot"><button type="button" class="button" data-choice="">' + esc( T.cancel ) + '</button></p>';
+
+			Array.prototype.forEach.call( dialog.querySelectorAll( '[data-choice]' ), function ( button ) {
+				button.addEventListener( 'click', function () {
+					dialog.close( button.getAttribute( 'data-choice' ) );
+				} );
+			} );
+			// A click on the dimmed page around the box is a Cancel too.
+			dialog.addEventListener( 'click', function ( e ) {
+				if ( e.target === dialog ) {
+					dialog.close( '' );
+				}
+			} );
+			dialog.addEventListener( 'close', function () {
+				var choice = dialog.returnValue || '';
+				dialog.remove();
+				el.go.focus();
+				resolve( choice );
+			} );
+
+			document.body.appendChild( dialog );
+			dialog.showModal();
+		} );
+	}
+
+	/* Duplicate the product with this run waiting on it, and go there; the copy's screen starts it. */
+	function intoCopy( chosen, notes ) {
+		el.go.disabled = true;
+		say( T.copying );
+		api( 'copy', {
+			images: photos.map( function ( p ) {
+				return p.id;
+			} ),
+			parts: chosen,
+			keywords: keywords(),
+			notes: notes,
+			count: count,
+			shots: shots.slice( 0, count )
+		} ).then( function ( made ) {
+			say( T.copied );
+			window.location.href = made.edit;
+		} ).catch( function ( e ) {
+			el.go.disabled = false;
+			say( e.message, true );
+		} );
+	}
+
+	/* Arriving on a copy made to write into: put the run's settings back on the panel, and start it. */
+	function resume( a ) {
+		photos = ( a.photos || [] ).length ? a.photos : photos;
+		Array.prototype.forEach.call( root.querySelectorAll( '[data-part]' ), function ( box ) {
+			box.checked = ( a.parts || [] ).indexOf( box.getAttribute( 'data-part' ) ) !== -1;
+		} );
+		if ( el.notes ) {
+			el.notes.value = a.notes || '';
+		}
+		if ( window.WHDKeywords && el.keywords && ( a.keywords || [] ).length ) {
+			window.WHDKeywords.add( el.keywords, a.keywords );
+		}
+		shots = ( a.shots || [] ).map( function ( s ) {
+			return { mode: 'mannequin' === s.mode ? 'mannequin' : 'model', ask: s.ask || '' };
+		} );
+		count = D.draw ? parseInt( a.count, 10 ) || 0 : 0;
+		countPicked = true;
+		changedPhotos();
+
+		var note = document.createElement( 'div' );
+		note.className = 'whd-studio__copied';
+		note.textContent = fmt( T.isCopy, a.fromName || '' );
+		root.insertBefore( note, root.firstChild );
+
+		// Off the address bar, so a reload is a reload and not a second run.
+		if ( window.history && window.history.replaceState ) {
+			window.history.replaceState( null, '', window.location.href.replace( /([?&])whd_studio=run(&|$)/, '$1' ).replace( /[?&]$/, '' ) );
+		}
+		var box = document.getElementById( 'whd-ai-studio' );
+		if ( box && box.scrollIntoView ) {
+			box.scrollIntoView( { block: 'start' } );
+		}
+		run( true );
+	}
+
+	function start( chosen, notes ) {
 		busy = true;
 		el.go.disabled = true;
 		say( '' );
@@ -938,7 +1068,9 @@
 
 	/* ─────────────────────────── start ─────────────────────────── */
 
-	el.go.addEventListener( 'click', run );
+	el.go.addEventListener( 'click', function () {
+		run( false );
+	} );
 
 	// Typing Enter in the panel must never submit the product form.
 	root.addEventListener( 'keydown', function ( e ) {
@@ -965,4 +1097,15 @@
 	}
 
 	changedPhotos();
+
+	// A copy made to write into: start once the editors on this screen are up, since the run reads them.
+	if ( D.autorun ) {
+		if ( 'complete' === document.readyState ) {
+			resume( D.autorun );
+		} else {
+			window.addEventListener( 'load', function () {
+				resume( D.autorun );
+			} );
+		}
+	}
 }() );
