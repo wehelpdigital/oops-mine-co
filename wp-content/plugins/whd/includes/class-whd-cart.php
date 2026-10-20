@@ -521,6 +521,8 @@ final class WHD_Cart {
 					WC()->session->set( 'whd_guest', [ 'email' => $row->email, 'first_name' => $row->first_name ] );
 				}
 				$wpdb->update( self::table(), [ 'status' => 'clicked', 'updated_at' => current_time( 'mysql' ) ], [ 'id' => $row->id ] );
+				/** Back through the reminder: the bag is restored, and the browser now knows who this is (WHD_Shopper). */
+				do_action( 'whd_cart_recovered', $row );
 				if ( function_exists( 'wc_add_notice' ) ) {
 					wc_add_notice( __( 'Welcome back — your bag is just how you left it.', 'whd' ), 'success' );
 				}

@@ -272,6 +272,22 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
 - Abandoned carts: table `{prefix}whd_carts`, guests captured by an inline checkout script → AJAX, cron
   `whd_cart_cron` (custom 15-min schedule), restore links `?whd_recover=<token>`, unsubscribe `?whd_unsub=`.
   Subscribers: table `{prefix}whd_subscribers`. Activation creates both tables and default designs.
+- **Returning shoppers** (`WHD_Shopper`, `includes/class-whd-shopper.php` + `assets/fit.js`; WHD → Settings → “Returning
+  shoppers”, both on by default): empty checkout fields are filled from what *this browser* gave the shop last, and the
+  size (fit, length, cup… — `personal()`, never colour/pattern/print) chosen last is picked again on the next product.
+  Whose details is decided by a signed HttpOnly cookie `whd_shopper` = `o<order>` (set when an order is placed),
+  `c<bag>` (an email typed at checkout, via the `whd_cart_captured` action) or `r<bag>` (the reminder link, via the new
+  `whd_cart_recovered` action in `WHD_Cart::handle_links()`). **Nothing is ever looked up from a typed email** — typing a
+  stranger’s address must not reveal theirs; only `r` (the inbox is proven) also pulls that email’s last order. The
+  fill is written onto `WC()->customer` at `template_redirect` (only empty fields; country/state replaced only when the
+  street line is empty), so totals and fields agree. The “Welcome back — not you? Clear them” line is printed inside the
+  billing form (`woocommerce_before_checkout_billing_form`), not as a WooCommerce notice — this theme shows notices as a
+  toast that slides away. `?whd_forget=1` (nonced) clears both cookies and the filled fields. Sizes live in the
+  non-HttpOnly cookie `whd_fit` (plain JSON `{"pa_size":"m"}` — `setcookie()` encodes it; encoding it first left JS a
+  value it could not read) and in user meta `_whd_fit`; learned on add to cart, order and recovery. `fit.js` selects
+  an open, empty level that offers the value (skipping `whdv-locked` rows, so the colour still comes first, and swatches
+  marked unavailable), once — a shopper who clears it is left alone. Client-side on purpose, so a cached page never
+  carries one visitor’s size to another.
 - **AI Writer** is one top-level menu with three screens: AI Posts (`whd-ai-posts`, also the parent slug), AI Pages
   (`whd-ai-pages`) and **Bulk products** (`whd-ai-products`, `WHD_AI_Products`, WooCommerce only). Admin assets key off
   `$_GET['page']`, never the hook name — the hook carries where an item sits in the menu, so matching on it breaks the
@@ -361,6 +377,16 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   missing one in. Only when nothing fits does the product name stand in. The slug gets the keyphrase in front when
   the name lacks it (`slug_for()`), and the list's lower case is fixed afterwards by `WHD_AI_Studio::proper()`
   (Korean, Thai, Seoul…; filter `whd_ai_proper_words`) — the model was told to capitalise and did not always.
+- **AI Posts / AI Pages** (`WHD_AI_Writer`, `admin/ai-writer.js`) use the same form as the product-screen panel and
+  Bulk products (ai-studio.css is loaded there too): what it is about; what to write (title and body always, plus
+  excerpt / search snippet / FAQ / links to your pages — `doc.parts`, honoured by `save()`), length pills, keywords,
+  “Anything to specify?” (`notes`, appended to the prompt as the shop’s own words); then pictures — optional
+  photographs to work from, a count (0–`MAX_PICTURES`; the first is the featured image, the rest spread evenly over
+  the sections by `image_slots( $doc, $count )`), and per picture *Find or draw* / *On a model* / *Ghost mannequin*
+  (needs the photographs) / *Choose my own*, with instructions. `WHD_AI_Images::make()` takes `refs` (drawn from the
+  shop’s real pieces, as references) and `mode` `mannequin`. `compose` and `write-image` run as background jobs through
+  `WHD_AI_Studio::background()` (polled at `studio/job`, now `edit_posts`) when WooCommerce is there; the kit loader and
+  lightbox are the same ones (`admin/ai-kit.js`, whose client takes a `jobs` URL).
 - **Who appears in drawn pictures** is one list, `WHD_AI_Images::people()` (filter `whd_ai_image_people`): young
   women with a stated age (23–30) and background — Korean, Thai, Japanese, Chinese, Filipina, alternating with
   white — plus `age_rule()` (22–32) in every brief. Product sets offset the list by product id; journal, page and

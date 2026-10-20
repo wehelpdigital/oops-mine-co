@@ -3,7 +3,7 @@
  * Plugin Name: WHD — Popups, Emails & Tracking
  * Plugin URI:  https://wehelpdigital.com
  * Description: Marketing toolkit for Oops, Mine Co.: exit-intent and welcome popups with a drag-and-drop editor and cookie-based countdowns, a drag-and-drop email builder for every WooCommerce trigger (including abandoned-cart recovery), a newsletter list with phone capture, integrations that push subscribers to Mailchimp, Klaviyo or a webhook and send SMS through Twilio, a tracking-scripts module (GA4, Search Console, Meta Pixel and Conversions API), size charts, product stories, and an AI copywriter that writes against your own brief, rules and keyword list.
- * Version:     1.16.11
+ * Version:     1.16.12
  * Author:      We Help Digital
  * Text Domain: whd
  * Requires at least: 6.4
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'WHD_VERSION', '1.16.11' );
+define( 'WHD_VERSION', '1.16.12' );
 define( 'WHD_FILE', __FILE__ );
 define( 'WHD_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WHD_URL', plugin_dir_url( __FILE__ ) );
@@ -21,6 +21,7 @@ require_once WHD_DIR . 'includes/class-whd-blocks.php';
 require_once WHD_DIR . 'includes/class-whd-popups.php';
 require_once WHD_DIR . 'includes/class-whd-emails.php';
 require_once WHD_DIR . 'includes/class-whd-cart.php';
+require_once WHD_DIR . 'includes/class-whd-shopper.php';
 require_once WHD_DIR . 'includes/class-whd-scripts.php';
 require_once WHD_DIR . 'includes/class-whd-capi.php';
 require_once WHD_DIR . 'includes/class-whd-subscribers.php';
@@ -52,6 +53,8 @@ final class WHD_Plugin {
 			'cart_coupon'             => '',       // coupon merged into {coupon_code}
 			'exit_coupon'             => 'STAY15', // code offered by the exit-intent popup
 			'free_shipping_threshold' => 0,        // cart progress bar target; 0 hides it. No default promise.
+			'remember_details'        => 1,        // a returning shopper's details filled in at checkout
+			'remember_sizes'          => 1,        // and their size picked on the product page
 			'from_name'               => get_bloginfo( 'name' ),
 			'from_email'              => get_option( 'admin_email' ),
 		] );
@@ -82,6 +85,7 @@ final class WHD_Plugin {
 		WHD_Emails::init();
 		if ( class_exists( 'WooCommerce' ) ) {
 			WHD_Cart::init();
+			WHD_Shopper::init();
 		}
 		WHD_Admin::init();
 		WHD_AI_Admin::init();

@@ -73,6 +73,8 @@ final class WHD_Admin {
 			'cart_coupon'             => sanitize_text_field( $in['cart_coupon'] ?? '' ),
 			'exit_coupon'             => sanitize_text_field( $in['exit_coupon'] ?? '' ),
 			'free_shipping_threshold' => max( 0, round( (float) ( $in['free_shipping_threshold'] ?? 0 ), 2 ) ),
+			'remember_details'        => empty( $in['remember_details'] ) ? 0 : 1,
+			'remember_sizes'          => empty( $in['remember_sizes'] ) ? 0 : 1,
 			'from_name'               => sanitize_text_field( $in['from_name'] ?? '' ),
 			'from_email'              => sanitize_email( $in['from_email'] ?? '' ),
 		];
@@ -514,6 +516,10 @@ final class WHD_Admin {
 		echo '<tr><th><label for="cc">' . esc_html__( 'Coupon code for {coupon_code}', 'whd' ) . '</label></th><td><input class="regular-text" id="cc" name="whd_settings[cart_coupon]" value="' . esc_attr( $s['cart_coupon'] ) . '" placeholder="OOPS10"><p class="description">' . esc_html__( 'Create the coupon in WooCommerce → Marketing → Coupons; this only fills the merge tag.', 'whd' ) . '</p></td></tr>';
 		echo '<tr><th><label for="xc">' . esc_html__( 'Exit-intent coupon', 'whd' ) . '</label></th><td><input class="regular-text" id="xc" name="whd_settings[exit_coupon]" value="' . esc_attr( $s['exit_coupon'] ) . '" placeholder="STAY15"><p class="description">' . esc_html__( 'Offered by the exit-intent popup to keep a leaving visitor. Create the coupon in WooCommerce first.', 'whd' ) . '</p></td></tr>';
 		echo '<tr><th><label for="fst">' . esc_html__( 'Free shipping threshold', 'whd' ) . '</label></th><td><input type="number" step="1" min="0" id="fst" name="whd_settings[free_shipping_threshold]" value="' . esc_attr( $s['free_shipping_threshold'] ) . '"><p class="description">' . esc_html__( 'The cart progress bar counts up to this amount (“you are $15 away from free shipping”). Set the matching free-shipping method in WooCommerce → Shipping; 0 hides the bar.', 'whd' ) . '</p></td></tr>';
+		echo '<tr><th>' . esc_html__( 'Returning shoppers', 'whd' ) . '</th><td>'
+			. '<label><input type="checkbox" name="whd_settings[remember_details]" value="1" ' . checked( $s['remember_details'], 1, false ) . '> ' . esc_html__( 'Fill in their details at checkout — name, email, phone and address from their last order, or the bag they left', 'whd' ) . '</label><br>'
+			. '<label><input type="checkbox" name="whd_settings[remember_sizes]" value="1" ' . checked( $s['remember_sizes'], 1, false ) . '> ' . esc_html__( 'Pick their size on product pages — the size, fit or length they chose before, never a colour', 'whd' ) . '</label>'
+			. '<p class="description">' . esc_html__( 'Only on the browser that placed the order, typed the email at checkout, or followed the cart reminder link — never looked up from an email address somebody types. The checkout says “Welcome back — not you? Clear them”, which makes the browser forget everything.', 'whd' ) . '</p></td></tr>';
 		echo '<tr><th><label for="fn">' . esc_html__( 'Sender name (automations)', 'whd' ) . '</label></th><td><input class="regular-text" id="fn" name="whd_settings[from_name]" value="' . esc_attr( $s['from_name'] ) . '"></td></tr>';
 		list( $from, $reply ) = WHD_Emails::sender();
 		$sender_note          = $reply
