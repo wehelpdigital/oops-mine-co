@@ -1,0 +1,968 @@
+/**
+ * Write with AI, on the product screen.
+ *
+ * The panel above the description: choose the photographs, tick what to write, say how many new
+ * pictures, press Generate. The work is a chain of requests — look, inspect, write, then a draw and
+ * a check for each new picture, then finish — run one after another, so each step shows as it
+ * happens and a slow picture never takes the others with it.
+ *
+ * Whatever has a field on this screen is put into that field here, in the browser, and saved by
+ * Update like any other edit. Only the pictures' alt text and the product story, which have no
+ * field on this screen, are written by the server.
+ */
+( function () {
+	'use strict';
+
+	var D = window.WHD_AI_STUDIO || {};
+	var T = D.i18n || {};
+	var root = document.getElementById( 'whd-studio' );
+	if ( ! root || ! D.rest ) {
+		return;
+	}
+
+	var postId = parseInt( D.postId, 10 ) || 0;
+	var lookMax = parseInt( D.lookMax, 10 ) || 6;
+	var totalMax = parseInt( D.totalMax, 10 ) || 12;
+
+	var photos = ( D.images || [] ).slice(); // [ { id, thumb } ], in the order they are read
+	var shots = [];                          // [ { mode, ask } ] — kept when the count changes, so nothing typed is lost
+	var count = 0;                           // new pictures asked for
+	var countPicked = false;                 // until somebody picks, the count follows the photographs
+	var busy = false;
+	var active = null;                       // the progress line being worked on
+
+	var el = {
+		photos: document.getElementById( 'whd-studio-photos' ),
+		photosNote: document.getElementById( 'whd-studio-photos-note' ),
+		counts: document.getElementById( 'whd-studio-counts' ),
+		shots: document.getElementById( 'whd-studio-shots' ),
+		keywords: document.getElementById( 'whd-studio-keywords' ),
+		notes: document.getElementById( 'whd-studio-notes' ),
+		go: document.getElementById( 'whd-studio-go' ),
+		status: document.getElementById( 'whd-studio-status' ),
+		progress: document.getElementById( 'whd-studio-progress' ),
+		saw: document.getElementById( 'whd-studio-saw' ),
+		drawn: document.getElementById( 'whd-studio-drawn' ),
+		result: document.getElementById( 'whd-studio-result' ),
+		attrs: document.getElementById( 'whd-studio-attrs' )
+	};
+
+	/* ─────────────────────────── small things ─────────────────────────── */
+
+	function api( step, body ) {
+		body.post_id = postId;
+		return window.fetch( D.rest.root + step, {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': D.rest.nonce },
+			body: JSON.stringify( body )
+		} ).then( function ( r ) {
+			return r.text().then( function ( raw ) {
+				var json = null;
+				try {
+					json = JSON.parse( raw );
+				} catch ( e ) {
+					// A PHP fatal or a gateway timeout arrives as a page, not as JSON.
+					throw new Error( ( T.error || 'Something went wrong' ) + ' (HTTP ' + r.status + ')' );
+				}
+				if ( ! r.ok ) {
+					throw new Error( ( json && json.message ) || ( T.error || 'Something went wrong' ) );
+				}
+				return json;
+			} );
+		} );
+	}
+
+	function esc( text ) {
+		var d = document.createElement( 'div' );
+		d.textContent = text == null ? '' : String( text );
+		return d.innerHTML;
+	}
+
+	/* sprintf for the two shapes the strings use: %d / %s, and %1$d / %2$d. */
+	function fmt( text ) {
+		var args = Array.prototype.slice.call( arguments, 1 );
+		var i = 0;
+		return String( text || '' ).replace( /%(\d+)\$[sd]|%[sd]/g, function ( m, n ) {
+			return String( n ? args[ n - 1 ] : args[ i++ ] );
+		} );
+	}
+
+	function say( text, bad ) {
+		el.status.textContent = text || '';
+		el.status.className = 'whd-studio__status' + ( bad ? ' is-bad' : '' );
+	}
+
+	function fire( node, type ) {
+		if ( ! node ) {
+			return;
+		}
+		if ( window.jQuery ) {
+			window.jQuery( node ).trigger( type );
+		} else {
+			node.dispatchEvent( new Event( type, { bubbles: true } ) );
+		}
+	}
+
+	/* ─────────────────────────── 1. the photographs ─────────────────────────── */
+
+	function paintPhotos() {
+		el.photos.innerHTML = '';
+		photos.forEach( function ( p, i ) {
+			var fig = document.createElement( 'figure' );
+			fig.className = 'whd-studio__photo';
+			fig.innerHTML = '<img src="' + esc( p.thumb ) + '" alt="">' +
+				'<span class="whd-studio__photo-n" aria-hidden="true">' + ( i + 1 ) + '</span>' +
+				'<button type="button" class="whd-studio__photo-x" aria-label="' + esc( T.remove ) + '">&times;</button>';
+			fig.querySelector( 'button' ).addEventListener( 'click', function () {
+				photos.splice( i, 1 );
+				changedPhotos();
+			} );
+			el.photos.appendChild( fig );
+		} );
+
+		var add = document.createElement( 'button' );
+		add.type = 'button';
+		add.className = 'whd-studio__add';
+		add.innerHTML = '<span class="whd-studio__add-plus" aria-hidden="true">+</span><span>' + esc( photos.length ? T.change : T.choose ) + '</span>';
+		add.addEventListener( 'click', pick );
+		el.photos.appendChild( add );
+
+		el.photos.classList.toggle( 'is-empty', ! photos.length );
+		el.photosNote.textContent = photos.length
+			? fmt( T.some, photos.length ) + ( photos.length > lookMax ? ' ' + fmt( T.tooMany, lookMax ) : '' )
+			: T.none;
+	}
+
+	function pick() {
+		if ( ! window.wp || ! wp.media ) {
+			return;
+		}
+		var frame = wp.media( {
+			title: T.choose,
+			button: { text: T.use },
+			library: { type: 'image' },
+			multiple: 'add'
+		} );
+		frame.on( 'open', function () {
+			var selection = frame.state().get( 'selection' );
+			photos.forEach( function ( p ) {
+				var a = wp.media.attachment( p.id );
+				a.fetch();
+				selection.add( a );
+			} );
+		} );
+		frame.on( 'select', function () {
+			photos = frame.state().get( 'selection' ).map( function ( m ) {
+				var a = m.toJSON();
+				var size = a.sizes && ( a.sizes.thumbnail || a.sizes.medium );
+				return { id: a.id, thumb: size ? size.url : a.url };
+			} ).slice( 0, totalMax );
+			changedPhotos();
+		} );
+		frame.open();
+	}
+
+	function changedPhotos() {
+		paintPhotos();
+		paintCounts();
+	}
+
+	/* ─────────────────────────── 3. how many new pictures ─────────────────────────── */
+
+	/*
+	 * The choices that leave an even number in all. The story lays copy and picture out in rows that
+	 * swap sides, so an odd total leaves the last row with nothing opposite it: three photographs
+	 * offer 1, 3 or 5 (four, six or eight in all), four offer 2, 4 or 6.
+	 */
+	function options() {
+		var n = photos.length;
+		var out = [];
+		if ( ! n ) {
+			return out;
+		}
+		for ( var k = n % 2 ? 1 : 2; out.length < 3 && n + k <= totalMax; k += 2 ) {
+			out.push( k );
+		}
+		return out;
+	}
+
+	function paintCounts() {
+		if ( ! el.counts ) {
+			return;
+		}
+		var opts = options();
+		if ( ! countPicked ) {
+			count = D.draw && opts.length ? opts[ 0 ] : 0;
+		} else if ( count && opts.indexOf( count ) === -1 ) {
+			// The photographs changed under the choice: keep as close to it as still balances.
+			count = opts.reduce( function ( best, k ) {
+				return Math.abs( k - count ) < Math.abs( best - count ) ? k : best;
+			}, opts.length ? opts[ 0 ] : 0 );
+		}
+
+		el.counts.innerHTML = '';
+		[ 0 ].concat( opts ).forEach( function ( k ) {
+			var label = document.createElement( 'label' );
+			label.className = 'whd-studio__count' + ( k === count ? ' is-on' : '' );
+			label.innerHTML = '<input type="radio" name="whd-studio-count" form="whd-studio-none" value="' + k + '"' + ( k === count ? ' checked' : '' ) + '>' +
+				'<span class="whd-studio__count-n">' + ( k ? '+' + k : esc( T.noNew ) ) + '</span>' +
+				( k ? '<span class="whd-studio__count-all">' + esc( fmt( T.inAll, photos.length + k ) ) + '</span>' : '' );
+			label.querySelector( 'input' ).addEventListener( 'change', function () {
+				count = k;
+				countPicked = true;
+				paintCounts();
+			} );
+			el.counts.appendChild( label );
+		} );
+		paintShots();
+	}
+
+	function paintShots() {
+		if ( ! el.shots ) {
+			return;
+		}
+		while ( shots.length < count ) {
+			shots.push( { mode: 'model', ask: '' } );
+		}
+		el.shots.innerHTML = '';
+		for ( var i = 0; i < count; i++ ) {
+			el.shots.appendChild( shotCard( i ) );
+		}
+		if ( count ) {
+			var hint = document.createElement( 'p' );
+			hint.className = 'description whd-studio__shots-note';
+			hint.textContent = T.leftBlank;
+			el.shots.appendChild( hint );
+		}
+		el.shots.hidden = ! count;
+	}
+
+	function shotCard( i ) {
+		var s = shots[ i ];
+		var card = document.createElement( 'div' );
+		card.className = 'whd-studio__shot is-' + s.mode;
+		var name = 'whd-studio-mode-' + i;
+
+		function choice( mode, label ) {
+			return '<label class="whd-studio__mode">' +
+				'<input type="radio" form="whd-studio-none" name="' + name + '" value="' + mode + '"' + ( s.mode === mode ? ' checked' : '' ) + '>' +
+				'<span>' + esc( label ) + '</span></label>';
+		}
+
+		card.innerHTML = '<div class="whd-studio__shot-head">' +
+				'<span class="whd-studio__shot-n">' + esc( fmt( T.picture, photos.length + i + 1 ) ) + '</span>' +
+				'<span class="whd-studio__modes" role="radiogroup" aria-label="' + esc( fmt( T.picture, photos.length + i + 1 ) ) + '">' +
+					choice( 'model', T.onModel ) + choice( 'mannequin', T.mannequin ) +
+				'</span>' +
+			'</div>' +
+			'<label class="screen-reader-text" for="whd-studio-ask-' + i + '">' + esc( T.askLabel ) + '</label>' +
+			'<textarea id="whd-studio-ask-' + i + '" rows="2" class="whd-studio__ask"></textarea>';
+
+		var ask = card.querySelector( 'textarea' );
+		function hint() {
+			var list = ( 'mannequin' === s.mode ? T.askGhost : T.askModel ) || [];
+			ask.placeholder = list.length ? list[ i % list.length ] : '';
+		}
+		ask.value = s.ask;
+		hint();
+		ask.addEventListener( 'input', function () {
+			s.ask = ask.value;
+		} );
+		Array.prototype.forEach.call( card.querySelectorAll( 'input[type="radio"]' ), function ( radio ) {
+			radio.addEventListener( 'change', function () {
+				s.mode = radio.value;
+				card.className = 'whd-studio__shot is-' + s.mode;
+				hint();
+			} );
+		} );
+
+		return card;
+	}
+
+	/* ─────────────────────────── 2. what to write ─────────────────────────── */
+
+	function parts() {
+		return Array.prototype.filter.call( root.querySelectorAll( '[data-part]' ), function ( box ) {
+			return box.checked;
+		} ).map( function ( box ) {
+			return box.getAttribute( 'data-part' );
+		} );
+	}
+
+	Array.prototype.forEach.call( root.querySelectorAll( '[data-parts]' ), function ( button ) {
+		button.addEventListener( 'click', function () {
+			var on = 'all' === button.getAttribute( 'data-parts' );
+			Array.prototype.forEach.call( root.querySelectorAll( '[data-part]' ), function ( box ) {
+				box.checked = on;
+			} );
+		} );
+	} );
+
+	function keywords() {
+		return window.WHDKeywords && el.keywords ? window.WHDKeywords.chosen( el.keywords ) : [];
+	}
+
+	/* ─────────────────────────── what the screen holds ─────────────────────────── */
+
+	function editorHtml( id ) {
+		var editor = window.tinymce && tinymce.get( id );
+		if ( editor && ! editor.isHidden() ) {
+			return editor.getContent();
+		}
+		var field = document.getElementById( id );
+		return field ? field.value : '';
+	}
+
+	function current() {
+		var title = document.getElementById( 'title' );
+		return {
+			title: title ? title.value : '',
+			short: editorHtml( 'excerpt' ),
+			description: editorHtml( 'content' )
+		};
+	}
+
+	/* The fields this run would replace that already have something in them. */
+	function filled( chosen ) {
+		var now = current();
+		var out = [];
+		var has = function ( part ) {
+			return chosen.indexOf( part ) !== -1;
+		};
+		var text = function ( html ) {
+			return String( html || '' ).replace( /<[^>]*>/g, '' ).trim();
+		};
+		if ( has( 'name' ) && now.title.trim() ) {
+			out.push( T.fName );
+		}
+		if ( has( 'description' ) && text( now.description ) ) {
+			out.push( T.fDesc );
+		}
+		if ( has( 'short' ) && text( now.short ) ) {
+			out.push( T.fShort );
+		}
+		if ( has( 'story' ) && D.hasStory ) {
+			out.push( T.fStory );
+		}
+		var ticked = Array.prototype.filter.call( document.querySelectorAll( '#product_catchecklist input:checked' ), function ( box ) {
+			return parseInt( box.value, 10 ) !== parseInt( D.defaultCat, 10 );
+		} );
+		if ( has( 'categories' ) && ticked.length ) {
+			out.push( T.fCats );
+		}
+		var seoTitle = document.getElementById( 'whd-seo-title' );
+		var seoDesc = document.getElementById( 'whd-seo-desc' );
+		if ( has( 'seo' ) && ( ( seoTitle && seoTitle.value.trim() ) || ( seoDesc && seoDesc.value.trim() ) ) ) {
+			out.push( T.fSeo );
+		}
+		return out;
+	}
+
+	/* ─────────────────────────── putting things in their fields ─────────────────────────── */
+
+	function setTitle( text ) {
+		var field = document.getElementById( 'title' );
+		if ( ! field ) {
+			return false;
+		}
+		field.value = text;
+		field.dispatchEvent( new Event( 'input', { bubbles: true } ) );
+		var prompt = document.getElementById( 'title-prompt-text' );
+		if ( prompt ) {
+			prompt.classList.add( 'screen-reader-text' );
+		}
+		return true;
+	}
+
+	function setSlug( slug ) {
+		var field = document.getElementById( 'post_name' );
+		if ( field && D.canSlug && slug ) {
+			field.value = slug;
+		}
+	}
+
+	function intoEditor( id, html ) {
+		var editor = window.tinymce && tinymce.get( id );
+		var field = document.getElementById( id );
+		if ( editor && ! editor.isHidden() ) {
+			editor.setContent( html );
+			editor.fire( 'change' );
+			editor.save();
+			return true;
+		}
+		if ( field ) {
+			field.value = html;
+			field.dispatchEvent( new Event( 'input', { bubbles: true } ) );
+			if ( editor ) {
+				editor.setContent( html );
+			}
+			return true;
+		}
+		return false;
+	}
+
+	function setCategories( ids ) {
+		var boxes = document.querySelectorAll( '#product_catchecklist input[type="checkbox"], #product_catchecklist-pop input[type="checkbox"]' );
+		if ( ! boxes.length ) {
+			return false;
+		}
+		Array.prototype.forEach.call( boxes, function ( box ) {
+			box.checked = ids.indexOf( parseInt( box.value, 10 ) ) !== -1;
+		} );
+		return true;
+	}
+
+	function setChart( id ) {
+		var select = document.querySelector( 'select[name="whd_size_chart"]' );
+		if ( ! select ) {
+			return false;
+		}
+		select.value = String( id || 0 );
+		fire( select, 'change' );
+		return true;
+	}
+
+	function setSeo( seo ) {
+		var title = document.getElementById( 'whd-seo-title' );
+		var desc = document.getElementById( 'whd-seo-desc' );
+		var picker = document.getElementById( 'whd-seo-keyphrase' );
+		var hidden = document.getElementById( 'whd-seo-keyphrase-input' );
+		if ( ! title && ! desc && ! hidden ) {
+			return false;
+		}
+		if ( title ) {
+			title.value = seo.title || '';
+			title.dispatchEvent( new Event( 'input', { bubbles: true } ) );
+		}
+		if ( desc ) {
+			desc.value = seo.description || '';
+			desc.dispatchEvent( new Event( 'input', { bubbles: true } ) );
+		}
+		if ( seo.keyphrase ) {
+			// The picker holds one phrase, so adding replaces; its event keeps the hidden field in step.
+			if ( picker && window.WHDKeywords ) {
+				window.WHDKeywords.add( picker, seo.keyphrase );
+			}
+			if ( hidden ) {
+				hidden.value = seo.keyphrase;
+			}
+		}
+		return true;
+	}
+
+	function setPrice( price ) {
+		var done = false;
+		[ [ 'regular', '_regular_price' ], [ 'sale', '_sale_price' ], [ 'sku', '_sku' ] ].forEach( function ( pair ) {
+			var field = document.getElementById( pair[ 1 ] );
+			if ( field && price[ pair[ 0 ] ] !== undefined ) {
+				field.value = price[ pair[ 0 ] ];
+				fire( field, 'change' );
+				done = true;
+			}
+		} );
+		if ( price.stock !== undefined ) {
+			var manage = document.getElementById( '_manage_stock' );
+			if ( manage && ! manage.checked ) {
+				manage.checked = true;
+				fire( manage, 'change' );
+			}
+			var stock = document.getElementById( '_stock' );
+			if ( stock ) {
+				stock.value = price.stock;
+				done = true;
+			}
+		}
+		return done;
+	}
+
+	function loadTiers( state ) {
+		if ( ! window.WHDV_App ) {
+			return false;
+		}
+		window.WHDV_App.load( state );
+		return true;
+	}
+
+	/** Put every value the write step returned into its field; say where each one went. */
+	function place( s ) {
+		var out = [];
+		if ( s.title ) {
+			out.push( { label: T.fName, ok: setTitle( s.title ), box: 'titlediv', detail: s.title } );
+			setSlug( s.slug );
+		}
+		if ( s.description ) {
+			out.push( { label: T.fDesc, ok: intoEditor( 'content', s.description ), box: 'postdivrich' } );
+		}
+		if ( s.short ) {
+			out.push( { label: T.fShort, ok: intoEditor( 'excerpt', s.short ), box: 'postexcerpt' } );
+		}
+		if ( s.categories ) {
+			out.push( { label: T.fCats, ok: setCategories( s.categories ), box: 'product_catdiv', detail: ( s.category_names || [] ).join( ', ' ) } );
+		}
+		if ( Object.prototype.hasOwnProperty.call( s, 'size_chart' ) ) {
+			out.push( {
+				label: s.size_chart ? T.fChart : T.fChartNone,
+				ok: setChart( s.size_chart ),
+				box: 'whd-size-chart',
+				detail: s.size_chart_name || ''
+			} );
+		}
+		if ( s.seo ) {
+			out.push( { label: T.fSeo, ok: setSeo( s.seo ), box: 'whd-seo-box', detail: s.seo.keyphrase } );
+		}
+		var data = [];
+		if ( s.attributes && Object.keys( s.attributes ).length ) {
+			el.attrs.value = JSON.stringify( s.attributes );
+			Object.keys( s.attributes ).forEach( function ( k ) {
+				data.push( k + ': ' + s.attributes[ k ] );
+			} );
+		}
+		if ( s.price && Object.keys( s.price ).length && ! s.tiers && setPrice( s.price ) ) {
+			Object.keys( s.price ).forEach( function ( k ) {
+				data.push( k + ' ' + s.price[ k ] );
+			} );
+		}
+		if ( data.length ) {
+			out.push( { label: T.fData, ok: true, box: 'woocommerce-product-data', detail: data.join( ' · ' ) } );
+		}
+		if ( s.tiers ) {
+			out.push( {
+				label: T.fVariants,
+				ok: loadTiers( s.tiers ),
+				box: 'woocommerce-product-data',
+				detail: ( s.tier_labels || [] ).join( ' → ' ) + ' · ' + s.variations
+			} );
+		}
+		return out;
+	}
+
+	/* ─────────────────────────── the gallery ─────────────────────────── */
+
+	/**
+	 * Make pictures the product's: the first becomes the main image when there is none, the rest go
+	 * on the end of the gallery. Only the screen is changed; Update saves it, and nothing already
+	 * there is moved or removed.
+	 */
+	function intoGallery( list ) {
+		var featured = document.getElementById( '_thumbnail_id' );
+		var hidden = document.getElementById( 'product_image_gallery' );
+		var ul = document.querySelector( '#product_images_container ul.product_images' );
+		var main = featured ? parseInt( featured.value, 10 ) || 0 : 0;
+		var gallery = hidden && hidden.value ? hidden.value.split( ',' ).map( Number ).filter( Boolean ) : [];
+
+		list.forEach( function ( p ) {
+			if ( p.id === main || gallery.indexOf( p.id ) !== -1 ) {
+				return;
+			}
+			if ( main <= 0 && window.wp && wp.media && wp.media.featuredImage ) {
+				wp.media.featuredImage.set( p.id );
+				main = p.id;
+				return;
+			}
+			if ( ! hidden || ! ul ) {
+				return;
+			}
+			gallery.push( p.id );
+			var li = document.createElement( 'li' );
+			li.className = 'image';
+			li.setAttribute( 'data-attachment_id', p.id );
+			li.innerHTML = '<img src="' + esc( p.thumb ) + '" alt="">' +
+				'<ul class="actions"><li><a href="#" class="delete tips" data-tip="' + esc( T.deleteImage ) + '">' + esc( T.deleteImage ) + '</a></li></ul>';
+			var add = ul.querySelector( '.add_product_images' );
+			if ( add ) {
+				ul.insertBefore( li, add );
+			} else {
+				ul.appendChild( li );
+			}
+		} );
+		if ( hidden ) {
+			hidden.value = gallery.join( ',' );
+		}
+	}
+
+	/* ─────────────────────────── progress ─────────────────────────── */
+
+	function step( label ) {
+		var li = document.createElement( 'li' );
+		li.className = 'whd-studio__s is-busy';
+		li.innerHTML = '<span class="whd-studio__s-mark" aria-hidden="true"></span>' +
+			'<span class="whd-studio__s-label">' + esc( label ) + '</span>' +
+			'<span class="whd-studio__s-note"></span>';
+		el.progress.appendChild( li );
+		el.progress.hidden = false;
+		var note = li.querySelector( '.whd-studio__s-note' );
+		var line = {
+			note: function ( text ) {
+				note.textContent = text ? ' — ' + text : '';
+			},
+			done: function ( text ) {
+				li.className = 'whd-studio__s is-done';
+				line.note( text );
+			},
+			warn: function ( text ) {
+				li.className = 'whd-studio__s is-warn';
+				line.note( text );
+			},
+			fail: function ( text ) {
+				li.className = 'whd-studio__s is-bad';
+				line.note( text );
+			}
+		};
+		active = line;
+		return line;
+	}
+
+	/* What the AI saw, so a miscount is caught by a person before it goes anywhere. */
+	function paintSaw( facts ) {
+		var html = '<h4 class="whd-studio__sub">' + esc( T.saw ) + '</h4>';
+		var ways = ( facts.colourways || [] ).length > 1 ? facts.colourways.map( function ( w ) {
+			return w.name;
+		} ).join( ' / ' ) : facts.colour;
+		var what = [ facts.garment, ways, facts.pattern ].filter( Boolean ).join( ' · ' );
+		if ( what ) {
+			html += '<p class="whd-studio__saw-what">' + esc( what ) + '</p>';
+		}
+		if ( ( facts.countables || [] ).length ) {
+			html += '<p class="whd-studio__saw-label">' + esc( T.counted ) + '</p><ul class="whd-studio__saw-list">';
+			facts.countables.forEach( function ( c ) {
+				html += '<li><strong class="whd-studio__saw-n">' + ( c.all_visible ? '' : esc( T.atLeast ) + ' ' ) + esc( c.count ) + '</strong> ' + esc( c.item ) +
+					( c.where ? ' <span class="whd-studio__saw-where">— ' + esc( c.where ) + '</span>' : '' ) +
+					( 'high' !== c.confidence ? ' <em class="whd-studio__saw-conf is-' + esc( c.confidence ) + '">' + esc( c.confidence ) + '</em>' : '' ) +
+					( c.checked ? ' <span class="whd-studio__saw-tick" title="' + esc( T.corrected ) + '">&#10003;</span>' : '' ) +
+					'</li>';
+			} );
+			html += '</ul>';
+		}
+		if ( ( facts.absent || [] ).length ) {
+			html += '<p class="whd-studio__saw-label">' + esc( T.without ) + '</p><p class="whd-studio__saw-line">' + esc( facts.absent.join( '; ' ) ) + '</p>';
+		}
+		if ( ( facts.corrections || [] ).length ) {
+			html += '<p class="whd-studio__saw-label">' + esc( T.corrected ) + '</p><ul class="whd-studio__saw-list whd-studio__saw-list--fix">' +
+				facts.corrections.map( function ( c ) {
+					return '<li>' + esc( c ) + '</li>';
+				} ).join( '' ) + '</ul>';
+		}
+		html += '<p class="description">' + esc( T.sawNote ) + '</p>';
+		el.saw.innerHTML = html;
+		el.saw.hidden = false;
+	}
+
+	function tile( position ) {
+		var fig = document.createElement( 'figure' );
+		fig.className = 'whd-studio__tile is-busy';
+		fig.innerHTML = '<div class="whd-studio__tile-img"><span class="spinner is-active"></span></div>' +
+			'<figcaption><span class="whd-studio__tile-n">' + esc( fmt( T.picture, position ) ) + '</span><span class="whd-studio__tile-state"></span></figcaption>';
+		el.drawn.querySelector( '.whd-studio__tiles' ).appendChild( fig );
+		var state = fig.querySelector( '.whd-studio__tile-state' );
+		return {
+			show: function ( pic, verdict ) {
+				fig.querySelector( '.whd-studio__tile-img' ).innerHTML = '<a href="' + esc( pic.large || pic.url ) + '" target="_blank" rel="noopener"><img src="' + esc( pic.url ) + '" alt=""></a>';
+				var good = verdict.ok && ! verdict.unchecked;
+				fig.className = 'whd-studio__tile ' + ( good ? 'is-ok' : 'is-warn' );
+				state.textContent = good ? T.matches : T.lookAgain;
+				var notes = ( verdict.problems || [] ).slice();
+				if ( verdict.unchecked ) {
+					notes.push( verdict.unchecked );
+				}
+				if ( notes.length ) {
+					var ul = document.createElement( 'ul' );
+					ul.className = 'whd-studio__tile-notes';
+					notes.forEach( function ( n ) {
+						var li = document.createElement( 'li' );
+						li.textContent = n;
+						ul.appendChild( li );
+					} );
+					fig.appendChild( ul );
+				}
+			},
+			fail: function ( message ) {
+				fig.className = 'whd-studio__tile is-bad';
+				fig.querySelector( '.whd-studio__tile-img' ).innerHTML = '<span class="whd-studio__tile-x" aria-hidden="true">&times;</span>';
+				state.textContent = T.failedDraw + ': ' + message;
+			}
+		};
+	}
+
+	/* ─────────────────────────── drawing ─────────────────────────── */
+
+	function drawAll( ctx ) {
+		var plan = ctx.draft.shots || [];
+		if ( ! plan.length || ! D.draw ) {
+			return Promise.resolve();
+		}
+		el.drawn.innerHTML = '<h4 class="whd-studio__sub">' + esc( T.drawnHead ) + '</h4><div class="whd-studio__tiles"></div>';
+		el.drawn.hidden = false;
+
+		return plan.reduce( function ( chain, shot, j ) {
+			return chain.then( function () {
+				return drawOne( ctx, shot, j, plan.length );
+			} );
+		}, Promise.resolve() );
+	}
+
+	/*
+	 * Draw, check, and draw once more with the mistakes named if the check found any. The better of
+	 * the two is kept and the other deleted; a picture that still disagrees with the real piece is
+	 * kept too, but marked, because a person can fix a stray button faster than a third attempt can.
+	 */
+	function drawOne( ctx, shot, j, total ) {
+		var position = ctx.ids.length + j + 1;
+		var line = step( fmt( T.stepDraw, j + 1, total ) );
+		var spot = tile( position );
+		var body = { images: ctx.ids, facts: ctx.facts, shot: shot, position: position, name: ctx.draft.name };
+		var best = null;
+
+		function check( pic ) {
+			return api( 'check', { image: pic.id, images: ctx.ids, facts: ctx.facts, shot: shot } ).catch( function ( e ) {
+				return { ok: false, score: 0, problems: [], unchecked: e.message };
+			} );
+		}
+
+		return api( 'draw', body ).then( function ( pic ) {
+			line.note( T.stepCheck );
+			return check( pic ).then( function ( verdict ) {
+				best = { pic: pic, verdict: verdict };
+				if ( verdict.ok || ! ( verdict.problems || [] ).length ) {
+					return null;
+				}
+				line.note( T.stepRedraw );
+				return api( 'draw', Object.assign( {}, body, { fixes: verdict.problems } ) ).then( function ( again ) {
+					line.note( T.stepCheck );
+					return check( again ).then( function ( second ) {
+						var better = second.ok ||
+							( ! second.unchecked && ( second.score > verdict.score ||
+								( second.score === verdict.score && ( second.problems || [] ).length < verdict.problems.length ) ) );
+						var loser = better ? pic : again;
+						if ( better ) {
+							best = { pic: again, verdict: second };
+						}
+						api( 'discard', { image: loser.id } ).catch( function () {} );
+					} );
+				}, function () {
+					return null; // the second attempt failed outright: the first one stands
+				} );
+			} );
+		} ).then( function () {
+			ctx.finals.push( { id: best.pic.id, slot: ctx.ids.length + j } );
+			intoGallery( [ { id: best.pic.id, thumb: best.pic.thumb || best.pic.url } ] );
+			spot.show( best.pic, best.verdict );
+			if ( best.verdict.ok && ! best.verdict.unchecked ) {
+				line.done( T.matches );
+			} else {
+				line.warn( T.lookAgain );
+			}
+		} ).catch( function ( e ) {
+			spot.fail( e.message );
+			line.fail( e.message );
+			// One picture that would not draw is no reason to stop the rest.
+		} );
+	}
+
+	/* ─────────────────────────── the run ─────────────────────────── */
+
+	function run() {
+		if ( busy ) {
+			return;
+		}
+		var chosen = parts();
+		var notes = el.notes ? el.notes.value.trim() : '';
+		if ( ! photos.length ) {
+			say( T.needPhoto, true );
+			return;
+		}
+		if ( ! chosen.length && ! count ) {
+			say( T.needWork, true );
+			return;
+		}
+		var replacing = filled( chosen );
+		if ( replacing.length && ! window.confirm( fmt( T.confirm, replacing.join( ', ' ) ) ) ) {
+			return;
+		}
+		var existing = window.WHDV_App && window.WHDV_App.existing ? window.WHDV_App.existing() : 0;
+		if ( chosen.indexOf( 'product_data' ) !== -1 && notes && existing && ! window.confirm( fmt( T.confirmVars, existing ) ) ) {
+			return;
+		}
+
+		busy = true;
+		el.go.disabled = true;
+		say( '' );
+		[ el.progress, el.saw, el.drawn, el.result ].forEach( function ( node ) {
+			node.innerHTML = '';
+			node.hidden = true;
+		} );
+		root.classList.add( 'is-running' );
+
+		var ctx = {
+			ids: photos.map( function ( p ) {
+				return p.id;
+			} ),
+			parts: chosen,
+			finals: [],
+			placed: []
+		};
+		ctx.finals = ctx.ids.map( function ( id, i ) {
+			return { id: id, slot: i };
+		} );
+		var want = shots.slice( 0, count ).map( function ( s ) {
+			return { mode: s.mode, ask: s.ask.trim() };
+		} );
+
+		var asked = null;
+		var line = step( T.stepLook );
+		api( 'look', { images: ctx.ids, commands: notes } ).then( function ( facts ) {
+			line.done( fmt( T.looked, Math.min( ctx.ids.length, lookMax ) ) );
+			line = step( T.stepZoom );
+			return api( 'inspect', { facts: facts, commands: notes } );
+		} ).then( function ( facts ) {
+			line.done( facts.inspected ? fmt( T.zoomed, facts.inspected ) : T.zoomNone );
+			ctx.facts = facts;
+			paintSaw( facts );
+			line = step( T.stepWrite );
+			asked = {
+				facts: facts,
+				parts: chosen,
+				keywords: keywords(),
+				commands: notes,
+				images: ctx.ids,
+				shots: want,
+				current: current()
+			};
+			return api( 'write', asked );
+		} ).then( function ( draft ) {
+			line.done( draft.model );
+			if ( ! draft.repair ) {
+				return draft;
+			}
+			// A draft that failed a check goes back once, as a request of its own.
+			line = step( fmt( T.stepRepair, draft.issues.length ) );
+			return api( 'repair', Object.assign( {}, asked, { raw: draft.raw } ) ).then( function ( fixed ) {
+				line.done( ( fixed.repaired || [] ).length ? fmt( T.fixedN, fixed.repaired.length ) : T.keptFirst );
+				return fixed;
+			}, function ( e ) {
+				line.warn( e.message );
+				return draft; // the first draft stands; its faults are listed with the result
+			} );
+		} ).then( function ( draft ) {
+			ctx.draft = draft;
+			ctx.placed = place( draft.screen || {} );
+			// The photographs this was all written from are the product's own now, if they were not already.
+			intoGallery( photos );
+			return drawAll( ctx );
+		} ).then( function () {
+			line = step( T.stepFinish );
+			return api( 'finish', {
+				parts: chosen,
+				images: ctx.finals,
+				draft: {
+					name: ctx.draft.name,
+					images: ctx.draft.images,
+					story: ctx.draft.story || [],
+					used: ctx.draft.used || []
+				}
+			} );
+		} ).then( function ( finished ) {
+			line.done();
+			ctx.finished = finished;
+			if ( finished.story ) {
+				D.hasStory = true;
+			}
+			paintResult( ctx );
+			say( T.done );
+			// The score box reads the screen; give the editors a moment to settle first.
+			window.setTimeout( function () {
+				var refresh = document.getElementById( 'whd-seo-refresh' );
+				if ( refresh ) {
+					refresh.click();
+				}
+			}, 400 );
+		} ).catch( function ( e ) {
+			if ( active ) {
+				active.fail( e.message );
+			}
+			say( ( T.stopped || 'Stopped' ) + ': ' + e.message, true );
+			if ( ctx.placed.length ) {
+				paintResult( ctx );
+			}
+		} ).then( function () {
+			busy = false;
+			el.go.disabled = false;
+			el.go.textContent = T.again;
+			root.classList.remove( 'is-running' );
+		} );
+	}
+
+	function paintResult( ctx ) {
+		var rows = ( ctx.placed || [] ).slice();
+		var draft = ctx.draft || {};
+		var finished = ctx.finished || {};
+		if ( finished.story ) {
+			rows.push( { label: T.fStory, ok: true, box: 'whd-product-story', detail: fmt( T.sections, finished.story ) } );
+		}
+		if ( finished.dressed ) {
+			rows.push( { label: T.fAlt, ok: true, box: 'postimagediv', detail: fmt( T.pictures, finished.dressed ) } );
+		}
+
+		var html = '<h4 class="whd-studio__sub">' + esc( T.resultHead ) + '</h4><ul class="whd-studio__placed">';
+		rows.forEach( function ( r ) {
+			html += '<li class="' + ( r.ok ? 'is-ok' : 'is-bad' ) + '">' +
+				'<span class="whd-studio__placed-mark" aria-hidden="true">' + ( r.ok ? '&#10003;' : '!' ) + '</span>' +
+				'<a href="#' + esc( r.box ) + '" class="whd-ready__jump">' + esc( r.label ) + '</a>' +
+				( r.detail ? ' <span class="whd-studio__placed-detail">' + esc( r.detail ) + '</span>' : '' ) +
+				( r.ok ? '' : ' <span class="whd-studio__placed-detail">' + esc( T.notPlaced ) + '</span>' ) +
+				'</li>';
+		} );
+		html += '</ul>';
+
+		if ( ( draft.used || [] ).length ) {
+			html += '<p class="whd-studio__saw-label">' + esc( T.keywordsIn ) + '</p><p class="whd-studio__chips">' +
+				draft.used.map( function ( k ) {
+					return '<span class="whd-ai-kwtag is-in">' + esc( k ) + '</span>';
+				} ).join( ' ' ) + '</p>';
+		}
+		if ( ( draft.repaired || [] ).length ) {
+			html += '<p class="whd-studio__saw-label">' + esc( T.repaired ) + '</p><ul class="whd-studio__fixed">' +
+				draft.repaired.map( function ( i ) {
+					return '<li>' + esc( i ) + '</li>';
+				} ).join( '' ) + '</ul>';
+		}
+		if ( ( draft.issues || [] ).length ) {
+			html += '<p class="whd-studio__saw-label">' + esc( T.stillWrong ) + '</p><ul class="whd-studio__issues">' +
+				draft.issues.map( function ( i ) {
+					return '<li>' + esc( i ) + '</li>';
+				} ).join( '' ) + '</ul>';
+		}
+		el.result.innerHTML = html;
+		el.result.hidden = false;
+	}
+
+	/* ─────────────────────────── start ─────────────────────────── */
+
+	el.go.addEventListener( 'click', run );
+
+	// Typing Enter in the panel must never submit the product form.
+	root.addEventListener( 'keydown', function ( e ) {
+		if ( 'Enter' === e.key && 'INPUT' === e.target.tagName && 'text' === e.target.type && ! e.target.closest( '.whd-kw' ) ) {
+			e.preventDefault();
+		}
+	} );
+
+	/* Suggestions are offered, not chosen: a chosen keyword has to appear word for word in the copy. */
+	var suggest = document.getElementById( 'whd-studio-suggest' );
+	if ( suggest && window.WHDKeywords && el.keywords && ( D.suggested || [] ).length ) {
+		D.suggested.forEach( function ( word ) {
+			var chip = document.createElement( 'button' );
+			chip.type = 'button';
+			chip.className = 'whd-ai-suggest__chip';
+			chip.textContent = word;
+			chip.addEventListener( 'click', function () {
+				window.WHDKeywords.add( el.keywords, word );
+				chip.remove();
+			} );
+			suggest.appendChild( chip );
+		} );
+		suggest.hidden = false;
+	}
+
+	changedPhotos();
+}() );

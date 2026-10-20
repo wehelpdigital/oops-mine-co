@@ -292,6 +292,28 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   reasoning comes out of `max_tokens`, so the write step needs a budget far above the reply length or the JSON arrives
   truncated and unreadable; and the keyphrase is derived from the product's own name, never from the researched keyword
   list — that list is passed as vocabulary only (handing products topic phrases put a hundred of them in competition).
+- **Write with AI on the product screen** is `WHD_AI_Studio` (`includes/class-whd-ai-studio.php`, `admin/ai-studio.js`):
+  a meta box in its own context `whd_top`, printed at `edit_form_after_title` so it sits above the description (no
+  position in the normal column can — the editor is not a meta box). Products no longer get the old `whd-ai-box`
+  panel; pages and journal posts still do. Flow: pick photographs (defaults to featured + gallery) → tick parts
+  (name, description, short, story, categories, size chart, product data, SEO) + keywords + a notes box read like
+  Bulk's commands → number of new pictures, offered only as counts that make the total even (3 photos → 1/3/5),
+  each with a mode (model / ghost mannequin) and instructions. Eight REST steps under `whd/v1/ai/studio/`, one
+  request each so none runs long: `look` (photos at 1536px, `detail: high` → facts, whole-garment `countables` with
+  `all_visible`, `colourways`, `absent`, boxes in thousandths), `inspect` (those boxes cut from the **original**
+  files at full resolution, plus 2×2 tiles as a fallback, re-read and corrected), `write` (all copy in one JSON
+  reply; house check + `WHD_SEO::analyse` on a synthetic doc), `repair` (its own request, once, when `write` says
+  `repair: true`), `draw` + `check` per picture (references + detail crops; the checker counts the drawing against
+  the spec; one redraw with the problems named, the worse attempt deleted via `discard`), `finish` (alt text and
+  the story, which have no field on the screen). Everything that **has** a field (title, slug while unpublished,
+  description, excerpt, categories, size chart select, SEO box, price, gallery) is filled in the browser and saved
+  by Update; variants go through `window.WHDV_App.load( state )` in the Variation tiers grid; fabric/fit/care ride
+  a hidden field merged at `woocommerce_process_product_meta` priority 30. Lessons from the first real runs: a
+  count must be for the whole piece, not per photograph (the first prompt produced "exactly 1 front button"); a
+  loose colour name beats the reference ("red plaid" drew bright tartan for a muted rust ombre), so colours are
+  named precisely and the brief says colours come from the photographs; with two colourways in the photos, each
+  shot names one and its photo goes first, the other labelled "cut and details only"; and a single request that
+  wrote and repaired took 130 s, which is why repair is a separate step.
 - **Who appears in drawn pictures** is one list, `WHD_AI_Images::people()` (filter `whd_ai_image_people`): young
   women with a stated age (23–30) and background — Korean, Thai, Japanese, Chinese, Filipina, alternating with
   white — plus `age_rule()` (22–32) in every brief. Product sets offset the list by product id; journal, page and

@@ -266,11 +266,11 @@ final class WHD_Product_Admin {
 		if ( $order ) {
 			return $order; // the user has dragged them somewhere; leave it alone
 		}
+		// "Write with AI" is not in this list: it sits above the description, in a context of its own.
 		return [
 			'normal' => implode( ',', [
 				'woocommerce-product-data',
 				'postexcerpt',
-				'whd-ai-box',
 				'postdivrich',
 			] ),
 			'side'   => implode( ',', [

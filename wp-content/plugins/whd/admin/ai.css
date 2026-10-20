@@ -227,6 +227,8 @@
 	gap: 6px;
 	margin: 8px 0 0;
 }
+/* display:flex above would otherwise beat the hidden attribute and show an empty "Suggested" label. */
+.whd-ai-suggest[hidden] { display: none; }
 .whd-ai-suggest__label { font-size: 12px; color: #646970; }
 .whd-ai-suggest__chip {
 	padding: 3px 10px;

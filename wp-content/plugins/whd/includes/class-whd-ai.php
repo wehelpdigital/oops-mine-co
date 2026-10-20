@@ -908,9 +908,12 @@ final class WHD_AI {
 	 * through a copy, so the file in the media library is left exactly as it was.
 	 *
 	 * @param int|string $image An attachment ID, or a path to a file on disk.
+	 * @param int        $edge  Long edge to send at; 0 for VISION_EDGE. Counting buttons needs more
+	 *                          than describing a colour does, so the product panel asks for more.
 	 * @return array|null [ mime, data (base64) ], or null when it cannot be read.
 	 */
-	public static function picture_part( $image ) {
+	public static function picture_part( $image, $edge = 0 ) {
+		$edge = (int) $edge > 0 ? (int) $edge : self::VISION_EDGE;
 		$file = is_numeric( $image ) ? get_attached_file( (int) $image ) : (string) $image;
 		if ( ! $file || ! file_exists( $file ) ) {
 			return null;
@@ -925,10 +928,10 @@ final class WHD_AI {
 		$editor = wp_get_image_editor( $file );
 		if ( ! is_wp_error( $editor ) ) {
 			$size = $editor->get_size();
-			if ( max( (int) $size['width'], (int) $size['height'] ) > self::VISION_EDGE ) {
+			if ( max( (int) $size['width'], (int) $size['height'] ) > $edge ) {
 				$editor->resize(
-					$size['width'] >= $size['height'] ? self::VISION_EDGE : null,
-					$size['height'] > $size['width'] ? self::VISION_EDGE : null,
+					$size['width'] >= $size['height'] ? $edge : null,
+					$size['height'] > $size['width'] ? $edge : null,
 					false
 				);
 				$editor->set_quality( 82 );
@@ -958,14 +961,20 @@ final class WHD_AI {
 		$model = self::model();
 		$json  = ! empty( $options['json'] );
 
-		/* Pictures to look at, if the caller sent any. */
+		/*
+		 * Pictures to look at, if the caller sent any. 'vision_edge' sends them larger than the
+		 * default, and 'detail' => 'high' asks the provider not to shrink them again on its side —
+		 * which it otherwise does, and which is exactly the difference between seeing four buttons
+		 * and guessing at five.
+		 */
 		$pictures = [];
 		foreach ( (array) ( $options['images'] ?? [] ) as $image ) {
-			$part = self::picture_part( $image );
+			$part = self::picture_part( $image, (int) ( $options['vision_edge'] ?? 0 ) );
 			if ( $part ) {
 				$pictures[] = $part;
 			}
 		}
+		$high = $pictures && 'high' === ( $options['detail'] ?? '' );
 
 		/*
 		 * The setting is sized for a product description. A caller that knows it is asking for
@@ -1005,7 +1014,10 @@ final class WHD_AI {
 			if ( $pictures ) {
 				$chat = [ [ 'type' => 'text', 'text' => $user ] ];
 				foreach ( $pictures as $p ) {
-					$chat[] = [ 'type' => 'image_url', 'image_url' => [ 'url' => 'data:' . $p['mime'] . ';base64,' . $p['data'] ] ];
+					$chat[] = [ 'type' => 'image_url', 'image_url' => array_filter( [
+						'url'    => 'data:' . $p['mime'] . ';base64,' . $p['data'],
+						'detail' => $high ? 'high' : null,
+					] ) ];
 				}
 			}
 			$url  = 'https://api.openai.com/v1/chat/completions';
@@ -1042,6 +1054,9 @@ final class WHD_AI {
 			];
 			if ( $json ) {
 				$config['responseMimeType'] = 'application/json';
+			}
+			if ( $high ) {
+				$config['mediaResolution'] = 'MEDIA_RESOLUTION_HIGH';
 			}
 			$parts = [ [ 'text' => $user ] ];
 			foreach ( $pictures as $p ) {

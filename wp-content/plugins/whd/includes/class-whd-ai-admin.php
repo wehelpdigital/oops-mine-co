@@ -832,6 +832,10 @@ final class WHD_AI_Admin {
 
 	public static function meta_box() {
 		foreach ( WHD_AI::get()['post_types'] as $type ) {
+			// A product gets the whole-page panel above the editor instead (WHD_AI_Studio).
+			if ( 'product' === $type && class_exists( 'WHD_AI_Studio' ) && WHD_AI_Studio::active() ) {
+				continue;
+			}
 			add_meta_box(
 				// Not 'whd-ai-panel': that id belongs to the div inside, and add_meta_box puts
 				// its own id on the postbox wrapper.

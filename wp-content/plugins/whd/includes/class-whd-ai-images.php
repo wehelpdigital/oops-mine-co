@@ -185,7 +185,7 @@ final class WHD_AI_Images {
 	 * Left to itself the model returns the same woman in the same window four times. Naming the
 	 * variation is what makes a set of four look like a set rather than a contact sheet.
 	 */
-	private static function scenes(): array {
+	public static function scenes(): array {
 		return [
 			__( 'at home in a bright apartment, morning light across the floor', 'whd' ),
 			__( 'out on a quiet city street, late afternoon light', 'whd' ),
@@ -521,7 +521,7 @@ final class WHD_AI_Images {
 	 *                            for a photograph that runs the full width of a screen.
 	 * @return array|WP_Error { data: string, mime: string }
 	 */
-	private static function request( array $parts, array $image_config = [] ) {
+	public static function request( array $parts, array $image_config = [] ) {
 		$key = (string) WHD_AI::get()['google_key'];
 
 		$response = wp_remote_post(
@@ -568,7 +568,6 @@ final class WHD_AI_Images {
 	 * @return array|WP_Error { data: string, mime: string }
 	 */
 	private static function draw( $product, string $prompt ) {
-		$key   = (string) WHD_AI::get()['google_key'];
 		$parts = [];
 
 		// Three references is enough to pin the garment down and keeps the request a sensible size.
@@ -589,42 +588,8 @@ final class WHD_AI_Images {
 		}
 		$parts[] = [ 'text' => $prompt ];
 
-		$response = wp_remote_post(
-			'https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode( self::model() ) . ':generateContent?key=' . rawurlencode( $key ),
-			[
-				// Drawing takes far longer than writing, and a 4K frame is eight megabytes of it.
-				'timeout' => 300,
-				'headers' => [ 'Content-Type' => 'application/json' ],
-				'body'    => wp_json_encode( array_filter( [
-					'contents'         => [ [ 'role' => 'user', 'parts' => $parts ] ],
-					'generationConfig' => $image_config ? [ 'imageConfig' => $image_config ] : null,
-				] ) ),
-			]
-		);
-
-		if ( is_wp_error( $response ) ) {
-			return $response;
-		}
-		$code = (int) wp_remote_retrieve_response_code( $response );
-		$body = json_decode( wp_remote_retrieve_body( $response ), true );
-		if ( $code < 200 || $code >= 300 ) {
-			return new WP_Error( 'whd_ai_images_http', sprintf( '%d — %s', $code, $body['error']['message'] ?? __( 'the image model refused', 'whd' ) ) );
-		}
-
-		foreach ( (array) ( $body['candidates'][0]['content']['parts'] ?? [] ) as $part ) {
-			if ( ! empty( $part['inlineData']['data'] ) ) {
-				return [
-					'data' => base64_decode( $part['inlineData']['data'] ),
-					'mime' => (string) ( $part['inlineData']['mimeType'] ?? 'image/jpeg' ),
-				];
-			}
-		}
-
-		// A refusal comes back as words where the picture should be, so pass it on rather than
-		// reporting an empty success.
-		$said = trim( (string) ( $body['candidates'][0]['content']['parts'][0]['text'] ?? '' ) );
-
-		return new WP_Error( 'whd_ai_images_empty', $said ?: __( 'The model sent no picture back.', 'whd' ) );
+		/* This was a second copy of request() that read an $image_config it never defined. */
+		return self::request( $parts );
 	}
 
 	/** Put a drawn picture in the media library, named and described like the rest. */
@@ -697,7 +662,7 @@ final class WHD_AI_Images {
 	 * @param string $alt  What the picture shows.
 	 * @param string $desc Longer sentence, or empty to derive one from the alt.
 	 */
-	private static function settle( int $id, string $file, string $alt, string $desc = '', int $max_edge = 0, int $quality = 0 ) {
+	public static function settle( int $id, string $file, string $alt, string $desc = '', int $max_edge = 0, int $quality = 0 ) {
 		$max_edge = $max_edge ?: self::MAX_EDGE;
 		$quality  = $quality ?: self::QUALITY;
 		require_once ABSPATH . 'wp-admin/includes/image.php';

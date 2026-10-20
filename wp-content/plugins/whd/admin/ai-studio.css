@@ -1,0 +1,724 @@
+/*
+ * Write with AI, above the product description.
+ *
+ * A WordPress meta box and it should keep looking like one: the admin's own type, its own blue for
+ * links and its own buttons. The shop's colours come in only where something is chosen — a ticked
+ * part, the picked number of pictures — so the eye finds what is on without having to read.
+ */
+
+.whd-studio-top {
+	margin-top: 18px;
+}
+
+.whd-studio-top .meta-box-sortables {
+	min-height: 0;
+}
+
+.whd-studio {
+	--whd-ink: #3a2b26;
+	--whd-sand: #f7f2ed;
+	--whd-sand-2: #efe6de;
+	--whd-rose: #b98b7e;
+	--whd-line: #dcdcde;
+	--whd-quiet: #646970;
+	max-width: 1100px;
+}
+
+.whd-studio__lead {
+	margin: 4px 0 6px;
+	max-width: 88ch;
+	color: #50575e;
+	line-height: 1.6;
+}
+
+/* the three steps */
+
+.whd-studio__step {
+	padding: 16px 0 6px;
+	border-top: 1px solid #f0f0f1;
+}
+
+.whd-studio__step:first-of-type {
+	border-top: 0;
+	padding-top: 10px;
+}
+
+.whd-studio__h {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	margin: 0 0 12px;
+	font-size: 14px;
+	font-weight: 600;
+	color: #1d2327;
+}
+
+.whd-studio__n {
+	display: grid;
+	place-items: center;
+	flex: 0 0 auto;
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	background: var(--whd-ink);
+	color: #f7f2ed;
+	font-size: 11px;
+	font-weight: 600;
+}
+
+.whd-studio__label {
+	display: block;
+	margin: 0 0 6px;
+	font-weight: 600;
+	color: #1d2327;
+}
+
+.whd-studio__field {
+	margin: 16px 0 0;
+}
+
+.whd-studio .description {
+	margin-top: 6px;
+	max-width: 88ch;
+}
+
+/* 1. photographs */
+
+.whd-studio__photos {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.whd-studio__photo {
+	position: relative;
+	margin: 0;
+	width: 78px;
+	height: 102px;
+	border-radius: 5px;
+	overflow: hidden;
+	background: #f6f7f7;
+	border: 1px solid var(--whd-line);
+}
+
+.whd-studio__photo img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.whd-studio__photo-n {
+	position: absolute;
+	left: 5px;
+	top: 5px;
+	min-width: 18px;
+	height: 18px;
+	padding: 0 4px;
+	border-radius: 9px;
+	background: rgba(29, 35, 39, .72);
+	color: #fff;
+	font-size: 10.5px;
+	font-weight: 600;
+	line-height: 18px;
+	text-align: center;
+}
+
+.whd-studio__photo-x {
+	position: absolute;
+	right: 4px;
+	top: 4px;
+	width: 20px;
+	height: 20px;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, .92);
+	color: #b32d2e;
+	font-size: 15px;
+	line-height: 20px;
+	cursor: pointer;
+	opacity: 0;
+	transition: opacity .15s;
+}
+
+.whd-studio__photo:hover .whd-studio__photo-x,
+.whd-studio__photo-x:focus-visible {
+	opacity: 1;
+}
+
+.whd-studio__add {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	width: 78px;
+	height: 102px;
+	padding: 6px;
+	border: 1px dashed #a7aaad;
+	border-radius: 5px;
+	background: #fcfcfc;
+	color: #2271b1;
+	font-size: 11.5px;
+	line-height: 1.3;
+	text-align: center;
+	cursor: pointer;
+	transition: border-color .15s, background .15s;
+}
+
+.whd-studio__add:hover,
+.whd-studio__add:focus-visible {
+	border-color: #2271b1;
+	background: #f6fbff;
+}
+
+.whd-studio__add-plus {
+	font-size: 20px;
+	line-height: 1;
+}
+
+.whd-studio__photos.is-empty .whd-studio__add {
+	width: 180px;
+	border-color: #b32d2e;
+	color: #b32d2e;
+}
+
+/* 2. what to write */
+
+.whd-studio__parts {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+	gap: 8px;
+}
+
+.whd-studio__part {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	grid-template-rows: auto auto;
+	column-gap: 8px;
+	align-items: center;
+	padding: 8px 10px;
+	border: 1px solid var(--whd-line);
+	border-radius: 5px;
+	background: #fff;
+	cursor: pointer;
+	transition: border-color .15s, background .15s;
+}
+
+.whd-studio__part input {
+	grid-row: 1 / span 2;
+	margin: 0;
+}
+
+.whd-studio__part-name {
+	font-weight: 600;
+	color: #1d2327;
+	line-height: 1.35;
+}
+
+.whd-studio__part-note {
+	grid-column: 2;
+	font-size: 11.5px;
+	color: var(--whd-quiet);
+	line-height: 1.35;
+}
+
+.whd-studio__part:has(input:checked) {
+	border-color: var(--whd-rose);
+	background: var(--whd-sand);
+}
+
+.whd-studio__part:hover {
+	border-color: #8c8f94;
+}
+
+.whd-studio__quick {
+	margin: 8px 0 0;
+	font-size: 12px;
+	color: var(--whd-quiet);
+}
+
+.whd-studio__quick .button-link {
+	font-size: 12px;
+}
+
+.whd-studio__notes {
+	width: 100%;
+	max-width: 880px;
+	resize: vertical;
+	line-height: 1.5;
+}
+
+/* 3. more photographs */
+
+.whd-studio__counts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.whd-studio__count {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 6px;
+	padding: 6px 13px;
+	border: 1px solid #c3c4c7;
+	border-radius: 999px;
+	background: #fff;
+	cursor: pointer;
+	transition: border-color .15s, background .15s, color .15s;
+}
+
+.whd-studio__count input {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.whd-studio__count:hover {
+	border-color: #8c8f94;
+}
+
+.whd-studio__count:has(input:focus-visible) {
+	box-shadow: 0 0 0 2px #fff, 0 0 0 4px #2271b1;
+}
+
+.whd-studio__count-n {
+	font-weight: 600;
+}
+
+.whd-studio__count-all {
+	font-size: 11.5px;
+	color: var(--whd-quiet);
+}
+
+.whd-studio__count.is-on {
+	border-color: var(--whd-ink);
+	background: var(--whd-ink);
+	color: #f7f2ed;
+}
+
+.whd-studio__count.is-on .whd-studio__count-all {
+	color: #d9c9c0;
+}
+
+.whd-studio__shots {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 10px;
+	margin-top: 12px;
+}
+
+.whd-studio__shots-note {
+	grid-column: 1 / -1;
+	margin: 0;
+}
+
+.whd-studio__shot {
+	padding: 10px;
+	border: 1px solid var(--whd-line);
+	border-radius: 6px;
+	background: #fff;
+}
+
+.whd-studio__shot.is-mannequin {
+	background: #fbfaf8;
+}
+
+.whd-studio__shot-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	margin-bottom: 8px;
+}
+
+.whd-studio__shot-n {
+	font-weight: 600;
+	color: #1d2327;
+}
+
+.whd-studio__modes {
+	display: inline-flex;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+.whd-studio__mode {
+	position: relative;
+	margin: 0;
+	cursor: pointer;
+}
+
+.whd-studio__mode input {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.whd-studio__mode span {
+	display: block;
+	padding: 3px 9px;
+	font-size: 12px;
+	color: #50575e;
+	background: #fff;
+	transition: background .15s, color .15s;
+}
+
+.whd-studio__mode + .whd-studio__mode span {
+	border-left: 1px solid #c3c4c7;
+}
+
+.whd-studio__mode input:checked + span {
+	background: var(--whd-sand-2);
+	color: var(--whd-ink);
+	font-weight: 600;
+}
+
+.whd-studio__mode input:focus-visible + span {
+	outline: 2px solid #2271b1;
+	outline-offset: -2px;
+}
+
+.whd-studio__ask {
+	width: 100%;
+	resize: vertical;
+	font-size: 12.5px;
+	line-height: 1.45;
+}
+
+/* the button */
+
+.whd-studio__go {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 12px;
+	margin: 18px 0 4px;
+	padding-top: 14px;
+	border-top: 1px solid #f0f0f1;
+}
+
+.whd-studio__status {
+	color: var(--whd-quiet);
+}
+
+.whd-studio__status.is-bad {
+	color: #b32d2e;
+}
+
+/* progress */
+
+.whd-studio__progress {
+	margin: 12px 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.whd-studio__s {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	margin: 0;
+	padding: 3px 0;
+	color: #1d2327;
+}
+
+.whd-studio__s-mark {
+	position: relative;
+	top: 2px;
+	flex: 0 0 auto;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	border: 2px solid #c3c4c7;
+	box-sizing: border-box;
+}
+
+.whd-studio__s.is-busy .whd-studio__s-mark {
+	border-color: #2271b1;
+	border-right-color: transparent;
+	animation: whd-studio-spin .8s linear infinite;
+}
+
+.whd-studio__s.is-done .whd-studio__s-mark {
+	border-color: #00a32a;
+	background: #00a32a;
+}
+
+.whd-studio__s.is-done .whd-studio__s-mark::after {
+	content: "";
+	position: absolute;
+	left: 3px;
+	top: 0;
+	width: 3px;
+	height: 6px;
+	border: solid #fff;
+	border-width: 0 2px 2px 0;
+	transform: rotate(45deg);
+}
+
+.whd-studio__s.is-warn .whd-studio__s-mark {
+	border-color: #dba617;
+	background: #dba617;
+}
+
+.whd-studio__s.is-bad .whd-studio__s-mark {
+	border-color: #b32d2e;
+	background: #b32d2e;
+}
+
+.whd-studio__s-note {
+	color: var(--whd-quiet);
+}
+
+.whd-studio__s.is-bad .whd-studio__s-note {
+	color: #b32d2e;
+}
+
+@keyframes whd-studio-spin {
+	to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.whd-studio__s.is-busy .whd-studio__s-mark {
+		animation: none;
+	}
+}
+
+/* what the AI saw, the pictures, the result */
+
+.whd-studio__saw,
+.whd-studio__drawn,
+.whd-studio__result {
+	margin-top: 14px;
+	padding: 12px 14px;
+	border-radius: 6px;
+}
+
+.whd-studio__saw {
+	background: var(--whd-sand);
+	border-left: 3px solid var(--whd-rose);
+	border-radius: 0 6px 6px 0;
+	color: #3c3431;
+}
+
+.whd-studio__drawn,
+.whd-studio__result {
+	border: 1px solid var(--whd-line);
+	background: #fff;
+}
+
+.whd-studio__sub {
+	margin: 0 0 8px;
+	font-size: 13px;
+	font-weight: 600;
+	color: #1d2327;
+}
+
+.whd-studio__saw-what {
+	margin: 0 0 8px;
+	font-size: 13.5px;
+}
+
+.whd-studio__saw-label {
+	margin: 10px 0 4px;
+	font-size: 10.5px;
+	font-weight: 600;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+	color: #6f5348;
+}
+
+.whd-studio__saw-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	columns: 2 320px;
+	column-gap: 24px;
+}
+
+.whd-studio__saw-list li {
+	margin: 0 0 3px;
+	break-inside: avoid;
+}
+
+.whd-studio__saw-list--fix {
+	columns: auto;
+}
+
+.whd-studio__saw-n {
+	display: inline-block;
+	min-width: 20px;
+	text-align: right;
+	margin-right: 2px;
+}
+
+.whd-studio__saw-where {
+	color: var(--whd-quiet);
+}
+
+.whd-studio__saw-conf {
+	font-size: 11px;
+	font-style: normal;
+	padding: 0 6px;
+	border-radius: 9px;
+	background: #fcf9e8;
+	color: #8a6d00;
+}
+
+.whd-studio__saw-conf.is-low {
+	background: #fcf0f1;
+	color: #b32d2e;
+}
+
+.whd-studio__saw-tick {
+	color: #00a32a;
+	font-weight: 600;
+}
+
+.whd-studio__saw-line {
+	margin: 0;
+}
+
+.whd-studio__tiles {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	gap: 12px;
+}
+
+.whd-studio__tile {
+	margin: 0;
+	font-size: 12px;
+}
+
+.whd-studio__tile-img {
+	display: grid;
+	place-items: center;
+	aspect-ratio: 3 / 4;
+	border-radius: 5px;
+	overflow: hidden;
+	background: #f6f7f7;
+	border: 1px solid var(--whd-line);
+}
+
+.whd-studio__tile-img a,
+.whd-studio__tile-img img {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.whd-studio__tile-img img {
+	object-fit: cover;
+}
+
+.whd-studio__tile-img .spinner {
+	float: none;
+	margin: 0;
+}
+
+.whd-studio__tile.is-ok .whd-studio__tile-img {
+	border-color: #68de7c;
+}
+
+.whd-studio__tile.is-warn .whd-studio__tile-img {
+	border-color: #dba617;
+}
+
+.whd-studio__tile-x {
+	font-size: 28px;
+	color: #b32d2e;
+}
+
+.whd-studio__tile figcaption {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	margin-top: 5px;
+}
+
+.whd-studio__tile-n {
+	font-weight: 600;
+}
+
+.whd-studio__tile.is-ok .whd-studio__tile-state {
+	color: #007017;
+}
+
+.whd-studio__tile.is-warn .whd-studio__tile-state {
+	color: #8a6d00;
+}
+
+.whd-studio__tile.is-bad .whd-studio__tile-state {
+	color: #b32d2e;
+}
+
+.whd-studio__tile-notes {
+	margin: 4px 0 0;
+	padding-left: 14px;
+	color: #50575e;
+	list-style: disc;
+	line-height: 1.4;
+}
+
+.whd-studio__placed {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.whd-studio__placed li {
+	display: flex;
+	align-items: baseline;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin: 0 0 4px;
+}
+
+.whd-studio__placed-mark {
+	flex: 0 0 16px;
+	font-weight: 700;
+	color: #00a32a;
+}
+
+.whd-studio__placed li.is-bad .whd-studio__placed-mark {
+	color: #b32d2e;
+}
+
+.whd-studio__placed-detail {
+	color: var(--whd-quiet);
+}
+
+.whd-studio__chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 5px;
+	margin: 0;
+}
+
+.whd-studio__issues,
+.whd-studio__fixed {
+	margin: 0;
+	padding-left: 18px;
+	list-style: disc;
+	color: #8a6d00;
+}
+
+.whd-studio__fixed {
+	color: var(--whd-quiet);
+}
+
+.whd-studio.is-running .whd-studio__step {
+	opacity: .55;
+	pointer-events: none;
+}
+
+@media (max-width: 782px) {
+	.whd-studio__parts,
+	.whd-studio__shots {
+		grid-template-columns: 1fr;
+	}
+}

@@ -369,4 +369,18 @@
 	render();
 	var form = document.getElementById('post');
 	if (form) { form.addEventListener('submit', sync); }
+
+	/* "Write with AI" above the editor builds tiers from what the shop typed. It hands them to this
+	   grid rather than writing variations itself: they then show here for checking and are saved by
+	   Update like any other edit. Writing them from the server would be undone by that same Update,
+	   which posts the product type and attributes the screen was loaded with. */
+	window.WHDV_App = {
+		load: function (s) {
+			state = normalise(s || {});
+			state.dirty = true;
+			ensureVariable();
+			render();
+		},
+		existing: function () { return loadedCount; }
+	};
 })();
