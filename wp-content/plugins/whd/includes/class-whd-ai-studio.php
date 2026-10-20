@@ -329,6 +329,7 @@ final class WHD_AI_Studio {
 			'hintGhost'      => __( 'On a ghost mannequin, drawn from your photographs — then checked against them.', 'whd' ),
 			'hintFinish'     => __( 'Alt text on every picture, and the story beside them.', 'whd' ),
 			'hintCopy'       => __( 'A draft copy of this product, so the original stays as it is.', 'whd' ),
+			'tooLong'        => __( 'This step has been running for eight minutes, which is far longer than it should — it has been given up on.', 'whd' ),
 			'loaderShow'     => __( 'Show progress', 'whd' ),
 			'loaderHide'     => __( 'Hide — it keeps working', 'whd' ),
 			'loaderClose'    => __( 'Close', 'whd' ),
@@ -2669,6 +2670,19 @@ final class WHD_AI_Studio {
 		$mark          = is_array( $mark ) ? $mark : [ 'doing' => '', 'at' => time() ];
 		$mark['fatal'] = wp_strip_all_tags( $error['message'] ) . ' (' . basename( (string) $error['file'] ) . ':' . (int) $error['line'] . ')';
 		set_transient( self::mark_key(), $mark, 10 * MINUTE_IN_SECONDS );
+
+		// A job that died this way is over: say so, rather than leave the panel waiting on it.
+		if ( '' !== self::$job ) {
+			set_transient( self::job_key( self::$job ), [
+				'status'  => 'error',
+				'message' => sprintf(
+					/* translators: 1: what it was doing, 2: the error */
+					__( 'The server stopped while %1$s: %2$s', 'whd' ),
+					$mark['doing'] ?: __( 'working', 'whd' ),
+					$mark['fatal']
+				),
+			], HOUR_IN_SECONDS );
+		}
 	}
 
 	/** What the last request was doing when it stopped, said once. */
@@ -2708,6 +2722,9 @@ final class WHD_AI_Studio {
 				'methods'             => 'POST',
 				'callback'            => static function ( WP_REST_Request $r ) use ( $step ) {
 					self::prepare();
+					if ( in_array( $step, self::JOBS, true ) ) {
+						return self::start_job( $step, $r );
+					}
 					$answer = call_user_func( [ __CLASS__, 'rest_' . $step ], $r );
 					// Got this far, so whatever the note said did not stop it.
 					delete_transient( self::mark_key() );
@@ -2716,13 +2733,87 @@ final class WHD_AI_Studio {
 				'permission_callback' => $can,
 			] );
 		}
+		$own = static function () {
+			return current_user_can( 'edit_products' );
+		};
+		register_rest_route( 'whd/v1', '/ai/studio/job', [
+			'methods'             => 'POST',
+			'callback'            => [ __CLASS__, 'rest_job' ],
+			'permission_callback' => $own,
+		] );
 		register_rest_route( 'whd/v1', '/ai/studio/last', [
 			'methods'             => 'POST',
 			'callback'            => [ __CLASS__, 'rest_last' ],
-			'permission_callback' => static function () {
-				return current_user_can( 'edit_products' );
-			},
+			'permission_callback' => $own,
 		] );
+	}
+
+	/* ─────────────────────────── jobs ─────────────────────────── */
+
+	/** The steps that wait on a model, and so may take longer than a host keeps a request open. */
+	const JOBS = [ 'look', 'inspect', 'write', 'repair', 'draw', 'check' ];
+
+	/** The job this request is working on, for the shutdown handler. */
+	private static $job = '';
+
+	/**
+	 * Start a slow step and answer at once; the work carries on after the answer has gone.
+	 *
+	 * Writing the copy waits on the model for a minute or two, and the live host ends a request that
+	 * has said nothing for about that long — it came back as a bare HTTP 500 at "Writing the page"
+	 * with nothing logged, having never reached an error. So no request waits on a model any more:
+	 * this one hands back a job number, closes the connection (the same way the Klaviyo pushes do,
+	 * through WHD_Plugin::after_response()), and only then does the work. The panel asks how the job
+	 * is getting on every few seconds, and each of those requests is over in a moment.
+	 *
+	 * Where the server cannot close a connection early (Apache with mod_php, as on the local site)
+	 * the job simply runs before the answer is finished, which is how it worked before.
+	 */
+	private static function start_job( string $step, WP_REST_Request $r ): WP_REST_Response {
+		$job = strtolower( wp_generate_password( 20, false, false ) );
+		set_transient( self::job_key( $job ), [ 'status' => 'running', 'step' => $step, 'at' => time() ], HOUR_IN_SECONDS );
+
+		WHD_Plugin::after_response( static function ( $closed ) use ( $job, $step, $r ) {
+			self::$job = $job;
+			try {
+				$answer = call_user_func( [ __CLASS__, 'rest_' . $step ], $r );
+				$data   = $answer instanceof WP_REST_Response ? $answer->get_data() : $answer;
+				$failed = $answer instanceof WP_REST_Response && $answer->get_status() >= 400;
+				set_transient( self::job_key( $job ), $failed
+					? [ 'status' => 'error', 'message' => (string) ( $data['message'] ?? __( 'Something went wrong', 'whd' ) ) ]
+					: [ 'status' => 'done', 'result' => $data, 'closed' => (bool) $closed ], HOUR_IN_SECONDS );
+			} catch ( Throwable $e ) {
+				set_transient( self::job_key( $job ), [ 'status' => 'error', 'message' => $e->getMessage() ], HOUR_IN_SECONDS );
+			}
+			self::$job = '';
+			delete_transient( self::mark_key() );
+		} );
+
+		return new WP_REST_Response( [ 'job' => $job ], 202 );
+	}
+
+	/** How a job is getting on: running, or done with its answer, or failed with the reason — said once. */
+	public static function rest_job( WP_REST_Request $r ) {
+		$job   = preg_replace( '/[^a-z0-9]/', '', strtolower( (string) $r->get_param( 'job' ) ) );
+		$state = '' !== $job ? get_transient( self::job_key( $job ) ) : false;
+		if ( ! is_array( $state ) ) {
+			return new WP_REST_Response( [ 'status' => 'error', 'message' => __( 'That job is not known here any more. Generate again.', 'whd' ) ], 200 );
+		}
+		if ( 'running' !== $state['status'] ) {
+			delete_transient( self::job_key( $job ) );
+			return new WP_REST_Response( $state, 200 );
+		}
+		$mark = get_transient( self::mark_key() );
+		return new WP_REST_Response( [
+			'status'  => 'running',
+			'seconds' => time() - (int) $state['at'],
+			'doing'   => is_array( $mark ) ? (string) ( $mark['doing'] ?? '' ) : '',
+		], 200 );
+	}
+
+	/** Per user, so one person's job number is no use to anybody else. */
+	private static function job_key( string $job ): string {
+		return 'whd_studio_job_' . get_current_user_id() . '_' . $job;
 	}
 
 	public static function rest_copy( WP_REST_Request $r ) {

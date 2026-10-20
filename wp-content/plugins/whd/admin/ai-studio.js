@@ -49,7 +49,56 @@
 
 	/* ─────────────────────────── small things ─────────────────────────── */
 
+	/*
+	 * One step of the run. The steps that wait on a model answer at once with a job number and do
+	 * the work after the connection has closed — a host that ends quiet requests after a minute
+	 * ended "Writing the page" with a bare HTTP 500 — so here a job is waited for, a few seconds at
+	 * a time, and the caller gets the step's answer either way.
+	 */
 	function api( step, body ) {
+		return send( step, body ).then( function ( json ) {
+			return json && json.job ? wait( json.job ) : json;
+		} );
+	}
+
+	/* How long a job may run before it is given up on: the slowest step takes about two minutes. */
+	var JOB_LIMIT = 8 * 60 * 1000;
+
+	function wait( job ) {
+		var started = Date.now();
+		var misses = 0;
+		return new Promise( function ( resolve, reject ) {
+			( function poll() {
+				send( 'job', { job: job } ).then( function ( s ) {
+					misses = 0;
+					if ( 'done' === s.status ) {
+						resolve( s.result );
+						return;
+					}
+					if ( 'error' === s.status ) {
+						reject( new Error( s.message || T.error ) );
+						return;
+					}
+					if ( Date.now() - started > JOB_LIMIT ) {
+						lastWords().then( function ( said ) {
+							reject( new Error( T.tooLong + ( said ? ' ' + said : '' ) ) );
+						} );
+						return;
+					}
+					window.setTimeout( poll, 2500 );
+				}, function ( e ) {
+					// One check that did not get through is not the job failing; a run of them is.
+					if ( ++misses > 5 ) {
+						reject( e );
+					} else {
+						window.setTimeout( poll, 4000 );
+					}
+				} );
+			}() );
+		} );
+	}
+
+	function send( step, body ) {
 		body.post_id = postId;
 		return window.fetch( D.rest.root + step, {
 			method: 'POST',

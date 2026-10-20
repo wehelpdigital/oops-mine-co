@@ -331,6 +331,13 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   object carries), step + hint, a bar ticked once per progress line (`4 + pictures`, `+1` for a repair), time so
   far against an estimate (150 s + 55 s a picture), drawn thumbnails. Escape is swallowed; "Hide" closes it and
   the Generate button ("Show progress" while busy) reopens it; it closes itself on success and stays on failure.
+  **No request waits on a model.** Live (LiteSpeed) ended "Writing the page" — a 60–110 s wait with no output —
+  with a bare 500 and nothing logged, and the WAF passes HTML bodies, so it was the host's time limit. The six model
+  steps (`JOBS`) answer 202 `{ job }` at once and do the work in `WHD_Plugin::after_response()` (connection closed
+  via `litespeed_finish_request`); the result is a transient `whd_studio_job_{user}_{job}` that `studio/job` hands
+  back once; the panel polls every 2.5 s, gives up after 8 min with the server's `last` note. A fatal inside a job
+  is written onto the job by `shutdown()`. Locally (Apache + mod_php, nothing can close the connection early) the
+  job just runs before the 202 is delivered, so behaviour there is unchanged.
 - **Who appears in drawn pictures** is one list, `WHD_AI_Images::people()` (filter `whd_ai_image_people`): young
   women with a stated age (23–30) and background — Korean, Thai, Japanese, Chinese, Filipina, alternating with
   white — plus `age_rule()` (22–32) in every brief. Product sets offset the list by product id; journal, page and
