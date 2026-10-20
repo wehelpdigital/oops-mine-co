@@ -37,6 +37,7 @@
 	 * opts.root     the endpoint base, a step name is appended to it
 	 * opts.nonce    the REST nonce
 	 * opts.last     the endpoint that says what a dead request was doing
+	 * opts.jobs     the endpoint a job is asked after at (default: root + 'job')
 	 * opts.strings  error, tooLong
 	 * opts.prepare  optional: called with each body before it is sent
 	 */
@@ -66,7 +67,11 @@
 			if ( opts.prepare ) {
 				opts.prepare( body );
 			}
-			return window.fetch( opts.root + step, {
+			return post( opts.root + step, body );
+		}
+
+		function post( url, body ) {
+			return window.fetch( url, {
 				method: 'POST',
 				credentials: 'same-origin',
 				headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': opts.nonce },
@@ -100,7 +105,7 @@
 			var misses = 0;
 			return new Promise( function ( resolve, reject ) {
 				( function poll() {
-					send( 'job', { job: job } ).then( function ( s ) {
+					post( opts.jobs || opts.root + 'job', { job: job } ).then( function ( s ) {
 						misses = 0;
 						if ( 'done' === s.status ) {
 							resolve( s.result );

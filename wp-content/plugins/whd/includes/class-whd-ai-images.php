@@ -429,46 +429,75 @@ final class WHD_AI_Images {
 	}
 
 	/**
-	 * Draw a picture that belongs to no product and put it in the library.
+	 * Draw a picture that belongs to no product and put it in the library — for a journal post or
+	 * a page.
 	 *
-	 * The product path above always has the shop's own photographs to copy from. This one has
-	 * only words, so it leans on the house look instead — it is for a journal post or a page,
-	 * where nothing exists yet to be faithful to.
+	 * With nothing but words it leans on the house look. Given photographs of the shop's own pieces
+	 * (`refs`), it draws those pieces as they really are: on somebody, or — `mode` mannequin — on a
+	 * ghost mannequin with nobody in the picture at all, the way the product screen draws them.
 	 *
-	 * @param string $prompt What to draw, in a sentence or two.
-	 * @param string $name   File name stem.
-	 * @param string $alt    Alt text for the library.
+	 * @param string $prompt  What to draw, in a sentence or two.
+	 * @param string $name    File name stem.
+	 * @param string $alt     Alt text for the library.
+	 * @param string $ask     What the shop asked for this picture, which wins over the rest.
+	 * @param array  $options aspect ("16:9"), size ("1K"|"2K"|"4K"), max_edge (how wide to keep the
+	 *                        stored file), quality, refs (attachment ids of the pieces to show),
+	 *                        mode ("model" | "mannequin").
 	 * @return int|WP_Error Attachment id.
-	 */
-	/**
-	 * Draw something and put it in the media library.
-	 *
-	 * @param array $options aspect ("16:9"), size ("1K"|"2K"|"4K"), max_edge (how wide to keep
-	 *                       the stored file), quality.
 	 */
 	public static function make( string $prompt, string $name = 'illustration', string $alt = '', string $ask = '', array $options = [] ) {
 		if ( ! self::ready() ) {
 			return new WP_Error( 'whd_ai_images_off', __( 'Drawing pictures needs a Google AI key. Add one in WHD → AI content.', 'whd' ) );
 		}
 
-		$brief = sprintf(
-			"A photograph for an online boutique's journal.\n\n%3\$sWHAT TO SHOW\n%1\$s\n\nIF SOMEBODY IS IN IT\n%4\$s\n\nTHE LOOK\n%2\$s\n\n"
-			. "RULES\n- one single photograph, landscape 3:2, nothing split or collaged\n"
-			. '- ' . self::age_rule() . "\n"
-			. "- if somebody is in the picture, her whole head is in it too: not cropped at the top, not cut off by an edge\n"
-			. "- no text, no lettering, no logo, no watermark, no border\n"
-			. "- a real photograph, not a rendering or an illustration\n"
-			. '- nobody looking into the lens',
-			trim( $prompt ),
-			self::look(),
-			self::asked( $ask ),
-			self::next_person()
-		);
+		$ratio = (string) ( $options['aspect'] ?? '' );
+		$shape = '' === $ratio || '3:2' === $ratio ? 'landscape 3:2' : 'aspect ratio ' . $ratio;
+
+		/* The pieces to show, as the model's first images: a picture of the real thing beats any description of it. */
+		$parts  = [];
+		$labels = [];
+		foreach ( array_slice( array_values( array_filter( array_map( 'absint', (array) ( $options['refs'] ?? [] ) ) ) ), 0, 3 ) as $ref ) {
+			$part = WHD_AI::picture_part( $ref, 1536 );
+			if ( $part ) {
+				$parts[]  = [ 'inlineData' => [ 'mimeType' => $part['mime'], 'data' => $part['data'] ] ];
+				$labels[] = sprintf( 'Image %d: a photograph of the real piece, from the shop.', count( $parts ) );
+			}
+		}
+		$piece = $labels
+			? "THE PIECE\n" . implode( "\n", $labels ) . "\nWhatever is worn or shown is exactly this piece: the same colour and pattern at the same scale, the same length, neckline, collar, sleeves, fastenings in the same number, the same trims — nothing added, nothing left off. Colours come from these photographs, not from any word in this brief. The photographs are the truth about it.\n\n"
+			: '';
+
+		if ( $labels && 'mannequin' === ( $options['mode'] ?? '' ) ) {
+			$brief = "A product photograph for an online boutique's journal.\n\n" . $piece . self::asked( $ask )
+				. "WHAT IT IS FOR\n" . trim( $prompt ) . "\n\n"
+				. "HOW IT IS SHOWN\nA ghost-mannequin product photograph: the piece as if worn by an invisible body — natural shape and volume, the inside of the back neckline visible through the neck opening, sleeves filled out, fastenings done up the way the photographs show them. The whole piece in frame and centred; front view unless asked otherwise. A seamless warm off-white background, soft even studio light, a soft shadow beneath.\n\n"
+				. "RULES\n- one single photograph, " . $shape . ", nothing split or collaged\n"
+				. "- no person, no mannequin, no stand, no hanger, no props\n"
+				. "- no added text, lettering, logo, watermark or border — print that is part of the piece stays as the photographs show it\n"
+				. '- a real photograph, not a rendering or an illustration';
+		} else {
+			$brief = sprintf(
+				"A photograph for an online boutique's journal.\n\n%5\$s%3\$sWHAT TO SHOW\n%1\$s\n\nIF SOMEBODY IS IN IT\n%4\$s\n\nTHE LOOK\n%2\$s\n\n"
+				. "RULES\n- one single photograph, " . $shape . ", nothing split or collaged\n"
+				. '- ' . self::age_rule() . "\n"
+				. "- if somebody is in the picture, her whole head is in it too: not cropped at the top, not cut off by an edge\n"
+				. ( $labels ? "- she wears the piece from the photographs, and nothing she wears or holds covers its details; a different person from anyone in them\n" : '' )
+				. "- no text, no lettering, no logo, no watermark, no border\n"
+				. "- a real photograph, not a rendering or an illustration\n"
+				. '- nobody looking into the lens',
+				trim( $prompt ),
+				self::look(),
+				self::asked( $ask ),
+				self::next_person(),
+				$piece
+			);
+		}
+		$parts[] = [ 'text' => $brief ];
 
 		$image = self::request(
-			[ [ 'text' => $brief ] ],
+			$parts,
 			array_filter( [
-				'aspectRatio' => $options['aspect'] ?? '',
+				'aspectRatio' => $ratio,
 				'imageSize'   => $options['size'] ?? self::size(),
 			] )
 		);
@@ -505,12 +534,6 @@ final class WHD_AI_Images {
 		return (int) $id;
 	}
 
-	/**
-	 * One call to the image model.
-	 *
-	 * @param array $parts inlineData references and the text brief, in the order the model reads them.
-	 * @return array|WP_Error { data: string, mime: string }
-	 */
 	/**
 	 * One call to the image model.
 	 *

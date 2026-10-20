@@ -1,192 +1,374 @@
 /**
  * AI Posts and AI Pages.
  *
- * Two steps and a box you can edit in between: say what it is about, read what came back, change
- * anything you like, then save it. What is saved is what is in the box — the preview is the draft,
- * not a picture of one.
+ * The form is laid out the way Write with AI is on the product screen and on Bulk products: what it
+ * is about; what to write, with keywords and anything to specify; then the pictures — how many, and
+ * for each one whether it is found or drawn, on a model or a ghost mannequin, with instructions of
+ * its own, drawn from photographs of the shop's pieces when some are chosen. One button, the same
+ * loader while it works, and the same lightbox for looking at a picture up close.
+ *
+ * What comes back is a box you can edit: read it, change anything you like, then save it. What is
+ * saved is what is in the box — the preview is the draft, not a picture of one.
  */
 ( function () {
 	'use strict';
 
 	var D = window.WHD_AI_WRITER || {};
 	var T = D.i18n || {};
+	var Kit = window.WHDAIKit;
 
 	var root = document.getElementById( 'whd-writer' );
-	if ( ! root ) {
+	if ( ! root || ! Kit ) {
 		return;
 	}
 
-	var idea = document.getElementById( 'whd-writer-idea' );
-	var picker = document.getElementById( 'whd-writer-keywords' );
-	var length = document.getElementById( 'whd-writer-length' );
-	var faq = document.getElementById( 'whd-writer-faq' );
-	var go = document.getElementById( 'whd-writer-go' );
-	var status = document.getElementById( 'whd-writer-status' );
-	var result = document.getElementById( 'whd-writer-result' );
-	var title = document.getElementById( 'whd-writer-title' );
-	var desc = document.getElementById( 'whd-writer-desc' );
-	var descCount = document.getElementById( 'whd-writer-desc-count' );
-	var check = document.getElementById( 'whd-writer-check' );
-	var body = document.getElementById( 'whd-writer-body' );
-	var publish = document.getElementById( 'whd-writer-publish' );
-	var draft = document.getElementById( 'whd-writer-draft' );
-	var again = document.getElementById( 'whd-writer-again' );
-	var imagesMode = document.getElementById( 'whd-writer-images-mode' );
-	var askRow = document.getElementById( 'whd-writer-ask-row' );
-	var ask = document.getElementById( 'whd-writer-ask' );
-	var slotsNote = document.getElementById( 'whd-writer-images-note' );
-	var slotsNoteWas = slotsNote ? slotsNote.textContent : '';
-	var chosenBox = document.getElementById( 'whd-writer-chosen' );
-	var chosenList = document.getElementById( 'whd-writer-chosen-list' );
-	var chosenCount = document.getElementById( 'whd-writer-chosen-count' );
-	var chosenAdd = document.getElementById( 'whd-writer-chosen-add' );
-	var chosenClear = document.getElementById( 'whd-writer-chosen-clear' );
-	var chosenHint = document.getElementById( 'whd-writer-chosen-hint' );
-	var picked = [];
-	var saveStatus = document.getElementById( 'whd-writer-save-status' );
-	var savedBox = document.getElementById( 'whd-writer-saved' );
+	var esc = Kit.esc;
+	var fmt = Kit.fmt;
 
+	/* The slow steps — the writing, a drawing — run as background jobs where the server has a runner. */
+	var client = Kit.client( {
+		root: D.rest.root,
+		nonce: D.rest.nonce,
+		jobs: D.jobs || '',
+		last: D.last || '',
+		strings: T
+	} );
+	var api = client.api;
+	var lightbox = Kit.lightbox( T );
+	var loader = Kit.loader( T );
+
+	var el = {
+		idea: document.getElementById( 'whd-writer-idea' ),
+		picker: document.getElementById( 'whd-writer-keywords' ),
+		notes: document.getElementById( 'whd-writer-notes' ),
+		length: document.getElementById( 'whd-writer-length' ),
+		photos: document.getElementById( 'whd-writer-photos' ),
+		photosNote: document.getElementById( 'whd-writer-photos-note' ),
+		counts: document.getElementById( 'whd-writer-counts' ),
+		shots: document.getElementById( 'whd-writer-shots' ),
+		go: document.getElementById( 'whd-writer-go' ),
+		status: document.getElementById( 'whd-writer-status' ),
+		result: document.getElementById( 'whd-writer-result' ),
+		title: document.getElementById( 'whd-writer-title' ),
+		desc: document.getElementById( 'whd-writer-desc' ),
+		descField: document.getElementById( 'whd-writer-desc-field' ),
+		descCount: document.getElementById( 'whd-writer-desc-count' ),
+		check: document.getElementById( 'whd-writer-check' ),
+		body: document.getElementById( 'whd-writer-body' ),
+		images: document.getElementById( 'whd-writer-images' ),
+		slots: document.getElementById( 'whd-writer-slots' ),
+		slotsCount: document.getElementById( 'whd-writer-images-count' ),
+		slotsStatus: document.getElementById( 'whd-writer-images-status' ),
+		publish: document.getElementById( 'whd-writer-publish' ),
+		draft: document.getElementById( 'whd-writer-draft' ),
+		again: document.getElementById( 'whd-writer-again' ),
+		saveStatus: document.getElementById( 'whd-writer-save-status' ),
+		saved: document.getElementById( 'whd-writer-saved' )
+	};
+
+	var lengths = D.lengths || [];
+	var maxPictures = parseInt( D.maxPictures, 10 ) || 5;
+	var length = 'medium';
+	var photos = [];          // [ { id, thumb, view, large } ] — the pieces the pictures are drawn from
+	var count = 0;            // pictures asked for
+	var countPicked = false;  // until somebody picks, the count follows the length
+	var shots = [];           // [ { mode, ask, own } ] — kept when the count changes, so nothing typed is lost
 	var doc = null;
+	var slots = [];
+	var busy = false;
 
-	function api( path, body ) {
-		return fetch( D.rest.root + path, {
-			method: 'POST',
-			credentials: 'same-origin',
-			headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': D.rest.nonce },
-			body: JSON.stringify( body )
-		} ).then( function ( r ) {
-			return r.json().then( function ( json ) {
-				if ( ! r.ok ) {
-					throw new Error( ( json && json.message ) || T.error );
-				}
-				return json;
-			} );
-		} );
+	function say( text, bad ) {
+		el.status.textContent = text || '';
+		el.status.className = 'whd-studio__status' + ( bad ? ' is-bad' : '' );
 	}
-
-	/* ─── keywords ─── */
 
 	function keywords() {
-		return window.WHDKeywords ? window.WHDKeywords.chosen( picker ) : [];
+		return window.WHDKeywords && el.picker ? window.WHDKeywords.chosen( el.picker ) : [];
 	}
 
-	/* ─── pictures chosen before there is anything to put them in ───
-	   Saying you will choose them yourself should hand you the library there and then. How many a
-	   piece wants is not known until it exists, but it is predictable enough from the length to be
-	   worth saying out loud: a hero, then every other section, four at the most. */
-
-	var WANTS = { short: 2, medium: 3, long: 4 };
-
-	function wants() {
-		return WANTS[ length.value ] || 3;
+	function parts() {
+		return Array.prototype.filter.call( root.querySelectorAll( '[data-part]' ), function ( box ) {
+			return box.checked;
+		} ).map( function ( box ) {
+			return box.getAttribute( 'data-part' );
+		} );
 	}
 
-	function fill( text, a, b ) {
-		return String( text ).replace( '%s', a ).replace( '%1$s', a ).replace( '%2$s', b );
+	function has( part ) {
+		return parts().indexOf( part ) !== -1;
 	}
 
-	function paintChosen() {
-		if ( ! chosenList ) {
+	/* ─────────────────────────── how long ─────────────────────────── */
+
+	function lengthOf( key ) {
+		var found = lengths[ 1 ] || {};
+		lengths.forEach( function ( l ) {
+			if ( l.key === key ) {
+				found = l;
+			}
+		} );
+		return found;
+	}
+
+	function paintLength() {
+		if ( ! el.length ) {
 			return;
 		}
-		chosenList.innerHTML = '';
-		picked.forEach( function ( p, i ) {
-			var cell = document.createElement( 'span' );
-			cell.className = 'whd-writer__chosen-one';
-			cell.innerHTML = '<img src="' + p.url + '" alt="" />'
-				+ '<span class="whd-writer__chosen-no">' + ( i + 1 ) + '</span>'
-				+ '<button type="button" class="whd-writer__chosen-drop" aria-label="Remove">&times;</button>';
-			cell.querySelector( '.whd-writer__chosen-drop' ).addEventListener( 'click', function () {
-				picked.splice( i, 1 );
-				paintChosen();
+		el.length.innerHTML = '';
+		lengths.forEach( function ( l ) {
+			var label = document.createElement( 'label' );
+			label.className = 'whd-studio__count' + ( l.key === length ? ' is-on' : '' );
+			label.innerHTML = '<input type="radio" name="whd-writer-length" value="' + esc( l.key ) + '"' + ( l.key === length ? ' checked' : '' ) + '>' +
+				'<span class="whd-studio__count-n">' + esc( l.name ) + '</span>' +
+				'<span class="whd-studio__count-all">' + esc( l.note ) + '</span>';
+			label.querySelector( 'input' ).addEventListener( 'change', function () {
+				length = l.key;
+				paintLength();
+				paintCounts();
 			} );
-			chosenList.appendChild( cell );
+			el.length.appendChild( label );
 		} );
-
-		chosenCount.textContent = ! picked.length ? T.pickNone
-			: ( 1 === picked.length ? T.pickOne : fill( T.pickMany, picked.length ) );
-		chosenClear.hidden = ! picked.length;
-		chosenHint.textContent = fill( T.pickHint, length.value, wants() );
 	}
 
-	/** The library, opened on the pictures already chosen so a second visit adds rather than replaces. */
-	function openPicker() {
+	/* ─────────────────────────── the photographs to work from ─────────────────────────── */
+
+	function photoOf( m ) {
+		var a = m.toJSON ? m.toJSON() : m;
+		var size = a.sizes && ( a.sizes.thumbnail || a.sizes.medium );
+		var view = a.sizes && ( a.sizes.medium || a.sizes.large );
+		var large = a.sizes && ( a.sizes.large || a.sizes.full );
+		return {
+			id: a.id,
+			thumb: size ? size.url : a.url,
+			view: view ? view.url : a.url,
+			large: large ? large.url : a.url,
+			alt: a.alt || a.title || ''
+		};
+	}
+
+	function paintPhotos() {
+		if ( ! el.photos ) {
+			return;
+		}
+		el.photos.innerHTML = '';
+		photos.forEach( function ( p, i ) {
+			var fig = document.createElement( 'figure' );
+			fig.className = 'whd-studio__photo';
+			fig.innerHTML = '<button type="button" class="whd-studio__photo-view" aria-label="' + esc( fmt( T.viewPhoto, i + 1 ) ) + '">' +
+					'<img src="' + esc( p.thumb ) + '" alt="">' +
+				'</button>' +
+				'<span class="whd-studio__photo-n" aria-hidden="true">' + ( i + 1 ) + '</span>' +
+				'<button type="button" class="whd-studio__photo-x" aria-label="' + esc( T.remove ) + '"></button>';
+			fig.querySelector( '.whd-studio__photo-view' ).addEventListener( 'click', function () {
+				lightbox.open( photos.map( function ( q, j ) {
+					return { src: q.large || q.view || q.thumb, caption: fmt( T.photoN, j + 1 ) };
+				} ), i, this );
+			} );
+			fig.querySelector( '.whd-studio__photo-x' ).addEventListener( 'click', function () {
+				photos.splice( i, 1 );
+				paintPhotos();
+				paintShots();
+			} );
+			el.photos.appendChild( fig );
+		} );
+
+		var add = document.createElement( 'button' );
+		add.type = 'button';
+		add.className = 'whd-studio__add';
+		add.innerHTML = '<span class="whd-studio__add-plus" aria-hidden="true">+</span><span>' + esc( photos.length ? T.change : T.choose ) + '</span>';
+		add.addEventListener( 'click', pickPhotos );
+		el.photos.appendChild( add );
+		el.photosNote.textContent = photos.length ? fmt( T.photosSome, photos.length ) : T.photosNone;
+	}
+
+	function media( options, onPick ) {
 		if ( ! window.wp || ! wp.media ) {
 			return;
 		}
-		var lib = wp.media( {
-			title: 'Choose pictures',
-			button: { text: 'Use these' },
-			library: { type: 'image' },
-			multiple: 'add'
+		var frame = wp.media( options );
+		frame.on( 'open', function () {
+			/* Open on the library, not on the upload tab: before a mode is chosen the frame says
+			   it has none, which is exactly the moment the switch is needed. */
+			frame.content.mode( 'browse' );
+			if ( options.keep ) {
+				var selection = frame.state().get( 'selection' );
+				options.keep.forEach( function ( p ) {
+					var a = wp.media.attachment( p.id );
+					a.fetch();
+					selection.add( a );
+				} );
+			}
 		} );
-		lib.on( 'open', function () {
-			lib.content.mode( 'browse' );
-			var selection = lib.state().get( 'selection' );
-			picked.forEach( function ( p ) {
-				var one = wp.media.attachment( p.id );
-				one.fetch();
-				selection.add( one );
+		frame.on( 'select', function () {
+			onPick( frame.state().get( 'selection' ).map( photoOf ) );
+		} );
+		frame.open();
+	}
+
+	function pickPhotos() {
+		media( { title: T.choose, button: { text: T.use }, library: { type: 'image' }, multiple: 'add', keep: photos }, function ( picked ) {
+			photos = picked.slice( 0, 6 );
+			paintPhotos();
+			paintShots();
+		} );
+	}
+
+	/* ─────────────────────────── how many pictures ─────────────────────────── */
+
+	function paintCounts() {
+		if ( ! el.counts ) {
+			return;
+		}
+		if ( ! countPicked ) {
+			count = Math.min( maxPictures, parseInt( lengthOf( length ).pictures, 10 ) || 3 );
+		}
+		el.counts.innerHTML = '';
+		for ( var k = 0; k <= maxPictures; k++ ) {
+			( function ( k ) {
+				var label = document.createElement( 'label' );
+				label.className = 'whd-studio__count' + ( k === count ? ' is-on' : '' );
+				label.innerHTML = '<input type="radio" name="whd-writer-count" value="' + k + '"' + ( k === count ? ' checked' : '' ) + '>' +
+					'<span class="whd-studio__count-n">' + ( k ? k : esc( T.noNew ) ) + '</span>';
+				label.querySelector( 'input' ).addEventListener( 'change', function () {
+					count = k;
+					countPicked = true;
+					paintCounts();
+				} );
+				el.counts.appendChild( label );
+			}( k ) );
+		}
+		paintShots();
+	}
+
+	function paintShots() {
+		if ( ! el.shots ) {
+			return;
+		}
+		while ( shots.length < count ) {
+			shots.push( { mode: 'auto', ask: '', own: null } );
+		}
+		el.shots.innerHTML = '';
+		for ( var i = 0; i < count; i++ ) {
+			el.shots.appendChild( shotCard( i ) );
+		}
+		if ( count && D.canDraw ) {
+			var hint = document.createElement( 'p' );
+			hint.className = 'description whd-studio__shots-note';
+			hint.textContent = T.leftBlankW;
+			el.shots.appendChild( hint );
+		}
+		el.shots.hidden = ! count;
+	}
+
+	/* One card per picture: where it goes, how it is made, and anything to say about it. */
+	function shotCard( i ) {
+		var s = shots[ i ];
+		if ( 'mannequin' === s.mode && ! photos.length ) {
+			s.mode = 'model'; // the photographs it was to be drawn from are gone
+		}
+		var card = document.createElement( 'div' );
+		card.className = 'whd-studio__shot whd-writer__shot is-' + ( s.own ? 'own' : s.mode );
+		var name = 'whd-writer-mode-' + i;
+		var title = fmt( T.pictureN, i + 1 ) + ' · ' + ( i ? T.inBody : T.atTop );
+
+		function choice( mode, label, off ) {
+			return '<label class="whd-studio__mode' + ( off ? ' is-off' : '' ) + '"' + ( off ? ' title="' + esc( T.needPhotos ) + '"' : '' ) + '>' +
+				'<input type="radio" name="' + name + '" value="' + mode + '"' + ( s.mode === mode ? ' checked' : '' ) + ( off ? ' disabled' : '' ) + '>' +
+				'<span>' + esc( label ) + '</span></label>';
+		}
+
+		var how = s.own
+			? '<span class="whd-writer__own-tag">' + esc( T.mine ) + '</span>'
+			: ( D.canDraw
+				? '<span class="whd-studio__modes" role="radiogroup" aria-label="' + esc( title ) + '">' +
+					choice( 'auto', T.findDraw ) + choice( 'model', T.onModel ) + choice( 'mannequin', T.mannequin, ! photos.length ) +
+				'</span>'
+				: '<span class="whd-writer__own-tag is-quiet">' + esc( T.fromLib ) + '</span>' );
+
+		card.innerHTML = '<div class="whd-studio__shot-head">' +
+				'<span class="whd-studio__shot-n">' + esc( title ) + '</span>' + how +
+			'</div>' +
+			( s.own
+				? '<div class="whd-writer__own"><img src="' + esc( s.own.thumb ) + '" alt=""><button type="button" class="button-link" data-clear>' + esc( T.clearOwn ) + '</button></div>'
+				: ( D.canDraw
+					? '<label class="screen-reader-text" for="' + name + '-ask">' + esc( T.askLabel ) + '</label>' +
+						'<textarea id="' + name + '-ask" rows="2" class="whd-studio__ask"></textarea>'
+					: '' ) +
+				'<p class="whd-writer__shot-foot"><button type="button" class="button-link" data-own>' + esc( T.chooseOwn ) + '</button></p>' );
+
+		var ask = card.querySelector( 'textarea' );
+		function hint() {
+			if ( ! ask ) {
+				return;
+			}
+			var ideas = ( 'mannequin' === s.mode ? T.askGhost : ( 'model' === s.mode ? T.askModel : T.askAuto ) ) || [];
+			ask.placeholder = ideas.length ? ideas[ i % ideas.length ] : '';
+		}
+		if ( ask ) {
+			ask.value = s.ask;
+			hint();
+			ask.addEventListener( 'input', function () {
+				s.ask = ask.value;
+			} );
+		}
+		Array.prototype.forEach.call( card.querySelectorAll( 'input[type="radio"]' ), function ( radio ) {
+			radio.addEventListener( 'change', function () {
+				s.mode = radio.value;
+				card.className = 'whd-studio__shot whd-writer__shot is-' + s.mode;
+				hint();
 			} );
 		} );
-		lib.on( 'select', function () {
-			picked = lib.state().get( 'selection' ).map( function ( one ) {
-				var a = one.toJSON();
-				return {
-					id: a.id,
-					url: ( a.sizes && a.sizes.thumbnail ? a.sizes.thumbnail.url : a.url ),
-					full: ( a.sizes && a.sizes.large ? a.sizes.large.url : a.url ),
-					alt: a.alt || a.title || '',
-					source: 'library'
-				};
+		var own = card.querySelector( '[data-own]' );
+		if ( own ) {
+			own.addEventListener( 'click', function () {
+				media( { title: T.chooseOwn, button: { text: T.use }, library: { type: 'image' }, multiple: false }, function ( picked ) {
+					if ( picked[ 0 ] ) {
+						s.own = picked[ 0 ];
+						paintShots();
+					}
+				} );
 			} );
-			paintChosen();
-		} );
-		lib.open();
+		}
+		var clear = card.querySelector( '[data-clear]' );
+		if ( clear ) {
+			clear.addEventListener( 'click', function () {
+				s.own = null;
+				paintShots();
+			} );
+		}
+		return card;
 	}
 
-	if ( chosenAdd ) {
-		chosenAdd.addEventListener( 'click', openPicker );
-	}
-	if ( chosenClear ) {
-		chosenClear.addEventListener( 'click', function () {
-			picked = [];
-			paintChosen();
-		} );
-	}
-	if ( length ) {
-		length.addEventListener( 'change', paintChosen );
+	/* ─────────────────────────── progress ─────────────────────────── */
+
+	function step( label, hint ) {
+		loader.step( label, hint );
+		var ended = false;
+		var end = function () {
+			if ( ! ended ) {
+				ended = true;
+				loader.tick();
+			}
+		};
+		return {
+			note: function ( text ) {
+				loader.note( text );
+			},
+			done: end
+		};
 	}
 
-	if ( imagesMode ) {
-		imagesMode.addEventListener( 'change', function () {
-			var manual = 'manual' === imagesMode.value;
-			if ( chosenBox ) {
-				chosenBox.hidden = ! manual;
-			}
-			if ( askRow ) {
-				askRow.hidden = 'auto' !== imagesMode.value;
-			}
-			if ( manual ) {
-				paintChosen();
-				if ( ! picked.length ) {
-					openPicker();
-				}
-			}
-		} );
-	}
-
-	/* ─── writing ─── */
+	/* ─────────────────────────── writing ─────────────────────────── */
 
 	function paintCheck( c ) {
 		if ( ! c ) {
-			check.innerHTML = '';
+			el.check.innerHTML = '';
 			return;
 		}
 		var bits = [];
-		bits.push( '<span class="whd-writer__badge ' + ( c.ok ? 'is-ok' : 'is-warn' ) + '">'
-			+ ( c.ok ? 'Passes every check' : 'Worth a look' ) + '</span>' );
-		bits.push( '<span class="whd-writer__stat">' + ( c.words || 0 ) + ' ' + ( T.words || 'words' ) + '</span>' );
+		bits.push( '<span class="whd-writer__badge ' + ( c.ok ? 'is-ok' : 'is-warn' ) + '">' +
+			( c.ok ? 'Passes every check' : 'Worth a look' ) + '</span>' );
+		bits.push( '<span class="whd-writer__stat">' + ( c.words || 0 ) + ' ' + esc( T.words || 'words' ) + '</span>' );
 
 		var missing = [];
 		Object.keys( c.keywords || {} ).forEach( function ( k ) {
@@ -195,107 +377,46 @@
 			}
 		} );
 		if ( missing.length ) {
-			bits.push( '<span class="whd-writer__stat is-warn">not in the copy: ' + missing.join( ', ' ) + '</span>' );
+			bits.push( '<span class="whd-writer__stat is-warn">not in the copy: ' + esc( missing.join( ', ' ) ) + '</span>' );
 		}
 		( c.issues || [] ).forEach( function ( issue ) {
-			bits.push( '<span class="whd-writer__stat is-warn">' + issue + '</span>' );
+			bits.push( '<span class="whd-writer__stat is-warn">' + esc( issue.detail || issue ) + '</span>' );
 		} );
-		check.innerHTML = bits.join( '' );
+		el.check.innerHTML = bits.join( '' );
 	}
 
 	function countDesc() {
-		if ( ! descCount ) {
+		if ( ! el.descCount ) {
 			return;
 		}
-		var n = desc.value.trim().length;
-		descCount.textContent = n + ' / 155';
-		descCount.className = 'whd-writer__count' + ( n > 158 || ( n && n < 100 ) ? ' is-warn' : '' );
+		var n = el.desc.value.trim().length;
+		el.descCount.textContent = n + ' / 155';
+		el.descCount.className = 'whd-writer__count' + ( n > 158 || ( n && n < 100 ) ? ' is-warn' : '' );
 	}
 
-	desc.addEventListener( 'input', countDesc );
+	el.desc.addEventListener( 'input', countDesc );
 
-	go.addEventListener( 'click', function () {
-		if ( ! idea.value.trim() ) {
-			status.textContent = T.noIdea;
-			idea.focus();
-			return;
-		}
-		go.disabled = true;
-		status.textContent = T.writing;
-		check.innerHTML = '';
-		if ( savedBox ) {
-			savedBox.hidden = true;
-		}
-
-		api( 'compose', {
-			idea: idea.value,
-			keywords: keywords(),
-			type: D.type,
-			length: length.value,
-			faq: faq.value === '1'
-		} ).then( function ( r ) {
-			doc = r;
-			title.value = r.title || '';
-			desc.value = r.meta_description || '';
-			body.innerHTML = r.html || '';
-			paintCheck( r.check );
-			countDesc();
-			var mode = imagesMode ? imagesMode.value : 'auto';
-			slots = 'none' === mode ? [] : ( r.slots || [] ).map( function ( slot ) {
-				return { key: slot.key, subject: slot.subject, heading: slot.heading, image: null };
-			} );
-			var spare = 0;
-			if ( 'manual' === mode && picked.length ) {
-				slots.forEach( function ( slot, i ) {
-					if ( picked[ i ] ) {
-						slot.image = picked[ i ];
-					}
-				} );
-				spare = Math.max( 0, picked.length - slots.length );
-			}
-			if ( slotsNote ) {
-				slotsNote.textContent = ( 'auto' === mode && ask && ask.value.trim() )
-					? ( T.noteAsk || slotsNoteWas )
-					: slotsNoteWas;
-			}
-			if ( slotsBox ) {
-				slotsBox.hidden = ! slots.length;
-				slotsStatus.textContent = 'manual' !== mode || ! slots.length ? ''
-					: ( spare ? fill( T.pickSpare, slots.length )
-						: ( taken().length < slots.length ? ( picked.length ? T.pickFew : T.pickEach ) : T.swapAny ) );
-				paintSlots();
-			}
-			result.hidden = false;
-			status.textContent = '';
-			go.textContent = 'Write another';
-			result.scrollIntoView( { behavior: 'smooth', block: 'start' } );
-			if ( 'auto' === mode && slots.length ) {
-				fillAll();
-			}
-		} ).catch( function ( e ) {
-			status.textContent = e.message;
-		} ).then( function () {
-			go.disabled = false;
-		} );
-	} );
-
-	if ( again ) {
-		again.addEventListener( 'click', function () {
-			go.click();
-		} );
+	/* What a picture slot's request says about it: its mode, what was asked, and what to draw it from. */
+	function slotAsk( shot ) {
+		return {
+			mode: shot && D.canDraw ? shot.mode : 'auto',
+			ask: shot ? shot.ask.trim() : '',
+			refs: photos.map( function ( p ) {
+				return p.id;
+			} )
+		};
 	}
 
-	/* ─── pictures ───
-	   The piece says how many it wants. Fill them in one go, or click any slot and choose that one
-	   yourself; the two can be mixed, and a slot left empty is simply a slot left empty. */
-
-	var slotsBox = document.getElementById( 'whd-writer-images' );
-	var slotsList = document.getElementById( 'whd-writer-slots' );
-	var slotsCount = document.getElementById( 'whd-writer-images-count' );
-	var slotsAuto = document.getElementById( 'whd-writer-images-auto' );
-	var slotsStatus = document.getElementById( 'whd-writer-images-status' );
-	var slots = [];
-	var frame = null;
+	function hintFor( shot ) {
+		var refs = photos.length > 0;
+		if ( ! shot || 'auto' === shot.mode ) {
+			return shot && shot.ask.trim() && D.canDraw ? T.hintAsked : T.hintAuto;
+		}
+		if ( 'mannequin' === shot.mode ) {
+			return T.hintGhostW;
+		}
+		return refs ? T.hintModelW : T.hintModelN;
+	}
 
 	function taken() {
 		return slots.filter( function ( s ) {
@@ -305,124 +426,212 @@
 		} );
 	}
 
-	function paintSlots() {
-		if ( ! slotsList ) {
+	/* Fill the slots one after another, each as its own request, so a slow drawing never times out the rest. */
+	function fillSlots( list ) {
+		var todo = list.filter( function ( s ) {
+			return ! s.image;
+		} );
+		var n = 0;
+		return todo.reduce( function ( chain, slot ) {
+			return chain.then( function () {
+				n++;
+				var line = step( fmt( T.stepPicture, n, todo.length ), hintFor( slot.shot ) );
+				var how = slotAsk( slot.shot );
+				return api( 'write-image', {
+					doc: doc,
+					slot: { key: slot.key, subject: slot.subject, heading: slot.heading },
+					taken: taken(),
+					draw: !! D.canDraw,
+					ask: how.ask,
+					mode: how.mode,
+					refs: how.refs
+				} ).then( function ( r ) {
+					slot.image = r;
+					if ( r && r.url ) {
+						loader.picture( r.url );
+					}
+					line.done();
+				}, function ( e ) {
+					slot.error = e.message;
+					line.note( fmt( T.pictureFail, e.message ) );
+					line.done();
+				} );
+			} );
+		}, Promise.resolve() );
+	}
+
+	function run() {
+		if ( busy ) {
 			return;
 		}
-		slotsList.innerHTML = '';
-		slots.forEach( function ( slot, i ) {
-			var cell = document.createElement( 'button' );
-			cell.type = 'button';
-			cell.className = 'whd-writer__slot' + ( slot.image ? ' is-filled' : '' );
-			cell.title = slot.heading || 'Top of the page';
+		if ( ! el.idea.value.trim() ) {
+			say( T.noIdea, true );
+			el.idea.focus();
+			return;
+		}
+		busy = true;
+		el.go.disabled = true;
+		say( '' );
+		if ( el.saved ) {
+			el.saved.hidden = true;
+		}
 
-			if ( slot.image ) {
-				cell.innerHTML = '<img src="' + slot.image.url + '" alt="" />'
-					+ '<span class="whd-writer__slot-tag">' + ( slot.image.source === 'drawn' ? 'drawn' : 'from your library' ) + '</span>';
-			} else {
-				cell.innerHTML = '<span class="whd-writer__slot-empty">+</span>';
-			}
-			cell.innerHTML += '<span class="whd-writer__slot-where">' + ( slot.heading || 'Top of the page' ) + '</span>';
-			cell.addEventListener( 'click', function () {
-				choose( i );
+		// Writing the piece, then a step for every picture that is not one of the shop's own.
+		var drawn = shots.slice( 0, count ).filter( function ( s ) {
+			return ! s.own;
+		} ).length;
+		var seconds = { short: 40, medium: 60, long: 90 }[ length ] || 60;
+		loader.open( photos[ 0 ] ? ( photos[ 0 ].view || photos[ 0 ].thumb ) : '', 1 + drawn, seconds + 35 * drawn );
+		var line = step( T.stepCompose, T.hintCompose );
+
+		api( 'compose', {
+			idea: el.idea.value,
+			keywords: keywords(),
+			notes: el.notes ? el.notes.value : '',
+			type: D.type,
+			length: length,
+			faq: has( 'faq' ),
+			parts: parts(),
+			pictures: count
+		} ).then( function ( r ) {
+			line.done();
+			doc = r;
+			slots = ( r.slots || [] ).slice( 0, count ).map( function ( slot, i ) {
+				var shot = shots[ i ] || null;
+				return {
+					key: slot.key,
+					subject: slot.subject,
+					heading: slot.heading,
+					shot: shot,
+					image: shot && shot.own ? {
+						id: shot.own.id,
+						url: shot.own.view || shot.own.thumb,
+						full: shot.own.large || shot.own.view,
+						alt: shot.own.alt || '',
+						source: 'own'
+					} : null
+				};
 			} );
-			slotsList.appendChild( cell );
+			return fillSlots( slots );
+		} ).then( function () {
+			showResult();
+			loader.finish( true, T.doneNote, function () {
+				el.result.scrollIntoView( { behavior: 'smooth', block: 'start' } );
+			} );
+		} ).catch( function ( e ) {
+			say( ( T.stopped || 'Stopped' ) + ': ' + e.message, true );
+			loader.finish( false, e.message );
+		} ).then( function () {
+			busy = false;
+			el.go.disabled = false;
+		} );
+	}
+
+	function showResult() {
+		if ( ! doc ) {
+			return;
+		}
+		el.title.value = doc.title || '';
+		el.desc.value = doc.meta_description || '';
+		el.descField.hidden = ! has( 'seo' );
+		el.body.innerHTML = doc.html || '';
+		paintCheck( doc.check );
+		countDesc();
+		el.images.hidden = ! slots.length;
+		var asked = Math.min( count, maxPictures );
+		var failed = slots.filter( function ( s ) {
+			return s.error && ! s.image;
+		} ).map( function ( s ) {
+			return ( s.heading || T.top ) + ': ' + s.error;
+		} );
+		el.slotsStatus.textContent = failed.length
+			? failed.join( ' · ' )
+			: ( slots.length < asked ? fmt( T.pickSpare, slots.length ) : T.swapAny );
+		paintSlots();
+		el.result.hidden = false;
+		el.go.textContent = T.writeAnother;
+	}
+
+	el.go.addEventListener( 'click', run );
+	if ( el.again ) {
+		el.again.addEventListener( 'click', run );
+	}
+
+	/* ─────────────────────────── the pictures in what came back ───────────────────────────
+	   One tile per picture, labelled with where it goes. Click it to see it large; "Change" swaps it
+	   for one from the library; an empty one is a choice not yet made. */
+
+	function paintSlots() {
+		el.slots.innerHTML = '';
+		var shown = [];
+		slots.forEach( function ( slot, i ) {
+			var where = slot.heading || T.top;
+			var cell = document.createElement( 'figure' );
+			cell.className = 'whd-writer__slot' + ( slot.image ? ' is-filled' : '' );
+			var at = -1;
+			if ( slot.image ) {
+				var tag = 'drawn' === slot.image.source ? T.drawnTag : ( 'own' === slot.image.source ? T.yours : T.fromLibrary );
+				at = shown.length;
+				shown.push( { src: slot.image.full || slot.image.url, caption: where, state: tag } );
+				cell.innerHTML = '<button type="button" class="whd-writer__slot-view" data-view aria-label="' + esc( fmt( T.viewPicture, i + 1 ) ) + '">' +
+						'<img src="' + esc( slot.image.url ) + '" alt="">' +
+						'<span class="whd-writer__slot-tag">' + esc( tag ) + '</span>' +
+					'</button>';
+			} else {
+				cell.innerHTML = '<button type="button" class="whd-writer__slot-view is-empty" data-choose><span class="whd-writer__slot-empty" aria-hidden="true">+</span><span class="screen-reader-text">' + esc( T.emptySlot ) + '</span></button>';
+			}
+			// Written in one go before anything listens: adding to innerHTML later would rebuild the
+			// button above and drop its listener.
+			cell.innerHTML += '<figcaption class="whd-writer__slot-where"><span>' + esc( where ) + '</span>' +
+				'<button type="button" class="button-link" data-choose>' + esc( slot.image ? T.change : T.emptySlot ) + '</button></figcaption>';
+			var view = cell.querySelector( '[data-view]' );
+			if ( view ) {
+				view.addEventListener( 'click', function () {
+					lightbox.open( shown, at, this );
+				} );
+			}
+			Array.prototype.forEach.call( cell.querySelectorAll( '[data-choose]' ), function ( button ) {
+				button.addEventListener( 'click', function () {
+					choose( i );
+				} );
+			} );
+			el.slots.appendChild( cell );
 		} );
 
 		var filled = taken().length;
-		slotsCount.textContent = slots.length === 1
-			? ( filled ? '1 picture, chosen' : 'This piece wants 1 picture' )
-			: ( 'This piece wants ' + slots.length + ' pictures' + ( filled ? ' — ' + filled + ' chosen' : '' ) );
+		el.slotsCount.textContent = 1 === slots.length ? T.wantOne : fmt( T.wantN, slots.length );
+		if ( filled < slots.length && ! el.slotsStatus.textContent ) {
+			el.slotsStatus.textContent = T.swapAny;
+		}
 	}
 
 	/** WordPress's own media window, for the slot that was clicked. */
 	function choose( index ) {
-		if ( ! window.wp || ! wp.media ) {
-			return;
-		}
-		if ( ! frame ) {
-			frame = wp.media( { title: 'Choose a picture', button: { text: 'Use this one' }, multiple: false } );
-		}
-		frame.off( 'open' );
-		frame.on( 'open', function () {
-			frame.content.mode( 'browse' );
-		} );
-		frame.off( 'select' );
-		frame.on( 'select', function () {
-			var picked = frame.state().get( 'selection' ).first().toJSON();
-			slots[ index ].image = {
-				id: picked.id,
-				url: ( picked.sizes && picked.sizes.medium ? picked.sizes.medium.url : picked.url ),
-				full: ( picked.sizes && picked.sizes.large ? picked.sizes.large.url : picked.url ),
-				alt: picked.alt || picked.title || '',
-				source: 'library'
-			};
-			paintSlots();
-		} );
-		frame.open();
-	}
-
-	function fillAll() {
-		var queue = slots.map( function ( s, i ) {
-				return i;
-			} ).filter( function ( i ) {
-				return ! slots[ i ].image;
-			} );
-		if ( ! queue.length || ! doc ) {
-			return;
-		}
-		if ( slotsAuto ) {
-			slotsAuto.disabled = true;
-		}
-
-		function next() {
-			if ( ! queue.length ) {
-				if ( slotsAuto ) {
-					slotsAuto.disabled = false;
-				}
-				slotsStatus.textContent = T.swapAny;
+		media( { title: T.chooseOwn, button: { text: T.use }, library: { type: 'image' }, multiple: false }, function ( picked ) {
+			var p = picked[ 0 ];
+			if ( ! p ) {
 				return;
 			}
-			var i = queue.shift();
-			slotsStatus.textContent = 'Looking for ' + ( slots[ i ].heading || 'the one at the top' ) + '…';
-			api( 'write-image', {
-				doc: doc,
-				slot: { key: slots[ i ].key, subject: slots[ i ].subject, heading: slots[ i ].heading },
-				taken: taken(),
-				draw: !! D.canDraw,
-				ask: ask ? ask.value : ''
-			} ).then( function ( r ) {
-				slots[ i ].image = r;
-				paintSlots();
-				next();
-			} ).catch( function ( e ) {
-				slotsStatus.textContent = e.message;
-				if ( slotsAuto ) {
-					slotsAuto.disabled = false;
-				}
-			} );
-		}
-
-		next();
+			slots[ index ].image = { id: p.id, url: p.view || p.thumb, full: p.large || p.view, alt: p.alt || '', source: 'own' };
+			slots[ index ].error = '';
+			paintSlots();
+		} );
 	}
 
-	if ( slotsAuto ) {
-		slotsAuto.addEventListener( 'click', fillAll );
-	}
-
-	/* ─── saving ─── */
+	/* ─────────────────────────── saving ─────────────────────────── */
 
 	function save( postStatus, button ) {
 		if ( ! doc ) {
 			return;
 		}
 		button.disabled = true;
-		saveStatus.textContent = T.saving;
+		el.saveStatus.textContent = T.saving;
 
 		var payload = JSON.parse( JSON.stringify( doc ) );
-		payload.title = title.value;
-		payload.meta_description = desc.value;
-		payload.html = body.innerHTML;
+		payload.title = el.title.value;
+		payload.meta_description = el.desc.value;
+		payload.html = el.body.innerHTML;
+		payload.parts = parts();
 		payload.images = slots.filter( function ( s ) {
 			return s.image;
 		} ).map( function ( s ) {
@@ -436,43 +645,47 @@
 
 		api( 'write-save', {
 			doc: payload,
-			idea: idea.value,
+			idea: el.idea.value,
 			type: D.type,
 			status: postStatus
 		} ).then( function ( r ) {
 			/* The result box closes on a save, so the confirmation cannot live inside it — the
 			   edit link is the one thing worth keeping on screen. */
-			saveStatus.textContent = '';
-			var where = savedBox || saveStatus;
+			el.saveStatus.textContent = '';
+			var where = el.saved || el.saveStatus;
 			var scored = r.seo && r.seo.score
-				? ' <span class="whd-seo-dot whd-seo-dot--' + r.seo.rating + '">' + r.seo.score + '</span>'
-					+ ' <span class="whd-writer__scored">SEO ' + r.seo.label.toLowerCase() + '</span>'
+				? ' <span class="whd-seo-dot whd-seo-dot--' + esc( r.seo.rating ) + '">' + esc( r.seo.score ) + '</span>' +
+					' <span class="whd-writer__scored">SEO ' + esc( String( r.seo.label ).toLowerCase() ) + '</span>'
 				: '';
-			where.innerHTML = '<strong>' + ( postStatus === 'publish' ? 'Published.' : 'Saved as a draft.' ) + '</strong>' + scored + ' '
-				+ '<a href="' + r.edit_url + '">' + ( postStatus === 'publish' ? 'Edit it' : 'Open it' ) + '</a>'
-				+ ' · <a href="' + r.view_url + '" target="_blank" rel="noopener">'
-				+ ( postStatus === 'publish' ? 'View it' : 'Preview it' ) + '</a>';
+			where.innerHTML = '<strong>' + ( 'publish' === postStatus ? 'Published.' : 'Saved as a draft.' ) + '</strong>' + scored + ' ' +
+				'<a href="' + esc( r.edit_url ) + '">' + ( 'publish' === postStatus ? 'Edit it' : 'Open it' ) + '</a>' +
+				' · <a href="' + esc( r.view_url ) + '" target="_blank" rel="noopener">' +
+				( 'publish' === postStatus ? 'View it' : 'Preview it' ) + '</a>';
 			where.hidden = false;
 			addRow( r, postStatus );
 			doc = null;
-			result.hidden = true;
-			idea.value = '';
-			go.textContent = 'Write it';
+			slots = [];
+			el.result.hidden = true;
+			el.idea.value = '';
+			el.go.textContent = T.writeIt;
 			/* Those pictures belonged to the piece that was just saved. */
-			picked = [];
-			paintChosen();
+			shots.forEach( function ( s ) {
+				s.own = null;
+			} );
+			paintShots();
+			where.scrollIntoView( { behavior: 'smooth', block: 'center' } );
 		} ).catch( function ( e ) {
-			saveStatus.textContent = e.message;
+			el.saveStatus.textContent = e.message;
 		} ).then( function () {
 			button.disabled = false;
 		} );
 	}
 
-	publish.addEventListener( 'click', function () {
-		save( 'publish', publish );
+	el.publish.addEventListener( 'click', function () {
+		save( 'publish', el.publish );
 	} );
-	draft.addEventListener( 'click', function () {
-		save( 'draft', draft );
+	el.draft.addEventListener( 'click', function () {
+		save( 'draft', el.draft );
 	} );
 
 	/** Put what was just saved at the top of the list, so the screen agrees without a reload. */
@@ -484,14 +697,27 @@
 		}
 		var tr = document.createElement( 'tr' );
 		tr.className = 'whd-writer__new';
-		tr.innerHTML = '<td class="whd-writer__cell-title"><strong><a href="' + saved.edit_url + '">'
-			+ saved.title.replace( /</g, '&lt;' ) + '</a></strong></td>'
-			+ '<td>' + keywords().slice( 0, 4 ).join( ', ' ) + '</td>'
-			+ '<td><span class="whd-pill whd-pill--' + ( postStatus === 'publish' ? 'on' : 'off' ) + '">'
-			+ ( postStatus === 'publish' ? 'Published' : 'Draft' ) + '</span></td>'
-			+ '<td>' + new Date().toLocaleDateString() + '</td>'
-			+ '<td class="whd-writer__cell-actions"><a class="button button-small" href="' + saved.edit_url + '">Edit</a> '
-			+ '<a class="button button-small" href="' + saved.view_url + '" target="_blank" rel="noopener">View</a></td>';
+		tr.innerHTML = '<td class="whd-writer__cell-title"><strong><a href="' + esc( saved.edit_url ) + '">' +
+			esc( saved.title ) + '</a></strong></td>' +
+			'<td>' + esc( keywords().slice( 0, 4 ).join( ', ' ) ) + '</td>' +
+			'<td><span class="whd-pill whd-pill--' + ( 'publish' === postStatus ? 'on' : 'off' ) + '">' +
+			( 'publish' === postStatus ? 'Published' : 'Draft' ) + '</span></td>' +
+			'<td>' + esc( new Date().toLocaleDateString() ) + '</td>' +
+			'<td class="whd-writer__cell-actions"><a class="button button-small" href="' + esc( saved.edit_url ) + '">Edit</a> ' +
+			'<a class="button button-small" href="' + esc( saved.view_url ) + '" target="_blank" rel="noopener">View</a></td>';
 		table.insertBefore( tr, table.firstChild );
 	}
+
+	/* ─────────────────────────── start ─────────────────────────── */
+
+	window.addEventListener( 'beforeunload', function ( e ) {
+		if ( busy ) {
+			e.preventDefault();
+			e.returnValue = '';
+		}
+	} );
+
+	paintLength();
+	paintPhotos();
+	paintCounts();
 }() );

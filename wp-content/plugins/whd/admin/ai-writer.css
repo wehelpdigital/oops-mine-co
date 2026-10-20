@@ -1,15 +1,93 @@
 /* AI Posts and AI Pages.
-   Two things on the screen: the box you write the idea in, and the list of what came out of it.
-   The preview in between is styled like the page it will become rather than like a form field,
-   because it is the thing being judged. */
+   The form is the Write with AI panel from the product screen and Bulk products, and wears that
+   panel's styles (ai-studio.css, loaded first): numbered steps, ticked parts, count pills, a card
+   per picture. This file adds the panel's frame here, and what comes back — the preview, styled
+   like the page it will become rather than like a form field, because it is the thing being
+   judged — and the list of what has been written. */
 
 .whd-writer__make {
+	max-width: 1100px;
 	margin: 18px 0 8px;
-	padding: 22px 24px 20px;
+	padding: 6px 24px 20px;
 	background: #fff;
-	border: 1px solid #e2e4e7;
-	border-left: 3px solid #b98b7e;
-	box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+	border: 1px solid #dcdcde;
+	border-radius: 10px;
+	box-shadow: 0 1px 2px rgba(29, 35, 39, .04), 0 4px 14px rgba(29, 35, 39, .03);
+}
+
+.whd-writer__make .whd-studio__h label {
+	cursor: default;
+}
+
+.whd-writer__make .whd-studio__notes {
+	max-width: none;
+}
+
+/* "Title and body" is always written: shown so the list reads whole, not something to untick. */
+.whd-studio__part.is-locked {
+	cursor: default;
+	border-color: var(--whd-line);
+	background: #fbfaf8;
+}
+
+.whd-studio__part.is-locked input {
+	opacity: .55;
+}
+
+.whd-writer__opt {
+	font-weight: 400;
+	font-size: 12px;
+	color: var(--whd-quiet);
+}
+
+/* a picture card: three ways to make it, or one of your own */
+
+.whd-writer__shot .whd-studio__mode.is-off {
+	cursor: not-allowed;
+}
+
+.whd-writer__shot .whd-studio__mode.is-off span {
+	color: #a7aaad;
+	background: #f6f7f7;
+}
+
+.whd-writer__shot-foot {
+	margin: 6px 0 0;
+	font-size: 12px;
+}
+
+.whd-writer__own-tag {
+	padding: 2px 9px;
+	border-radius: 999px;
+	background: var(--whd-sand-2);
+	color: var(--whd-ink);
+	font-size: 11.5px;
+	font-weight: 600;
+}
+
+.whd-writer__own-tag.is-quiet {
+	background: #f0f0f1;
+	color: #50575e;
+	font-weight: 500;
+}
+
+.whd-writer__own {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.whd-writer__own img {
+	width: 84px;
+	height: 56px;
+	object-fit: cover;
+	border-radius: 5px;
+	border: 1px solid var(--whd-line);
+}
+
+.whd-writer__shot.is-own {
+	background: var(--whd-sand);
+	border-color: #e3d4ca;
 }
 
 .whd-writer__field { margin: 0 0 16px; }
@@ -21,31 +99,6 @@
 	color: #1d2327;
 }
 .whd-writer__field textarea { resize: vertical; }
-
-/* ─── the row of controls ─── */
-
-.whd-writer__row {
-	display: flex;
-	align-items: flex-end;
-	gap: 16px;
-	flex-wrap: wrap;
-	margin: 18px 0 0;
-	padding-top: 16px;
-	border-top: 1px solid #f0f0f1;
-}
-.whd-writer__inline { display: flex; flex-direction: column; gap: 5px; font-size: 13px; }
-.whd-writer__inline span { font-weight: 600; color: #1d2327; }
-/* The button is the last thing you do, so it is the last thing on the form: under the length,
-   the questions, the picture choice and whatever those two reveal, not wedged between them. */
-.whd-writer__go {
-	display: flex;
-	align-items: center;
-	gap: 14px;
-	margin: 20px 0 0;
-	padding-top: 18px;
-	border-top: 1px solid #f0f0f1;
-}
-.whd-writer__row { border-top: 0; padding-top: 0; }
 
 .whd-writer__status { font-size: 13px; color: #646970; }
 .whd-writer__status a { color: #2271b1; }
@@ -95,6 +148,7 @@
 	padding: 26px 30px;
 	background: #fdfaf6;
 	border: 1px solid #e9e1da;
+	border-radius: 6px;
 	font-family: Georgia, 'Times New Roman', serif;
 	font-size: 16px;
 	line-height: 1.75;
@@ -143,14 +197,15 @@
 	.whd-writer__new { animation: none; }
 }
 
-/* ─── the picture slots ───
-   One tile per picture the piece wants, labelled with where it goes. Empty is a legible state:
-   a dashed outline and a plus, so an unfilled slot reads as a choice not yet made. */
+/* ─── the pictures in what came back ───
+   One tile per picture, labelled with where it goes. Click it to see it large; "Change" swaps it.
+   Empty is a legible state: a dashed outline and a plus, a choice not yet made. */
 .whd-writer__images {
 	margin: 0 0 18px;
 	padding: 16px 18px;
 	background: #fbfbfc;
 	border: 1px solid #e2e4e7;
+	border-radius: 6px;
 }
 .whd-writer__images .whd-writer__label {
 	display: flex;
@@ -161,31 +216,40 @@
 }
 .whd-writer__slots {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
 	gap: 12px;
 }
 .whd-writer__slot {
 	position: relative;
-	display: block;
-	padding: 0;
+	margin: 0;
 	border: 1px solid #dcdcde;
-	border-radius: 3px;
+	border-radius: 6px;
 	background: #fff;
-	cursor: pointer;
 	overflow: hidden;
-	text-align: left;
 }
 .whd-writer__slot:not(.is-filled) {
 	border-style: dashed;
 	background: #f6f7f7;
 }
-.whd-writer__slot:hover { border-color: #b98b7e; }
-.whd-writer__slot img {
+.whd-writer__slot-view {
+	position: relative;
+	display: block;
+	width: 100%;
+	padding: 0;
+	border: 0;
+	background: none;
+	cursor: zoom-in;
+}
+.whd-writer__slot-view.is-empty { cursor: pointer; }
+.whd-writer__slot-view img {
 	display: block;
 	width: 100%;
 	aspect-ratio: 3 / 2;
 	object-fit: cover;
+	transition: transform .25s ease;
 }
+.whd-writer__slot-view:hover img { transform: scale(1.03); }
+.whd-writer__slot-view:focus-visible { outline: 2px solid #2271b1; outline-offset: -2px; }
 .whd-writer__slot-empty {
 	display: grid;
 	place-items: center;
@@ -199,25 +263,34 @@
 	top: 6px;
 	left: 6px;
 	padding: 2px 7px;
-	border-radius: 2px;
-	background: rgba(29, 35, 39, .76);
+	border-radius: 3px;
+	background: rgba(58, 43, 38, .82);
 	font-size: 10px;
-	letter-spacing: .06em;
+	letter-spacing: .05em;
 	text-transform: uppercase;
-	color: #fff;
+	color: #f7f2ed;
 }
 .whd-writer__slot-where {
-	display: block;
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 8px;
 	padding: 7px 9px;
 	border-top: 1px solid #f0f0f1;
-	font-size: 11px;
+	font-size: 11.5px;
 	line-height: 1.4;
 	color: #50575e;
+}
+.whd-writer__slot-where span {
+	min-width: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
-
+.whd-writer__slot-where .button-link {
+	flex: 0 0 auto;
+	font-size: 11.5px;
+}
 
 /* The line that says it saved. It sits outside the result box, which closes on a save, so it is
    the only thing left on screen pointing at what was just written. */
@@ -241,82 +314,19 @@
 .whd-writer__saved a { color: #2271b1; text-decoration: none; font-weight: 500; }
 .whd-writer__saved a:hover { text-decoration: underline; }
 
-
-/* ─── pictures chosen up front ─── */
-
-.whd-writer__chosen {
-	margin: 16px 0 0;
-	padding: 14px 16px;
-	border: 1px solid #e2e4e7;
-	border-radius: 3px;
-	background: #fbfbfc;
-}
-.whd-writer__chosen-head {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	margin: 0 0 10px;
-}
-.whd-writer__chosen-head .whd-writer__label { margin: 0; }
-.whd-writer__clear { color: #b32d2e; font-size: 12px; }
-.whd-writer__chosen-list {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 9px;
-	margin: 0 0 8px;
-}
-.whd-writer__chosen-list:empty { display: none; }
-.whd-writer__chosen-one {
-	position: relative;
-	display: block;
-	width: 76px;
-	height: 76px;
-	border: 1px solid #dcdcde;
-	border-radius: 3px;
-	overflow: hidden;
-	background: #fff;
-}
-.whd-writer__chosen-one img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.whd-writer__chosen-no {
-	position: absolute;
-	top: 3px;
-	left: 3px;
-	min-width: 17px;
-	padding: 1px 4px;
-	border-radius: 2px;
-	background: rgba(29, 35, 39, .78);
-	color: #fff;
-	font-size: 11px;
-	line-height: 1.5;
-	text-align: center;
-}
-.whd-writer__chosen-drop {
-	position: absolute;
-	top: 3px;
-	right: 3px;
-	width: 18px;
-	height: 18px;
-	padding: 0;
-	border: 0;
-	border-radius: 2px;
-	background: rgba(29, 35, 39, .78);
-	color: #fff;
-	font-size: 14px;
-	line-height: 18px;
-	cursor: pointer;
-}
-.whd-writer__chosen-drop:hover { background: #b32d2e; }
-
-
-/* ─── a line about what the pictures should be of ─── */
-
-.whd-writer__ask {
-	margin: 14px 0 0;
-	max-width: 680px;
-}
-.whd-writer__ask .whd-writer__field { margin: 0; }
-.whd-writer__ask .description { display: block; margin-top: 5px; }
-
 /* The score of what was just written, beside the links to it. */
 .whd-writer__scored { font-size: 12px; color: #50575e; }
 .whd-writer__saved .whd-seo-dot { margin: 0 2px; }
+
+@media (max-width: 782px) {
+	.whd-writer__make { padding: 4px 14px 16px; }
+}
+
+/* Three ways to make a picture take more room across than the product screen's two. */
+.whd-writer__make .whd-studio__shots {
+	grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+}
+
+.whd-writer__shot .whd-studio__shot-head {
+	flex-wrap: wrap;
+}

@@ -174,40 +174,99 @@ final class WHD_AI_Writer {
 			return;
 		}
 		wp_enqueue_style( 'whd-admin', WHD_URL . 'admin/admin.css', [], WHD_VERSION );
-		wp_enqueue_style( 'whd-ai-writer', WHD_URL . 'admin/ai-writer.css', [ 'whd-admin' ], WHD_VERSION );
+		// The form is the product screen's Write with AI panel, so it wears that panel's styles.
+		wp_enqueue_style( 'whd-ai-studio', WHD_URL . 'admin/ai-studio.css', [], WHD_VERSION );
+		wp_enqueue_style( 'whd-ai-writer', WHD_URL . 'admin/ai-writer.css', [ 'whd-admin', 'whd-ai-studio' ], WHD_VERSION );
 		// The saved line shows the score, which borrows the dot from the SEO box.
 		wp_enqueue_style( 'whd-seo', WHD_URL . 'admin/seo.css', [ 'whd-admin' ], WHD_VERSION );
-		// The manual route opens WordPress's own media window.
+		// The photographs and the pictures chosen by hand come from WordPress's own media window.
 		wp_enqueue_media();
 		wp_enqueue_style( 'whd-keyword-picker', WHD_URL . 'admin/keyword-picker.css', [], WHD_VERSION );
 		wp_enqueue_script( 'whd-keyword-picker', WHD_URL . 'admin/keyword-picker.js', [], WHD_VERSION, true );
-		wp_enqueue_script( 'whd-ai-writer', WHD_URL . 'admin/ai-writer.js', [ 'whd-keyword-picker' ], WHD_VERSION, true );
+		wp_enqueue_script( 'whd-ai-kit', WHD_URL . 'admin/ai-kit.js', [], WHD_VERSION, true );
+		wp_enqueue_script( 'whd-ai-writer', WHD_URL . 'admin/ai-writer.js', [ 'whd-ai-kit', 'whd-keyword-picker', 'media-editor' ], WHD_VERSION, true );
 
 		$type = self::PAGE_POST === $page ? 'post' : 'page';
 		wp_localize_script( 'whd-ai-writer', 'WHD_AI_WRITER', [
-			'rest'  => [ 'root' => esc_url_raw( rest_url( 'whd/v1/ai/' ) ), 'nonce' => wp_create_nonce( 'wp_rest' ) ],
-			'type'  => $type,
-			'ready' => WHD_AI::ready(),
+			'rest'    => [ 'root' => esc_url_raw( rest_url( 'whd/v1/ai/' ) ), 'nonce' => wp_create_nonce( 'wp_rest' ) ],
+			// The slow steps run as background jobs, asked after where the studio's are.
+			'jobs'    => self::jobs() ? esc_url_raw( rest_url( 'whd/v1/ai/studio/job' ) ) : '',
+			'last'    => self::jobs() ? esc_url_raw( rest_url( 'whd/v1/ai/studio/last' ) ) : '',
+			'type'    => $type,
+			'ready'   => WHD_AI::ready(),
 			'canDraw' => class_exists( 'WHD_AI_Images' ) && WHD_AI_Images::ready(),
-			'i18n'  => [
-				'writing'  => __( 'Writing — this takes a few seconds…', 'whd' ),
-				'saving'   => __( 'Saving…', 'whd' ),
-				'error'    => __( 'Something went wrong', 'whd' ),
-				'noIdea'   => __( 'Say what it should be about first.', 'whd' ),
-				'words'    => __( 'words', 'whd' ),
-				'sections' => __( 'sections', 'whd' ),
-				'faqs'     => __( 'questions', 'whd' ),
-				'pickEach' => __( 'Click each one to choose a picture.', 'whd' ),
-				'swapAny'  => __( 'Done — click any one to swap it.', 'whd' ),
-				'pickNone' => __( 'No pictures chosen yet', 'whd' ),
-				'pickOne'  => __( '1 picture chosen', 'whd' ),
-				'pickMany' => __( '%s pictures chosen', 'whd' ),
-				'pickHint' => __( 'They go in the order you choose them — the first one sits at the top of the page. A %1$s piece usually asks for about %2$s.', 'whd' ),
-				'pickFew'  => __( 'Click the empty ones to fill them.', 'whd' ),
-				'pickSpare' => __( 'This piece had room for %1$s of them; the rest were left out.', 'whd' ),
-				'noteAsk'  => __( 'Drawn to match what you asked for, rather than taken from your library. Click any one to choose a picture yourself instead.', 'whd' ),
+			'lengths' => [
+				[ 'key' => 'short', 'name' => __( 'Short', 'whd' ), 'note' => __( 'about 400 words', 'whd' ), 'pictures' => 2 ],
+				[ 'key' => 'medium', 'name' => __( 'Medium', 'whd' ), 'note' => __( 'about 700 words', 'whd' ), 'pictures' => 3 ],
+				[ 'key' => 'long', 'name' => __( 'Long', 'whd' ), 'note' => __( 'about 1,100 words', 'whd' ), 'pictures' => 4 ],
 			],
+			'maxPictures' => self::MAX_PICTURES,
+			'i18n'    => array_merge(
+				class_exists( 'WHD_AI_Studio' ) ? WHD_AI_Studio::strings() : [],
+				[
+					'writing'   => __( 'Writing — this takes a few seconds…', 'whd' ),
+					'saving'    => __( 'Saving…', 'whd' ),
+					'error'     => __( 'Something went wrong', 'whd' ),
+					'noIdea'    => __( 'Say what it should be about first.', 'whd' ),
+					'words'     => __( 'words', 'whd' ),
+					'sections'  => __( 'sections', 'whd' ),
+					'faqs'      => __( 'questions', 'whd' ),
+					'swapAny'   => __( 'Click a picture to see it large; “Change” swaps it for one from your library.', 'whd' ),
+					'pickSpare' => __( 'This piece had room for %1$s of them; the rest were left out.', 'whd' ),
+					'top'       => __( 'Top of the page', 'whd' ),
+					/* translators: %d: picture number */
+					'pictureN'  => __( 'Picture %d', 'whd' ),
+					'atTop'     => __( 'top of the page', 'whd' ),
+					'inBody'    => __( 'in the body', 'whd' ),
+					'findDraw'  => __( 'Find or draw', 'whd' ),
+					'fromLib'   => __( 'From your library', 'whd' ),
+					'chooseOwn' => __( 'Choose my own', 'whd' ),
+					'mine'      => __( 'Your own picture', 'whd' ),
+					'clearOwn'  => __( 'Use the AI instead', 'whd' ),
+					'needPhotos' => __( 'Needs photographs to work from, above', 'whd' ),
+					'photosNone' => __( 'Optional. Choose photographs of the pieces this is about, and a picture drawn on a model or a ghost mannequin shows those pieces as they really are.', 'whd' ),
+					/* translators: %d: number of photographs */
+					'photosSome' => __( '%d chosen. Pictures drawn on a model or a ghost mannequin are drawn from these.', 'whd' ),
+					'askAuto'   => [
+						__( 'e.g. a woman on a quiet street in autumn light, warm cream tones', 'whd' ),
+						__( 'e.g. a close-up of a knit texture, soft daylight', 'whd' ),
+						__( 'e.g. an office desk with a coffee, morning light', 'whd' ),
+						__( 'e.g. a rail of folded sweaters in neutral colours', 'whd' ),
+					],
+					'leftBlankW'  => __( 'Left blank, a picture is made to suit the section it sits beside.', 'whd' ),
+					'stepCompose' => __( 'Writing the piece', 'whd' ),
+					'hintCompose' => __( 'Title, sections, snippet and questions, in the shop’s own voice, with the keywords worked in.', 'whd' ),
+					/* translators: 1: picture number, 2: how many */
+					'stepPicture' => __( 'Picture %1$d of %2$d', 'whd' ),
+					'hintAuto'    => __( 'Your media library is searched first; anything it has no good match for is drawn.', 'whd' ),
+					'hintAsked'   => __( 'Drawn to match what you asked for.', 'whd' ),
+					'hintModelW'  => __( 'Drawn on a model, from your photographs.', 'whd' ),
+					'hintModelN'  => __( 'Drawn on a model, in the look of your shop.', 'whd' ),
+					'hintGhostW'  => __( 'Drawn on a ghost mannequin, from your photographs.', 'whd' ),
+					'fromLibrary' => __( 'from your library', 'whd' ),
+					'drawnTag'    => __( 'drawn', 'whd' ),
+					'yours'       => __( 'chosen by you', 'whd' ),
+					'change'      => __( 'Change', 'whd' ),
+					'emptySlot'   => __( 'Choose a picture', 'whd' ),
+					/* translators: %d: how many pictures */
+					'wantN'       => __( 'This piece has %d pictures', 'whd' ),
+					'wantOne'     => __( 'This piece has 1 picture', 'whd' ),
+					/* translators: %s: what went wrong */
+					'pictureFail' => __( 'not filled: %s', 'whd' ),
+					'doneNote'    => __( 'Read it over below, change anything you like, then publish it or save it as a draft.', 'whd' ),
+					'writeIt'     => __( 'Write it', 'whd' ),
+					'writeAnother' => __( 'Write another', 'whd' ),
+				]
+			),
 		] );
+	}
+
+	/** At most this many pictures in one piece: one at the top and one between sections after that. */
+	const MAX_PICTURES = 5;
+
+	/** Whether the slow steps can run as background jobs — the studio's runner is there with WooCommerce. */
+	private static function jobs(): bool {
+		return class_exists( 'WooCommerce' ) && class_exists( 'WHD_AI_Studio' );
 	}
 
 	public static function screen_posts() {
@@ -247,88 +306,96 @@ final class WHD_AI_Writer {
 		<?php
 	}
 
+	/**
+	 * The form, laid out the way Write with AI is on the product screen and on Bulk products: what
+	 * it is about, what to write (with keywords and anything to specify), then the pictures — how
+	 * many, and for each one whether it is found or drawn, on a model or a ghost mannequin, with its
+	 * own instructions. One button, and the same loader while it works.
+	 */
 	private static function compose_form( string $type ) {
-		$total = class_exists( 'WHD_AI_Keywords' ) ? WHD_AI_Keywords::count() : 0;
+		$total   = class_exists( 'WHD_AI_Keywords' ) ? WHD_AI_Keywords::count() : 0;
+		$is_post = 'post' === $type;
+		$parts   = [
+			'excerpt' => [ __( 'Excerpt', 'whd' ), __( 'the summary in lists and feeds', 'whd' ) ],
+			'seo'     => [ __( 'Search snippet', 'whd' ), __( 'SEO title and meta description', 'whd' ) ],
+			'faq'     => [ __( 'Questions at the end', 'whd' ), __( 'with FAQ structured data', 'whd' ) ],
+			'links'   => [ __( 'Links to your pages', 'whd' ), __( 'into related pages on the site', 'whd' ) ],
+		];
 		?>
-		<div class="whd-writer__make" id="whd-writer">
+		<div class="whd-writer__make whd-studio" id="whd-writer">
 
-			<div class="whd-writer__field">
-				<label class="whd-writer__label" for="whd-writer-idea"><?php esc_html_e( 'What should it be about?', 'whd' ); ?></label>
-				<textarea id="whd-writer-idea" rows="3" class="large-text" placeholder="<?php esc_attr_e( 'e.g. how to choose between a wrap vest and a cardigan for a Korean winter, for someone who works in an office', 'whd' ); ?>"></textarea>
+			<section class="whd-studio__step">
+				<h3 class="whd-studio__h"><span class="whd-studio__n" aria-hidden="true">1</span><label for="whd-writer-idea"><?php echo esc_html( $is_post ? __( 'What the post is about', 'whd' ) : __( 'What the page is about', 'whd' ) ); ?></label></h3>
+				<textarea id="whd-writer-idea" rows="3" class="whd-studio__notes" placeholder="<?php esc_attr_e( 'e.g. how to choose between a wrap vest and a cardigan for a Korean winter, for someone who works in an office', 'whd' ); ?>"></textarea>
 				<p class="description"><?php esc_html_e( 'A sentence is enough. The more you say about who it is for, the less you will have to edit afterwards.', 'whd' ); ?></p>
-			</div>
+			</section>
 
-			<div class="whd-writer__field">
-				<span class="whd-writer__label"><?php esc_html_e( 'Keywords to work in', 'whd' ); ?></span>
-				<div class="whd-kw" id="whd-writer-keywords" data-whd-keywords
-					data-placeholder="<?php esc_attr_e( 'Search your keywords, or type your own', 'whd' ); ?>"></div>
-				<p class="description">
-					<?php
-					printf(
-						/* translators: %s: number of keywords in the list */
-						esc_html__( 'Type to search all %s of your keywords — monthly volume and how hard each one is to rank for are shown beside it. A phrase that is not in the list works too: type it and press Enter.', 'whd' ),
-						esc_html( number_format_i18n( $total ) )
-					);
-					?>
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=whd-ai&tab=keywords' ) ); ?>"><?php esc_html_e( 'Manage the list', 'whd' ); ?></a>
-				</p>
-			</div>
+			<section class="whd-studio__step">
+				<h3 class="whd-studio__h"><span class="whd-studio__n" aria-hidden="true">2</span><?php esc_html_e( 'What to write', 'whd' ); ?></h3>
+				<div class="whd-studio__parts" role="group" aria-label="<?php esc_attr_e( 'What to write', 'whd' ); ?>">
+					<label class="whd-studio__part is-locked">
+						<input type="checkbox" checked disabled>
+						<span class="whd-studio__part-name"><?php esc_html_e( 'Title and body', 'whd' ); ?></span>
+						<span class="whd-studio__part-note"><?php esc_html_e( 'headings, sections, the words', 'whd' ); ?></span>
+					</label>
+					<?php foreach ( $parts as $key => $label ) : ?>
+						<label class="whd-studio__part">
+							<input type="checkbox" data-part="<?php echo esc_attr( $key ); ?>" checked>
+							<span class="whd-studio__part-name"><?php echo esc_html( $label[0] ); ?></span>
+							<span class="whd-studio__part-note"><?php echo esc_html( $label[1] ); ?></span>
+						</label>
+					<?php endforeach; ?>
+				</div>
 
-			<div class="whd-writer__row">
-				<label class="whd-writer__inline">
-					<span><?php esc_html_e( 'Length', 'whd' ); ?></span>
-					<select id="whd-writer-length">
-						<option value="short"><?php esc_html_e( 'Short — about 400 words', 'whd' ); ?></option>
-						<option value="medium" selected><?php esc_html_e( 'Medium — about 700 words', 'whd' ); ?></option>
-						<option value="long"><?php esc_html_e( 'Long — about 1,100 words', 'whd' ); ?></option>
-					</select>
-				</label>
-				<label class="whd-writer__inline">
-					<span><?php esc_html_e( 'Questions at the end', 'whd' ); ?></span>
-					<select id="whd-writer-faq">
-						<option value="1" selected><?php esc_html_e( 'Yes — with FAQ structured data', 'whd' ); ?></option>
-						<option value="0"><?php esc_html_e( 'No', 'whd' ); ?></option>
-					</select>
-				</label>
-				<label class="whd-writer__inline">
-					<span><?php esc_html_e( 'Pictures', 'whd' ); ?></span>
-					<select id="whd-writer-images-mode">
-						<?php if ( class_exists( 'WHD_AI_Images' ) && WHD_AI_Images::ready() ) : ?>
-							<option value="auto" selected><?php esc_html_e( 'Find or draw them for me', 'whd' ); ?></option>
-						<?php else : ?>
-							<option value="auto" selected><?php esc_html_e( 'Find them in my library', 'whd' ); ?></option>
-						<?php endif; ?>
-						<option value="manual"><?php esc_html_e( 'I will choose them myself', 'whd' ); ?></option>
-						<option value="none"><?php esc_html_e( 'No pictures', 'whd' ); ?></option>
-					</select>
-				</label>
-			</div>
+				<div class="whd-studio__field">
+					<p class="whd-studio__label" id="whd-writer-length-label"><?php esc_html_e( 'How long?', 'whd' ); ?></p>
+					<div class="whd-studio__counts" id="whd-writer-length" role="radiogroup" aria-labelledby="whd-writer-length-label"></div>
+				</div>
 
-			<div class="whd-writer__ask" id="whd-writer-ask-row">
-				<label class="whd-writer__field">
-					<span class="whd-writer__label"><?php esc_html_e( 'What the pictures should show', 'whd' ); ?></span>
-					<input type="text" class="large-text" id="whd-writer-ask" maxlength="300"
-						placeholder="<?php esc_attr_e( 'e.g. a woman on a quiet street in autumn light, warm cream tones', 'whd' ); ?>">
-					<span class="description">
-						<?php esc_html_e( 'Optional. Say this and the pictures are drawn to match it. Leave it empty and your library is searched first, and only what it has no match for is drawn.', 'whd' ); ?>
-					</span>
-				</label>
-			</div>
+				<div class="whd-studio__field">
+					<span class="whd-studio__label"><?php esc_html_e( 'Keywords to work in', 'whd' ); ?></span>
+					<div class="whd-kw" id="whd-writer-keywords" data-whd-keywords
+						data-placeholder="<?php esc_attr_e( 'Search your keyword list, or type your own', 'whd' ); ?>"></div>
+					<p class="description">
+						<?php
+						printf(
+							/* translators: %s: number of keywords in the list */
+							esc_html__( 'Leave it empty and the AI picks from all %s of your keywords — the phrase that fits best becomes the focus keyphrase, never one another page is already aimed at. Pick some to choose yourself; the first one you pick is the focus.', 'whd' ),
+							esc_html( number_format_i18n( $total ) )
+						);
+						?>
+						<a href="<?php echo esc_url( admin_url( 'admin.php?page=whd-ai&tab=keywords' ) ); ?>"><?php esc_html_e( 'Manage the list', 'whd' ); ?></a>
+					</p>
+				</div>
 
-			<div class="whd-writer__chosen" id="whd-writer-chosen" hidden>
-				<p class="whd-writer__chosen-head">
-					<span class="whd-writer__label" id="whd-writer-chosen-count"></span>
-					<button type="button" class="button button-small" id="whd-writer-chosen-add"><?php esc_html_e( 'Choose pictures', 'whd' ); ?></button>
-					<button type="button" class="button-link whd-writer__clear" id="whd-writer-chosen-clear" hidden><?php esc_html_e( 'Start again', 'whd' ); ?></button>
-				</p>
-				<div class="whd-writer__chosen-list" id="whd-writer-chosen-list"></div>
-				<p class="description" id="whd-writer-chosen-hint"></p>
-			</div>
+				<div class="whd-studio__field">
+					<label class="whd-studio__label" for="whd-writer-notes"><?php esc_html_e( 'Anything to specify?', 'whd' ); ?></label>
+					<textarea id="whd-writer-notes" rows="3" class="whd-studio__notes" placeholder="<?php esc_attr_e( 'e.g. for women in their twenties who work in an office — mention our wrap vests and cardigans — warm and practical, no jargon', 'whd' ); ?>"></textarea>
+					<p class="description"><?php esc_html_e( 'Who it is for, what to mention or leave out, the tone. What you write here wins over everything else.', 'whd' ); ?></p>
+				</div>
+			</section>
 
-			<p class="whd-writer__go">
-				<button type="button" class="button button-primary button-hero" id="whd-writer-go"><?php esc_html_e( 'Write it', 'whd' ); ?></button>
-				<span class="whd-writer__status" id="whd-writer-status" role="status"></span>
-			</p>
+			<section class="whd-studio__step">
+				<h3 class="whd-studio__h"><span class="whd-studio__n" aria-hidden="true">3</span><?php esc_html_e( 'Pictures', 'whd' ); ?></h3>
+
+				<?php if ( class_exists( 'WHD_AI_Images' ) && WHD_AI_Images::ready() ) : ?>
+					<p class="whd-studio__label"><?php esc_html_e( 'Photographs to work from', 'whd' ); ?> <span class="whd-writer__opt"><?php esc_html_e( 'optional', 'whd' ); ?></span></p>
+					<div class="whd-studio__photos" id="whd-writer-photos"></div>
+					<p class="description" id="whd-writer-photos-note"></p>
+				<?php endif; ?>
+
+				<div class="whd-studio__field">
+					<p class="whd-studio__label" id="whd-writer-count-label"><?php esc_html_e( 'How many pictures?', 'whd' ); ?></p>
+					<div class="whd-studio__counts" id="whd-writer-counts" role="radiogroup" aria-labelledby="whd-writer-count-label"></div>
+					<p class="description"><?php esc_html_e( 'The first sits at the top of the page as its featured image; the rest go in between the sections.', 'whd' ); ?></p>
+					<div class="whd-studio__shots" id="whd-writer-shots" hidden></div>
+				</div>
+			</section>
+
+			<div class="whd-studio__go">
+				<button type="button" class="button button-primary button-large" id="whd-writer-go"><?php esc_html_e( 'Write it', 'whd' ); ?></button>
+				<span class="whd-studio__status" id="whd-writer-status" role="status" aria-live="polite"></span>
+			</div>
 
 			<div class="whd-writer__saved" id="whd-writer-saved" role="status" hidden></div>
 
@@ -338,7 +405,7 @@ final class WHD_AI_Writer {
 						<span class="whd-writer__label"><?php esc_html_e( 'Title', 'whd' ); ?></span>
 						<input type="text" class="large-text" id="whd-writer-title">
 					</label>
-					<label class="whd-writer__field">
+					<label class="whd-writer__field" id="whd-writer-desc-field">
 						<span class="whd-writer__label"><?php esc_html_e( 'Search snippet', 'whd' ); ?></span>
 						<textarea rows="2" class="large-text" id="whd-writer-desc"></textarea>
 						<span class="whd-writer__count" id="whd-writer-desc-count"></span>
@@ -350,25 +417,13 @@ final class WHD_AI_Writer {
 				<div class="whd-writer__images" id="whd-writer-images" hidden>
 					<p class="whd-writer__label">
 						<span id="whd-writer-images-count"></span>
-						<?php if ( class_exists( 'WHD_AI_Images' ) && WHD_AI_Images::ready() ) : ?>
-							<button type="button" class="button button-small" id="whd-writer-images-auto"><?php esc_html_e( 'Find or draw them', 'whd' ); ?></button>
-						<?php else : ?>
-							<button type="button" class="button button-small" id="whd-writer-images-auto"><?php esc_html_e( 'Find them in my library', 'whd' ); ?></button>
-						<?php endif; ?>
 						<span class="whd-writer__status" id="whd-writer-images-status" role="status"></span>
 					</p>
 					<div class="whd-writer__slots" id="whd-writer-slots"></div>
-					<p class="description" id="whd-writer-images-note">
-						<?php
-						echo class_exists( 'WHD_AI_Images' ) && WHD_AI_Images::ready()
-							? esc_html__( 'Your media library is searched first; anything it has no good match for is drawn in the look of your own photographs. Or click a slot to choose the picture yourself.', 'whd' )
-							: esc_html__( 'Your media library is searched for a match. Click a slot to choose the picture yourself.', 'whd' );
-						?>
-					</p>
 				</div>
 
 				<div class="whd-writer__preview">
-					<p class="whd-writer__label"><?php esc_html_e( 'The page itself', 'whd' ); ?></p>
+					<p class="whd-writer__label"><?php echo esc_html( $is_post ? __( 'The post itself', 'whd' ) : __( 'The page itself', 'whd' ) ); ?></p>
 					<div class="whd-writer__body" id="whd-writer-body" contenteditable="true" spellcheck="true"></div>
 					<p class="description"><?php esc_html_e( 'Edit anything here before you save it — what you save is what is in this box.', 'whd' ); ?></p>
 				</div>
@@ -392,9 +447,11 @@ final class WHD_AI_Writer {
 	 * Prose would have to be taken apart again to find the title and the snippet, and taking prose
 	 * apart is guesswork. Asking for the parts separately means each one can go where it belongs.
 	 *
+	 * @param array $more notes (anything to specify — wins over the rest), parts (which of excerpt,
+	 *                    seo, faq, links to keep), pictures (how many; left out, the length decides).
 	 * @return array|WP_Error
 	 */
-	public static function compose( string $idea, array $keywords, string $type, string $length = 'medium', bool $faq = true ) {
+	public static function compose( string $idea, array $keywords, string $type, string $length = 'medium', bool $faq = true, array $more = [] ) {
 		$idea = trim( wp_strip_all_tags( $idea ) );
 		if ( '' === $idea ) {
 			return new WP_Error( 'whd_ai_idea', __( 'Say what it should be about first.', 'whd' ) );
@@ -406,6 +463,7 @@ final class WHD_AI_Writer {
 		$words    = [ 'short' => 400, 'medium' => 700, 'long' => 1100 ][ $length ] ?? 700;
 		$sections = [ 'short' => '3', 'medium' => '4 or 5', 'long' => '6 or 7' ][ $length ] ?? '4 or 5';
 		$keywords = WHD_AI::clean_keywords( $keywords );
+		$notes    = mb_substr( trim( sanitize_textarea_field( (string) ( $more['notes'] ?? '' ) ) ), 0, 2000 );
 
 		/*
 		 * Nothing picked: the keywords come from the shop's list, not from the model's own idea of
@@ -479,6 +537,9 @@ JSON;
 			'post' === $type ? __( 'journal post', 'whd' ) : __( 'page', 'whd' )
 		);
 
+		if ( '' !== $notes ) {
+			$user .= "\n\nTHE SHOP'S OWN WORDS — who it is for, what to mention or leave out, the tone. They win over anything above:\n" . $notes;
+		}
 		if ( ! $faq ) {
 			$user .= "\n\n" . __( 'Leave "faqs" as an empty list.', 'whd' );
 		}
@@ -490,7 +551,9 @@ JSON;
 		 */
 		$budget = [ 'short' => 9000, 'medium' => 14000, 'long' => 22000 ][ $length ] ?? 14000;
 
-		$raw = WHD_AI::call( $system, $user, [ 'json' => true, 'max_tokens' => $budget ] );
+		// It runs as a background job, with no page held open, so it may wait as long as the studio does.
+		$wait = [ 'json' => true, 'max_tokens' => $budget, 'timeout' => 240 ];
+		$raw  = WHD_AI::call( $system, $user, $wait );
 		if ( is_wp_error( $raw ) ) {
 			return $raw;
 		}
@@ -498,7 +561,7 @@ JSON;
 		$doc = self::decode( $raw );
 		if ( ! is_array( $doc ) || empty( $doc['sections'] ) ) {
 			// Once more before giving up: a mangled reply is usually a one-off.
-			$raw = WHD_AI::call( $system, $user, [ 'json' => true, 'max_tokens' => $budget ] );
+			$raw = WHD_AI::call( $system, $user, $wait );
 			if ( is_wp_error( $raw ) ) {
 				return $raw;
 			}
@@ -540,7 +603,8 @@ JSON;
 		}
 		$check['ok']  = empty( $check['issues'] ) && ! in_array( false, (array) ( $check['keywords'] ?? [] ), true );
 		$doc['check'] = $check;
-		$doc['slots'] = self::image_slots( $doc );
+		$doc['parts'] = self::parts( $more['parts'] ?? null );
+		$doc['slots'] = self::image_slots( $doc, isset( $more['pictures'] ) ? (int) $more['pictures'] : -1 );
 
 		return $doc;
 	}
@@ -755,11 +819,18 @@ JSON;
 	   media library and draw whatever is missing, or choose every one by hand. */
 
 	/**
-	 * The picture slots this piece wants: one at the top, then one every other section.
+	 * The picture slots this piece wants: one at the top, then one above a section.
+	 *
+	 * Asked for a number, the ones after the first are spread evenly through the sections — never
+	 * the first section, which sits right under the picture at the top, and never two on one. Left
+	 * to itself (-1) it is one every other section, four at the most.
 	 *
 	 * @return array [ { key, subject, heading } ]
 	 */
-	public static function image_slots( array $doc ): array {
+	public static function image_slots( array $doc, int $count = -1 ): array {
+		if ( 0 === $count ) {
+			return [];
+		}
 		$sections = array_values( (array) ( $doc['sections'] ?? [] ) );
 		$slots    = [ [
 			'key'     => 'hero',
@@ -767,10 +838,20 @@ JSON;
 			'heading' => '',
 		] ];
 
-		for ( $i = 1; $i < count( $sections ); $i += 2 ) {
-			if ( count( $slots ) >= 4 ) {
-				break;
+		$at = [];
+		if ( $count < 0 ) {
+			for ( $i = 1; $i < count( $sections ) && count( $at ) < 3; $i += 2 ) {
+				$at[] = $i;
 			}
+		} else {
+			$want = min( $count, self::MAX_PICTURES ) - 1;
+			$room = count( $sections ) - 1; // sections 1 … n-1
+			for ( $k = 1; $k <= min( $want, $room ); $k++ ) {
+				$at[] = 1 + (int) floor( ( $k - 1 ) * $room / min( $want, $room ) + $room / ( 2 * min( $want, $room ) ) - 0.5 );
+			}
+			$at = array_values( array_unique( array_filter( $at, static fn( $i ) => $i >= 1 && $i < count( $sections ) ) ) );
+		}
+		foreach ( $at as $i ) {
 			$slots[] = [
 				'key'     => 'section-' . $i,
 				'subject' => (string) ( $sections[ $i ]['heading'] ?? '' ),
@@ -779,6 +860,15 @@ JSON;
 		}
 
 		return $slots;
+	}
+
+	/** Which of the optional parts to keep; all of them when nothing says otherwise. */
+	private static function parts( $given ): array {
+		$all = [ 'excerpt', 'seo', 'faq', 'links' ];
+		if ( ! is_array( $given ) ) {
+			return $all;
+		}
+		return array_values( array_intersect( $all, array_map( 'sanitize_key', array_filter( $given, 'is_scalar' ) ) ) );
 	}
 
 	/**
@@ -912,13 +1002,51 @@ JSON;
 	}
 
 	/**
-	 * Fill one slot: the library first, the model only where the library has nothing.
+	 * Fill one slot: the library first, the model only where the library has nothing — or, asked for
+	 * a picture on a model or a ghost mannequin, drawn straight away, from the photographs of the
+	 * shop's own pieces when there are some.
 	 *
+	 * @param string $mode auto | model | mannequin.
+	 * @param int[]  $refs Photographs of the pieces the piece is about.
 	 * @return array|WP_Error
 	 */
-	public static function fill_slot( array $slot, array $doc, array $taken = [], bool $may_draw = true, string $ask = '' ) {
-		$ask = trim( $ask );
+	public static function fill_slot( array $slot, array $doc, array $taken = [], bool $may_draw = true, string $ask = '', string $mode = 'auto', array $refs = [] ) {
+		$ask      = trim( $ask );
 		$can_draw = $may_draw && class_exists( 'WHD_AI_Images' ) && WHD_AI_Images::ready();
+		$refs     = array_values( array_filter( array_map( 'absint', $refs ), static fn( $id ) => $id && wp_attachment_is_image( $id ) ) );
+
+		if ( in_array( $mode, [ 'model', 'mannequin' ], true ) ) {
+			if ( ! $can_draw ) {
+				return new WP_Error( 'whd_ai_writer_nodraw', __( 'Drawing pictures needs a Google AI key. Add one in WHD → AI content.', 'whd' ) );
+			}
+			if ( 'mannequin' === $mode && ! $refs ) {
+				return new WP_Error( 'whd_ai_writer_noref', __( 'A ghost mannequin needs photographs of the piece to work from.', 'whd' ) );
+			}
+			$id = WHD_AI_Images::make(
+				sprintf(
+					/* translators: 1: what the picture is about, 2: the piece it belongs to */
+					__( '%1$s. The photograph sits beside writing about %2$s for an online womenswear boutique.', 'whd' ),
+					$slot['subject'],
+					(string) ( $doc['title'] ?? '' )
+				),
+				sanitize_title( $slot['subject'] ?: 'journal' ),
+				$slot['subject'],
+				$ask,
+				[ 'aspect' => '3:2', 'refs' => $refs, 'mode' => $mode ]
+			);
+			if ( is_wp_error( $id ) ) {
+				return $id;
+			}
+			return [
+				'id'     => (int) $id,
+				'url'    => wp_get_attachment_image_url( $id, 'medium' ),
+				'full'   => wp_get_attachment_image_url( $id, 'large' ),
+				'alt'    => $slot['subject'],
+				'score'  => 0,
+				'source' => 'drawn',
+				'key'    => $slot['key'],
+			];
+		}
 
 		/*
 		 * Asking for something specific means the library is not what you want. Searching it first
@@ -949,7 +1077,8 @@ JSON;
 			),
 			sanitize_title( $slot['subject'] ?: 'journal' ),
 			$slot['subject'],
-			$ask
+			$ask,
+			[ 'refs' => $refs ]
 		);
 		if ( is_wp_error( $id ) ) {
 			return $id;
@@ -1181,12 +1310,15 @@ JSON;
 		 * The pictures go in before the post is written rather than after: the body saved is then
 		 * the body with its figures in it, and nothing has to be edited twice.
 		 */
+		$parts  = self::parts( $doc['parts'] ?? null );
 		$images = array_values( array_filter( (array) ( $doc['images'] ?? [] ), static fn( $i ) => ! empty( $i['id'] ) ) );
 		$html   = self::place_images( $html, $images );
-		$html   = self::link_up( $html );
+		if ( in_array( 'links', $parts, true ) ) {
+			$html = self::link_up( $html );
+		}
 
 		/* Nothing linked out of its own accord, so give the reader somewhere to go. */
-		if ( false === mb_stripos( $html, '<a href' ) ) {
+		if ( in_array( 'links', $parts, true ) && false === mb_stripos( $html, '<a href' ) ) {
 			$html .= self::read_next( (array) ( $doc['keywords'] ?? [] ) );
 		}
 
@@ -1196,7 +1328,7 @@ JSON;
 			'post_title'   => $title,
 			'post_name'    => sanitize_title( $doc['slug'] ?? $title ),
 			'post_content' => wp_kses_post( $html ),
-			'post_excerpt' => sanitize_textarea_field( (string) ( $doc['excerpt'] ?? '' ) ),
+			'post_excerpt' => in_array( 'excerpt', $parts, true ) ? sanitize_textarea_field( (string) ( $doc['excerpt'] ?? '' ) ) : '',
 		], true );
 
 		if ( is_wp_error( $id ) ) {
@@ -1221,7 +1353,11 @@ JSON;
 		 */
 		update_post_meta( $id, self::FAQ, self::faqs_from_html( $html, (array) ( $doc['faqs'] ?? [] ) ) );
 
-		// The two the theme's own SEO head reads.
+		// The two the theme's own SEO head reads — unless the search snippet was left out on purpose.
+		if ( ! in_array( 'seo', $parts, true ) ) {
+			$doc['meta_description'] = '';
+			$doc['seo_title']        = '';
+		}
 		if ( ! empty( $doc['meta_description'] ) ) {
 			update_post_meta( $id, '_omc_meta_description', sanitize_textarea_field( $doc['meta_description'] ) );
 		}
@@ -1371,19 +1507,35 @@ JSON;
 		] );
 	}
 
+	/**
+	 * Write the piece — as a background job where there is a runner for one: a long piece keeps the
+	 * model busy for a minute or more, and the live host ends a request that quiet with a bare 500.
+	 */
 	public static function rest_compose( WP_REST_Request $r ) {
-		$doc = self::compose(
-			(string) $r->get_param( 'idea' ),
-			(array) $r->get_param( 'keywords' ),
-			sanitize_key( (string) $r->get_param( 'type' ) ),
-			sanitize_key( (string) $r->get_param( 'length' ) ),
-			(bool) $r->get_param( 'faq' )
-		);
-		if ( is_wp_error( $doc ) ) {
-			return new WP_REST_Response( [ 'message' => $doc->get_error_message() ], 400 );
-		}
+		$work = static function () use ( $r ) {
+			$more = [
+				'notes' => (string) $r->get_param( 'notes' ),
+				'parts' => $r->get_param( 'parts' ),
+			];
+			if ( null !== $r->get_param( 'pictures' ) ) {
+				$more['pictures'] = max( 0, min( self::MAX_PICTURES, (int) $r->get_param( 'pictures' ) ) );
+			}
+			$doc = self::compose(
+				(string) $r->get_param( 'idea' ),
+				(array) $r->get_param( 'keywords' ),
+				sanitize_key( (string) $r->get_param( 'type' ) ),
+				sanitize_key( (string) $r->get_param( 'length' ) ),
+				(bool) $r->get_param( 'faq' ),
+				$more
+			);
+			if ( is_wp_error( $doc ) ) {
+				return new WP_REST_Response( [ 'message' => $doc->get_error_message() ], 400 );
+			}
 
-		return new WP_REST_Response( $doc, 200 );
+			return new WP_REST_Response( $doc, 200 );
+		};
+
+		return self::jobs() ? WHD_AI_Studio::background( 'compose', $work ) : $work();
 	}
 
 	/**
@@ -1400,19 +1552,25 @@ JSON;
 			return new WP_REST_Response( [ 'message' => __( 'No slot was named.', 'whd' ) ], 400 );
 		}
 
-		$filled = self::fill_slot(
-			$slot,
-			$doc,
-			$taken,
-			(bool) $r->get_param( 'draw' ),
-			mb_substr( sanitize_textarea_field( (string) $r->get_param( 'ask' ) ), 0, 300 )
-		);
-		if ( is_wp_error( $filled ) ) {
-			return new WP_REST_Response( [ 'message' => $filled->get_error_message() ], 400 );
-		}
-		$filled['heading'] = (string) ( $slot['heading'] ?? '' );
+		$work = static function () use ( $r, $doc, $slot, $taken ) {
+			$filled = self::fill_slot(
+				$slot,
+				$doc,
+				$taken,
+				(bool) $r->get_param( 'draw' ),
+				mb_substr( sanitize_textarea_field( (string) $r->get_param( 'ask' ) ), 0, 500 ),
+				sanitize_key( (string) ( $r->get_param( 'mode' ) ?: 'auto' ) ),
+				array_slice( array_map( 'absint', (array) $r->get_param( 'refs' ) ), 0, 6 )
+			);
+			if ( is_wp_error( $filled ) ) {
+				return new WP_REST_Response( [ 'message' => $filled->get_error_message() ], 400 );
+			}
+			$filled['heading'] = (string) ( $slot['heading'] ?? '' );
 
-		return new WP_REST_Response( $filled, 200 );
+			return new WP_REST_Response( $filled, 200 );
+		};
+
+		return self::jobs() ? WHD_AI_Studio::background( 'write-image', $work ) : $work();
 	}
 
 	public static function rest_save( WP_REST_Request $r ) {

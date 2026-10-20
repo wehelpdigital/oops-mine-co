@@ -2968,7 +2968,7 @@ final class WHD_AI_Studio {
 				'callback'            => static function ( WP_REST_Request $r ) use ( $step ) {
 					self::prepare();
 					if ( in_array( $step, self::JOBS, true ) ) {
-						return self::start_job( $step, $r );
+						return self::start_job( $step, static fn() => call_user_func( [ __CLASS__, 'rest_' . $step ], $r ) );
 					}
 					$answer = call_user_func( [ __CLASS__, 'rest_' . $step ], $r );
 					// Got this far, so whatever the note said did not stop it.
@@ -2978,8 +2978,9 @@ final class WHD_AI_Studio {
 				'permission_callback' => $can,
 			] );
 		}
+		// Jobs are per user, so anybody who may start one may ask after it — AI Posts runs them too.
 		$own = static function () {
-			return current_user_can( 'edit_products' );
+			return current_user_can( 'edit_posts' );
 		};
 		register_rest_route( 'whd/v1', '/ai/studio/job', [
 			'methods'             => 'POST',
@@ -3014,14 +3015,14 @@ final class WHD_AI_Studio {
 	 * Where the server cannot close a connection early (Apache with mod_php, as on the local site)
 	 * the job simply runs before the answer is finished, which is how it worked before.
 	 */
-	private static function start_job( string $step, WP_REST_Request $r ): WP_REST_Response {
+	private static function start_job( string $step, callable $work ): WP_REST_Response {
 		$job = strtolower( wp_generate_password( 20, false, false ) );
 		set_transient( self::job_key( $job ), [ 'status' => 'running', 'step' => $step, 'at' => time() ], HOUR_IN_SECONDS );
 
-		WHD_Plugin::after_response( static function ( $closed ) use ( $job, $step, $r ) {
+		WHD_Plugin::after_response( static function ( $closed ) use ( $job, $work ) {
 			self::$job = $job;
 			try {
-				$answer = call_user_func( [ __CLASS__, 'rest_' . $step ], $r );
+				$answer = $work();
 				$data   = $answer instanceof WP_REST_Response ? $answer->get_data() : $answer;
 				$failed = $answer instanceof WP_REST_Response && $answer->get_status() >= 400;
 				set_transient( self::job_key( $job ), $failed
@@ -3035,6 +3036,18 @@ final class WHD_AI_Studio {
 		} );
 
 		return new WP_REST_Response( [ 'job' => $job ], 202 );
+	}
+
+	/**
+	 * Any slow step, from any screen, as a job: answered at once with { job }, done after the
+	 * response has gone, asked after through studio/job like the studio's own steps.
+	 *
+	 * @param string   $step What it is, for the record.
+	 * @param callable $work Returns a WP_REST_Response (or plain data) — the job's answer.
+	 */
+	public static function background( string $step, callable $work ): WP_REST_Response {
+		self::prepare();
+		return self::start_job( $step, $work );
 	}
 
 	/** How a job is getting on: running, or done with its answer, or failed with the reason — said once. */
