@@ -407,6 +407,22 @@ final class WHD_AI_Writer {
 		$sections = [ 'short' => '3', 'medium' => '4 or 5', 'long' => '6 or 7' ][ $length ] ?? '4 or 5';
 		$keywords = WHD_AI::clean_keywords( $keywords );
 
+		/*
+		 * Nothing picked: the keywords come from the shop's list, not from the model's own idea of
+		 * what people search. It used to be told to "choose the two or three phrases a reader would
+		 * search for", and chose phrases the list had never heard of.
+		 */
+		$shortlist = ! $keywords && class_exists( 'WHD_AI_Keywords' ) ? WHD_AI_Keywords::shortlist( $idea, 0, 15, true ) : [];
+		$from_list = '';
+		if ( $shortlist ) {
+			$lines = [];
+			foreach ( $shortlist as $k ) {
+				$lines[] = '- ' . $k['keyword'] . ' (' . number_format_i18n( $k['volume'] ) . ' searches a month)'
+					. ( $k['taken'] ? ' — already another page\'s focus keyphrase: fine to work in, never to aim at' : '' );
+			}
+			$from_list = "Choose this page's keywords from the shop's keyword list below — two or three phrases the page is genuinely about, the best one first, because the first is the page's focus keyphrase and may not be one marked as another page's focus. Copy each exactly as it is written there, list them in \"keywords\" in that order, and work every one into the copy word for word. Capitalise their words the way English does (Korean, Thai); capitals are not counted.\n" . implode( "\n", $lines );
+		}
+
 		$system = WHD_AI::system_prompt() . "\n\n"
 			. "## This job\n"
 			. __( 'You are writing one complete page. Return JSON and nothing else — no prose around it, no code fence. Every string is plain text: no HTML, no markdown.', 'whd' );
@@ -458,7 +474,7 @@ JSON;
 					__( 'Work these in verbatim, each at least once, where they read naturally: %s.', 'whd' ),
 					implode( ', ', $keywords )
 				)
-				: __( 'Choose the two or three phrases a reader would search for and use them in the copy.', 'whd' ),
+				: ( '' !== $from_list ? $from_list : __( 'Choose the two or three phrases a reader would search for and use them in the copy.', 'whd' ) ),
 			$shape,
 			'post' === $type ? __( 'journal post', 'whd' ) : __( 'page', 'whd' )
 		);
@@ -497,8 +513,11 @@ JSON;
 			);
 		}
 
-		$doc         = self::tidy( $doc, $keywords, $faq );
+		$doc         = self::proper( self::tidy( $doc, $keywords, $faq ) );
 		$doc['html'] = self::to_html( $doc );
+		if ( $shortlist ) {
+			$doc['keywords'] = self::from_list( (array) $doc['keywords'], $shortlist, wp_strip_all_tags( $doc['title'] . ' ' . $doc['html'] ) );
+		}
 
 		/*
 		 * The same check the rest of the panel uses — banned words, and keywords claimed but not
@@ -523,6 +542,93 @@ JSON;
 		$doc['check'] = $check;
 		$doc['slots'] = self::image_slots( $doc );
 
+		return $doc;
+	}
+
+	/**
+	 * The keywords the model said it used, held to the shop's list.
+	 *
+	 * Anything not on the list is dropped, and list phrases the copy carries without saying so are
+	 * added. The first one is the focus keyphrase, so it has to be a phrase no other page is
+	 * already aimed at, and one the copy really contains — the best such phrase goes to the front.
+	 * With nothing left, the two best list phrases stand in, and the check that follows says the
+	 * copy is missing them.
+	 *
+	 * @param string[] $said      What the reply listed.
+	 * @param array[]  $shortlist WHD_AI_Keywords::shortlist().
+	 * @param string   $copy      The page as plain text.
+	 * @return string[]
+	 */
+	private static function from_list( array $said, array $shortlist, string $copy ): array {
+		$copy = mb_strtolower( $copy );
+		$in   = static fn( array $k ): bool => false !== mb_strpos( $copy, mb_strtolower( trim( $k['keyword'] ) ) );
+		$by   = [];
+		foreach ( $shortlist as $k ) {
+			$by[ mb_strtolower( trim( $k['keyword'] ) ) ] = $k;
+		}
+		$kept = [];
+		foreach ( $said as $word ) {
+			$k = $by[ mb_strtolower( trim( (string) $word ) ) ] ?? null;
+			if ( $k && ! isset( $kept[ $k['keyword'] ] ) ) {
+				$kept[ $k['keyword'] ] = $k;
+			}
+		}
+		foreach ( $shortlist as $k ) {
+			if ( count( $kept ) < 4 && ! isset( $kept[ $k['keyword'] ] ) && $in( $k ) ) {
+				$kept[ $k['keyword'] ] = $k;
+			}
+		}
+		if ( ! $kept ) {
+			foreach ( array_slice( $shortlist, 0, 2 ) as $k ) {
+				$kept[ $k['keyword'] ] = $k;
+			}
+		}
+		$kept = array_values( $kept );
+
+		// The focus keyphrase first: in the copy and nobody else's, failing that nobody else's.
+		$focus = null;
+		foreach ( [ $kept, $shortlist ] as $pool ) {
+			foreach ( $pool as $k ) {
+				if ( ! $focus && ! $k['taken'] && $in( $k ) ) {
+					$focus = $k;
+				}
+			}
+		}
+		foreach ( array_merge( $kept, $shortlist ) as $k ) {
+			if ( ! $focus && ! $k['taken'] ) {
+				$focus = $k;
+			}
+		}
+		$words = wp_list_pluck( $kept, 'keyword' );
+		if ( $focus ) {
+			$words = array_values( array_diff( $words, [ $focus['keyword'] ] ) );
+			array_unshift( $words, $focus['keyword'] );
+		}
+		return array_slice( $words, 0, 4 );
+	}
+
+	/** Proper words capitalised throughout — the keyword list is lower case and copied word for word. */
+	private static function proper( array $doc ): array {
+		if ( ! class_exists( 'WHD_AI_Studio' ) ) {
+			return $doc;
+		}
+		$fix = [ 'WHD_AI_Studio', 'proper' ];
+		foreach ( [ 'title', 'seo_title', 'meta_description', 'excerpt' ] as $field ) {
+			$doc[ $field ] = call_user_func( $fix, (string) ( $doc[ $field ] ?? '' ) );
+		}
+		$doc['intro'] = array_map( $fix, (array) ( $doc['intro'] ?? [] ) );
+		foreach ( (array) ( $doc['sections'] ?? [] ) as $n => $section ) {
+			$doc['sections'][ $n ]['heading']    = call_user_func( $fix, (string) $section['heading'] );
+			$doc['sections'][ $n ]['paragraphs'] = array_map( $fix, (array) $section['paragraphs'] );
+			$doc['sections'][ $n ]['bullets']    = array_map( $fix, (array) ( $section['bullets'] ?? [] ) );
+		}
+		foreach ( (array) ( $doc['faqs'] ?? [] ) as $n => $faq ) {
+			foreach ( [ 'question', 'answer' ] as $key ) {
+				if ( isset( $faq[ $key ] ) && is_string( $faq[ $key ] ) ) {
+					$doc['faqs'][ $n ][ $key ] = call_user_func( $fix, $faq[ $key ] );
+				}
+			}
+		}
 		return $doc;
 	}
 

@@ -1482,6 +1482,17 @@
 		} );
 		html += '</ul>';
 
+		/* What the page is aimed at, and where that came from: the list, the shop's own pick, or —
+		   only when the list has nothing for this piece — the product's name. */
+		if ( draft.keyphrase ) {
+			var from = 'picked' === draft.keyphrase_from ? T.focusPicked
+				: ( 'list' === draft.keyphrase_from
+					? ( draft.keyphrase_volume ? fmt( T.focusListVol, Number( draft.keyphrase_volume ).toLocaleString() ) : T.focusList )
+					: T.focusName );
+			html += '<p class="whd-studio__saw-label">' + esc( T.focusHead ) + '</p>' +
+				'<p class="whd-studio__focus"><span class="whd-ai-kwtag is-in">' + esc( draft.keyphrase ) + '</span> ' +
+				'<span class="whd-studio__placed-detail' + ( 'name' === draft.keyphrase_from ? ' is-warn' : '' ) + '">' + esc( from ) + '</span></p>';
+		}
 		if ( ( draft.used || [] ).length ) {
 			html += '<p class="whd-studio__saw-label">' + esc( T.keywordsIn ) + '</p><p class="whd-studio__chips">' +
 				draft.used.map( function ( k ) {

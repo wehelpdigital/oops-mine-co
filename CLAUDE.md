@@ -290,8 +290,8 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   descriptive attributes are written, or the product lists Colour twice. Other gotchas the first real run found: a draft WooCommerce saves
   has **no `post_name`** until published, so the slug is set explicitly or `key_slug` fails on every product; Gemini's
   reasoning comes out of `max_tokens`, so the write step needs a budget far above the reply length or the JSON arrives
-  truncated and unreadable; and the keyphrase is derived from the product's own name, never from the researched keyword
-  list — that list is passed as vocabulary only (handing products topic phrases put a hundred of them in competition).
+  truncated and unreadable. Its keywords come from the list like every other writer's (next-but-one bullet); it has
+  no repair pass, so `aim()` there prefers list phrases the copy really carries and a miss is a warning on the row.
 - **Write with AI on the product screen** is `WHD_AI_Studio` (`includes/class-whd-ai-studio.php`, `admin/ai-studio.js`):
   a meta box in its own context `whd_top`, printed at `edit_form_after_title` so it sits above the description (no
   position in the normal column can — the editor is not a meta box). Products no longer get the old `whd-ai-box`
@@ -342,6 +342,20 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   back once; the panel polls every 2.5 s, gives up after 8 min with the server's `last` note. A fatal inside a job
   is written onto the job by `shutdown()`. Locally (Apache + mod_php, nothing can close the connection early) the
   job just runs before the 202 is delivered, so behaviour there is unchanged.
+- **Every AI writer aims at the shop's keyword list** (WHD → AI content → Keywords) — the owner's rule. The studio,
+  Bulk products, AI Posts/Pages and the old panel's suggestions all start from `WHD_AI_Keywords::shortlist( $about,
+  $post_id, $limit, $any )`: whole words with plurals folded (the old `suggest()` matched fragments, so "over" in
+  "overshirt" offered "petite fashion over 50"); a phrase naming a *different* garment family (`kinds()`) is
+  rejected outright; words about the piece score, shop words (`shop_words()`) a little, anything else costs and
+  men/kids/pet words (`foreign_words()`) all but rule a phrase out; question words are stop words. Phrases already
+  some other page's `_whd_focus_keyphrase` come back `taken` — fine to work in, never a second page's focus (two
+  pages aimed at one phrase beat each other). With fewer than three matches, `general` all-shop-word phrases
+  ("chic fashion") are appended for clothes, or always with `$any` (posts). The model picks the focus keyphrase and
+  2–4 supporting keywords from that list, copied exactly (`WHD_AI_Studio::keyword_brief()`); `aim()` / the writer's
+  `from_list()` hold the reply to the list; the copy is checked for every one, and the studio's `repair` step puts a
+  missing one in. Only when nothing fits does the product name stand in. The slug gets the keyphrase in front when
+  the name lacks it (`slug_for()`), and the list's lower case is fixed afterwards by `WHD_AI_Studio::proper()`
+  (Korean, Thai, Seoul…; filter `whd_ai_proper_words`) — the model was told to capitalise and did not always.
 - **Who appears in drawn pictures** is one list, `WHD_AI_Images::people()` (filter `whd_ai_image_people`): young
   women with a stated age (23–30) and background — Korean, Thai, Japanese, Chinese, Filipina, alternating with
   white — plus `age_rule()` (22–32) in every brief. Product sets offset the list by product id; journal, page and

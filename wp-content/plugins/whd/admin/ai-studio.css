@@ -710,6 +710,14 @@
 	color: var(--whd-quiet);
 }
 
+.whd-studio__focus {
+	margin: 0;
+}
+
+.whd-studio__placed-detail.is-warn {
+	color: #8a6d00;
+}
+
 .whd-studio__chips {
 	display: flex;
 	flex-wrap: wrap;

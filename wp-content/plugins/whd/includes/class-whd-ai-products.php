@@ -92,6 +92,8 @@ final class WHD_AI_Products {
 				'drawing'     => __( 'Drawing a second photograph…', 'whd' ),
 				'done'        => __( 'Done', 'whd' ),
 				'failed'      => __( 'Failed', 'whd' ),
+				'aimedAt'     => __( 'Focus keyphrase “%s”', 'whd' ),
+				'alsoUses'    => __( 'also uses %s', 'whd' ),
 				'edit'        => __( 'Open it', 'whd' ),
 				'remove'      => __( 'Remove this row', 'whd' ),
 				'confirmRun'  => __( 'This will create %d draft product(s). Carry on?', 'whd' ),
@@ -225,18 +227,21 @@ final class WHD_AI_Products {
 	/**
 	 * Turn the facts into everything a finished product page needs.
 	 *
-	 * The focus keyphrase is deliberately not taken from the researched keyword list. Handing
-	 * products the topic phrases those pages are written for put a hundred of them in competition
-	 * with each other and with the pages; a product ranks for the thing it is, which is its own
-	 * name. The keyword list is still read, as the words shoppers actually use, and whichever of
-	 * them genuinely fit the garment are worked into the copy.
+	 * The focus keyphrase and the supporting keywords come from the shop's researched keyword list,
+	 * the same way Write with AI on the product screen chooses them: the model picks from the
+	 * phrases that fit this piece (WHD_AI_Keywords::shortlist()), never one another page is already
+	 * aimed at, and the copy has to carry every one word for word. The keyphrase used to be the
+	 * product's own name, with the list as optional vocabulary, and the researched phrases mostly
+	 * went unused. Only when nothing on the list fits does the name stand in.
 	 *
 	 * @param array $facts What look() returned.
 	 * @param array $hints What the person filled in.
 	 * @return array|WP_Error
 	 */
 	public static function write( array $facts, array $hints = [] ) {
-		$vocabulary = self::vocabulary( $facts );
+		$ctx        = self::keyword_context( $facts, $hints );
+		$brief      = $ctx ? WHD_AI_Studio::keyword_brief( $ctx ) : '';
+		$vocabulary = $ctx ? [] : self::vocabulary( $facts );
 
 		$given = array_filter( [
 			'name'     => (string) ( $hints['name'] ?? '' ),
@@ -247,12 +252,14 @@ final class WHD_AI_Products {
 		$user = "Write the shop page for this piece, from these facts and nothing else.\n\n"
 			. "FACTS\n" . wp_json_encode( self::without( $facts, [ 'image_ids' ] ) ) . "\n\n"
 			. ( $given ? "THE SHOP'S OWN WORDS, which win over anything above:\n" . wp_json_encode( $given ) . "\n\n" : '' )
+			. ( '' !== $brief ? $brief . "\n\n" : '' )
 			. ( $vocabulary ? "WORDS SHOPPERS USE for this kind of thing. Work in the ones that genuinely fit, and ignore the rest:\n- " . implode( "\n- ", $vocabulary ) . "\n\n" : '' )
 			. "Answer as JSON and nothing else:\n"
 			. '{"name":"the product name, 3-7 words, no brand, no superlatives, no ALL CAPS",'
+			. ( '' !== $brief ? '"keyphrase":"the focus keyphrase, copied exactly from the keyword list","keywords":["supporting keywords, copied exactly from the keyword list"],' : '' )
 			. '"short":"the line under the title: one or two sentences, what it is and how it sits",'
 			. '"description":"the long description as HTML: 220 to 300 words across four or five <p>, with two <h3> subheadings between them. No <h1>, no <h2>.",'
-			. '"seo_title":"30 to 60 characters, the product name first",'
+			. '"seo_title":"30 to 60 characters, starting with the keyphrase or the product name, one phrase — no pipes, no shop name",'
 			. '"meta_description":"120 to 155 characters, says what it is and who it suits",'
 			. '"attributes":{"Colour":"","Fabric":"","Fit":""},'
 			. '"care":"one sentence, hedged — general advice for this fabric, never a care label you have not read",'
@@ -263,7 +270,11 @@ final class WHD_AI_Products {
 			. '"price":"","sale":"","stock":"","sku":"","category":"","tags":[]}'
 			. "}\n\n"
 			. "Rules:\n"
-			. "- The product name must appear word for word in all of these: the first sentence of \"short\", \"seo_title\", \"meta_description\", one of the two <h3> subheadings, and the \"alt\" of the first picture.\n"
+			. ( '' !== $brief
+				? "- \"keyphrase\" and \"keywords\": as the keyword brief above says — from the shop's list, copied exactly. Put the keyphrase in the name too when it reads as a natural product name (\"Korean Fashion Jacket\" can; \"Dress Korean Fashion\" cannot); a name that reads naturally matters more.\n"
+					. "- The keyphrase appears word for word in all of these: the first sentence of \"short\", \"seo_title\" near the start, \"meta_description\", one of the two <h3> subheadings, and the \"alt\" of the first picture. Past that, at most twice more in all the copy.\n"
+					. "- Every one of the \"keywords\" appears word for word in \"short\" or \"description\", in a sentence that reads naturally.\n"
+				: "- The product name must appear word for word in all of these: the first sentence of \"short\", \"seo_title\", \"meta_description\", one of the two <h3> subheadings, and the \"alt\" of the first picture.\n" )
 			. "- Write 220 to 300 words in \"description\". A page shorter than that reads as a stub, and one mention of the name in a short page reads as stuffing.\n"
 			. "- Short sentences. Most under twenty words, and no sentence carrying three ideas joined by dashes where two full stops would do.\n"
 			. "- One entry in \"images\" per photograph in the facts, in the same order.\n"
@@ -312,15 +323,104 @@ final class WHD_AI_Products {
 			$draft['name'] = sanitize_text_field( (string) $hints['name'] );
 		}
 
-		$draft['name']             = self::tidy_name( (string) $draft['name'] );
-		$draft['keyphrase']        = self::phrase_from_name( $draft['name'] );
-		$draft['image_ids']        = (array) ( $facts['image_ids'] ?? [] );
-		$draft['category_guess']   = (string) ( $facts['category'] ?? '' );
-		$draft['house']            = WHD_AI::check(
-			wp_strip_all_tags( (string) ( $draft['short'] ?? '' ) . ' ' . (string) ( $draft['description'] ?? '' ) )
-		);
+		$draft['name']           = self::tidy_name( (string) $draft['name'] );
+		$draft['image_ids']      = (array) ( $facts['image_ids'] ?? [] );
+		$draft['category_guess'] = (string) ( $facts['category'] ?? '' );
+
+		/* The list is stored in lower case and copied word for word: "korean" → "Korean". */
+		if ( class_exists( 'WHD_AI_Studio' ) ) {
+			foreach ( [ 'short', 'description', 'seo_title', 'meta_description' ] as $field ) {
+				$draft[ $field ] = WHD_AI_Studio::proper( (string) ( $draft[ $field ] ?? '' ) );
+			}
+			foreach ( (array) ( $draft['images'] ?? [] ) as $i => $image ) {
+				foreach ( is_array( $image ) ? [ 'alt', 'title', 'caption', 'description' ] : [] as $field ) {
+					$draft['images'][ $i ][ $field ] = WHD_AI_Studio::proper( (string) ( $image[ $field ] ?? '' ) );
+				}
+			}
+		}
+
+		$copy  = wp_strip_all_tags( (string) ( $draft['short'] ?? '' ) . ' ' . (string) ( $draft['description'] ?? '' ) );
+		$draft = array_merge( $draft, $ctx ? self::aim( $draft, $copy, $ctx ) : [ 'keyphrase' => self::phrase_from_name( $draft['name'] ), 'keywords' => [] ] );
+
+		/*
+		 * The copy is checked for every keyword it is aimed at. There is no second pass here to put
+		 * one in — a row already runs three model calls — so a miss is said on the row instead.
+		 */
+		$aimed           = array_values( array_filter( array_merge( [ (string) $draft['keyphrase'] ], (array) $draft['keywords'] ) ) );
+		$house           = WHD_AI::check( $copy, $aimed );
+		$house['issues'] = array_values( array_filter( (array) $house['issues'], static fn( $i ) => 'keyword' !== ( $i['type'] ?? '' ) ) );
+		foreach ( $ctx ? (array) $house['keywords'] : [] as $keyword => $in ) {
+			if ( ! $in ) {
+				$house['issues'][] = [
+					'type'   => 'keyword',
+					/* translators: %s: a keyword */
+					'detail' => sprintf( __( 'The keyword “%s” from the shop\'s list is not in the copy word for word — add it when you edit the product.', 'whd' ), $keyword ),
+				];
+			}
+		}
+		$draft['house'] = $house;
 
 		return $draft;
+	}
+
+	/**
+	 * What the keyword brief needs: the list phrases that fit this piece. Empty when the studio or
+	 * the list is missing, and the old vocabulary hint is used instead.
+	 */
+	private static function keyword_context( array $facts, array $hints ): array {
+		if ( ! class_exists( 'WHD_AI_Studio' ) || ! class_exists( 'WHD_AI_Keywords' ) ) {
+			return [];
+		}
+		$about = [];
+		foreach ( [ 'garment', 'category', 'colour', 'fabric', 'texture', 'silhouette', 'neckline', 'sleeve', 'length', 'season', 'not_clothing' ] as $key ) {
+			$about[] = is_scalar( $facts[ $key ] ?? null ) ? (string) $facts[ $key ] : '';
+		}
+		foreach ( [ 'other_colours', 'occasion' ] as $key ) {
+			$about[] = implode( ' ', array_filter( (array) ( $facts[ $key ] ?? [] ), 'is_scalar' ) );
+		}
+		$about[] = (string) ( $hints['name'] ?? '' );
+		$about[] = (string) ( $hints['category_name'] ?? '' );
+		$about[] = self::commands( $hints );
+
+		return [
+			'keywords'  => [],
+			'shortlist' => WHD_AI_Keywords::shortlist( implode( ' ', $about ), 0, 20 ),
+			'post_id'   => 0,
+			'facts'     => $facts,
+		];
+	}
+
+	/**
+	 * WHD_AI_Studio::aim(), then held to what the copy really says. The studio repairs copy that
+	 * misses its keyphrase; this screen does not, so a focus phrase the copy does not carry gives
+	 * way to one from the list that it does, and supporting keywords the copy never uses are
+	 * swapped for list phrases it does use.
+	 */
+	private static function aim( array $draft, string $copy, array $ctx ): array {
+		$aim  = WHD_AI_Studio::aim( $draft, (string) $draft['name'], $ctx );
+		$text = mb_strtolower( $copy . ' ' . $draft['name'] );
+		$in   = static fn( string $k ): bool => '' !== trim( $k ) && false !== mb_strpos( $text, mb_strtolower( trim( $k ) ) );
+
+		if ( ! $in( (string) $aim['keyphrase'] ) ) {
+			foreach ( $ctx['shortlist'] as $k ) {
+				if ( ! $k['taken'] && ! $k['general'] && $in( $k['keyword'] ) ) {
+					$aim['keyphrase']        = $k['keyword'];
+					$aim['keyphrase_from']   = 'list';
+					$aim['keyphrase_volume'] = $k['volume'];
+					break;
+				}
+			}
+		}
+		$keywords = array_values( array_filter( (array) $aim['keywords'], $in ) );
+		foreach ( $ctx['shortlist'] as $k ) {
+			if ( count( $keywords ) < 2 && $in( $k['keyword'] ) && ! in_array( $k['keyword'], $keywords, true ) && mb_strtolower( $k['keyword'] ) !== mb_strtolower( $aim['keyphrase'] ) ) {
+				$keywords[] = $k['keyword'];
+			}
+		}
+		// Nothing from the list made it in: say so, rather than quietly aiming at nothing.
+		$aim['keywords'] = $keywords ?: (array) $aim['keywords'];
+
+		return $aim;
 	}
 
 	/* ─────────────────────────── step three: make ─────────────────────────── */
@@ -360,8 +460,10 @@ final class WHD_AI_Products {
 		$product->set_name( $name );
 		/* A draft WooCommerce saves has no post_name at all until somebody publishes it, and a
 		   product with no web address fails the check that asks whether its phrase is in one.
-		   Naming it now also means the URL matches the name somebody chose, not a later edit. */
-		$product->set_slug( sanitize_title( $name ) );
+		   Naming it now also means the URL matches the name somebody chose, not a later edit —
+		   with the focus keyphrase in front when the name does not carry it. */
+		$keyphrase = trim( (string) ( $draft['keyphrase'] ?? '' ) ) ?: self::phrase_from_name( $name );
+		$product->set_slug( class_exists( 'WHD_AI_Studio' ) ? WHD_AI_Studio::slug_for( $name, $keyphrase ) : sanitize_title( $name ) );
 		$product->set_status( 'draft' );
 		$product->set_short_description( (string) ( $draft['short'] ?? '' ) );
 		$product->set_description( (string) ( $draft['description'] ?? '' ) );
@@ -435,7 +537,11 @@ final class WHD_AI_Products {
 		update_post_meta( $id, '_omc_seo_title', self::fit( (string) ( $draft['seo_title'] ?? '' ), 60 ) ?: $name );
 		update_post_meta( $id, '_omc_meta_description', self::fit( (string) ( $draft['meta_description'] ?? '' ), 155 ) );
 		if ( class_exists( 'WHD_SEO' ) ) {
-			update_post_meta( $id, WHD_SEO::KEYPHRASE, (string) ( $draft['keyphrase'] ?? self::phrase_from_name( $name ) ) );
+			update_post_meta( $id, WHD_SEO::KEYPHRASE, sanitize_text_field( $keyphrase ) );
+		}
+		$keywords = array_values( array_filter( array_map( 'sanitize_text_field', (array) ( $draft['keywords'] ?? [] ) ) ) );
+		if ( class_exists( 'WHD_AI_Keywords' ) ) {
+			WHD_AI_Keywords::mark_used( array_merge( [ $keyphrase ], $keywords ) );
 		}
 
 		/* Anything still missing, and the score. */
@@ -446,6 +552,8 @@ final class WHD_AI_Products {
 		return [
 			'id'         => (int) $id,
 			'name'       => $name,
+			'keyphrase'  => $keyphrase,
+			'keywords'   => $keywords,
 			'edit'       => get_edit_post_link( $id, 'raw' ),
 			'images'     => count( $ids ),
 			'drawn'      => $drawn,

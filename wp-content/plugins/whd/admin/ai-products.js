@@ -260,6 +260,17 @@
 						: '' );
 				el.appendChild( note );
 
+				/* What it is aimed at, from the shop's keyword list. */
+				if ( made.keyphrase ) {
+					var aim = document.createElement( 'div' );
+					aim.className = 'whd-aip__aim';
+					aim.textContent = ( i18n.aimedAt || 'Focus keyphrase “%s”' ).replace( '%s', made.keyphrase ) +
+						( made.keywords && made.keywords.length
+							? ' · ' + ( i18n.alsoUses || 'also uses %s' ).replace( '%s', made.keywords.join( ', ' ) )
+							: '' );
+					el.appendChild( aim );
+				}
+
 				/* Anything the build had to say — a new attribute created, an option skipped. */
 				var said = ( made.house || [] ).map( function ( i ) { return i.detail; } )
 					.concat( made.notices || [] );

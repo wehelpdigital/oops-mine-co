@@ -174,7 +174,7 @@ final class WHD_AI_Studio {
 						<span class="whd-ai-suggest__label"><?php esc_html_e( 'Suggested — click to add:', 'whd' ); ?></span>
 					</p>
 					<p class="description">
-						<?php esc_html_e( 'From the list in WHD → AI content → Keywords. Each one you pick appears word for word in the copy; the list is also searched for the words shoppers use for this kind of piece, and the ones that fit are worked in. The focus keyphrase comes from the product’s own name — a product ranks for what it is.', 'whd' ); ?>
+						<?php esc_html_e( 'Leave this empty and the AI chooses from your list in WHD → AI content → Keywords: the phrase that fits this piece best becomes the focus keyphrase, and two to four more are worked into the copy word for word — never a phrase another page is already aimed at. Pick keywords here to choose them yourself; the first one you pick becomes the focus keyphrase.', 'whd' ); ?>
 						<a href="<?php echo esc_url( admin_url( 'admin.php?page=whd-ai&tab=keywords' ) ); ?>"><?php esc_html_e( 'Manage the list', 'whd' ); ?></a>
 					</p>
 				</div>
@@ -264,9 +264,25 @@ final class WHD_AI_Studio {
 			'canSlug'   => ! in_array( $status, [ 'publish', 'private', 'future' ], true ),
 			// Offered, never pre-picked: a picked keyword must appear word for word, and the matcher
 			// behind these is loose enough to offer "petite fashion over 50" for an overshirt.
-			'suggested' => $post_id && class_exists( 'WHD_AI_Keywords' ) ? WHD_AI_Keywords::suggest( $post_id, 6 ) : [],
+			'suggested' => $post ? self::suggested( $post ) : [],
 			'i18n'      => self::strings(),
 		] );
+	}
+
+	/**
+	 * List keywords to offer as one-click chips, from what the product is already called and filed
+	 * under. The run picks its own from the photographs anyway; these are for somebody who wants
+	 * to choose. Phrases another page aims at are left out — they would only become a second
+	 * page's focus keyphrase.
+	 */
+	private static function suggested( WP_Post $post ): array {
+		if ( ! class_exists( 'WHD_AI_Keywords' ) || 'auto-draft' === $post->post_status ) {
+			return [];
+		}
+		$cats = wp_get_post_terms( $post->ID, 'product_cat', [ 'fields' => 'names' ] );
+		$list = WHD_AI_Keywords::shortlist( $post->post_title . ' ' . implode( ' ', is_array( $cats ) ? $cats : [] ), $post->ID, 12 );
+		$list = array_filter( $list, static fn( $k ) => ! $k['taken'] && ! $k['general'] );
+		return array_slice( array_values( wp_list_pluck( $list, 'keyword' ) ), 0, 6 );
 	}
 
 	/** The product's own pictures, featured first, as the panel starts with them chosen. */
@@ -409,7 +425,13 @@ final class WHD_AI_Studio {
 			'pictures'    => __( '%d pictures', 'whd' ),
 			'fGallery'    => __( 'Gallery', 'whd' ),
 			'notPlaced'   => __( 'Not found on this screen — copy it from below', 'whd' ),
-			'keywordsIn'  => __( 'Keywords worked in', 'whd' ),
+			'keywordsIn'  => __( 'Keywords from your list in the copy', 'whd' ),
+			'focusHead'   => __( 'Focus keyphrase', 'whd' ),
+			'focusPicked' => __( 'the one you picked', 'whd' ),
+			'focusList'   => __( 'from your keyword list', 'whd' ),
+			/* translators: %s: searches a month */
+			'focusListVol' => __( 'from your keyword list · %s searches a month', 'whd' ),
+			'focusName'   => __( 'from the product’s name — nothing in your keyword list fits this piece. Add a phrase for it to the list to aim at one next time.', 'whd' ),
 			'stillWrong'  => __( 'Still worth a look', 'whd' ),
 			'repaired'    => __( 'Found in the first draft and put right automatically', 'whd' ),
 			'error'       => __( 'Something went wrong', 'whd' ),
@@ -975,7 +997,7 @@ final class WHD_AI_Studio {
 		$draft['repair']   = $attempts < 2 && $draft['issues'] && ! empty( WHD_AI::get()['auto_repair'] );
 		$draft['raw']      = $draft['repair'] ? $raw : null;
 		$draft['model']    = WHD_AI::model();
-		$draft['used']     = self::used_keywords( $draft, array_merge( $ctx['keywords'], $ctx['vocab'] ) );
+		$draft['used']     = self::used_keywords( $draft, array_merge( [ (string) $draft['keyphrase'] ], (array) $draft['keywords'], wp_list_pluck( $ctx['shortlist'], 'keyword' ) ) );
 		$draft['screen']   = self::screen( $ctx['post_id'], $draft, $ctx );
 
 		return $draft;
@@ -993,21 +1015,38 @@ final class WHD_AI_Studio {
 		$total    = count( $have ) + count( $shots );
 		$sections = in_array( 'story', $parts, true ) ? max( 3, min( 8, $total ) ) : 0;
 		$fixed    = in_array( 'name', $parts, true ) ? '' : self::tidy_name( $current['title'] );
-		$vocab    = array_values( array_diff( self::vocabulary( $facts ), $keywords ) );
+
+		/*
+		 * The keywords this piece is written around come from the shop's list: the ones that fit it,
+		 * found from what the piece is, what the shop said about it and where it is filed. The ones
+		 * the shop picked by hand are left out here, because they come first anyway.
+		 */
+		$cats  = $post_id ? wp_get_post_terms( $post_id, 'product_cat', [ 'fields' => 'names' ] ) : [];
+		$about = implode( ' ', array_merge(
+			array_map( 'strval', array_intersect_key( $facts, array_flip( [ 'garment', 'category', 'colour', 'pattern', 'fabric', 'texture', 'silhouette', 'neckline', 'sleeve', 'length', 'season' ] ) ) ),
+			self::strings_of( $facts['other_colours'] ?? [] ),
+			self::strings_of( $facts['occasion'] ?? [] ),
+			is_array( $cats ) ? $cats : [],
+			[ $commands, $current['title'] ]
+		) );
+		$shortlist = class_exists( 'WHD_AI_Keywords' ) ? array_values( array_filter(
+			WHD_AI_Keywords::shortlist( $about, $post_id, 20 ),
+			static fn( $k ) => ! in_array( mb_strtolower( $k['keyword'] ), array_map( 'mb_strtolower', $keywords ), true )
+		) ) : [];
 
 		return [
-			'parts'    => $parts,
-			'keywords' => $keywords,
-			'commands' => $commands,
-			'facts'    => $facts,
-			'have'     => count( $have ),
-			'shots'    => $shots,
-			'total'    => $total,
-			'sections' => $sections,
-			'fixed'    => $fixed,
-			'vocab'    => $vocab,
-			'current'  => $current,
-			'post_id'  => $post_id,
+			'parts'     => $parts,
+			'keywords'  => $keywords, // picked by hand in the panel
+			'shortlist' => $shortlist,
+			'commands'  => $commands,
+			'facts'     => $facts,
+			'have'      => count( $have ),
+			'shots'     => $shots,
+			'total'     => $total,
+			'sections'  => $sections,
+			'fixed'     => $fixed,
+			'current'   => $current,
+			'post_id'   => $post_id,
 		];
 	}
 
@@ -1037,20 +1076,7 @@ final class WHD_AI_Studio {
 			$out[] = 'THE NAME IS FIXED: "' . $ctx['fixed'] . '". Use it exactly, everywhere the rules below say the name.';
 		}
 
-		if ( $ctx['keywords'] ) {
-			$out[] = "KEYWORDS — "
-				. ( ! empty( WHD_AI::get()['require_keywords'] )
-					? 'each one must appear word for word at least once, across the description, the short description and the story, inside a sentence that would read normally to somebody who has never heard of SEO. Change nothing about them — not the order of the words, not a plural.'
-					: 'work these in where they fit naturally.' )
-				. "\n- " . implode( "\n- ", $ctx['keywords'] );
-		}
-		if ( $ctx['vocab'] ) {
-			$out[] = "WORDS SHOPPERS USE for this kind of piece, from the shop's keyword research. Work in the ones that genuinely fit it, word for word, and ignore the rest:\n- " . implode( "\n- ", $ctx['vocab'] );
-		}
-		$taken = self::taken_phrases( $ctx['post_id'], $ctx['facts'] );
-		if ( $taken ) {
-			$out[] = "FOCUS KEYPHRASES OTHER PAGES ALREADY USE — two pages aimed at one phrase beat each other, so choose a different one:\n- " . implode( "\n- ", $taken );
-		}
+		$out[] = self::keyword_brief( $ctx );
 
 		$out[] = "THE PICTURES\nThe page will carry " . $ctx['total'] . " pictures, in this order:\n" . self::picture_list( $ctx );
 
@@ -1078,12 +1104,51 @@ final class WHD_AI_Studio {
 		return implode( "\n\n", $out );
 	}
 
+	/**
+	 * What the copy is aimed at: keywords from the shop's own list.
+	 *
+	 * The keyphrase used to come from the product's own name, with the list passed along as words
+	 * the model could use or ignore, so the researched phrases mostly went unused. Now the model
+	 * chooses its focus keyphrase and two to four supporting keywords from the shortlist of list
+	 * phrases that fit this piece, copies them exactly, and the copy is checked for every one of
+	 * them afterwards. Only when nothing on the list fits does the product's name stand in.
+	 */
+	public static function keyword_brief( array $ctx ): string {
+		$lines = [];
+		if ( $ctx['keywords'] ) {
+			$lines[] = "KEYWORDS THE SHOP CHOSE FOR THIS PIECE — the first is the focus keyphrase. Every one of them appears word for word in the copy.\n- " . implode( "\n- ", $ctx['keywords'] );
+		}
+		if ( $ctx['shortlist'] ) {
+			$list = [];
+			foreach ( $ctx['shortlist'] as $k ) {
+				$list[] = '- ' . $k['keyword'] . ' (' . number_format_i18n( $k['volume'] ) . ' searches a month)'
+					. ( $k['taken'] ? ' — already another page\'s focus keyphrase: work it in, never aim at it' : '' )
+					. ( $k['general'] ? ' — about the shop, not the piece: a supporting keyword at most' : '' );
+			}
+			$lines[] = "THE SHOP'S KEYWORD LIST — the researched search phrases that fit this piece, best match first:\n" . implode( "\n", $list );
+			$lines[] = ( $ctx['keywords'] ? 'From that list, as well as the shop\'s own:' : 'From that list:' ) . "\n"
+				. ( $ctx['keywords'] ? '' : "- \"keyphrase\" is the ONE phrase that describes this piece most exactly — a shopper who typed it would be glad to land on this page. Copied exactly as it is written there. Never one marked as another page's focus, never one marked \"about the shop\", and never one that claims something the piece is not: petite, a season it is not for, an occasion it does not suit.\n" )
+				. "- \"keywords\" are two to four more from the list that genuinely fit, copied exactly. Each one then has to appear word for word in the copy — the description, the short description or the story — in a sentence that reads naturally. Change nothing about them, not the order of the words, not a plural; if one is awkward, build the sentence around it rather than bending it.\n"
+				. '- The list is stored in lower case. In the copy, capitalise its words the way English does — "Korean", "Thai", "K-pop", the first word of a sentence. Capitals are not counted when the copy is checked; the words and their order are.';
+		} elseif ( ! $ctx['keywords'] ) {
+			$lines[] = "THE SHOP'S KEYWORD LIST has nothing that fits this piece. \"keyphrase\" is then what a shopper would type to find it, two to four words, and it has to appear word for word in the name. \"keywords\" is empty.";
+		}
+
+		$taken = self::taken_phrases( $ctx['post_id'], $ctx['facts'] );
+		if ( $taken ) {
+			$lines[] = "FOCUS KEYPHRASES OTHER PAGES ALREADY USE — two pages aimed at one phrase beat each other:\n- " . implode( "\n- ", $taken );
+		}
+
+		return implode( "\n\n", $lines );
+	}
+
 	/** The JSON asked for: only the keys for the parts that were ticked, plus the ones every run needs. */
 	private static function answer_shape( array $ctx ): string {
 		$has  = static fn( $part ) => in_array( $part, $ctx['parts'], true );
 		$keys = [
 			'"name": "the product name"',
-			'"keyphrase": "the focus keyphrase, 2 to 4 words, lower case"',
+			'"keyphrase": "the focus keyphrase, copied exactly from the keyword list"',
+			'"keywords": ["supporting keywords, copied exactly from the keyword list"]',
 		];
 		if ( $has( 'short' ) ) {
 			$keys[] = '"short": "the short description, plain text"';
@@ -1122,7 +1187,7 @@ final class WHD_AI_Studio {
 		$rules = [];
 
 		$rules[] = '"name": 3 to 7 words in Title Case like the shop\'s other names, ending with what the piece is ("… Knit Cardigan"). No brand, no superlatives, no ALL CAPS.';
-		$rules[] = '"keyphrase": what a shopper would type to find this kind of piece — 2 to 4 words, lower case — and it must appear word for word inside the name. The name may put a colour or a detail in front of it.';
+		$rules[] = '"keyphrase" and "keywords": as the keyword brief above says — from the shop\'s list, copied exactly. Put the keyphrase in the name too when it reads as a natural product name ("Korean Fashion Jacket" can; "Dress Korean Fashion" cannot); a name that reads naturally matters more.';
 
 		$where = [];
 		if ( $has( 'short' ) ) {
@@ -1214,7 +1279,7 @@ final class WHD_AI_Studio {
 		$draft = [];
 
 		$draft['name']      = '' !== $ctx['fixed'] ? $ctx['fixed'] : self::tidy_name( (string) ( $raw['name'] ?? '' ) );
-		$draft['keyphrase'] = self::keyphrase( (string) ( $raw['keyphrase'] ?? '' ), $draft['name'] );
+		$draft = array_merge( $draft, self::aim( $raw, $draft['name'], $ctx ) );
 
 		if ( $has( 'short' ) ) {
 			$draft['short'] = trim( preg_replace( '/\s+/u', ' ', wp_strip_all_tags( (string) ( $raw['short'] ?? '' ) ) ) );
@@ -1253,6 +1318,21 @@ final class WHD_AI_Studio {
 		}
 
 		$draft['images'] = self::image_words( (array) ( $raw['images'] ?? [] ), $ctx['total'], $draft['name'] );
+
+		/* The list is lower case and the copy carries it word for word, so "this korean fashion
+		   jacket" came back however the model was asked. Proper words are put right here instead. */
+		foreach ( [ 'short', 'description', 'seo_title', 'meta_description' ] as $field ) {
+			if ( isset( $draft[ $field ] ) ) {
+				$draft[ $field ] = self::proper( $draft[ $field ] );
+			}
+		}
+		foreach ( (array) ( $draft['story'] ?? [] ) as $n => $section ) {
+			$draft['story'][ $n ]['heading']    = self::proper( $section['heading'] );
+			$draft['story'][ $n ]['paragraphs'] = array_map( [ __CLASS__, 'proper' ], $section['paragraphs'] );
+		}
+		foreach ( $draft['images'] as $n => $words ) {
+			$draft['images'][ $n ] = array_map( [ __CLASS__, 'proper' ], $words );
+		}
 		$draft['shots']  = [];
 		foreach ( $ctx['shots'] as $j => $shot ) {
 			$brief = sanitize_textarea_field( (string) ( $raw['shots'][ $j ]['brief'] ?? '' ) );
@@ -1284,9 +1364,21 @@ final class WHD_AI_Studio {
 			self::story_text( (array) ( $draft['story'] ?? [] ) ),
 		] ) );
 		if ( '' !== trim( $copy ) ) {
-			foreach ( WHD_AI::check( $copy, $ctx['keywords'] )['issues'] as $issue ) {
-				if ( in_array( $issue['type'], [ 'banned', 'keyword', 'structure' ], true ) ) {
+			/*
+			 * Every keyword the page is aimed at has to be in the words a shopper reads — whatever the
+			 * "word for word" setting says, because these were chosen from the list to be used, not
+			 * offered as ideas. The focus keyphrase is checked here too, not only by the SEO score.
+			 */
+			$aimed = array_values( array_filter( array_merge( [ (string) ( $draft['keyphrase'] ?? '' ) ], (array) ( $draft['keywords'] ?? [] ) ) ) );
+			$check = WHD_AI::check( $copy, $aimed );
+			foreach ( $check['issues'] as $issue ) {
+				if ( in_array( $issue['type'], [ 'banned', 'structure' ], true ) ) {
 					$issues[] = $issue['detail'];
+				}
+			}
+			foreach ( $check['keywords'] as $keyword => $found ) {
+				if ( ! $found ) {
+					$issues[] = sprintf( 'The keyword "%s" from the shop\'s keyword list does not appear word for word in the description, the short description or the story. Add a sentence that contains it exactly.', $keyword );
 				}
 			}
 		}
@@ -1371,7 +1463,7 @@ final class WHD_AI_Studio {
 
 		if ( $has( 'name' ) && '' !== $draft['name'] ) {
 			$screen['title'] = $draft['name'];
-			$screen['slug']  = sanitize_title( $draft['name'] );
+			$screen['slug']  = self::slug_for( $draft['name'], (string) $draft['keyphrase'] );
 		}
 		if ( $has( 'description' ) && '' !== $draft['description'] ) {
 			$screen['description'] = $draft['description'];
@@ -2046,28 +2138,50 @@ final class WHD_AI_Studio {
 	}
 
 	/**
-	 * Words shoppers use for this kind of thing, from the researched list.
-	 *
-	 * Searched by each word of what the piece is, so a "ribbed knit cardigan" finds the cardigan
-	 * phrases and the knit ones; the list is passed as vocabulary, never as the focus keyphrase.
+	 * Proper words capitalised, and the first letter of the text: "korean fashion jacket in brushed
+	 * plaid" → "Korean fashion jacket in brushed plaid". HTML tags are left alone.
 	 */
-	private static function vocabulary( array $facts ): array {
-		if ( ! class_exists( 'WHD_AI_Keywords' ) ) {
-			return [];
+	public static function proper( string $text ): string {
+		static $words = null;
+		if ( null === $words ) {
+			$words = (array) apply_filters( 'whd_ai_proper_words', [
+				'korean', 'korea', 'thai', 'thailand', 'asian', 'asia', 'japanese', 'japan', 'chinese', 'china',
+				'filipina', 'filipino', 'philippines', 'vietnamese', 'vietnam', 'seoul', 'bangkok', 'tokyo',
+				'manila', 'kpop', 'christmas', 'xmas', 'valentine', 'valentines',
+			] );
 		}
-		$seeds = preg_split( '/[^\p{L}]+/u', mb_strtolower( (string) ( $facts['garment'] ?? '' ) . ' ' . (string) ( $facts['category'] ?? '' ) ), -1, PREG_SPLIT_NO_EMPTY );
-		$seeds = array_unique( array_filter( $seeds, static fn( $w ) => mb_strlen( $w ) >= 4 ) );
-		$out   = [];
-		foreach ( array_slice( $seeds, 0, 5 ) as $seed ) {
-			$seed = preg_replace( '/s$/', '', $seed );
-			foreach ( (array) WHD_AI_Keywords::all( [ 'search' => $seed, 'limit' => 6 ] ) as $row ) {
-				$phrase = (string) ( is_object( $row ) ? $row->keyword : ( $row['keyword'] ?? '' ) );
-				if ( '' !== $phrase ) {
-					$out[ $phrase ] = true;
-				}
+		// Outside tags only, so an attribute or a tag name is never touched.
+		$parts = preg_split( '/(<[^>]*>)/', $text, -1, PREG_SPLIT_DELIM_CAPTURE );
+		foreach ( $parts as $i => $part ) {
+			if ( '' === $part || '<' === $part[0] ) {
+				continue;
 			}
+			$parts[ $i ] = preg_replace_callback(
+				'/\b(' . implode( '|', array_map( 'preg_quote', $words ) ) . ')\b/i',
+				static fn( $m ) => 'xmas' === strtolower( $m[1] ) ? 'Xmas' : ucfirst( strtolower( $m[1] ) ),
+				$part
+			);
 		}
-		return array_slice( array_keys( $out ), 0, 15 );
+		$text = implode( '', $parts );
+		// The first letter the reader sees, if the model began in lower case.
+		return (string) preg_replace_callback( '/^((?:\s|<[^>]*>)*)(\p{Ll})/u', static fn( $m ) => $m[1] . mb_strtoupper( $m[2] ), $text );
+	}
+
+	/**
+	 * The web address: the name, with the focus keyphrase in front when the name does not carry it.
+	 *
+	 * A list phrase does not always make a good product name ("Dress Korean Fashion"), so the name
+	 * is allowed to leave it out — but the address is one of the places the score looks for it, and
+	 * nobody reads an address as prose. "korean-fashion-jacket-plaid-shacket", not three words more.
+	 */
+	public static function slug_for( string $name, string $keyphrase ): string {
+		$slug = sanitize_title( $name );
+		$key  = sanitize_title( $keyphrase );
+		if ( '' === $key || false !== strpos( '-' . $slug . '-', '-' . $key . '-' ) ) {
+			return $slug;
+		}
+		$rest = array_diff( explode( '-', $slug ), explode( '-', $key ) );
+		return sanitize_title( $key . '-' . implode( '-', array_slice( array_values( $rest ), -3 ) ) );
 	}
 
 	/** Focus keyphrases other products already aim at, among the ones that share a word with this piece. */
@@ -2394,6 +2508,86 @@ final class WHD_AI_Studio {
 		$name = html_entity_decode( sanitize_text_field( wp_strip_all_tags( $name ) ), ENT_QUOTES, 'UTF-8' );
 		$name = trim( preg_replace( '/\s+/u', ' ', $name ) );
 		return 'auto draft' === strtolower( $name ) ? '' : mb_substr( $name, 0, 120 );
+	}
+
+	/**
+	 * The focus keyphrase and the supporting keywords, held to the shop's list.
+	 *
+	 * The model is asked to choose both from the shortlist; this checks that it did, and puts it
+	 * right when it did not. A focus keyphrase off the list is replaced by the best list phrase that
+	 * names the piece (the copy is then checked against that one, and repaired if it misses it);
+	 * supporting keywords off the list are dropped, and when none are left the next best list
+	 * phrases are used. Keywords the shop picked by hand always come first.
+	 *
+	 * @return array { keyphrase, keyphrase_from: picked|list|name, keyphrase_volume, keywords[] }
+	 */
+	public static function aim( array $raw, string $name, array $ctx ): array {
+		$norm   = static fn( $s ) => trim( preg_replace( '/\s+/u', ' ', mb_strtolower( wp_strip_all_tags( (string) $s ) ) ) );
+		$picked = $ctx['keywords'];
+		$list   = [];
+		foreach ( $ctx['shortlist'] as $k ) {
+			$list[ $norm( $k['keyword'] ) ] = $k;
+		}
+		$aimable = static fn( $k ) => $k && ! $k['taken'] && ! $k['general'];
+
+		$volume = 0;
+		if ( $picked ) {
+			$focus = $picked[0];
+			$from  = 'picked';
+		} else {
+			$said = $list[ $norm( $raw['keyphrase'] ?? '' ) ] ?? null;
+			if ( $aimable( $said ) ) {
+				$focus  = $said['keyword'];
+				$volume = $said['volume'];
+				$from   = 'list';
+			} else {
+				$best = null;
+				foreach ( $ctx['shortlist'] as $k ) {
+					if ( $k['names'] && $aimable( $k ) ) {
+						$best = $k;
+						break;
+					}
+				}
+				if ( $best ) {
+					$focus  = $best['keyword'];
+					$volume = $best['volume'];
+					$from   = 'list';
+				} else {
+					$focus = self::keyphrase( (string) ( $raw['keyphrase'] ?? '' ), $name );
+					$from  = 'name';
+				}
+			}
+		}
+
+		$support = [];
+		$offered = array_merge( array_slice( $picked, 1 ), self::strings_of( $raw['keywords'] ?? [] ) );
+		foreach ( $offered as $word ) {
+			$key = $norm( $word );
+			if ( $key === $norm( $focus ) ) {
+				continue;
+			}
+			$exact = in_array( $word, $picked, true ) ? $word : ( $list[ $key ]['keyword'] ?? '' );
+			if ( '' !== $exact && ! in_array( $exact, $support, true ) ) {
+				$support[] = $exact;
+			}
+		}
+		// The model chose nothing from the list although the list had phrases: the best of them.
+		$from_list = array_diff( $support, $picked );
+		foreach ( $from_list ? [] : $ctx['shortlist'] as $k ) {
+			if ( count( $support ) - count( array_slice( $picked, 1 ) ) >= 2 ) {
+				break;
+			}
+			if ( $norm( $k['keyword'] ) !== $norm( $focus ) && ! in_array( $k['keyword'], $support, true ) ) {
+				$support[] = $k['keyword'];
+			}
+		}
+
+		return [
+			'keyphrase'        => $focus,
+			'keyphrase_from'   => $from,
+			'keyphrase_volume' => $volume,
+			'keywords'         => array_slice( $support, 0, max( 4, count( $picked ) ) ),
+		];
 	}
 
 	/** The phrase the model chose, if the name really contains it; otherwise the name's own last words. */
