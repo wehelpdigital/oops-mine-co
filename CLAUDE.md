@@ -326,7 +326,11 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   original only when it is JPEG/PNG/WebP ≤ 16 MP (else the `-scaled` copy). Each risky step writes a note
   (`mark()`, transient `whd_studio_mark_{user}`) that the route wrapper clears on return; when a response is an
   HTML page, the panel calls `studio/last` and shows where the server stopped. A failed zoom no longer stops the
-  run — it continues on the first look's facts with a warning line.
+  run — it continues on the first look's facts with a warning line. While a run works, a `<dialog>` loader
+  (`loader` in ai-studio.js) covers the page: viewfinder over the first photo (the `view` = medium URL each photo
+  object carries), step + hint, a bar ticked once per progress line (`4 + pictures`, `+1` for a repair), time so
+  far against an estimate (150 s + 55 s a picture), drawn thumbnails. Escape is swallowed; "Hide" closes it and
+  the Generate button ("Show progress" while busy) reopens it; it closes itself on success and stays on failure.
 - **Who appears in drawn pictures** is one list, `WHD_AI_Images::people()` (filter `whd_ai_image_people`): young
   women with a stated age (23–30) and background — Korean, Thai, Japanese, Chinese, Filipina, alternating with
   white — plus `age_rule()` (22–32) in every brief. Product sets offset the list by product id; journal, page and

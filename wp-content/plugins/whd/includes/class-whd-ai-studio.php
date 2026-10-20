@@ -269,7 +269,7 @@ final class WHD_AI_Studio {
 		foreach ( $ids as $id ) {
 			$thumb = wp_get_attachment_image_url( $id, 'thumbnail' );
 			if ( $thumb ) {
-				$out[] = [ 'id' => (int) $id, 'thumb' => $thumb ];
+				$out[] = [ 'id' => (int) $id, 'thumb' => $thumb, 'view' => (string) wp_get_attachment_image_url( $id, 'medium' ) ];
 			}
 		}
 		return $out;
@@ -321,6 +321,24 @@ final class WHD_AI_Studio {
 			'overTitle'   => __( 'Overwrite this product', 'whd' ),
 			'overNote'    => __( 'The fields listed are replaced on this screen. Nothing is saved until you press Update.', 'whd' ),
 			'cancel'      => __( 'Cancel', 'whd' ),
+			'hintLook'       => __( 'Every photograph, edge to edge — what it is, its colours, and everything that can be counted.', 'whd' ),
+			'hintZoom'       => __( 'Close-ups of the buttons, seams and trims, cut from your photographs and counted again.', 'whd' ),
+			'hintWrite'      => __( 'Name, descriptions, story and search snippet, in the shop’s own voice.', 'whd' ),
+			'hintRepair'     => __( 'Sent back once with the faults listed — keeping whichever draft is better.', 'whd' ),
+			'hintModel'      => __( 'On a model, drawn from your photographs — then checked against them.', 'whd' ),
+			'hintGhost'      => __( 'On a ghost mannequin, drawn from your photographs — then checked against them.', 'whd' ),
+			'hintFinish'     => __( 'Alt text on every picture, and the story beside them.', 'whd' ),
+			'hintCopy'       => __( 'A draft copy of this product, so the original stays as it is.', 'whd' ),
+			'loaderShow'     => __( 'Show progress', 'whd' ),
+			'loaderHide'     => __( 'Hide — it keeps working', 'whd' ),
+			'loaderClose'    => __( 'Close', 'whd' ),
+			'loaderProgress' => __( 'Progress', 'whd' ),
+			'loaderDone'     => __( 'Done', 'whd' ),
+			'loaderDoneNote' => __( 'Everything is in its field — read it over, then press Update.', 'whd' ),
+			/* translators: %s: time so far, e.g. 1:42 */
+			'loaderSoFar'    => __( '%s so far', 'whd' ),
+			/* translators: 1: fewest minutes, 2: most minutes */
+			'loaderUsually'  => __( 'usually %1$d–%2$d minutes', 'whd' ),
 			'copying'     => __( 'Making the copy…', 'whd' ),
 			'copied'      => __( 'Copy made — opening it…', 'whd' ),
 			/* translators: %s: name of the product this one was copied from */
@@ -449,7 +467,7 @@ final class WHD_AI_Studio {
 		foreach ( $run['images'] as $id ) {
 			$thumb = wp_get_attachment_image_url( $id, 'thumbnail' );
 			if ( $thumb ) {
-				$run['photos'][] = [ 'id' => (int) $id, 'thumb' => $thumb ];
+				$run['photos'][] = [ 'id' => (int) $id, 'thumb' => $thumb, 'view' => (string) wp_get_attachment_image_url( $id, 'medium' ) ];
 			}
 		}
 		$run['fromName'] = html_entity_decode( get_the_title( (int) $run['from'] ), ENT_QUOTES, 'UTF-8' );

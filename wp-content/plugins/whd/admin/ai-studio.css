@@ -841,6 +841,354 @@
 	text-align: right;
 }
 
+/* ─────────────────────────── the loader ───────────────────────────
+   A viewfinder over the first photograph, a scan line passing down it, the step beneath. The
+   rose-gold and sand are the shop's; everything else stays quiet, because it is on screen for
+   minutes and should be easy to look at for that long. */
+
+.whd-studio-loader {
+	--rose: #b98b7e;
+	--rose-deep: #9c6f63;
+	--ink: #3a2b26;
+	--sand: #f7f2ed;
+	--sand-2: #efe6de;
+	width: min(400px, calc(100vw - 32px));
+	padding: 30px 28px 16px;
+	border: 0;
+	border-radius: 16px;
+	background: #fffdfb;
+	color: #1d2327;
+	text-align: center;
+	box-shadow: 0 28px 80px rgba(29, 20, 17, .35), 0 2px 8px rgba(29, 20, 17, .08);
+	overflow: hidden;
+}
+
+.whd-studio-loader[open] {
+	animation: whd-loader-in .32s cubic-bezier(.2, .8, .2, 1);
+}
+
+.whd-studio-loader.is-leaving {
+	animation: whd-loader-out .26s ease forwards;
+}
+
+.whd-studio-loader::backdrop {
+	background: rgba(36, 28, 25, .5);
+	backdrop-filter: blur(3px);
+}
+
+@keyframes whd-loader-in {
+	from { opacity: 0; transform: translateY(10px) scale(.97); }
+	to   { opacity: 1; transform: none; }
+}
+
+@keyframes whd-loader-out {
+	to { opacity: 0; transform: translateY(6px) scale(.98); }
+}
+
+/* the viewfinder */
+
+.whd-studio-loader__frame {
+	position: relative;
+	width: 136px;
+	height: 172px;
+	margin: 0 auto 20px;
+	border-radius: 12px;
+	overflow: hidden;
+	background: linear-gradient(160deg, var(--sand), var(--sand-2));
+	box-shadow: 0 10px 30px rgba(58, 43, 38, .18), inset 0 0 0 1px rgba(58, 43, 38, .06);
+}
+
+.whd-studio-loader__img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	animation: whd-loader-breathe 6s ease-in-out infinite;
+}
+
+/* A slow push in and out — looking closer, then back. */
+@keyframes whd-loader-breathe {
+	0%, 100% { transform: scale(1); }
+	50%      { transform: scale(1.07); }
+}
+
+.whd-studio-loader__scan {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: -40%;
+	height: 40%;
+	background: linear-gradient(to bottom,
+		rgba(185, 139, 126, 0) 0%,
+		rgba(185, 139, 126, .16) 60%,
+		rgba(255, 246, 240, .75) 96%,
+		rgba(255, 255, 255, .95) 100%);
+	box-shadow: 0 1px 10px rgba(255, 240, 232, .9);
+	animation: whd-loader-scan 2.6s cubic-bezier(.45, 0, .55, 1) infinite;
+}
+
+@keyframes whd-loader-scan {
+	0%   { top: -40%; opacity: 0; }
+	12%  { opacity: 1; }
+	88%  { opacity: 1; }
+	100% { top: 100%; opacity: 0; }
+}
+
+.whd-studio-loader__corner {
+	position: absolute;
+	width: 16px;
+	height: 16px;
+	border: 0 solid #fff;
+	filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .35));
+	opacity: .85;
+	animation: 2.6s ease-in-out infinite;
+}
+
+/* Each bracket draws in towards the middle and back, as a camera does when it finds focus. */
+.whd-studio-loader__corner.is-tl { top: 10px; left: 10px; border-top-width: 2px; border-left-width: 2px; border-top-left-radius: 4px; animation-name: whd-loader-focus-tl; }
+.whd-studio-loader__corner.is-tr { top: 10px; right: 10px; border-top-width: 2px; border-right-width: 2px; border-top-right-radius: 4px; animation-name: whd-loader-focus-tr; }
+.whd-studio-loader__corner.is-bl { bottom: 10px; left: 10px; border-bottom-width: 2px; border-left-width: 2px; border-bottom-left-radius: 4px; animation-name: whd-loader-focus-bl; }
+.whd-studio-loader__corner.is-br { bottom: 10px; right: 10px; border-bottom-width: 2px; border-right-width: 2px; border-bottom-right-radius: 4px; animation-name: whd-loader-focus-br; }
+
+@keyframes whd-loader-focus-tl { 50% { transform: translate(4px, 4px); opacity: 1; } }
+@keyframes whd-loader-focus-tr { 50% { transform: translate(-4px, 4px); opacity: 1; } }
+@keyframes whd-loader-focus-bl { 50% { transform: translate(4px, -4px); opacity: 1; } }
+@keyframes whd-loader-focus-br { 50% { transform: translate(-4px, -4px); opacity: 1; } }
+
+/* done: the scan stops, the photo settles, a tick arrives */
+
+.whd-studio-loader__badge {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+	width: 34px;
+	height: 34px;
+	border-radius: 50%;
+	background: var(--ink);
+	box-shadow: 0 4px 14px rgba(58, 43, 38, .35);
+	opacity: 0;
+	transform: scale(.4);
+}
+
+.whd-studio-loader__badge::after {
+	content: "";
+	position: absolute;
+	left: 13px;
+	top: 8px;
+	width: 7px;
+	height: 13px;
+	border: solid #f7f2ed;
+	border-width: 0 2.5px 2.5px 0;
+	transform: rotate(45deg);
+}
+
+.whd-studio-loader.is-done .whd-studio-loader__badge {
+	animation: whd-loader-pop .45s cubic-bezier(.2, 1.4, .4, 1) forwards;
+}
+
+.whd-studio-loader.is-bad .whd-studio-loader__badge {
+	background: #b32d2e;
+	animation: whd-loader-pop .45s cubic-bezier(.2, 1.4, .4, 1) forwards;
+}
+
+/* A cross for a run that stopped: two bars on the centre, like the remove buttons. */
+.whd-studio-loader.is-bad .whd-studio-loader__badge::before,
+.whd-studio-loader.is-bad .whd-studio-loader__badge::after {
+	content: "";
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 14px;
+	height: 2.5px;
+	border: 0;
+	border-radius: 2px;
+	background: #f7f2ed;
+	transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.whd-studio-loader.is-bad .whd-studio-loader__badge::after {
+	transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+@keyframes whd-loader-pop {
+	to { opacity: 1; transform: scale(1); }
+}
+
+.whd-studio-loader.is-done .whd-studio-loader__scan,
+.whd-studio-loader.is-bad .whd-studio-loader__scan,
+.whd-studio-loader.is-done .whd-studio-loader__corner,
+.whd-studio-loader.is-bad .whd-studio-loader__corner {
+	animation: none;
+	opacity: 0;
+	transition: opacity .3s;
+}
+
+.whd-studio-loader.is-done .whd-studio-loader__img,
+.whd-studio-loader.is-bad .whd-studio-loader__img {
+	animation: none;
+	transition: transform .5s;
+}
+
+/* words */
+
+.whd-studio-loader__h {
+	min-height: 1.35em;
+	margin: 0 0 4px;
+	font-size: 17px;
+	font-weight: 600;
+	line-height: 1.35;
+	color: #1d2327;
+}
+
+/* It takes focus on opening so nothing else shows a ring; it is not something to click. */
+.whd-studio-loader__h:focus {
+	outline: none;
+}
+
+.whd-studio-loader__note {
+	min-height: 2.8em;
+	margin: 0 auto;
+	max-width: 32ch;
+	font-size: 13px;
+	line-height: 1.4;
+	color: #646970;
+}
+
+.whd-studio-loader.is-bad .whd-studio-loader__note {
+	max-width: 40ch;
+	color: #b32d2e;
+	word-break: break-word;
+}
+
+/* the bar: the part done fills in rose-gold, with light moving along it so it never looks stuck */
+
+.whd-studio-loader__bar {
+	position: relative;
+	height: 5px;
+	margin: 16px 0 8px;
+	border-radius: 99px;
+	background: var(--sand-2);
+	overflow: hidden;
+}
+
+.whd-studio-loader__bar span {
+	position: relative;
+	display: block;
+	height: 100%;
+	width: 0;
+	border-radius: inherit;
+	background: linear-gradient(90deg, var(--rose), var(--rose-deep));
+	transition: width .6s cubic-bezier(.2, .8, .2, 1);
+	overflow: hidden;
+}
+
+.whd-studio-loader__bar span::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 60px;
+	background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .55), rgba(255, 255, 255, 0));
+	animation: whd-loader-shine 1.8s ease-in-out infinite;
+}
+
+@keyframes whd-loader-shine {
+	from { left: -60px; }
+	to   { left: 100%; }
+}
+
+.whd-studio-loader.is-done .whd-studio-loader__bar span::after,
+.whd-studio-loader.is-bad .whd-studio-loader__bar span::after {
+	animation: none;
+	opacity: 0;
+}
+
+.whd-studio-loader.is-bad .whd-studio-loader__bar span {
+	background: #d6a5a0;
+}
+
+.whd-studio-loader__time {
+	margin: 0;
+	font-size: 12px;
+	color: #8c8f94;
+	font-variant-numeric: tabular-nums;
+}
+
+/* each new picture as it lands */
+
+.whd-studio-loader__pics {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 6px;
+	margin-top: 12px;
+}
+
+.whd-studio-loader__pics:empty {
+	display: none;
+}
+
+.whd-studio-loader__pics img {
+	width: 40px;
+	height: 50px;
+	object-fit: cover;
+	border-radius: 6px;
+	box-shadow: 0 3px 10px rgba(58, 43, 38, .2);
+	animation: whd-loader-land .5s cubic-bezier(.2, 1.3, .4, 1);
+}
+
+@keyframes whd-loader-land {
+	from { opacity: 0; transform: translateY(8px) scale(.8); }
+	to   { opacity: 1; transform: none; }
+}
+
+.whd-studio-loader__foot {
+	margin: 16px 0 0;
+	padding-top: 12px;
+	border-top: 1px solid #f0ebe7;
+}
+
+.whd-studio-loader__foot .button-link {
+	font-size: 12px;
+	color: #8c8f94;
+	text-decoration: none;
+}
+
+.whd-studio-loader__foot .button-link:hover,
+.whd-studio-loader__foot .button-link:focus-visible {
+	color: var(--ink);
+	text-decoration: underline;
+}
+
+.whd-studio-loader.is-bad .whd-studio-loader__foot .button-link {
+	font-size: 13px;
+	color: #2271b1;
+}
+
+/* Still for anyone who has asked for less motion: a fixed line, steady corners, no shine. */
+@media (prefers-reduced-motion: reduce) {
+	.whd-studio-loader[open],
+	.whd-studio-loader.is-leaving,
+	.whd-studio-loader__img,
+	.whd-studio-loader__corner,
+	.whd-studio-loader__bar span::after,
+	.whd-studio-loader__pics img {
+		animation: none;
+	}
+
+	.whd-studio-loader__scan {
+		animation: none;
+		top: 48%;
+		height: 2px;
+		opacity: .8;
+		background: rgba(255, 255, 255, .9);
+	}
+
+	.whd-studio-loader.is-leaving {
+		opacity: 0;
+	}
+}
+
 .whd-studio.is-running .whd-studio__step {
 	opacity: .55;
 	pointer-events: none;

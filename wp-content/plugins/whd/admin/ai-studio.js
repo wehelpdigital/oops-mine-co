@@ -179,7 +179,8 @@
 			photos = frame.state().get( 'selection' ).map( function ( m ) {
 				var a = m.toJSON();
 				var size = a.sizes && ( a.sizes.thumbnail || a.sizes.medium );
-				return { id: a.id, thumb: size ? size.url : a.url };
+				var view = a.sizes && ( a.sizes.medium || a.sizes.large );
+				return { id: a.id, thumb: size ? size.url : a.url, view: view ? view.url : a.url };
 			} ).slice( 0, totalMax );
 			changedPhotos();
 		} );
@@ -608,9 +609,200 @@
 		}
 	}
 
+	/* ─────────────────────────── the loader ───────────────────────────
+	   A run takes minutes, so while it works the page is covered by a modal that says what is
+	   happening: the first photograph in a viewfinder with a scan line passing over it, the step and
+	   its detail, a bar, the time so far, and each new picture as it lands. It closes itself when the
+	   run is done, and stays open with the reason when the run stops. Escape does not end a run —
+	   "Hide" puts the loader away while it carries on, and Generate brings it back. */
+
+	var loader = ( function () {
+		var dialog = null;
+		var clock = null;
+		var started = 0;
+		var done = 0;
+		var total = 1;
+		var estimate = 0;
+
+		function part( sel ) {
+			return dialog ? dialog.querySelector( sel ) : null;
+		}
+
+		function minutes( s ) {
+			var m = Math.floor( s / 60 );
+			var r = Math.floor( s % 60 );
+			return m + ':' + ( r < 10 ? '0' : '' ) + r;
+		}
+
+		function paint() {
+			var pct = Math.max( 4, Math.min( 100, Math.round( 100 * done / Math.max( 1, total ) ) ) );
+			var bar = part( '.whd-studio-loader__bar' );
+			if ( bar ) {
+				bar.firstChild.style.width = pct + '%';
+				bar.setAttribute( 'aria-valuenow', String( pct ) );
+			}
+		}
+
+		function tock() {
+			var time = part( '.whd-studio-loader__time' );
+			if ( ! time ) {
+				return;
+			}
+			var spent = ( Date.now() - started ) / 1000;
+			time.textContent = fmt( T.loaderSoFar, minutes( spent ) ) +
+				( estimate ? ' · ' + fmt( T.loaderUsually, Math.max( 1, Math.round( estimate / 60 ) ), Math.round( estimate / 60 ) + 1 ) : '' );
+		}
+
+		function close( after ) {
+			if ( ! dialog ) {
+				return;
+			}
+			var d = dialog;
+			window.clearInterval( clock );
+			d.classList.add( 'is-leaving' );
+			window.setTimeout( function () {
+				if ( d.open ) {
+					d.close();
+				}
+				d.remove();
+				if ( after ) {
+					after();
+				}
+			}, 260 );
+			dialog = null;
+		}
+
+		return {
+			/* photo: the picture for the viewfinder; units: how many steps make the bar full;
+			   seconds: what a run like this usually takes, for the estimate. */
+			open: function ( photo, units, seconds ) {
+				if ( dialog ) {
+					close();
+				}
+				done = 0;
+				total = Math.max( 1, units );
+				estimate = seconds || 0;
+				started = Date.now();
+				dialog = document.createElement( 'dialog' );
+				dialog.className = 'whd-studio-loader';
+				dialog.setAttribute( 'aria-labelledby', 'whd-studio-loader-h' );
+				dialog.innerHTML =
+					'<div class="whd-studio-loader__frame">' +
+						( photo ? '<img class="whd-studio-loader__img" src="' + esc( photo ) + '" alt="">' : '' ) +
+						'<span class="whd-studio-loader__scan" aria-hidden="true"></span>' +
+						'<span class="whd-studio-loader__corner is-tl" aria-hidden="true"></span>' +
+						'<span class="whd-studio-loader__corner is-tr" aria-hidden="true"></span>' +
+						'<span class="whd-studio-loader__corner is-bl" aria-hidden="true"></span>' +
+						'<span class="whd-studio-loader__corner is-br" aria-hidden="true"></span>' +
+						'<span class="whd-studio-loader__badge" aria-hidden="true"></span>' +
+					'</div>' +
+					// Focus lands here, not on Hide: a ring round Hide the moment it opens reads as "press me".
+					'<h2 class="whd-studio-loader__h" id="whd-studio-loader-h" aria-live="polite" tabindex="-1" autofocus></h2>' +
+					'<p class="whd-studio-loader__note"></p>' +
+					'<div class="whd-studio-loader__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-label="' + esc( T.loaderProgress ) + '"><span></span></div>' +
+					'<p class="whd-studio-loader__time"></p>' +
+					'<div class="whd-studio-loader__pics"></div>' +
+					'<p class="whd-studio-loader__foot"><button type="button" class="button-link" data-loader-hide>' + esc( T.loaderHide ) + '</button></p>';
+				// Escape would otherwise close it, and that reads as cancelling — it is not.
+				dialog.addEventListener( 'cancel', function ( e ) {
+					e.preventDefault();
+				} );
+				dialog.querySelector( '[data-loader-hide]' ).addEventListener( 'click', function () {
+					if ( dialog.classList.contains( 'is-bad' ) ) {
+						close();
+					} else {
+						dialog.close();
+					}
+				} );
+				document.body.appendChild( dialog );
+				dialog.showModal();
+				paint();
+				tock();
+				clock = window.setInterval( tock, 1000 );
+			},
+
+			/* Back on screen after Hide, while the run is still going. */
+			show: function () {
+				if ( dialog && ! dialog.open ) {
+					dialog.showModal();
+				}
+			},
+
+			/* hint: a line under the step saying what it is doing, until a note replaces it. */
+			step: function ( label, hint ) {
+				var h = part( '.whd-studio-loader__h' );
+				var n = part( '.whd-studio-loader__note' );
+				if ( h ) {
+					h.textContent = label;
+				}
+				if ( n ) {
+					n.textContent = hint || '';
+				}
+			},
+
+			note: function ( text ) {
+				var n = part( '.whd-studio-loader__note' );
+				if ( n ) {
+					n.textContent = text || '';
+				}
+			},
+
+			/* One step finished; or more steps than were counted (a repair). */
+			tick: function () {
+				done++;
+				paint();
+			},
+			more: function ( n ) {
+				total += n;
+				paint();
+			},
+
+			picture: function ( url ) {
+				var pics = part( '.whd-studio-loader__pics' );
+				if ( pics && url ) {
+					var img = document.createElement( 'img' );
+					img.src = url;
+					img.alt = '';
+					pics.appendChild( img );
+				}
+			},
+
+			/* ok: a tick, then gone. Not ok: it stays, with the reason and a Close. */
+			finish: function ( ok, message, after ) {
+				if ( ! dialog ) {
+					if ( after ) {
+						after();
+					}
+					return;
+				}
+				window.clearInterval( clock );
+				tock();
+				done = total;
+				paint();
+				dialog.classList.add( ok ? 'is-done' : 'is-bad' );
+				this.step( ok ? T.loaderDone : T.stopped );
+				this.note( ok ? T.loaderDoneNote : message );
+				if ( ! dialog.open ) {
+					dialog.showModal();
+				}
+				if ( ok ) {
+					window.setTimeout( function () {
+						close( after );
+					}, 1500 );
+				} else {
+					part( '[data-loader-hide]' ).textContent = T.loaderClose;
+					part( '[data-loader-hide]' ).focus();
+					if ( after ) {
+						after();
+					}
+				}
+			}
+		};
+	}() );
+
 	/* ─────────────────────────── progress ─────────────────────────── */
 
-	function step( label ) {
+	function step( label, hint ) {
 		var li = document.createElement( 'li' );
 		li.className = 'whd-studio__s is-busy';
 		li.innerHTML = '<span class="whd-studio__s-mark" aria-hidden="true"></span>' +
@@ -618,22 +810,31 @@
 			'<span class="whd-studio__s-note"></span>';
 		el.progress.appendChild( li );
 		el.progress.hidden = false;
+		loader.step( label, hint );
 		var note = li.querySelector( '.whd-studio__s-note' );
+		var ended = false;
+		// The loader's bar moves once per line, however the line ends.
+		var end = function ( state, text ) {
+			li.className = 'whd-studio__s ' + state;
+			note.textContent = text ? ' — ' + text : '';
+			if ( ! ended ) {
+				ended = true;
+				loader.tick();
+			}
+		};
 		var line = {
 			note: function ( text ) {
 				note.textContent = text ? ' — ' + text : '';
+				loader.note( text );
 			},
 			done: function ( text ) {
-				li.className = 'whd-studio__s is-done';
-				line.note( text );
+				end( 'is-done', text );
 			},
 			warn: function ( text ) {
-				li.className = 'whd-studio__s is-warn';
-				line.note( text );
+				end( 'is-warn', text );
 			},
 			fail: function ( text ) {
-				li.className = 'whd-studio__s is-bad';
-				line.note( text );
+				end( 'is-bad', text );
 			}
 		};
 		active = line;
@@ -735,7 +936,7 @@
 	 */
 	function drawOne( ctx, shot, j, total ) {
 		var position = ctx.ids.length + j + 1;
-		var line = step( fmt( T.stepDraw, j + 1, total ) );
+		var line = step( fmt( T.stepDraw, j + 1, total ), 'mannequin' === shot.mode ? T.hintGhost : T.hintModel );
 		var spot = tile( position );
 		var body = { images: ctx.ids, facts: ctx.facts, shot: shot, position: position, name: ctx.draft.name };
 		var best = null;
@@ -774,6 +975,7 @@
 			ctx.finals.push( { id: best.pic.id, slot: ctx.ids.length + j } );
 			intoGallery( [ { id: best.pic.id, thumb: best.pic.thumb || best.pic.url } ] );
 			spot.show( best.pic, best.verdict );
+			loader.picture( best.pic.thumb || best.pic.url );
 			if ( best.verdict.ok && ! best.verdict.unchecked ) {
 				line.done( T.matches );
 			} else {
@@ -795,6 +997,7 @@
 	 */
 	function run( skipAsk ) {
 		if ( busy ) {
+			loader.show();
 			return;
 		}
 		var chosen = parts();
@@ -883,6 +1086,9 @@
 	function intoCopy( chosen, notes ) {
 		el.go.disabled = true;
 		say( T.copying );
+		// Up until the copy's screen replaces this one, where the same loader opens again for the run.
+		loader.open( photos[ 0 ] ? ( photos[ 0 ].view || photos[ 0 ].thumb ) : '', 2, 0 );
+		loader.step( T.copying, T.hintCopy );
 		api( 'copy', {
 			images: photos.map( function ( p ) {
 				return p.id;
@@ -894,10 +1100,13 @@
 			shots: shots.slice( 0, count )
 		} ).then( function ( made ) {
 			say( T.copied );
+			loader.tick();
+			loader.step( T.copied );
 			window.location.href = made.edit;
 		} ).catch( function ( e ) {
 			el.go.disabled = false;
 			say( e.message, true );
+			loader.finish( false, e.message );
 		} );
 	}
 
@@ -938,13 +1147,17 @@
 
 	function start( chosen, notes ) {
 		busy = true;
-		el.go.disabled = true;
+		// Not disabled: while a run is going the button brings a hidden loader back.
+		el.go.textContent = T.loaderShow;
 		say( '' );
 		[ el.progress, el.saw, el.drawn, el.result ].forEach( function ( node ) {
 			node.innerHTML = '';
 			node.hidden = true;
 		} );
 		root.classList.add( 'is-running' );
+		/* Look, zoom, write, one per new picture, finish. The estimate is what the test runs took:
+		   about two and a half minutes for the words, and a minute more for each picture. */
+		loader.open( photos[ 0 ] ? ( photos[ 0 ].view || photos[ 0 ].thumb ) : '', 4 + count, 150 + 55 * count );
 
 		var ctx = {
 			ids: photos.map( function ( p ) {
@@ -962,10 +1175,10 @@
 		} );
 
 		var asked = null;
-		var line = step( T.stepLook );
+		var line = step( T.stepLook, T.hintLook );
 		api( 'look', { images: ctx.ids, commands: notes } ).then( function ( facts ) {
 			line.done( fmt( T.looked, Math.min( ctx.ids.length, lookMax ) ) );
-			line = step( T.stepZoom );
+			line = step( T.stepZoom, T.hintZoom );
 			/*
 			 * The close-ups are a second opinion. If they cannot be had — a host that kills the request,
 			 * a model that times out — the first look's facts are still good facts, so the run goes on
@@ -984,7 +1197,7 @@
 			}
 			ctx.facts = facts;
 			paintSaw( facts );
-			line = step( T.stepWrite );
+			line = step( T.stepWrite, T.hintWrite );
 			asked = {
 				facts: facts,
 				parts: chosen,
@@ -1001,7 +1214,8 @@
 				return draft;
 			}
 			// A draft that failed a check goes back once, as a request of its own.
-			line = step( fmt( T.stepRepair, draft.issues.length ) );
+			loader.more( 1 );
+			line = step( fmt( T.stepRepair, draft.issues.length ), T.hintRepair );
 			return api( 'repair', Object.assign( {}, asked, { raw: draft.raw } ) ).then( function ( fixed ) {
 				line.done( ( fixed.repaired || [] ).length ? fmt( T.fixedN, fixed.repaired.length ) : T.keptFirst );
 				return fixed;
@@ -1016,7 +1230,7 @@
 			intoGallery( photos );
 			return drawAll( ctx );
 		} ).then( function () {
-			line = step( T.stepFinish );
+			line = step( T.stepFinish, T.hintFinish );
 			return api( 'finish', {
 				parts: chosen,
 				images: ctx.finals,
@@ -1042,11 +1256,18 @@
 					refresh.click();
 				}
 			}, 400 );
+			// Out of the way, and the eye taken to what was filled in.
+			loader.finish( true, '', function () {
+				if ( el.result.scrollIntoView ) {
+					el.result.scrollIntoView( { behavior: 'smooth', block: 'center' } );
+				}
+			} );
 		} ).catch( function ( e ) {
 			if ( active ) {
 				active.fail( e.message );
 			}
 			say( ( T.stopped || 'Stopped' ) + ': ' + e.message, true );
+			loader.finish( false, e.message );
 			if ( ctx.placed.length ) {
 				paintResult( ctx );
 			}
