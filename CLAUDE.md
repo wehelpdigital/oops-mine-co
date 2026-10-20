@@ -332,6 +332,9 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   far against an estimate (150 s + 55 s a picture), drawn thumbnails. Nothing closes it mid-run — Escape is
   swallowed and there is deliberately no "Hide" (the owner asked for it gone: editing fields under a run that is
   about to fill them causes trouble); it closes itself on success, and on failure shows the reason and a Close.
+  Clicking a chosen photo or a drawn picture opens `lightbox` (another body-level `<dialog>`): the `large` size
+  (photo objects carry `thumb`/`view`/`large`), the check's verdict and notes for a drawn one, ← → and arrows
+  through its set, Escape / × / a click on the dark to close, focus back on the thumbnail.
   **No request waits on a model.** Live (LiteSpeed) ended "Writing the page" — a 60–110 s wait with no output —
   with a bare 500 and nothing logged, and the WAF passes HTML bodies, so it was the host's time limit. The six model
   steps (`JOBS`) answer 202 `{ job }` at once and do the work in `WHD_Plugin::after_response()` (connection closed

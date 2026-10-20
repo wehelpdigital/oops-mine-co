@@ -276,7 +276,7 @@ final class WHD_AI_Studio {
 		foreach ( $ids as $id ) {
 			$thumb = wp_get_attachment_image_url( $id, 'thumbnail' );
 			if ( $thumb ) {
-				$out[] = [ 'id' => (int) $id, 'thumb' => $thumb, 'view' => (string) wp_get_attachment_image_url( $id, 'medium' ) ];
+				$out[] = [ 'id' => (int) $id, 'thumb' => $thumb, 'view' => (string) wp_get_attachment_image_url( $id, 'medium' ), 'large' => (string) wp_get_attachment_image_url( $id, 'large' ) ];
 			}
 		}
 		return $out;
@@ -338,6 +338,18 @@ final class WHD_AI_Studio {
 			'hintCopy'       => __( 'A draft copy of this product, so the original stays as it is.', 'whd' ),
 			'tooLong'        => __( 'This step has been running for eight minutes, which is far longer than it should — it has been given up on.', 'whd' ),
 			'loaderClose'    => __( 'Close', 'whd' ),
+			'lightbox'       => __( 'Picture, enlarged', 'whd' ),
+			'close'          => __( 'Close', 'whd' ),
+			'previous'       => __( 'Previous picture', 'whd' ),
+			'next'           => __( 'Next picture', 'whd' ),
+			/* translators: 1: position, 2: how many */
+			'ofTotal'        => __( '%1$d / %2$d', 'whd' ),
+			/* translators: %d: photograph number */
+			'photoN'         => __( 'Photograph %d', 'whd' ),
+			/* translators: %d: photograph number */
+			'viewPhoto'      => __( 'View photograph %d larger', 'whd' ),
+			/* translators: %d: picture number */
+			'viewPicture'    => __( 'View picture %d larger', 'whd' ),
 			'loaderProgress' => __( 'Progress', 'whd' ),
 			'loaderDone'     => __( 'Done', 'whd' ),
 			'loaderDoneNote' => __( 'Everything is in its field — read it over, then press Update.', 'whd' ),
@@ -473,7 +485,7 @@ final class WHD_AI_Studio {
 		foreach ( $run['images'] as $id ) {
 			$thumb = wp_get_attachment_image_url( $id, 'thumbnail' );
 			if ( $thumb ) {
-				$run['photos'][] = [ 'id' => (int) $id, 'thumb' => $thumb, 'view' => (string) wp_get_attachment_image_url( $id, 'medium' ) ];
+				$run['photos'][] = [ 'id' => (int) $id, 'thumb' => $thumb, 'view' => (string) wp_get_attachment_image_url( $id, 'medium' ), 'large' => (string) wp_get_attachment_image_url( $id, 'large' ) ];
 			}
 		}
 		$run['fromName'] = html_entity_decode( get_the_title( (int) $run['from'] ), ENT_QUOTES, 'UTF-8' );

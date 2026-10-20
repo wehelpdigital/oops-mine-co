@@ -176,6 +176,119 @@
 		}
 	}
 
+	/* ─────────────────────────── the lightbox ───────────────────────────
+	   A picture clicked in the panel opens large, over the screen, so a drawn one can be checked
+	   button by button before it goes anywhere. Arrows and ← → step through the rest of its set;
+	   Escape, the cross or a click on the dark around it closes it, and the focus goes back to the
+	   picture that opened it. A <dialog> on the body, like the panel's other modals, so it sits
+	   above everything — the loader included. */
+
+	var lightbox = ( function () {
+		var dialog = null;
+		var items = [];
+		var at = 0;
+		var opener = null;
+
+		function build() {
+			dialog = document.createElement( 'dialog' );
+			dialog.className = 'whd-lightbox';
+			dialog.setAttribute( 'aria-label', T.lightbox );
+			dialog.innerHTML =
+				'<figure class="whd-lightbox__figure" tabindex="-1" autofocus>' +
+					'<img class="whd-lightbox__img" alt="">' +
+					'<figcaption class="whd-lightbox__cap">' +
+						'<span class="whd-lightbox__title"></span>' +
+						'<span class="whd-lightbox__state"></span>' +
+						'<span class="whd-lightbox__count"></span>' +
+						'<ul class="whd-lightbox__notes"></ul>' +
+					'</figcaption>' +
+				'</figure>' +
+				'<button type="button" class="whd-lightbox__btn whd-lightbox__close" aria-label="' + esc( T.close ) + '"></button>' +
+				'<button type="button" class="whd-lightbox__btn whd-lightbox__prev" aria-label="' + esc( T.previous ) + '"></button>' +
+				'<button type="button" class="whd-lightbox__btn whd-lightbox__next" aria-label="' + esc( T.next ) + '"></button>';
+
+			var img = dialog.querySelector( '.whd-lightbox__img' );
+			img.addEventListener( 'load', function () {
+				dialog.classList.remove( 'is-loading' );
+			} );
+			img.addEventListener( 'error', function () {
+				dialog.classList.remove( 'is-loading' );
+			} );
+			dialog.querySelector( '.whd-lightbox__close' ).addEventListener( 'click', function () {
+				dialog.close();
+			} );
+			dialog.querySelector( '.whd-lightbox__prev' ).addEventListener( 'click', function () {
+				show( at - 1 );
+			} );
+			dialog.querySelector( '.whd-lightbox__next' ).addEventListener( 'click', function () {
+				show( at + 1 );
+			} );
+			// The dark around the picture is the dialog itself; the picture and the buttons are not.
+			dialog.addEventListener( 'click', function ( e ) {
+				if ( e.target === dialog ) {
+					dialog.close();
+				}
+			} );
+			dialog.addEventListener( 'keydown', function ( e ) {
+				if ( 'ArrowLeft' === e.key ) {
+					e.preventDefault();
+					show( at - 1 );
+				} else if ( 'ArrowRight' === e.key ) {
+					e.preventDefault();
+					show( at + 1 );
+				}
+			} );
+			dialog.addEventListener( 'close', function () {
+				if ( opener && opener.focus ) {
+					opener.focus();
+				}
+			} );
+			document.body.appendChild( dialog );
+		}
+
+		function show( i ) {
+			if ( ! items.length ) {
+				return;
+			}
+			at = ( i + items.length ) % items.length; // round the ends, so the arrows never go dead
+			var item = items[ at ];
+			var img = dialog.querySelector( '.whd-lightbox__img' );
+			if ( img.getAttribute( 'src' ) !== item.src ) {
+				dialog.classList.add( 'is-loading' );
+				img.src = item.src;
+			}
+			img.alt = item.caption || '';
+			dialog.querySelector( '.whd-lightbox__title' ).textContent = item.caption || '';
+			var state = dialog.querySelector( '.whd-lightbox__state' );
+			state.textContent = item.state || '';
+			state.className = 'whd-lightbox__state' + ( item.tone ? ' is-' + item.tone : '' );
+			dialog.querySelector( '.whd-lightbox__count' ).textContent = items.length > 1 ? fmt( T.ofTotal, at + 1, items.length ) : '';
+			var notes = dialog.querySelector( '.whd-lightbox__notes' );
+			notes.innerHTML = ( item.notes || [] ).map( function ( n ) {
+				return '<li>' + esc( n ) + '</li>';
+			} ).join( '' );
+			dialog.classList.toggle( 'is-single', items.length < 2 );
+		}
+
+		return {
+			/* list: [ { src, caption, state, tone, notes[] } ]; from: the element to give focus back to. */
+			open: function ( list, index, from ) {
+				if ( ! list.length ) {
+					return;
+				}
+				if ( ! dialog ) {
+					build();
+				}
+				items = list;
+				opener = from || null;
+				show( index || 0 );
+				if ( ! dialog.open ) {
+					dialog.showModal();
+				}
+			}
+		};
+	}() );
+
 	/* ─────────────────────────── 1. the photographs ─────────────────────────── */
 
 	function paintPhotos() {
@@ -183,10 +296,17 @@
 		photos.forEach( function ( p, i ) {
 			var fig = document.createElement( 'figure' );
 			fig.className = 'whd-studio__photo';
-			fig.innerHTML = '<img src="' + esc( p.thumb ) + '" alt="">' +
+			fig.innerHTML = '<button type="button" class="whd-studio__photo-view" aria-label="' + esc( fmt( T.viewPhoto, i + 1 ) ) + '">' +
+					'<img src="' + esc( p.thumb ) + '" alt="">' +
+				'</button>' +
 				'<span class="whd-studio__photo-n" aria-hidden="true">' + ( i + 1 ) + '</span>' +
 				'<button type="button" class="whd-studio__photo-x" aria-label="' + esc( T.remove ) + '"></button>';
-			fig.querySelector( 'button' ).addEventListener( 'click', function () {
+			fig.querySelector( '.whd-studio__photo-view' ).addEventListener( 'click', function () {
+				lightbox.open( photos.map( function ( q, j ) {
+					return { src: q.large || q.view || q.thumb, caption: fmt( T.photoN, j + 1 ) };
+				} ), i, this );
+			} );
+			fig.querySelector( '.whd-studio__photo-x' ).addEventListener( 'click', function () {
 				photos.splice( i, 1 );
 				changedPhotos();
 			} );
@@ -229,7 +349,8 @@
 				var a = m.toJSON();
 				var size = a.sizes && ( a.sizes.thumbnail || a.sizes.medium );
 				var view = a.sizes && ( a.sizes.medium || a.sizes.large );
-				return { id: a.id, thumb: size ? size.url : a.url, view: view ? view.url : a.url };
+				var large = a.sizes && ( a.sizes.large || a.sizes.full );
+				return { id: a.id, thumb: size ? size.url : a.url, view: view ? view.url : a.url, large: large ? large.url : a.url };
 			} ).slice( 0, totalMax );
 			changedPhotos();
 		} );
@@ -929,14 +1050,32 @@
 		var state = fig.querySelector( '.whd-studio__tile-state' );
 		return {
 			show: function ( pic, verdict ) {
-				fig.querySelector( '.whd-studio__tile-img' ).innerHTML = '<a href="' + esc( pic.large || pic.url ) + '" target="_blank" rel="noopener"><img src="' + esc( pic.url ) + '" alt=""></a>';
 				var good = verdict.ok && ! verdict.unchecked;
-				fig.className = 'whd-studio__tile ' + ( good ? 'is-ok' : 'is-warn' );
-				state.textContent = good ? T.matches : T.lookAgain;
 				var notes = ( verdict.problems || [] ).slice();
 				if ( verdict.unchecked ) {
 					notes.push( verdict.unchecked );
 				}
+				// What the lightbox shows for this one: large, with the check's verdict beside it.
+				fig.whdLightbox = {
+					src: pic.large || pic.url,
+					caption: fmt( T.picture, position ),
+					state: good ? T.matches : T.lookAgain,
+					tone: good ? 'ok' : 'warn',
+					notes: notes
+				};
+				fig.querySelector( '.whd-studio__tile-img' ).innerHTML = '<button type="button" class="whd-studio__tile-view" aria-label="' + esc( fmt( T.viewPicture, position ) ) + '">' +
+					'<img src="' + esc( pic.url ) + '" alt=""></button>';
+				fig.querySelector( '.whd-studio__tile-view' ).addEventListener( 'click', function () {
+					// Every drawn picture so far, so the arrows step through the whole new set.
+					var figs = Array.prototype.filter.call( el.drawn.querySelectorAll( '.whd-studio__tile' ), function ( f ) {
+						return !! f.whdLightbox;
+					} );
+					lightbox.open( figs.map( function ( f ) {
+						return f.whdLightbox;
+					} ), figs.indexOf( fig ), this );
+				} );
+				fig.className = 'whd-studio__tile ' + ( good ? 'is-ok' : 'is-warn' );
+				state.textContent = good ? T.matches : T.lookAgain;
 				if ( notes.length ) {
 					var ul = document.createElement( 'ul' );
 					ul.className = 'whd-studio__tile-notes';
