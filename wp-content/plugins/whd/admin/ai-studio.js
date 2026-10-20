@@ -113,7 +113,7 @@
 			fig.className = 'whd-studio__photo';
 			fig.innerHTML = '<img src="' + esc( p.thumb ) + '" alt="">' +
 				'<span class="whd-studio__photo-n" aria-hidden="true">' + ( i + 1 ) + '</span>' +
-				'<button type="button" class="whd-studio__photo-x" aria-label="' + esc( T.remove ) + '">&times;</button>';
+				'<button type="button" class="whd-studio__photo-x" aria-label="' + esc( T.remove ) + '"></button>';
 			fig.querySelector( 'button' ).addEventListener( 'click', function () {
 				photos.splice( i, 1 );
 				changedPhotos();

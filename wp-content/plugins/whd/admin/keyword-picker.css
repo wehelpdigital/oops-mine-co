@@ -40,9 +40,8 @@
 	color: #fff;
 }
 .whd-kw__token-drop {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
+	position: relative;
+	flex: 0 0 auto;
 	width: 17px;
 	height: 17px;
 	padding: 0;
@@ -50,10 +49,23 @@
 	border-radius: 50%;
 	background: rgba(255, 255, 255, .22);
 	color: #fff;
-	font-size: 13px;
-	line-height: 1;
+	font-size: 0; /* the × glyph stays for anything reading the text; the cross below is what shows */
 	cursor: pointer;
 }
+/* Drawn rather than typed, so it is centred in every font instead of a pixel or two low. */
+.whd-kw__token-drop::before,
+.whd-kw__token-drop::after {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 8px;
+	height: 1.5px;
+	border-radius: 1px;
+	background: currentColor;
+	transform: translate(-50%, -50%) rotate(45deg);
+}
+.whd-kw__token-drop::after { transform: translate(-50%, -50%) rotate(-45deg); }
 .whd-kw__token-drop:hover { background: rgba(255, 255, 255, .4); }
 
 .whd-kw__input {

@@ -135,11 +135,29 @@
 	border-radius: 50%;
 	background: rgba(255, 255, 255, .92);
 	color: #b32d2e;
-	font-size: 15px;
-	line-height: 20px;
 	cursor: pointer;
 	opacity: 0;
 	transition: opacity .15s;
+}
+
+/* The cross is drawn, not typed: a "×" glyph sits wherever its font puts it — a pixel and a half
+   low in Segoe UI, somewhere else in San Francisco — and two bars on the centre line sit dead centre
+   in every font. */
+.whd-studio__photo-x::before,
+.whd-studio__photo-x::after {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 10px;
+	height: 2px;
+	border-radius: 1px;
+	background: currentColor;
+	transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.whd-studio__photo-x::after {
+	transform: translate(-50%, -50%) rotate(-45deg);
 }
 
 .whd-studio__photo:hover .whd-studio__photo-x,
