@@ -18,9 +18,9 @@
   ],
   "hero": {
     "eyebrow": "The cold-weather edit",
-    "intro": "Cold-weather dressing from Korea is a stacking game: one long line, one soft layer, one detail worth a second look. This edit gathers the knits, dresses, denim and tights those outfits are built from, and the three formulas that put them together in about a minute.",
+    "intro": "Winter Korean fashion is a stacking game: one long line, one soft layer, one detail worth a second look. This edit gathers the knits, dresses, denim and tights behind those outfits, and the three formulas that put them together in about a minute.",
     "cta_text": "Shop the winter edit",
-    "cta_url": "/product-category/korean-winter-fashion/"
+    "cta_url": "/product-category/clothing/coats/"
   },
   "category": {
     "slug": "korean-winter-fashion",
@@ -36,7 +36,7 @@
         "Korean fashion in winter is mostly a proportion game. One long line holds the outfit together — a knit dress past the knee, a coat that covers your hands, a column of opaque tights — and everything else stays short, soft or plain beside it. Sleeves run a touch long. Hems land where you do not expect them. The palette keeps to warm neutrals, cream over sand over cocoa, so texture does the talking: ribbed knit against denim, brushed wool against a smooth slip skirt.",
         "That is why the look still reads as put together three layers deep. Nothing competes with anything else. You pick one piece with a detail you look twice at — a scalloped knit edge, a wrapped waist, a cuff cut at an odd angle — and let the rest sit quiet around it. Warm, easy to repeat with what you already own, and not the outfit walking toward you on the sidewalk."
       ],
-      "cta": { "text": "Shop cold-weather pieces", "url": "/product-category/korean-winter-fashion/" }
+      "cta": { "text": "Shop cold-weather pieces", "url": "/product-category/clothing/coats/" }
     },
     {
       "heading": "How we choose every <em>knit</em>",
@@ -49,7 +49,7 @@
         "One detail per piece that earns a second look",
         "Small batches, so your sweater is not on every feed"
       ],
-      "cta": { "text": "Shop the Korean edit", "url": "/product-category/korean-fashion/" }
+      "cta": { "text": "Shop the Korean edit", "url": "/korean-fashion/" }
     },
     {
       "heading": "Three ways to <em>wear</em> it",
@@ -58,10 +58,10 @@
       ],
       "bullets": [
         "Knit dress + opaque tights + tall boots. Belt it if the dress falls straight, leave it loose if the hem already moves. Keep the boot above or well below the hem, never level with it.",
-        "Straight <a href=\"/product-category/jeans_and_denim/\">denim</a> + a long knit + a wide scarf. Roll the jean an inch so the boot shows, and let the knit run long enough to cover the back pocket.",
+        "Straight <a href=\"/product-category/clothing/jeans/\">denim</a> + a long knit + a wide scarf. Roll the jean an inch so the boot shows, and let the knit run long enough to cover the back pocket.",
         "A Korean fashion blazer over a sweater dress. Push the sleeves to the elbow, leave it open, and let the hem below finish the line."
       ],
-      "cta": { "text": "Shop dresses", "url": "/product-category/dresses/" }
+      "cta": { "text": "Shop dresses", "url": "/product-category/clothing/dresses/" }
     },
     {
       "heading": "Coats, jackets and the layer on <em>top</em>",
@@ -77,7 +77,7 @@
         "Most of this edit starts before the cold does. Korean fashion for fall leans on the same long cardigans, fine knits and easy dresses; the cold months only add a heavier coat, thicker tights and something wrapped at the neck. Buy the cardigan in September and it is still doing the work in January, which is the whole point of a layering piece.",
         "The shoulder-season trick is to keep the base thin. A ribbed long-sleeve, a slip skirt, a light knit dress — each one wears alone in October and then disappears under wool two months later without any bulk. Denim does the same double shift: bare ankles early, thick socks and boots later."
       ],
-      "cta": { "text": "Shop denim", "url": "/product-category/jeans_and_denim/" }
+      "cta": { "text": "Shop denim", "url": "/product-category/clothing/jeans/" }
     },
     {
       "heading": "Fit and sizing, <em>honestly</em>",

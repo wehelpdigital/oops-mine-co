@@ -27,9 +27,9 @@
   ],
   "hero": {
     "eyebrow": "The K-pop edit",
-    "intro": "Stage styling, turned into clothes you can wear to work, to class and to dinner. Same silhouettes, same playful mixing, nothing that needs a stage to make sense. Each piece is picked one at a time from Korea, Thailand and Vietnam, for the detail that makes you look twice.",
+    "intro": "K pop fashion is stage styling, turned into clothes you can wear to work, to class and to dinner. Same silhouettes, same playful mixing, nothing that needs a stage to make sense. Each piece is picked one at a time from Korea, Thailand and Vietnam, for the detail that makes you look twice.",
     "cta_text": "Shop the K-Pop Inspired edit",
-    "cta_url": "/product-category/kpop-fashion/"
+    "cta_url": "/product-category/clothing/tops/"
   },
   "category": {
     "slug": "kpop-fashion",
@@ -69,7 +69,7 @@
       ],
       "cta": {
         "text": "Shop the K-Pop Inspired edit",
-        "url": "/product-category/kpop-fashion/"
+        "url": "/product-category/clothing/tops/"
       }
     },
     {
@@ -123,7 +123,7 @@
       ],
       "cta": {
         "text": "See what we do carry",
-        "url": "/product-category/kpop-fashion/"
+        "url": "/product-category/clothing/tops/"
       }
     }
   ],
@@ -153,7 +153,7 @@
     "heading": "Find something yours",
     "text": "New pieces land in small batches, and the good ones go home with someone quickly, usually with a quiet \"oops, mine\". Leave your email and we send one note when a K-pop batch lands. Nothing else.",
     "button_text": "Shop the K-Pop Inspired edit",
-    "button_url": "/product-category/kpop-fashion/",
+    "button_url": "/product-category/clothing/tops/",
     "capture_email": true
   },
   "related_slugs": [

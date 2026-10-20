@@ -14,9 +14,9 @@
   ],
   "hero": {
     "eyebrow": "Style edit",
-    "intro": "Relaxed shapes with something going on up close: a crochet panel, a print you only read at arm's length, a sleeve that moves when you do. This is the softest corner of the boutique — easy to wear, easy to style, picked one piece at a time.",
+    "intro": "Chic boho clothes are relaxed shapes with something going on up close: a crochet panel, a print you only read at arm's length, a sleeve that moves when you do. This is the softest corner of the boutique — easy to wear, easy to style, picked one piece at a time.",
     "cta_text": "Shop the boho edit",
-    "cta_url": "/product-category/chic-boho/"
+    "cta_url": "/product-category/clothing/skirts/"
   },
   "category": {
     "slug": "chic-boho",
@@ -50,7 +50,7 @@
       ],
       "cta": {
         "text": "See what's in stock now",
-        "url": "/product-category/chic-boho/"
+        "url": "/product-category/clothing/skirts/"
       }
     },
     {
@@ -65,18 +65,18 @@
       ],
       "cta": {
         "text": "Shop the skirts and maxis",
-        "url": "/product-category/chic-boho/"
+        "url": "/product-category/clothing/skirts/"
       }
     },
     {
       "heading": "<em>Coastal chic fashion</em> for warm days",
       "paragraphs": [
         "Coastal chic fashion is boho with the volume down and the light up: cream, sand, soft pink, rose and warm brown, in cotton with a linen feel and hems that catch the breeze. Because the colors sit close together, nearly everything mixes with nearly everything, which is why these are the pieces that end up in the suitcase. Three of them and one pair of sandals will cover a week away.",
-        "The Thai side of our sourcing lives here too: light cotton and silk blends made for real heat, in prints that still read well beside a plain tee. Take a look at the <a href=\"/product-category/thai-fashion/\">Thai edit</a> if that is your weather, or the <a href=\"/cute-vacation-outfits/\">vacation packing notes</a> if there is a trip on the calendar."
+        "The Thai side of our sourcing lives here too: light cotton and silk blends made for real heat, in prints that still read well beside a plain tee. Take a look at the <a href=\"/thai-fashion/\">Thai edit</a> if that is your weather, or the <a href=\"/cute-vacation-outfits/\">vacation packing notes</a> if there is a trip on the calendar."
       ],
       "cta": {
         "text": "See the Thai edit",
-        "url": "/product-category/thai-fashion/"
+        "url": "/thai-fashion/"
       }
     },
     {

@@ -20,9 +20,9 @@
   ],
   "hero": {
     "eyebrow": "Style notes",
-    "intro": "Teen style moves fast, and most shops answer with the same five pieces in the same three colors. This one goes the other way: outfit ideas for school, weekends and a dance, sizing help that doesn't guess, and pieces bought in small runs so yours stays yours.",
+    "intro": "Cute fashion for teens moves fast, and most shops answer with the same five pieces in the same three colors. This guide goes the other way: outfit ideas for school, weekends and a dance, sizing help that doesn't guess, and pieces bought in small runs so yours stays yours.",
     "cta_text": "Shop the cute edit",
-    "cta_url": "/product-category/cute-fashion/"
+    "cta_url": "/cute-fashion/"
   },
   "sections": [
     {
@@ -46,7 +46,7 @@
       ],
       "cta": {
         "text": "See the everyday pieces",
-        "url": "/product-category/cute-fashion/"
+        "url": "/cute-fashion/"
       }
     },
     {
@@ -57,7 +57,7 @@
       ],
       "cta": {
         "text": "Browse the cute edit",
-        "url": "/product-category/cute-fashion/"
+        "url": "/cute-fashion/"
       }
     },
     {
@@ -79,7 +79,7 @@
       ],
       "cta": {
         "text": "Browse petite clothing",
-        "url": "/product-category/petite-clothing/"
+        "url": "/petite-clothes-for-women/"
       }
     },
     {
@@ -90,7 +90,7 @@
       ],
       "cta": {
         "text": "See what the cute edit costs",
-        "url": "/product-category/cute-fashion/"
+        "url": "/cute-fashion/"
       }
     },
     {
@@ -131,7 +131,7 @@
     "heading": "Find something <em>yours</em>",
     "text": "New pieces land in small runs and the good sizes go first. Leave your email and you hear when something arrives — the finds, not daily mail.",
     "button_text": "Shop the cute edit",
-    "button_url": "/product-category/cute-fashion/",
+    "button_url": "/cute-fashion/",
     "capture_email": true
   },
   "related_slugs": [

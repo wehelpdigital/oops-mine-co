@@ -16,7 +16,7 @@
   ],
   "hero": {
     "eyebrow": "Fit help",
-    "intro": "Sizing from Korea and Thailand rarely lines up with a US label, and guessing is how a piece you loved on screen ends up back in the mail. Take six measurements once, keep them in your phone, and let the numbers pick your size from here on.",
+    "intro": "Sizing from Korea and Thailand rarely lines up with a US label, and a petite clothing size is the hardest of all to guess. Guessing is how a piece you loved on screen ends up back in the mail. Take six measurements once, keep them in your phone, and let the numbers pick your size from here on.",
     "cta_text": "Shop new arrivals",
     "cta_url": "/shop/?orderby=date"
   },
@@ -110,7 +110,7 @@
       ],
       "cta": {
         "text": "Shop the petite edit",
-        "url": "/product-category/petite-clothing/"
+        "url": "/petite-clothes-for-women/"
       }
     },
     {

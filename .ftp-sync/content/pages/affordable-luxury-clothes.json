@@ -13,9 +13,9 @@
   ],
   "hero": {
     "eyebrow": "Fabric first",
-    "intro": "The heavier end of the boutique: silk blends, wool, satin, crystal embellishment and real leather, picked on fiber content, lining and finish rather than on how well they photograph. Fewer pieces, better cloth, labels that say exactly what you are holding. Look twice — that is usually the point.",
+    "intro": "Affordable luxury clothes, the way we read them: silk blends, wool, satin, crystal embellishment and real leather, picked on fiber content, lining and finish rather than on how well they photograph. Fewer pieces, better cloth, labels that say exactly what you are holding. Look twice — that is usually the point.",
     "cta_text": "Shop affordable luxury",
-    "cta_url": "/product-category/affordable-luxury/"
+    "cta_url": "/product-category/clothing/sweaters-knits/"
   },
   "category": {
     "slug": "affordable-luxury",
@@ -44,7 +44,7 @@
     {
       "heading": "How we choose: five checks <em>before</em> we buy",
       "paragraphs": [
-        "Photos flatter everything, so the label and the details decide it, not the styling. These are the five checks we run before a piece goes into an order — and the same five you can run the day your package lands."
+        "Photos flatter everything, so the label and the details decide it, not the styling. These are the five checks we run before a piece goes into an order — and the same five you can run the day your package lands. They work on affordable luxury clothes from any shop, not only ours."
       ],
       "bullets": [
         "<strong>Fabric weight.</strong> Hold it up to a window. Good cloth keeps its shape and its color; thin cloth goes sheer and clings. The sweetheart gown here is 57% silk to 43% polyester, so it falls instead of hanging flat.",
@@ -55,7 +55,7 @@
       ],
       "cta": {
         "text": "Shop affordable luxury",
-        "url": "/product-category/affordable-luxury/"
+        "url": "/product-category/clothing/sweaters-knits/"
       }
     },
     {
@@ -64,13 +64,13 @@
         "Classy chic fashion is mostly restraint plus one good thing. Keep the outfit quiet, let the fabric do the talking, and stop adding once the piece has been seen. Each of these uses one or two items from this edit and the rest from what you already own."
       ],
       "bullets": [
-        "<strong>Desk to dinner.</strong> The wool and silk dress with patch pockets, a pointed-toe pump, a thin gold chain. Short sleeves and a jewel neck keep it plain enough for a Tuesday; the cloth does the rest. More in <a href=\"/product-category/workwear/\">workwear</a>.",
+        "<strong>Desk to dinner.</strong> The wool and silk dress with patch pockets, a pointed-toe pump, a thin gold chain. Short sleeves and a jewel neck keep it plain enough for a Tuesday; the cloth does the rest. More in <a href=\"/product-category/clothing/dresses/\">dresses</a>.",
         "<strong>Weekend with an edge.</strong> The celadon leather miniskirt, pleated on a set-in yoke, a soft knit tucked in, a flat sandal. Leather reads formal until you put something slouchy with it.",
-        "<strong>Evening, no costume.</strong> The silk blend sweetheart gown, one pair of earrings, nothing else; the gathers and plissé pleating already catch the light. More of that in the <a href=\"/product-category/evening/\">evening edit</a>."
+        "<strong>Evening, no costume.</strong> The silk blend sweetheart gown, one pair of earrings, nothing else; the gathers and plissé pleating already catch the light. More of that in the <a href=\"/petite-evening-dresses/\">evening edit</a>."
       ],
       "cta": {
         "text": "Shop dresses",
-        "url": "/product-category/dresses/"
+        "url": "/product-category/clothing/dresses/"
       }
     },
     {
@@ -87,7 +87,7 @@
     {
       "heading": "Small batches, and why that <em>sets</em> the price",
       "paragraphs": [
-        "This is the part that keeps prices fair. We buy in small runs directly from sellers in Korea and Thailand, with a short chain between them and you. There is no flagship storefront behind this boutique and no wall of standing stock, and that is a real reason a silk blend or a leather piece here is priced the way it is.",
+        "This is the part that keeps affordable luxury clothes at a fair price. We buy in small runs directly from sellers in Korea and Thailand, with a short chain between them and you. There is no flagship storefront behind this boutique and no wall of standing stock, and that is a real reason a silk blend or a leather piece here is priced the way it is.",
         "It also means a piece arrives in a handful of sizes and then it's gone. When something sells through, the next order is rarely the same thing, so waiting for a sale usually means watching it leave. Look again in a few weeks, or let us email you when one turns up that sounds like you. Oops, mine."
       ],
       "cta": {
@@ -141,7 +141,7 @@
     "heading": "Find something yours",
     "text": "Not sure where to start? Take the thing you'll wear most — three pieces with real cloth in them beat a closet full of thin ones. Pieces at this end land in small numbers, so leave your email and we'll send the next ones with their fabric and sizes while the middle sizes are still on the page.",
     "button_text": "Shop affordable luxury",
-    "button_url": "/product-category/affordable-luxury/",
+    "button_url": "/product-category/clothing/sweaters-knits/",
     "capture_email": true
   },
   "related_slugs": [

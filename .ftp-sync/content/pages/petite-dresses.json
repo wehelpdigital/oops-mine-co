@@ -24,9 +24,9 @@
   "excerpt": "Dresses picked for shorter frames and sorted by length, sleeve and fabric, with honest fit notes for every shape.",
   "hero": {
     "eyebrow": "The petite edit",
-    "intro": "Every dress in this edit was picked because its measurements work on a shorter frame: the waist seam, the sleeve and the hem land where they should. Sorted by length, sleeve and fabric, so you can go straight to the shape you came here for.",
+    "intro": "We picked these petite dresses for women because their measurements work on a shorter frame: the waist seam, the sleeve and the hem land where they should. Sorted by length, sleeve and fabric, so you can go straight to the shape you came here for.",
     "cta_text": "Shop petite dresses",
-    "cta_url": "/product-category/petite-dresses/"
+    "cta_url": "/product-category/clothing/dresses/"
   },
   "category": {
     "slug": "petite-dresses",
@@ -69,7 +69,7 @@
       ],
       "cta": {
         "text": "Shop the petite edit",
-        "url": "/product-category/petite-dresses/"
+        "url": "/product-category/clothing/dresses/"
       }
     },
     {
@@ -85,7 +85,7 @@
       ],
       "cta": {
         "text": "See the petite dresses",
-        "url": "/product-category/petite-dresses/"
+        "url": "/product-category/clothing/dresses/"
       }
     },
     {
@@ -101,7 +101,7 @@
       ],
       "cta": {
         "text": "Shop petite dresses",
-        "url": "/product-category/petite-dresses/"
+        "url": "/product-category/clothing/dresses/"
       }
     },
     {

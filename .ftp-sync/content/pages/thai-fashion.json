@@ -19,9 +19,9 @@
   ],
   "hero": {
     "eyebrow": "The Thai edit",
-    "intro": "Thailand sends us color. Print over print, silk blends that move, embroidery you only catch on the second look. This is the Thai side of our sourcing: small batches, chosen one piece at a time, leaning toward the small studio over the big catalog.",
+    "intro": "Thai fashion is where our color comes from. Print over print, silk blends that move, embroidery you only catch on the second look. This is the Thai side of our sourcing: small batches, chosen one piece at a time, leaning toward the small studio over the big catalog.",
     "cta_text": "Shop the Thai edit",
-    "cta_url": "/product-category/thai-fashion/"
+    "cta_url": "/product-category/clothing/skirts/"
   },
   "category": {
     "slug": "thai-fashion",
@@ -55,7 +55,7 @@
       ],
       "cta": {
         "text": "Shop the Thai edit",
-        "url": "/product-category/thai-fashion/"
+        "url": "/product-category/clothing/skirts/"
       }
     },
     {
@@ -70,7 +70,7 @@
       ],
       "cta": {
         "text": "Shop the printed pieces",
-        "url": "/product-category/thai-fashion/"
+        "url": "/product-category/clothing/skirts/"
       }
     },
     {
@@ -80,7 +80,7 @@
       ],
       "cta": {
         "text": "Shop lightweight pieces",
-        "url": "/product-category/thai-fashion/"
+        "url": "/product-category/clothing/skirts/"
       }
     },
     {
@@ -116,7 +116,7 @@
       ],
       "cta": {
         "text": "Shop the Thai edit",
-        "url": "/product-category/thai-fashion/"
+        "url": "/product-category/clothing/skirts/"
       }
     }
   ],

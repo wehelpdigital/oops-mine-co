@@ -19,9 +19,9 @@
   "excerpt": "Petite is a set of proportions, not a size and not a body weight — here is what that means for hems, sleeves, plus size petite and juniors sizing.",
   "hero": {
     "eyebrow": "Style notes",
-    "intro": "Petite is one of the most misread words on a size label. It is not a size, not a body weight, and not a polite comment about being small. It is a set of proportions. Once you know which ones moved, shopping gets a lot less irritating.",
+    "intro": "What does petite clothes mean? It is one of the most misread words on a size label. It is not a size, not a body weight, and not a polite comment about being small. It is a set of proportions. Once you know which ones moved, shopping gets a lot less irritating.",
     "cta_text": "Shop petite clothing",
-    "cta_url": "/product-category/petite-clothing/"
+    "cta_url": "/petite-clothes-for-women/"
   },
   "sections": [
     {
@@ -73,7 +73,7 @@
       ],
       "cta": {
         "text": "See what's in petite now",
-        "url": "/product-category/petite-clothing/"
+        "url": "/petite-clothes-for-women/"
       }
     },
     {
@@ -82,14 +82,14 @@
         "Proportion is a styling tool, not only a sizing one. The aim is a long, unbroken line and a waist you can find, because that is what decides where the eye stops. On a shorter frame every horizontal break — a hem, a belt, a cuff — counts for more, so the fewer of them you build in, the longer the line runs. Get that right and people look twice at the outfit instead of guessing at your height. These four start from pieces in our petite edits, and none of them need a heel you cannot walk in."
       ],
       "bullets": [
-        "Waist-first: a waist-defined midi from <a href=\"/product-category/petite-dresses/\">petite dresses</a> with a low slim shoe — the seam does the lengthening, so the heel does not have to",
-        "Column dressing: one color from shoulder to shoe, a knit and matching skirt from <a href=\"/product-category/petite-clothing/\">petite clothing</a>, then a soft brown belt to mark the waist",
+        "Waist-first: a waist-defined midi from <a href=\"/petite-dresses/\">petite dresses</a> with a low slim shoe — the seam does the lengthening, so the heel does not have to",
+        "Column dressing: one color from shoulder to shoe, a knit and matching skirt from <a href=\"/petite-clothes-for-women/\">petite clothing</a>, then a soft brown belt to mark the waist",
         "Cropped over high-rise: a cropped knit with high-rise denim, so the leg appears to start at your waist rather than your hip",
         "The third piece: an open hip-length layer over a dress, giving you one vertical line down the middle instead of a horizontal cut across it"
       ],
       "cta": {
         "text": "Shop petite dresses",
-        "url": "/product-category/petite-dresses/"
+        "url": "/petite-dresses/"
       }
     },
     {
@@ -135,7 +135,7 @@
     "heading": "Find something yours",
     "text": "New petite pieces arrive in small batches and leave quietly. Leave your email and we will tell you when the next ones land, while your size is still on the page. One unexpected find at a time.",
     "button_text": "Shop petite clothing",
-    "button_url": "/product-category/petite-clothing/",
+    "button_url": "/petite-clothes-for-women/",
     "capture_email": true
   },
   "related_slugs": [

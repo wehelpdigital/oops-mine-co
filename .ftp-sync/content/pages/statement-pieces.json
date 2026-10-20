@@ -20,7 +20,7 @@
     "eyebrow": "Style edit",
     "intro": "Some pieces wait their turn in the closet. These do not. Statement fashion is sequins set into knit, chain mail that moves like fabric, pleated satin that catches the light — one loud thing, everything else quiet, and somebody asking where you found it.",
     "cta_text": "Shop statement pieces",
-    "cta_url": "/product-category/statement-pieces/"
+    "cta_url": "/product-category/clothing/jackets-outerwear/"
   },
   "category": {
     "slug": "statement-pieces",
@@ -54,7 +54,7 @@
       ],
       "cta": {
         "text": "Shop statement pieces",
-        "url": "/product-category/statement-pieces/"
+        "url": "/product-category/clothing/jackets-outerwear/"
       }
     },
     {
@@ -70,25 +70,25 @@
       ],
       "cta": {
         "text": "Shop dresses",
-        "url": "/product-category/dresses/"
+        "url": "/product-category/clothing/dresses/"
       }
     },
     {
       "heading": "Shoes: <em>cute fashion sneakers</em> and a heel for later",
       "paragraphs": [
-        "Two of the hardest-working things in this edit have no sparkle at all. Cute fashion sneakers do what a heel cannot: they take a piece that reads as dressy and make it a Tuesday. The Ethyl low top is clean and crisp, the kind of shoe that goes quiet beside a loud skirt. The V-10 court sneaker leans sporty without looking like gym kit, and it is listed in unisex sizing, so read the conversion on the product page.",
-        "A court-style low top and cute fashion tennis shoes are the same shelf here — either one sits happily under wide denim, a pleated midi or that satin maxi. The shoe is doing the same job in each case: taking the temperature down so the piece above it can do the talking. For later there are two slides, a crystal-covered platform for the nights you want height and a strappy leather pair that carries day clothes into the evening."
+        "Two of the hardest-working things in a statement outfit have no sparkle at all. Cute fashion sneakers do what a heel cannot: they take a piece that reads as dressy and make it a Tuesday. A clean, plain low top goes quiet beside a loud skirt. A court-style sneaker leans sporty without looking like gym kit. We sell clothes, not shoes, so this is advice for the pair already by your door.",
+        "A court-style low top and cute fashion tennis shoes do the same job here — either one sits happily under wide denim, a pleated midi or that satin maxi. The shoe takes the temperature down so the piece above it can do the talking. For later, a slide with a little height for the nights you want it, or a strappy leather pair that carries day clothes into the evening."
       ],
       "cta": {
-        "text": "Shop shoes and accessories",
-        "url": "/product-category/shoes_and_accessories/"
+        "text": "Shop wide-leg denim",
+        "url": "/product-category/clothing/jeans/"
       }
     },
     {
       "heading": "<em>Jewelry</em> and the rest of the outfit",
       "paragraphs": [
         "Straight answer first: we do not list jewelry yet, so this is styling advice rather than a sales pitch. Beside chain mail or sequins, trendy fashion jewelry should stay small — one thin hoop, one fine chain, a stud you forget you have on. The pieces you love most are better saved for plain days, when a cream knit and denim are the ones that need something to happen.",
-        "What we do stock alongside the clothes is the finishing half: cute clothes accessories that complete a look instead of competing with it — <a href=\"/product-category/handbags/\">a bag that keeps quiet</a>, a sandal that repeats the shine already in the outfit. Hair beats a second necklace most days: a claw clip, a clean part, done."
+        "We do not stock bags or shoes either, so the finishing half comes from your own closet: cute clothes accessories that complete a look instead of competing with it — a bag that keeps quiet, a sandal that repeats the shine already in the outfit. <a href=\"/korean-fashion-aesthetic/\">Our guide to bags, hats and glasses</a> has more. Hair beats a second necklace most days: a claw clip, a clean part, done."
       ],
       "bullets": [
         "<strong>One loud thing.</strong> If the skirt sparkles, the top, the bag and the shoes stay plain.",
@@ -96,8 +96,8 @@
         "<strong>Let the bag disappear.</strong> Cream, sand or soft brown does more here than a matching bag ever will."
       ],
       "cta": {
-        "text": "Shop bags and accessories",
-        "url": "/product-category/shoes_and_accessories/"
+        "text": "Read the accessories guide",
+        "url": "/korean-fashion-aesthetic/"
       }
     },
     {

@@ -36,7 +36,7 @@
     "eyebrow": "The cute edit",
     "intro": "Cute means soft and comfy to one person, a little bit extra to the next. These cute fashion ideas are both, bought a piece at a time from small makers in Korea and Thailand, so the outfit still reads as yours. Look twice — that's usually the oops, mine moment.",
     "cta_text": "Shop the cute edit",
-    "cta_url": "/product-category/cute-fashion/"
+    "cta_url": "/product-category/clothing/tops/"
   },
   "category": {
     "slug": "cute-fashion",
@@ -68,7 +68,7 @@
       ],
       "cta": {
         "text": "Shop the cute edit",
-        "url": "/product-category/cute-fashion/"
+        "url": "/product-category/clothing/tops/"
       }
     },
     {
@@ -90,7 +90,7 @@
       ],
       "cta": {
         "text": "Shop comfy and casual",
-        "url": "/product-category/cute-fashion/"
+        "url": "/product-category/clothing/tops/"
       }
     },
     {

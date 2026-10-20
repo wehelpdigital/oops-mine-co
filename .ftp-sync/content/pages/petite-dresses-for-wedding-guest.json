@@ -13,9 +13,9 @@
   ],
   "hero": {
     "eyebrow": "Occasion edit",
-    "intro": "An invitation, a date, and a dress that pools on the floor. Several listings here print the length outright, so you can hold it against your own shoulder-to-floor measurement and know where the hem lands before you buy, not after.",
+    "intro": "An invitation, a date, and a dress that pools on the floor: that is the problem petite dresses for wedding guest season have to solve. Several listings here print the length outright, so you can hold it against your own shoulder-to-floor measurement and know where the hem lands before you buy, not after.",
     "cta_text": "Shop the wedding guest edit",
-    "cta_url": "/product-category/wedding-guest/"
+    "cta_url": "/product-category/clothing/dresses/"
   },
   "category": {
     "slug": "wedding-guest",
@@ -90,7 +90,7 @@
       ],
       "cta": {
         "text": "See the wedding guest edit",
-        "url": "/product-category/wedding-guest/"
+        "url": "/product-category/clothing/dresses/"
       }
     },
     {
@@ -105,7 +105,7 @@
       ],
       "cta": {
         "text": "Shop dresses",
-        "url": "/product-category/dresses/"
+        "url": "/product-category/clothing/dresses/"
       }
     },
     {
@@ -169,7 +169,7 @@
     "heading": "Find something yours",
     "text": "New wedding guest pieces land in small numbers, and a style seldom comes back as the same piece. Leave your email and you will hear about the next ones before the rail thins out.",
     "button_text": "Shop the wedding guest edit",
-    "button_url": "/product-category/wedding-guest/",
+    "button_url": "/product-category/clothing/dresses/",
     "capture_email": true
   },
   "related_slugs": [

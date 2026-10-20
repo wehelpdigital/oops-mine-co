@@ -208,36 +208,47 @@ function omc_pub_post_thumbnails() {
 	// Womenswear and still-life only: the demo library also holds men's shots, and a male model
 	// on "Traditional Thai Clothes" on a womenswear boutique reads as a mistake. Checked by eye
 	// against a contact sheet, not by filename.
+	// file => alt text. The demo library shipped every one of these with an empty alt, so each
+	// journal card and post header was an unlabelled picture: nothing for a screen reader, and the
+	// SEO score marked every post down for it. Written from the photographs themselves; an alt
+	// someone has since typed in the media library is left alone.
 	$pool = [
-		'2023/04/ricky-2127760710.jpg',
-		'2023/04/ricky-2131286131.jpg',
-		'2023/04/ricky-2152926699.jpg',
-		'2023/04/ricky-2152516324.jpg',
-		'2023/04/ricky-2152193566.jpg',
-		'2023/04/ricky-2202377559.jpg',
-		'2023/04/ricky-2347110865.jpg',
-		'2023/04/ricky-2347961730.jpg',
-		'2023/04/ricky-2347791350.jpg',
-		'2023/04/moderno-2338177441.jpg',
-		'2023/04/moderno-2338441644.jpg',
-		'2023/04/moderno-2338813525.jpg',
-		'2023/04/moderno-2346592900.jpg',
-		'2023/04/moderno-2310883787.jpg',
-		'2023/04/moderno-2310427039.jpg',
-		'2023/04/moderno-2327197569.jpg',
-		'2023/04/moderno-2607419203.jpg',
-		'2023/04/moderno-2606815318.jpg',
-		'2023/04/moderno-2606742971.jpg',
-		'2023/04/moderno-2840461420.jpg',
-		'2023/04/moderno-2844197659.jpg',
-		'2023/04/moderno-2842566551.jpg',
+		'2023/04/ricky-2127760710.jpg'   => 'Women in cream knit dresses, beside a close-up of a pointelle halter knit',
+		'2023/04/ricky-2131286131.jpg'   => 'Woman in a camel V-neck knit and white wide-leg trousers, sitting on a rug',
+		'2023/04/ricky-2152926699.jpg'   => 'Woman with curly hair in a champagne satin slip top among palm leaves',
+		'2023/04/ricky-2152516324.jpg'   => 'Olive green structured handbag with a gold clasp, held by its top handle',
+		'2023/04/ricky-2152193566.jpg'   => 'Woman in a cream and sand zebra-print knit sweater',
+		'2023/04/ricky-2202377559.jpg'   => 'Woman in a blue-grey striped knit tank top',
+		'2023/04/ricky-2347110865.jpg'   => 'Blush leather tote bag with a gold charm',
+		'2023/04/ricky-2347961730.jpg'   => 'Woman in a white ruffled camisole and mint trousers',
+		'2023/04/ricky-2347791350.jpg'   => 'Woman in a black button-up shirt worn loose over light-wash jeans',
+		'2023/04/moderno-2338177441.jpg' => 'Woman in a black turtleneck and blazer against a dark backdrop',
+		'2023/04/moderno-2338441644.jpg' => 'Woman with a black bob resting her chin on her hand in soft light',
+		'2023/04/moderno-2338813525.jpg' => 'Woman with tousled hair in a portrait against a pink wall',
+		'2023/04/moderno-2346592900.jpg' => 'Woman in a white halter top and light ripped jeans',
+		'2023/04/moderno-2310883787.jpg' => 'Woman in a floral square-neck crop top, yellow trousers and layered gold necklaces',
+		'2023/04/moderno-2310427039.jpg' => 'Woman in a white script-print tee and black jeans',
+		'2023/04/moderno-2327197569.jpg' => 'Woman in a fitted pale blue sleeveless knit dress',
+		'2023/04/moderno-2607419203.jpg' => 'Three dark evening dresses: drop waist, one-shoulder bow and puff-sleeve mini',
+		'2023/04/moderno-2606815318.jpg' => 'Navy fine-knit crew-neck sweater worn with dark trousers',
+		'2023/04/moderno-2606742971.jpg' => 'Cream quilted shoulder bag on a gold chain, worn with a black outfit',
+		'2023/04/moderno-2840461420.jpg' => 'Two women in cream knit dresses on pale stone steps beside a potted plant',
+		'2023/04/moderno-2844197659.jpg' => 'Neutral knits and a snake-print blouse on hangers beside dried pampas grass',
+		'2023/04/moderno-2842566551.jpg' => 'Boutique interior with colourful clothing rails and folded knits on a table',
 	];
 
 	$ids = [];
-	foreach ( $pool as $file ) {
+	foreach ( $pool as $file => $alt ) {
 		$id = omc_pub_attachment_by_file( $file );
-		if ( $id ) {
-			$ids[] = $id;
+		if ( ! $id ) {
+			continue;
+		}
+		$ids[] = $id;
+		if ( '' === trim( (string) get_post_meta( $id, '_wp_attachment_image_alt', true ) ) ) {
+			omc_pub_note( "attachment #{$id} ({$file}): alt text set" );
+			if ( ! omc_pub_dry() ) {
+				update_post_meta( $id, '_wp_attachment_image_alt', $alt );
+			}
 		}
 	}
 	if ( ! $ids ) {
@@ -829,6 +840,11 @@ $about_content = <<<'HTML'
 <p class="omc-eyebrow">More than a boutique</p>
 <h2>It continues because we get to share those finds <em>with you.</em></h2>
 <p>Oops, Mine Co. started with a simple love for finding beautiful and unique things. Every collection, every new arrival, and every piece we bring in reflects the same idea: choose well, find something special — and when you know, you know.</p>
+
+<p class="omc-eyebrow">What you’ll find</p>
+<h2>A chic boutique for <em>Korean and Thai fashion.</em></h2>
+<p>Most of what we carry comes from Korea and Thailand, with the odd find from Vietnam and beyond. So you’ll find <a href="/korean-fashion/">Korean fashion</a> for women — soft knits, pleated skirts, easy denim — next to <a href="/thai-fashion/">Thai fashion</a> in light fabrics made for warm days.</p>
+<p>Fit matters as much as the find. That’s why there are <a href="/petite-dresses/">petite dresses for women</a> and <a href="/petite-dresses-for-wedding-guest/">petite dresses for wedding guest</a> invitations, <a href="/chic-boho-clothes/">chic boho clothes</a> for slow weekends, and <a href="/affordable-luxury-clothes/">affordable luxury clothes</a> for the days you want the fabric to do the talking. New pieces go up every week, in small batches. That’s the chic boutique we set out to build: fewer pieces, better chosen.</p>
 <p class="omc-signoff">Welcome to Oops, Mine Co.<br>Your next “Oops, Mine” moment might be right around the corner.</p>
 HTML;
 
@@ -840,7 +856,15 @@ $about = omc_pub_upsert_post( [
 	'post_content'  => $about_content,
 	'post_excerpt'  => 'Oops, Mine Co. is a curated boutique of Korean and Thai fashion — pieces chosen with intention, for the moment you see something and think: oops, mine. Read our story.',
 	'page_template' => 'templates/page-about.php',
-	'meta'          => [ 'omc_tagline' => 'Found with intention. Claimed on instinct.', '_header_height' => 'hide' ],
+	'meta'          => [
+		'omc_tagline'           => 'Found with intention. Claimed on instinct.',
+		'_header_height'        => 'hide',
+		/* "chic boutique" is one of the highest-volume phrases researched, and this is the page that
+		   says what kind of boutique this is — the "What you'll find" section above carries it. */
+		'_whd_focus_keyphrase'  => 'chic boutique',
+		'_omc_seo_title'        => 'About Oops, Mine Co. — A Chic Boutique for Asian Fashion',
+		'_omc_meta_description' => 'Oops, Mine Co. is a chic boutique for Korean and Thai fashion: pieces chosen with intention, in small batches, for the moment you think oops, mine.',
+	],
 ] );
 $about_id    = $about['id'];
 $log['about_page'] = [ 'id' => $about_id, 'url' => $about_id ? get_permalink( $about_id ) : null ];

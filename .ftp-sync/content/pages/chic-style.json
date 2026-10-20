@@ -24,9 +24,9 @@
   ],
   "hero": {
     "eyebrow": "Style edit",
-    "intro": "Clean shapes, good fabric, and one detail that makes a plain thing yours. Nothing here shouts. It fits well, mixes with what you already own, and gets asked about more than the loud pieces ever do.",
+    "intro": "Chic style is clean shapes, good fabric, and one detail that makes a plain thing yours. Nothing here shouts. It fits well, mixes with what you already own, and gets asked about more than the loud pieces ever do.",
     "cta_text": "Shop the chic edit",
-    "cta_url": "/product-category/chic-style/"
+    "cta_url": "/product-category/clothing/sweaters-knits/"
   },
   "category": {
     "slug": "chic-style",
@@ -60,7 +60,7 @@
       ],
       "cta": {
         "text": "Shop the chic edit",
-        "url": "/product-category/chic-style/"
+        "url": "/product-category/clothing/sweaters-knits/"
       }
     },
     {
@@ -69,11 +69,11 @@
         "Chic is a method, not one look — it stretches to vintage, coastal and elegant without changing the rules. Five that come up often, each built from one shape and kept quiet everywhere else."
       ],
       "bullets": [
-        "<strong>Casual chic fashion.</strong> Straight jeans, a fine knit, one gold chain, a loafer. Fit does the work, not effort — a knit that skims instead of clinging changes the whole outfit. Start in <a href=\"/product-category/casual/\">casual</a>.",
-        "<strong>Modern chic fashion.</strong> Clean lines, one column of color, a shoulder with a little structure in it. Goes to a meeting and then to dinner with no costume change in between. See <a href=\"/product-category/workwear/\">workwear</a>.",
-        "<strong>French chic fashion.</strong> A midi skirt, a fitted top, a light coat, hair that looks unplanned. Restraint plus one good fabric, nothing more. Start with the <a href=\"/product-category/skirts/\">skirts</a>.",
-        "<strong>Sporty chic fashion.</strong> A clean white sneaker under a knit dress, or a soft track pant with a silk blouse. One athletic piece, everything else grown-up. Browse <a href=\"/product-category/shoes_and_accessories/\">shoes and accessories</a>.",
-        "<strong>Rock chic fashion.</strong> A deep brown leather moto over a slip dress, silver hardware, a boot with some weight to it. Keep the edge in one piece and let the rest stay soft. Pair it with <a href=\"/product-category/jeans_and_denim/\">denim</a>."
+        "<strong>Casual chic fashion.</strong> Straight jeans, a fine knit, one gold chain, a loafer. Fit does the work, not effort — a knit that skims instead of clinging changes the whole outfit. Start in <a href=\"/product-category/clothing/jeans/\">jeans</a>.",
+        "<strong>Modern chic fashion.</strong> Clean lines, one column of color, a shoulder with a little structure in it. Goes to a meeting and then to dinner with no costume change in between. See <a href=\"/product-category/clothing/jackets-outerwear/\">jackets</a>.",
+        "<strong>French chic fashion.</strong> A midi skirt, a fitted top, a light coat, hair that looks unplanned. Restraint plus one good fabric, nothing more. Start with the <a href=\"/product-category/clothing/skirts/\">skirts</a>.",
+        "<strong>Sporty chic fashion.</strong> A clean white sneaker under a knit dress, or a soft track pant with a silk blouse. One athletic piece, everything else grown-up. Read <a href=\"/sporty-chic-fashion/\">the full sporty chic guide</a>.",
+        "<strong>Rock chic fashion.</strong> A deep brown leather moto over a slip dress, silver hardware, a boot with some weight to it. Keep the edge in one piece and let the rest stay soft. Pair it with <a href=\"/product-category/clothing/jeans/\">denim</a>."
       ]
     },
     {
@@ -88,7 +88,7 @@
       ],
       "cta": {
         "text": "Shop dresses",
-        "url": "/product-category/dresses/"
+        "url": "/product-category/clothing/dresses/"
       }
     },
     {
@@ -118,7 +118,7 @@
       ],
       "cta": {
         "text": "See what is in the edit now",
-        "url": "/product-category/chic-style/"
+        "url": "/product-category/clothing/sweaters-knits/"
       }
     }
   ],

@@ -18,9 +18,9 @@
   ],
   "hero": {
     "eyebrow": "Style notes",
-    "intro": "Five looks, five names, and not one of them needs a stage or a stylist. Each is built from pieces a normal closet already holds: a mini, a knit, denim, sneakers, with one piece doing all the talking. Take the shapes and swap the rest.",
+    "intro": "Five kpop outfit ideas, five names, and not one of them needs a stage or a stylist. Each one starts from pieces a normal closet already holds: a mini, a knit, denim, sneakers, with one piece doing all the talking. Take the shapes and swap the rest.",
     "cta_text": "Shop the K-Pop Inspired edit",
-    "cta_url": "/product-category/kpop-fashion/"
+    "cta_url": "/kpop-fashion/"
   },
   "sections": [
     {
@@ -34,7 +34,7 @@
       "heading": "Look one: the uniform, minus the <em>school</em>",
       "paragraphs": [
         "A short lined mini, a collared shirt, a fine knit or a vest on top, loafers or low sneakers, socks showing. It is one of the most copied shapes in K-pop styling because it reads tidy and a little sharp at the same time. Keep the skirt short but properly lined so nobody spends the day tugging at it, keep the shirt soft rather than stiff, and let the sock do something small: a ribbed cuff, a color that sits nowhere near the rest of the outfit.",
-        "A pleated mini takes the softer route and a leather one takes the sharper edge. The leather is the one we stock: a yoke-waist mini in the <a href=\"/product-category/kpop-fashion/\">K-Pop Inspired edit</a>. The part people miss is the break: a cardigan instead of a blazer, a bag that is clearly not a school bag, hair up with one clip. Uniform shapes go stiff the moment every piece in them agrees with every other piece."
+        "A pleated mini takes the softer route and a leather one takes the sharper edge. The leather is the one we stock: a yoke-waist mini in the <a href=\"/kpop-fashion/\">K-Pop Inspired edit</a>. The part people miss is the break: a cardigan instead of a blazer, a bag that is clearly not a school bag, hair up with one clip. Uniform shapes go stiff the moment every piece in them agrees with every other piece."
       ],
       "bullets": [
         "Mini skirt, lined — pleated for softer, a yoke waist for sharper.",
@@ -44,7 +44,7 @@
       ],
       "cta": {
         "text": "See the minis",
-        "url": "/product-category/kpop-fashion/"
+        "url": "/kpop-fashion/"
       }
     },
     {
@@ -55,7 +55,7 @@
       ],
       "cta": {
         "text": "Shop denim and sneakers",
-        "url": "/product-category/korean-fashion/"
+        "url": "/korean-fashion/"
       }
     },
     {
@@ -66,7 +66,7 @@
       ],
       "cta": {
         "text": "Shop knit dresses",
-        "url": "/product-category/kpop-fashion/"
+        "url": "/kpop-fashion/"
       }
     },
     {
@@ -77,7 +77,7 @@
       ],
       "cta": {
         "text": "Browse statement pieces",
-        "url": "/product-category/statement-pieces/"
+        "url": "/statement-pieces/"
       }
     },
     {
@@ -125,7 +125,7 @@
     },
     {
       "q": "Do these looks work if I am petite?",
-      "a": "Yes, with one adjustment: watch where each hem lands rather than the size on the label. Minis stay mini, but a midi can read maxi and a cropped knit can sit at the wrong point on a shorter torso. Shop the measurements on the product page, or start with our <a href=\"/product-category/petite-clothing/\">petite clothing</a> edit, where the proportions are picked for a shorter frame."
+      "a": "Yes, with one adjustment: watch where each hem lands rather than the size on the label. Minis stay mini, but a midi can read maxi and a cropped knit can sit at the wrong point on a shorter torso. Shop the measurements on the product page, or start with our <a href=\"/petite-clothes-for-women/\">petite clothing</a> edit, where the proportions are picked for a shorter frame."
     },
     {
       "q": "Can I wear any of this to work or to class?",
@@ -133,7 +133,7 @@
     },
     {
       "q": "What should I wear to a K-pop concert?",
-      "a": "Something you can stand in for hours, with one piece worth photographing. Straight denim or a lined mini, a fitted top, and sneakers you have already broken in cover it, and a cardigan or an oversized shirt handles a room that swings between warm and cold. If you want shine, keep it to one piece and leave the rest matte, the way look four is built. That one piece usually comes from our <a href=\"/product-category/statement-pieces/\">statement pieces</a> edit."
+      "a": "Something you can stand in for hours, with one piece worth photographing. Straight denim or a lined mini, a fitted top, and sneakers you have already broken in cover it, and a cardigan or an oversized shirt handles a room that swings between warm and cold. If you want shine, keep it to one piece and leave the rest matte, the way look four is built. That one piece usually comes from our <a href=\"/statement-pieces/\">statement pieces</a> edit."
     },
     {
       "q": "How do I dress in kpop style without looking like I am in costume?",
@@ -148,7 +148,7 @@
     "heading": "Find something <em>yours</em>",
     "text": "Pieces land in small batches and the good sizes go home with someone quickly, usually with a quiet \"oops, mine\". Leave your email and we tell you when the next K-pop pieces land.",
     "button_text": "Shop the K-Pop Inspired edit",
-    "button_url": "/product-category/kpop-fashion/",
+    "button_url": "/kpop-fashion/",
     "capture_email": true
   },
   "related_slugs": [

@@ -31,7 +31,7 @@
     "eyebrow": "Style notes",
     "intro": "Honest part first: Oops, Mine Co. is a womenswear boutique, so treat this as a style guide and not a men's shop. But Korean fashion men's clothing is one of the looks we get asked about most — by partners, by gift shoppers, by women who want the proportions for themselves. So here it is, piece by piece.",
     "cta_text": "Shop the women's Korean edit",
-    "cta_url": "/product-category/korean-fashion/"
+    "cta_url": "/korean-fashion/"
   },
   "sections": [
     {
@@ -86,11 +86,11 @@
       "heading": "<em>Winter Korean fashion men</em> wear is a layering problem",
       "paragraphs": [
         "Winter Korean fashion men wear is built out of layers instead of one heavy coat, because a winter day there is a run of cold streets and warm rooms. A thin base, a knit, an overshirt, then the outer piece. Each layer has to look like clothing on its own, since two of them come off the moment you sit down.",
-        "The outer piece is usually a long wool coat that covers the trouser, or a padded jacket with enough loft to read as a shape rather than a sleeping bag. Finish with a long scarf, a knit beanie, and one warm neutral repeated lower down so the top half is not doing all the talking. Our own winter buy is womenswear, but the <a href=\"/product-category/korean-winter-fashion/\">Korean winter</a> pieces are built on the same thinking."
+        "The outer piece is usually a long wool coat that covers the trouser, or a padded jacket with enough loft to read as a shape rather than a sleeping bag. Finish with a long scarf, a knit beanie, and one warm neutral repeated lower down so the top half is not doing all the talking. Our own winter buy is womenswear, but the <a href=\"/korean-winter-fashion/\">Korean winter</a> pieces are built on the same thinking."
       ],
       "cta": {
         "text": "See the women's winter edit",
-        "url": "/product-category/korean-winter-fashion/"
+        "url": "/korean-winter-fashion/"
       }
     },
     {
@@ -104,11 +104,11 @@
     {
       "heading": "If you came here for <em>yourself</em>",
       "paragraphs": [
-        "We do not stock menswear, so nothing above is a list you can fill here — take the guide shopping anywhere you like. What we do buy from Korea, in small runs, is the women's side of the same idea: the volume, the neutrals, the fabric that holds a line, the detail you have to look twice at. If that is what brought you in, the <a href=\"/product-category/korean-fashion/\">Korean Fashion</a> edit is where it lives, and our <a href=\"/korean-street-style/\">Korean fashion styles</a> guide goes further into the aesthetics."
+        "We do not stock menswear, so nothing above is a list you can fill here — take the guide shopping anywhere you like. What we do buy from Korea, in small runs, is the women's side of the same idea: the volume, the neutrals, the fabric that holds a line, the detail you have to look twice at. If that is what brought you in, the <a href=\"/korean-fashion/\">Korean Fashion</a> edit is where it lives, and our <a href=\"/korean-street-style/\">Korean fashion styles</a> guide goes further into the aesthetics."
       ],
       "cta": {
         "text": "Shop Korean fashion",
-        "url": "/product-category/korean-fashion/"
+        "url": "/korean-fashion/"
       }
     }
   ],
@@ -135,7 +135,7 @@
     },
     {
       "q": "Can women wear these pieces?",
-      "a": "Constantly, and many do. Oversized shirting, wide trousers, fine knits and long coats are not gendered shapes, and the women's versions are cut with the same restraint. A good part of what we buy is exactly that: the same quiet proportion in a women's fit. Start with the <a href=\"/product-category/korean-fashion/\">Korean Fashion</a> edit and pick the piece that makes you look twice."
+      "a": "Constantly, and many do. Oversized shirting, wide trousers, fine knits and long coats are not gendered shapes, and the women's versions are cut with the same restraint. A good part of what we buy is exactly that: the same quiet proportion in a women's fit. Start with the <a href=\"/korean-fashion/\">Korean Fashion</a> edit and pick the piece that makes you look twice."
     }
   ],
   "cta": {
@@ -143,7 +143,7 @@
     "heading": "Find something <em>yours</em>",
     "text": "New Korean pieces land in small batches and leave quietly — womenswear, chosen one at a time. Leave your email and you hear when the next ones arrive, while your size is still on the page.",
     "button_text": "Shop Korean fashion",
-    "button_url": "/product-category/korean-fashion/",
+    "button_url": "/korean-fashion/",
     "capture_email": true
   },
   "related_slugs": [

@@ -34,9 +34,9 @@
   ],
   "hero": {
     "eyebrow": "The Korean edit",
-    "intro": "One rail, chosen piece by piece: knit dresses, pleated midis, easy denim and the small detail you only catch on the second look. Nothing here was bought by the crate, so the odds of meeting your own outfit at brunch stay pleasantly low.",
+    "intro": "Our Korean fashion online store is one rail, chosen piece by piece: knit dresses, pleated midis, easy denim and the small detail you only catch on the second look. Nothing here came by the crate, so the odds of meeting your own outfit at brunch stay pleasantly low.",
     "cta_text": "Shop the Korean edit",
-    "cta_url": "/product-category/korean-fashion/"
+    "cta_url": "/product-category/clothing/"
   },
   "category": {
     "slug": "korean-fashion",
@@ -52,7 +52,7 @@
         "Korean fashion and style gets the small things right, and the small things are the whole trick. A shoulder seam that lands where your shoulder ends. A sleeve cut to finish at the prettiest part of the wrist. A covered button, a soft pleat, a collar that turns a plain shirt into a conversation. The shapes read loose and easy, yet they are drawn on purpose, which is why good Korean fashion wear can look quiet in a photograph and then surprise you the moment it is on.",
         "A shop selling it owes you more than a grid of borrowed supplier pictures. We keep one rail and choose it by hand: knits that hold their shape after a wash, lining where lining earns its place, seams that sit flat under a coat. We pick Korean fashion women actually wear on a Tuesday morning, not only in a studio. If a piece feels thin, stiff or scratchy in our hands, it never reaches the site."
       ],
-      "cta": { "text": "Shop the Korean edit", "url": "/product-category/korean-fashion/" }
+      "cta": { "text": "Shop the Korean edit", "url": "/product-category/clothing/" }
     },
     {
       "heading": "How we shop for you, and why the batches stay <em>small</em>",
@@ -66,7 +66,7 @@
         "A wide color range: cream, sand, soft pink, brown, blue, green",
         "The sizes each maker runs, with flat measurements on the listing wherever we have them"
       ],
-      "cta": { "text": "Shop the Korean edit", "url": "/product-category/korean-fashion/" }
+      "cta": { "text": "Shop the Korean edit", "url": "/product-category/clothing/" }
     },
     {
       "heading": "Dresses: <em>casual</em>, formal and the ones in between",
@@ -74,7 +74,7 @@
         "A dress is the quickest way into this style. A Korean fashion casual dress — cotton, jersey, a soft knit — handles the errands and the coffee and asks nothing of you beyond sneakers and a tote. A Korean fashion formal dress leans on texture instead of sparkle: fine pleating, a tie waist, a collar with something to say. It reads dressed up without dressing you up.",
         "If you have typed “dress korean fashion” into a search box and met the same ten sites selling one borrowed photo, start at the rail instead. The Korean fashion clothes for women we carry live in cream, sand, soft pink, brown, blue and green, so the piece you pick can stand beside the coat already in your closet rather than argue with it."
       ],
-      "cta": { "text": "Shop dresses", "url": "/product-category/dresses/" }
+      "cta": { "text": "Shop dresses", "url": "/product-category/clothing/dresses/" }
     },
     {
       "heading": "Skirts, pants and <em>jeans</em> for an ordinary week",
@@ -83,11 +83,11 @@
         "Korean fashion jeans sit between comfort and structure: firm enough to hold a line, soft enough for a ten-hour day. The sporty end counts too. Korean golf clothes pushed pleated skorts, collared knits and quarter-zips into everyday dressing, and you can see that influence in our separates even when a piece was never meant for a green."
       ],
       "bullets": [
-        "<a href=\"/product-category/skirts/\">Skirts</a> — pleated midis, A-lines and soft columns",
-        "<a href=\"/product-category/jeans_and_denim/\">Jeans and denim</a> — straight, skinny and easy-waist cuts",
-        "<a href=\"/product-category/korean-fashion/\">The Korean edit</a> — dresses, knits, denim and sneakers on one rail"
+        "<a href=\"/product-category/clothing/skirts/\">Skirts</a> — pleated midis, A-lines and soft columns",
+        "<a href=\"/product-category/clothing/jeans/\">Jeans and denim</a> — straight, skinny and easy-waist cuts",
+        "<a href=\"/product-category/clothing/\">The Korean edit</a> — dresses, knits, denim and sneakers on one rail"
       ],
-      "cta": { "text": "Shop skirts", "url": "/product-category/skirts/" }
+      "cta": { "text": "Shop skirts", "url": "/product-category/clothing/skirts/" }
     },
     {
       "heading": "Three ways to <em>wear</em> it this week",
@@ -99,7 +99,7 @@
         "Coffee that becomes dinner — a knit midi dress, a cropped cardigan over the shoulders, low boots. Lose the cardigan, add a thin belt, and the evening is handled.",
         "Saturday — straight jeans, an oversized shirt half tucked, one fine gold chain. Korean clothes casual enough for the train and sharp enough for the photo somebody takes of you."
       ],
-      "cta": { "text": "Shop denim", "url": "/product-category/jeans_and_denim/" }
+      "cta": { "text": "Shop denim", "url": "/product-category/clothing/jeans/" }
     },
     {
       "heading": "Fit and sizing, without the <em>guesswork</em>",

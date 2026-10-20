@@ -15,9 +15,9 @@
   ],
   "hero": {
     "eyebrow": "Evening edit",
-    "intro": "Satin, sequins and one very good column gown, chosen for a shorter frame first. We read the length before we fall for the photograph, and we'll give you the number, measured on request, so you know where the hem lands before you buy. Look twice: the detail is usually why we bought it.",
+    "intro": "Petite dresses evening wear, done properly: satin, sequins and one very good column gown, chosen for a shorter frame first. We read the length before we fall for the photograph, and we'll give you the number, measured on request, so you know where the hem lands before you buy. Look twice: the detail is usually why we bought it.",
     "cta_text": "Shop the evening edit",
-    "cta_url": "/product-category/evening/"
+    "cta_url": "/product-category/clothing/dresses/"
   },
   "category": {
     "slug": "evening",
@@ -63,7 +63,7 @@
       ],
       "cta": {
         "text": "Shop all evening pieces",
-        "url": "/product-category/evening/"
+        "url": "/product-category/clothing/dresses/"
       }
     },
     {
@@ -78,7 +78,7 @@
       ],
       "cta": {
         "text": "Shop dresses",
-        "url": "/product-category/dresses/"
+        "url": "/product-category/clothing/dresses/"
       }
     },
     {
@@ -117,7 +117,7 @@
       ],
       "cta": {
         "text": "Shop the evening edit",
-        "url": "/product-category/evening/"
+        "url": "/product-category/clothing/dresses/"
       }
     }
   ],
@@ -147,7 +147,7 @@
     "heading": "Find something yours",
     "text": "New evening pieces land in small numbers and leave quickly. Tell us where to send them and you'll see them first, one unexpected find at a time.",
     "button_text": "Shop the evening edit",
-    "button_url": "/product-category/evening/",
+    "button_url": "/product-category/clothing/dresses/",
     "capture_email": true
   },
   "related_slugs": [
