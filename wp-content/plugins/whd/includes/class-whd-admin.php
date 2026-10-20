@@ -675,7 +675,15 @@ final class WHD_Admin {
 		$ctx     = WHD_Emails::preview_context( $id );
 		$to      = wp_get_current_user()->user_email;
 		$subject = '[TEST] ' . wp_strip_all_tags( WHD_Blocks::merge( $design['settings']['subject'] ?: get_bloginfo( 'name' ), $ctx ) );
-		$ok      = wp_mail( $to, $subject, WHD_Blocks::render( $design, 'email', $ctx ), [ 'Content-Type: text/html; charset=UTF-8' ] );
+		/*
+		 * The same sender as the real thing. A test that arrives from "WordPress" tests nothing
+		 * about whether the real one is delivered: WooCommerce's emails go from its own address,
+		 * WHD's from WHD_Emails::sender().
+		 */
+		$headers = WHD_Emails::triggers()[ $id ]['template'] && function_exists( 'WC' )
+			? [ 'Content-Type: text/html; charset=UTF-8', 'From: ' . WC()->mailer()->get_from_name() . ' <' . WC()->mailer()->get_from_address() . '>' ]
+			: WHD_Emails::headers();
+		$ok      = wp_mail( $to, $subject, WHD_Blocks::render( $design, 'email', $ctx ), $headers );
 		return [ 'sent' => (bool) $ok, 'to' => $to ];
 	}
 }

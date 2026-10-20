@@ -24,10 +24,14 @@ final class WHD_Emails {
 			'customer_on_hold_order'    => [ 'label' => __( 'Order on hold (awaiting payment)', 'whd' ), 'group' => 'customer', 'template' => 'emails/customer-on-hold-order.php' ],
 			'customer_completed_order'  => [ 'label' => __( 'Order completed / shipped', 'whd' ), 'group' => 'customer', 'template' => 'emails/customer-completed-order.php' ],
 			'customer_refunded_order'   => [ 'label' => __( 'Order refunded', 'whd' ), 'group' => 'customer', 'template' => 'emails/customer-refunded-order.php' ],
+			// WooCommerce 9+ also writes to the customer when an order fails or is cancelled.
+			'customer_failed_order'     => [ 'label' => __( 'Order failed (payment did not go through)', 'whd' ), 'group' => 'customer', 'template' => 'emails/customer-failed-order.php' ],
+			'customer_cancelled_order'  => [ 'label' => __( 'Order cancelled', 'whd' ), 'group' => 'customer', 'template' => 'emails/customer-cancelled-order.php' ],
 			'customer_invoice'          => [ 'label' => __( 'Invoice / order details', 'whd' ), 'group' => 'customer', 'template' => 'emails/customer-invoice.php' ],
 			'customer_note'             => [ 'label' => __( 'Note to customer', 'whd' ), 'group' => 'customer', 'template' => 'emails/customer-note.php' ],
 			'customer_new_account'      => [ 'label' => __( 'New account welcome', 'whd' ), 'group' => 'customer', 'template' => 'emails/customer-new-account.php' ],
 			'customer_reset_password'   => [ 'label' => __( 'Password reset', 'whd' ), 'group' => 'customer', 'template' => 'emails/customer-reset-password.php' ],
+			'customer_verify_email'     => [ 'label' => __( 'Confirm email address', 'whd' ), 'group' => 'customer', 'template' => 'emails/customer-verify-email.php' ],
 			'abandoned_cart'            => [ 'label' => __( 'Abandoned cart — 1 h: friendly reminder', 'whd' ), 'group' => 'automation', 'template' => '' ],
 			'abandoned_cart_2'          => [ 'label' => __( 'Abandoned cart — 24 h: still available + social proof', 'whd' ), 'group' => 'automation', 'template' => '' ],
 			'abandoned_cart_3'          => [ 'label' => __( 'Abandoned cart — 48 h: 10% incentive', 'whd' ), 'group' => 'automation', 'template' => '' ],
@@ -131,6 +135,9 @@ final class WHD_Emails {
 			'customer_on_hold_order'    => [ 'Your order #{order_number} is on hold', [ $brand, $heading( 'Almost there, {first_name}.' ), $text( 'Your order is on hold until we confirm payment. As soon as it clears, we’ll get your pieces moving.' ), $items, $summary, $button( 'Complete payment', '{payment_url}' ), $signoff ] ],
 			'customer_completed_order'  => [ 'Your Oops, Mine order #{order_number} is on its way', [ $brand, $heading( 'On its way to you.' ), $text( 'Order #{order_number} has shipped. We hope it feels exactly like you hoped it would.' ), $items, $summary, $button( 'Track your order', '{order_url}' ), $signoff ] ],
 			'customer_refunded_order'   => [ 'Your refund for order #{order_number}', [ $brand, $heading( 'Your refund is on its way.' ), $text( 'We’ve refunded order #{order_number}. Depending on your bank, it can take a few days to appear.' ), $items, $summary, $signoff ] ],
+			'customer_failed_order'     => [ 'Your order #{order_number} did not go through', [ $brand, $heading( 'The payment did not go through, {first_name}.' ), $text( 'Order #{order_number} was not completed, so nothing has been charged for it. Your pieces are still listed below — you can try the payment again whenever you are ready.' ), $items, $button( 'Try the payment again', '{payment_url}' ), $signoff ] ],
+			'customer_cancelled_order'  => [ 'Your order #{order_number} has been cancelled', [ $brand, $heading( 'Order #{order_number} is cancelled.' ), $text( 'Your order has been cancelled. If that comes as a surprise, reply to this email and we will look into it.' ), $items, $summary, $signoff ] ],
+			'customer_verify_email'     => [ 'Confirm your email address for {site_name}', [ $brand, $heading( 'One quick check, {first_name}.' ), $text( 'Please confirm that <strong>{email}</strong> is your email address. The link works once.' ), $button( 'Confirm my email', '{verify_url}' ), $text( 'If you did not ask for this, you can ignore this email.' ), $signoff ] ],
 			'customer_invoice'          => [ 'Order #{order_number} from {site_name}', [ $brand, $heading( 'Your order details' ), $text( 'Here are the details for order #{order_number}, placed on {order_date}.' ), $items, $summary, $button( 'Pay for this order', '{payment_url}' ), $signoff ] ],
 			'customer_note'             => [ 'A note about your order #{order_number}', [ $brand, $heading( 'A quick note from us' ), $text( '{customer_note}' ), $items, $button( 'View your order', '{order_url}' ), $signoff ] ],
 			'customer_new_account'      => [ 'Welcome to {site_name}', [ $brand, $heading( 'Welcome, {first_name}.' ), $text( 'Your account is ready. Save your details, follow your orders and keep a wishlist of the pieces that caught your eye.' ), $button( 'Go to my account', '{my_account_url}' ), $signoff ] ],
@@ -178,18 +185,27 @@ final class WHD_Emails {
 			if ( ! $t['template'] ) {
 				continue;
 			}
-			add_filter( "woocommerce_email_subject_{$id}", function ( $subject, $object = null ) use ( $id ) {
-				$design = self::get( $id );
-				if ( empty( $design['settings']['enabled'] ) || '' === trim( $design['settings']['subject'] ) ) {
-					return $subject;
-				}
-				$ctx = self::context( [
-					'order' => $object instanceof WC_Order ? $object : null,
-					'user'  => $object instanceof WP_User ? $object : null,
-				] );
-				return wp_strip_all_tags( WHD_Blocks::merge( $design['settings']['subject'], $ctx ) );
-			}, 20, 2 );
+			// An invoice for an order already paid takes WooCommerce's "paid" subject, through its own filter.
+			$hooks = 'customer_invoice' === $id ? [ $id, 'customer_invoice_paid' ] : [ $id ];
+			foreach ( $hooks as $hook ) {
+				self::subject_filter( $hook, $id );
+			}
 		}
+	}
+
+	/** Swap WooCommerce's subject for the design's when the design is switched on. */
+	private static function subject_filter( $hook, $id ) {
+		add_filter( "woocommerce_email_subject_{$hook}", function ( $subject, $object = null ) use ( $id ) {
+			$design = self::get( $id );
+			if ( empty( $design['settings']['enabled'] ) || '' === trim( $design['settings']['subject'] ) ) {
+				return $subject;
+			}
+			$ctx = self::context( [
+				'order' => $object instanceof WC_Order ? $object : null,
+				'user'  => $object instanceof WP_User ? $object : null,
+			] );
+			return wp_strip_all_tags( WHD_Blocks::merge( $design['settings']['subject'], $ctx ) );
+		}, 20, 2 );
 	}
 
 	/** Called from templates/wc-email.php with the variables WooCommerce passed to the template. */
@@ -217,6 +233,15 @@ final class WHD_Emails {
 		}
 		if ( isset( $vars['customer_note'] ) ) {
 			$data['customer_note'] = wptexturize( wp_kses_post( nl2br( $vars['customer_note'] ) ) );
+		}
+		// "Confirm your email" carries no order or user, only these.
+		if ( ! empty( $vars['verify_url'] ) ) {
+			$data['verify_url'] = $vars['verify_url'];
+		}
+		if ( ! empty( $vars['user_email'] ) && empty( $args['order'] ) && empty( $args['user'] ) ) {
+			$data['email']         = $vars['user_email'];
+			$data['customer_name'] = (string) ( $vars['user_display_name'] ?? '' );
+			$data['first_name']    = (string) strtok( (string) ( $vars['user_display_name'] ?? '' ), ' ' ) ?: __( 'there', 'whd' );
 		}
 		$args['data'] = $data;
 		return WHD_Blocks::render( $design, 'email', self::context( $args ) );
@@ -376,6 +401,7 @@ final class WHD_Emails {
 			'customer_note'    => __( 'Your parcel is on its way — we added a little something extra.', 'whd' ),
 			'unsubscribe_url'  => home_url( '/?whd_unsub=sample' ),
 			'recovery_url'     => home_url( '/?whd_recover=sample' ),
+			'verify_url'       => home_url( '/my-account/?verify=sample' ),
 		] ];
 		if ( function_exists( 'wc_get_orders' ) ) {
 			$orders = wc_get_orders( [ 'limit' => 1, 'orderby' => 'date', 'order' => 'DESC', 'type' => 'shop_order' ] );
@@ -432,15 +458,9 @@ final class WHD_Emails {
 		if ( ! $design || ( ! $force && empty( $design['settings']['enabled'] ) ) ) {
 			return false;
 		}
-		$settings = WHD_Plugin::settings();
-		$subject  = wp_strip_all_tags( WHD_Blocks::merge( $design['settings']['subject'] ?: get_bloginfo( 'name' ), $ctx ) );
-		$html     = WHD_Blocks::render( $design, 'email', $ctx );
-		$headers  = [ 'Content-Type: text/html; charset=UTF-8' ];
-		list( $from, $reply_to ) = self::sender();
-		$headers[] = 'From: ' . sanitize_text_field( $settings['from_name'] ?: get_bloginfo( 'name' ) ) . ' <' . $from . '>';
-		if ( $reply_to ) {
-			$headers[] = 'Reply-To: ' . $reply_to;
-		}
+		$subject = wp_strip_all_tags( WHD_Blocks::merge( $design['settings']['subject'] ?: get_bloginfo( 'name' ), $ctx ) );
+		$html    = WHD_Blocks::render( $design, 'email', $ctx );
+		$headers = self::headers();
 
 		$error = null;
 		$catch = function ( $e ) use ( &$error ) {
@@ -454,6 +474,17 @@ final class WHD_Emails {
 			WHD_Integrations::log( 'email', 0, sprintf( '%s to %s — not sent: %s', $id, $to, is_wp_error( $error ) ? $error->get_error_message() : 'wp_mail() refused it' ) );
 		}
 		return $sent;
+	}
+
+	/** Mail headers for anything WHD sends itself: HTML, the shop's sender, and the reply-to. */
+	public static function headers(): array {
+		list( $from, $reply_to ) = self::sender();
+		$name    = sanitize_text_field( WHD_Plugin::settings()['from_name'] ?: get_bloginfo( 'name' ) );
+		$headers = [ 'Content-Type: text/html; charset=UTF-8', 'From: ' . $name . ' <' . $from . '>' ];
+		if ( $reply_to ) {
+			$headers[] = 'Reply-To: ' . $reply_to;
+		}
+		return $headers;
 	}
 
 	/**

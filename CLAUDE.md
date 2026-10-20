@@ -214,7 +214,14 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
 - Emails take over WooCommerce via the `woocommerce_locate_template` filter (enabled designs point at
   `templates/wc-email.php`) and `woocommerce_email_subject_{id}`; disabled triggers keep WooCommerce defaults.
   `abandoned_cart` and `welcome_subscriber` are custom triggers sent with `wp_mail()`. Merge tags come from
-  `WHD_Emails::context()`; `preview_context()` fabricates data when the store has no orders.
+  `WHD_Emails::context()`; `preview_context()` fabricates data when the store has no orders. Every customer
+  email WooCommerce 11 sends is a trigger, including `customer_failed_order`, `customer_cancelled_order` and
+  `customer_verify_email` (its one-time `{verify_url}` comes from the template vars) — those three ship with the
+  WHD design off. A paid invoice takes WooCommerce's separate `customer_invoice_paid` subject filter. The editor's
+  "Send test email" uses the real sender (WooCommerce's for WooCommerce triggers, `WHD_Emails::headers()` for the
+  rest). A scratchpad test fires every trigger by its real event (order statuses, refund, note, invoice, account,
+  reset, verify, a cart aged 50 h through three cron runs, a restock, the stylist, sign-ups, contact form, review)
+  with mail and Klaviyo intercepted; all 20 send, and the six inputs reach Klaviyo as list or profile.
 - Email platform (`WHD_Integrations`, option `whd_integrations`): Mailchimp / Klaviyo / webhook. Two paths, and the
   difference is consent — a sign-up (popup, newsletter form, stylist, checkout box ticked) goes through
   `WHD_Subscribers` and joins the list; everything else the shop learns (an order without the tick, an abandoned
@@ -285,6 +292,11 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   reasoning comes out of `max_tokens`, so the write step needs a budget far above the reply length or the JSON arrives
   truncated and unreadable; and the keyphrase is derived from the product's own name, never from the researched keyword
   list — that list is passed as vocabulary only (handing products topic phrases put a hundred of them in competition).
+- **Who appears in drawn pictures** is one list, `WHD_AI_Images::people()` (filter `whd_ai_image_people`): young
+  women with a stated age (23–30) and background — Korean, Thai, Japanese, Chinese, Filipina, alternating with
+  white — plus `age_rule()` (22–32) in every brief. Product sets offset the list by product id; journal, page and
+  Bulk-products pictures (`make()`) take the next person from a random start. The old casting ran "twenties"
+  to "fifties" with a rule demanding a different age per picture, so every set had an older woman in it.
 - `WHD_AI::call()` takes `$options['images']` (attachment IDs or paths) and sends them as vision parts for all three
   providers; `WHD_AI::picture_part()` resizes a copy to `VISION_EDGE` first so a phone photo is not sent whole.
 - Admin: menu `WHD`; editor screen `admin.php?page=whd-editor&type=popup|email&id=<id>` (vanilla JS in

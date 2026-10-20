@@ -139,26 +139,70 @@ final class WHD_AI_Images {
 	}
 
 	/**
-	 * A different person and a different room for each picture in a set.
+	 * Who appears in a drawn picture.
+	 *
+	 * The casting used to run from "a woman in her twenties" to "a woman in her fifties", with a
+	 * rule asking for a different age in every picture of a set — so every set had an older woman
+	 * in it, and the posts and pages, which named nobody, drifted the same way. The shop dresses
+	 * women in their twenties and early thirties. So each person now has an age, stated as a
+	 * number (a model keeps to a number better than to a "not"), and a background: mostly East
+	 * and Southeast Asian, for a shop of Korean and Thai fashion, alternating with white women.
+	 *
+	 * Filter `whd_ai_image_people` to change who appears.
+	 */
+	public static function people(): array {
+		$people = (array) apply_filters( 'whd_ai_image_people', [
+			__( 'a Korean woman, about 24, with long dark hair', 'whd' ),
+			__( 'a white woman, about 27, with light brown hair', 'whd' ),
+			__( 'a Thai woman, about 25, with shoulder-length black hair', 'whd' ),
+			__( 'a white woman, about 23, with dark blonde hair tied back', 'whd' ),
+			__( 'a Japanese woman, about 29, with a short black bob', 'whd' ),
+			__( 'a white woman, about 30, with auburn hair', 'whd' ),
+			__( 'a Chinese woman, about 26, with dark hair in a low ponytail', 'whd' ),
+			__( 'a Filipina woman, about 28, with wavy dark hair', 'whd' ),
+		] );
+		return $people ?: [ __( 'a woman, about 26', 'whd' ) ];
+	}
+
+	/** The line every brief carries, so no picture strays older whatever else it says. */
+	public static function age_rule(): string {
+		return __( 'anyone in the picture is a young woman between 22 and 32 years old, with the youthful face and skin of that age', 'whd' );
+	}
+
+	/** Somebody for a picture that belongs to no set: a different person each time, starting anywhere. */
+	private static function next_person(): string {
+		static $n = null;
+		$people = self::people();
+		if ( null === $n ) {
+			$n = wp_rand( 0, count( $people ) - 1 );
+		}
+		return $people[ $n++ % count( $people ) ];
+	}
+
+	/**
+	 * A different room for each picture in a set.
 	 *
 	 * Left to itself the model returns the same woman in the same window four times. Naming the
 	 * variation is what makes a set of four look like a set rather than a contact sheet.
 	 */
-	private static function casting(): array {
+	private static function scenes(): array {
 		return [
-			__( 'a woman in her twenties, at home in a bright apartment, morning light across the floor', 'whd' ),
-			__( 'a woman in her thirties, out on a quiet city street, late afternoon light', 'whd' ),
-			__( 'a woman in her forties, sitting at a cafe table by a window', 'whd' ),
-			__( 'a woman in her fifties, in a plain studio room with a chair and a plant', 'whd' ),
-			__( 'a woman browsing a shop window, seen from a little way off', 'whd' ),
-			__( 'a woman on a doorstep with a bag over her shoulder, about to leave', 'whd' ),
+			__( 'at home in a bright apartment, morning light across the floor', 'whd' ),
+			__( 'out on a quiet city street, late afternoon light', 'whd' ),
+			__( 'sitting at a cafe table by a window', 'whd' ),
+			__( 'in a plain studio room with a chair and a plant', 'whd' ),
+			__( 'browsing a shop window, seen from a little way off', 'whd' ),
+			__( 'on a doorstep with a bag over her shoulder, about to leave', 'whd' ),
 		];
 	}
 
 	/** What the picture has to show, written for a model rather than for a reader. */
 	public static function prompt( $product, int $index, bool $beauty, string $ask = '' ): string {
-		$casting = self::casting();
-		$scene   = $casting[ $index % count( $casting ) ];
+		$scenes = self::scenes();
+		$people = self::people();
+		// Offset by the product, so the second picture of every product is not the same woman.
+		$person = $people[ ( $index + (int) $product->get_id() ) % count( $people ) ];
+		$scene  = $person . ', ' . $scenes[ $index % count( $scenes ) ];
 
 		$facts = array_filter( [
 			$product->get_name(),
@@ -179,7 +223,8 @@ final class WHD_AI_Images {
 			. "%5\$s"
 			. "PRODUCT\n%1\$s\n\nWHO AND WHERE\n%2\$s\n\nWHAT TO SHOW\n%3\$s\n\nTHE LOOK\n%4\$s\n\n"
 			. "RULES\n- one single photograph, portrait 4:5, nothing split or collaged\n"
-			. "- a different person from the reference images and from the others in this set: different age, different hair, different build\n"
+			. "- a different person from the reference images and from the others in this set: different face, different hair, different build\n"
+			. '- ' . self::age_rule() . "\n"
 			. "- relaxed and unposed, not looking into the lens\n"
 			. "- frame her whole head: the top of the hair is inside the picture, and the face is not cut off by any edge\n"
 			. "- no text, no lettering, no logo, no watermark, no border\n"
@@ -407,15 +452,17 @@ final class WHD_AI_Images {
 		}
 
 		$brief = sprintf(
-			"A photograph for an online boutique's journal.\n\n%3\$sWHAT TO SHOW\n%1\$s\n\nTHE LOOK\n%2\$s\n\n"
+			"A photograph for an online boutique's journal.\n\n%3\$sWHAT TO SHOW\n%1\$s\n\nIF SOMEBODY IS IN IT\n%4\$s\n\nTHE LOOK\n%2\$s\n\n"
 			. "RULES\n- one single photograph, landscape 3:2, nothing split or collaged\n"
+			. '- ' . self::age_rule() . "\n"
 			. "- if somebody is in the picture, her whole head is in it too: not cropped at the top, not cut off by an edge\n"
 			. "- no text, no lettering, no logo, no watermark, no border\n"
 			. "- a real photograph, not a rendering or an illustration\n"
 			. '- nobody looking into the lens',
 			trim( $prompt ),
 			self::look(),
-			self::asked( $ask )
+			self::asked( $ask ),
+			self::next_person()
 		);
 
 		$image = self::request(
