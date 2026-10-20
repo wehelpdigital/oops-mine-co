@@ -343,6 +343,8 @@ final class WHD_AI_Studio {
 			/* translators: %d: number of close-ups */
 			'zoomed'      => __( '%d close-up(s) checked', 'whd' ),
 			'zoomNone'    => __( 'nothing small enough to need a close-up', 'whd' ),
+			/* translators: %s: the error */
+			'zoomSkipped' => __( 'skipped (%s) — carrying on with the first look', 'whd' ),
 			'saw'         => __( 'What the AI saw', 'whd' ),
 			'sawNote'     => __( 'Every picture and every line of copy is held to this. If something here is wrong, say so in “Anything to specify?” and generate again — what you write there wins.', 'whd' ),
 			'counted'     => __( 'Counted', 'whd' ),
@@ -523,7 +525,7 @@ final class WHD_AI_Studio {
 			. "- One entry in \"views\" per photograph.\n"
 			. '- Only what you can see. No measurements, no price, no stock, no country of origin, no brand names, no claims about how or where it was made.';
 
-		self::long_request();
+		self::mark( sprintf( 'reading %d photograph(s) with the model', $n ) );
 		$reply = WHD_AI::call( self::inspector(), $user, [
 			'json'        => true,
 			'images'      => $read,
@@ -609,7 +611,7 @@ final class WHD_AI_Studio {
 			. "}\n"
 			. '"checked" is true for a countable you could actually see in a close-up. Leave a field empty only when the close-ups say nothing about it.';
 
-		self::long_request();
+		self::mark( sprintf( 'checking %d close-up(s) with the model', count( $crops ) ) );
 		$reply = WHD_AI::call( self::inspector(), $user, [
 			'json'       => true,
 			'images'     => array_merge( [ $ids[0] ], wp_list_pluck( $crops, 'path' ) ),
@@ -692,10 +694,22 @@ final class WHD_AI_Studio {
 	 * @return string Path, or '' when it could not be cut.
 	 */
 	private static function cut( int $id, array $box, int $edge ): string {
-		$file = self::original( $id );
+		try {
+			$file = self::original( $id );
+			self::mark( sprintf( 'cutting a close-up from photo #%d (%s)', $id, basename( $file ) ) );
+			return self::cut_from( $file, $box, $edge );
+		} catch ( Throwable $e ) {
+			// One crop that will not open is a missing close-up, not a broken run.
+			return '';
+		}
+	}
+
+	private static function cut_from( string $file, array $box, int $edge ): string {
 		if ( '' === $file ) {
 			return '';
 		}
+		// What WordPress's own image screens ask for (WP_MAX_MEMORY_LIMIT) before opening a picture.
+		wp_raise_memory_limit( 'image' );
 		$editor = wp_get_image_editor( $file );
 		if ( is_wp_error( $editor ) ) {
 			return '';
@@ -731,13 +745,31 @@ final class WHD_AI_Studio {
 		return is_wp_error( $saved ) || empty( $saved['path'] ) ? '' : (string) $saved['path'];
 	}
 
-	/** The file as it was uploaded: WordPress keeps a scaled-down copy for anything past 2,560 pixels. */
+	/** Past this many pixels the original is not worth what it costs to open: the web copy is used instead. */
+	const ORIGINAL_MAX_PIXELS = 16000000;
+
+	/**
+	 * The file to cut close-ups from: the upload itself where that is safe, else WordPress's web copy.
+	 *
+	 * WordPress keeps the upload as it arrived and works from a copy scaled to 2,560 pixels. The
+	 * upload has the most detail, and it can also be a 24-megapixel phone photograph, or the HEIC an
+	 * iPhone sent, which WordPress keeps beside the JPEG it made. Opened whole, either one is enough
+	 * for a shared host to kill the request outright — no error, no log, a bare HTTP 500 — which
+	 * is what the zoom step did on the live shop the first time it ran. So the upload is used only
+	 * when it is an ordinary web image of a sensible size; the web copy is still plenty for a crop.
+	 */
 	private static function original( int $id ): string {
-		$file = function_exists( 'wp_get_original_image_path' ) ? (string) wp_get_original_image_path( $id ) : '';
-		if ( '' === $file || ! file_exists( $file ) ) {
-			$file = (string) get_attached_file( $id );
+		$copy = (string) get_attached_file( $id );
+		$orig = function_exists( 'wp_get_original_image_path' ) ? (string) wp_get_original_image_path( $id ) : '';
+		if ( '' !== $orig && $orig !== $copy && file_exists( $orig ) ) {
+			$type = (string) ( wp_check_filetype( $orig )['type'] ?? '' );
+			$size = function_exists( 'wp_getimagesize' ) ? wp_getimagesize( $orig ) : @getimagesize( $orig ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+			if ( in_array( $type, [ 'image/jpeg', 'image/png', 'image/webp' ], true )
+				&& $size && (int) $size[0] * (int) $size[1] <= self::ORIGINAL_MAX_PIXELS ) {
+				return $orig;
+			}
 		}
-		return '' !== $file && file_exists( $file ) ? $file : '';
+		return '' !== $copy && file_exists( $copy ) ? $copy : '';
 	}
 
 	private static function forget( array $crops ) {
@@ -838,7 +870,7 @@ final class WHD_AI_Studio {
 		 * A generous budget: these models reason before they answer, out of the same allowance, and
 		 * a reply cut off part way through is JSON that cannot be read at all.
 		 */
-		self::long_request();
+		self::mark( 'writing the copy with the model' );
 		$reply = WHD_AI::call( WHD_AI::system_prompt(), self::write_prompt( $ctx ), [ 'json' => true, 'max_tokens' => 20000 ] );
 		if ( is_wp_error( $reply ) ) {
 			return $reply;
@@ -876,7 +908,7 @@ final class WHD_AI_Studio {
 			return self::drafted( $draft, $raw, $ctx, [], 2 );
 		}
 
-		self::long_request();
+		self::mark( 'rewriting the copy with the model' );
 		$again = WHD_AI::call(
 			WHD_AI::system_prompt(),
 			self::write_prompt( $ctx ) . "\n\nYOUR PREVIOUS ANSWER\n" . wp_json_encode( $raw, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES )
@@ -944,7 +976,7 @@ final class WHD_AI_Studio {
 	private static function write_prompt( array $ctx ): string {
 		$parts = $ctx['parts'];
 		$has   = static fn( $part ) => in_array( $part, $parts, true );
-		$facts = self::without( $ctx['facts'], [ 'regions', 'image_ids', 'inspected', 'corrections', 'views', 'name_ideas' ] );
+		$facts = self::without( $ctx['facts'], [ 'regions', 'image_ids', 'inspected', 'skipped', 'corrections', 'views', 'name_ideas' ] );
 		$out   = [];
 
 		$out[] = "Write the shop page for this piece. Everything you say about it comes from THE PIECE below, which was read off its photographs and checked on close-ups. Never add a detail it does not list, and never change a count. If a count is not worth mentioning, leave the number out rather than write a different one.";
@@ -1440,7 +1472,7 @@ final class WHD_AI_Studio {
 
 		$parts[] = [ 'text' => self::draw_prompt( $facts, $shot, $position, $post_id, $labels, $fixes, $refs[0] ) ];
 
-		self::long_request();
+		self::mark( 'drawing a picture with the image model' );
 		$image = WHD_AI_Images::request( $parts, [
 			'aspectRatio' => self::aspect( $refs[0] ),
 			'imageSize'   => WHD_AI_Images::size(),
@@ -1571,7 +1603,7 @@ final class WHD_AI_Studio {
 			. '{"counts": {"front buttons": 4}, "problems": ["each one specific, e.g. shows five front buttons; the product has four"], "score": 0, "ok": true}' . "\n"
 			. '"score" is 0 to 10, where 10 means a shopper could not tell it from the real product. "ok" is false when any problem would mislead a shopper about the product or makes the picture unusable; a difference in the light or the styling is not a problem.';
 
-		self::long_request();
+		self::mark( 'checking a drawn picture with the model' );
 		$reply = WHD_AI::call( self::inspector(), $user, [
 			'json'        => true,
 			'images'      => array_merge( $whole, wp_list_pluck( $close, 'path' ), [ $image ] ),
@@ -1632,6 +1664,7 @@ final class WHD_AI_Studio {
 			return is_wp_error( $id ) ? $id : new WP_Error( 'whd_studio_attach', __( 'The picture could not be added to the media library.', 'whd' ) );
 		}
 
+		self::mark( 'saving the drawn picture to the media library' );
 		WHD_AI_Images::settle( (int) $id, $file['file'], $alt );
 		update_post_meta( $id, WHD_AI_Images::META, 1 );
 		update_post_meta( $id, '_whd_ai_shot', $shot['mode'] );
@@ -2554,6 +2587,97 @@ final class WHD_AI_Studio {
 		}
 	}
 
+	/**
+	 * Every request of the panel's, before it does anything.
+	 *
+	 * GD before Imagick for the cropping and resizing these requests do. Imagick runs outside PHP,
+	 * and under LiteSpeed — the live host — it can take the whole PHP process down with it: no error,
+	 * no log line, a bare HTTP 500, which is what the zoom step got the first time it ran there. GD
+	 * runs inside PHP's own memory limit, where running out is an error that can be reported, and
+	 * these photographs are small enough that it is no slower. Imagick is still there for a format
+	 * GD cannot open.
+	 */
+	private static function prepare() {
+		self::long_request();
+		wp_raise_memory_limit( 'image' );
+		add_filter( 'wp_image_editors', [ __CLASS__, 'gd_first' ] );
+		register_shutdown_function( [ __CLASS__, 'shutdown' ] );
+		// Worked out once, here, so writing a note never has to do anything that could itself fail.
+		self::$editor = (string) _wp_image_editor_choose( [ 'mime_type' => 'image/jpeg' ] );
+	}
+
+	/** The image library this request's crops and resizes go through, for the note. */
+	private static $editor = '';
+
+	public static function gd_first( $editors ) {
+		$editors = (array) $editors;
+		$gd      = array_search( 'WP_Image_Editor_GD', $editors, true );
+		if ( false !== $gd ) {
+			unset( $editors[ $gd ] );
+			array_unshift( $editors, 'WP_Image_Editor_GD' );
+		}
+		return array_values( $editors );
+	}
+
+	/**
+	 * A note of what the request is doing, kept until it finishes.
+	 *
+	 * When a host kills a PHP process there is nothing left to say what it was doing. This note is
+	 * written before each step that could do that and cleared when the request ends normally, so a
+	 * note that is still there afterwards is the answer — and the panel asks for it when a request
+	 * comes back as a server error page instead of an answer.
+	 */
+	private static function mark( string $doing ) {
+		set_transient( self::mark_key(), [
+			'doing'  => $doing,
+			'editor' => self::$editor ?: '?',
+			'memory' => size_format( memory_get_usage( true ) ),
+			'limit'  => (string) ini_get( 'memory_limit' ),
+			'at'     => time(),
+		], 10 * MINUTE_IN_SECONDS );
+	}
+
+	private static function mark_key(): string {
+		return 'whd_studio_mark_' . get_current_user_id();
+	}
+
+	/** A fatal error that does reach PHP is added to the note, so it is not lost with the page. */
+	public static function shutdown() {
+		$error = error_get_last();
+		if ( ! $error || ! in_array( $error['type'], [ E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR ], true ) ) {
+			return;
+		}
+		$mark          = get_transient( self::mark_key() );
+		$mark          = is_array( $mark ) ? $mark : [ 'doing' => '', 'at' => time() ];
+		$mark['fatal'] = wp_strip_all_tags( $error['message'] ) . ' (' . basename( (string) $error['file'] ) . ':' . (int) $error['line'] . ')';
+		set_transient( self::mark_key(), $mark, 10 * MINUTE_IN_SECONDS );
+	}
+
+	/** What the last request was doing when it stopped, said once. */
+	public static function rest_last() {
+		$mark = get_transient( self::mark_key() );
+		delete_transient( self::mark_key() );
+		if ( ! is_array( $mark ) || time() - (int) ( $mark['at'] ?? 0 ) > 10 * MINUTE_IN_SECONDS ) {
+			return new WP_REST_Response( [ 'said' => '' ], 200 );
+		}
+		$said = ! empty( $mark['fatal'] )
+			? sprintf(
+				/* translators: 1: what it was doing, 2: the error */
+				__( 'The server stopped while %1$s: %2$s', 'whd' ),
+				$mark['doing'] ?: __( 'working', 'whd' ),
+				$mark['fatal']
+			)
+			: sprintf(
+				/* translators: 1: what it was doing, 2: image library, 3: memory in use, 4: memory limit */
+				__( 'The server stopped while %1$s (image library %2$s, %3$s of %4$s memory in use). The host ended the request without saying why.', 'whd' ),
+				$mark['doing'],
+				$mark['editor'] ?? '?',
+				$mark['memory'] ?? '?',
+				$mark['limit'] ?? '?'
+			);
+		return new WP_REST_Response( [ 'said' => $said ], 200 );
+	}
+
 	/* ─────────────────────────── the wires ─────────────────────────── */
 
 	public static function rest() {
@@ -2564,10 +2688,23 @@ final class WHD_AI_Studio {
 		foreach ( [ 'copy', 'look', 'inspect', 'write', 'repair', 'draw', 'check', 'discard', 'finish' ] as $step ) {
 			register_rest_route( 'whd/v1', '/ai/studio/' . $step, [
 				'methods'             => 'POST',
-				'callback'            => [ __CLASS__, 'rest_' . $step ],
+				'callback'            => static function ( WP_REST_Request $r ) use ( $step ) {
+					self::prepare();
+					$answer = call_user_func( [ __CLASS__, 'rest_' . $step ], $r );
+					// Got this far, so whatever the note said did not stop it.
+					delete_transient( self::mark_key() );
+					return $answer;
+				},
 				'permission_callback' => $can,
 			] );
 		}
+		register_rest_route( 'whd/v1', '/ai/studio/last', [
+			'methods'             => 'POST',
+			'callback'            => [ __CLASS__, 'rest_last' ],
+			'permission_callback' => static function () {
+				return current_user_can( 'edit_products' );
+			},
+		] );
 	}
 
 	public static function rest_copy( WP_REST_Request $r ) {

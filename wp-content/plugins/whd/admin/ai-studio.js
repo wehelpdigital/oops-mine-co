@@ -62,14 +62,37 @@
 				try {
 					json = JSON.parse( raw );
 				} catch ( e ) {
-					// A PHP fatal or a gateway timeout arrives as a page, not as JSON.
-					throw new Error( ( T.error || 'Something went wrong' ) + ' (HTTP ' + r.status + ')' );
+					/*
+					 * A page instead of an answer: the host ended the request — a killed process, a
+					 * gateway timeout. The server leaves a note of what it was doing before each step
+					 * that could do that; ask for it, so the message says where, not just "500".
+					 */
+					var plain = ( T.error || 'Something went wrong' ) + ' (HTTP ' + r.status + ')';
+					return lastWords().then( function ( said ) {
+						throw new Error( said ? plain + '. ' + said : plain );
+					} );
 				}
 				if ( ! r.ok ) {
 					throw new Error( ( json && json.message ) || ( T.error || 'Something went wrong' ) );
 				}
 				return json;
 			} );
+		} );
+	}
+
+	/* What the server was doing when a request died, if it left a note; '' when it did not. */
+	function lastWords() {
+		return window.fetch( D.rest.root + 'last', {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': D.rest.nonce },
+			body: '{}'
+		} ).then( function ( r ) {
+			return r.ok ? r.json() : {};
+		} ).then( function ( j ) {
+			return ( j && j.said ) || '';
+		} ).catch( function () {
+			return '';
 		} );
 	}
 
@@ -943,9 +966,22 @@
 		api( 'look', { images: ctx.ids, commands: notes } ).then( function ( facts ) {
 			line.done( fmt( T.looked, Math.min( ctx.ids.length, lookMax ) ) );
 			line = step( T.stepZoom );
-			return api( 'inspect', { facts: facts, commands: notes } );
+			/*
+			 * The close-ups are a second opinion. If they cannot be had — a host that kills the request,
+			 * a model that times out — the first look's facts are still good facts, so the run goes on
+			 * with those rather than stopping; the line says what happened.
+			 */
+			return api( 'inspect', { facts: facts, commands: notes } ).catch( function ( e ) {
+				facts.inspected = -1;
+				facts.skipped = e.message;
+				return facts;
+			} );
 		} ).then( function ( facts ) {
-			line.done( facts.inspected ? fmt( T.zoomed, facts.inspected ) : T.zoomNone );
+			if ( facts.inspected < 0 ) {
+				line.warn( fmt( T.zoomSkipped, facts.skipped ) );
+			} else {
+				line.done( facts.inspected ? fmt( T.zoomed, facts.inspected ) : T.zoomNone );
+			}
 			ctx.facts = facts;
 			paintSaw( facts );
 			line = step( T.stepWrite );

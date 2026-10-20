@@ -319,6 +319,14 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   parked in a per-user transient keyed to the copy, picked up once by `?whd_studio=run` on the copy's screen and
   started on `load`), **Overwrite**, or Cancel. A duplicate **shares the original's attachments**, so `dress()`
   never rewrites alt/title on a photo another product also uses (`shared()`) — it only fills empty fields there.
+  **On live the zoom step first died with a bare HTTP 500 and nothing in `debug.log`** — a PHP fatal there comes
+  back as JSON *and* is logged, so the process itself was killed (the photos are ~1,000px, so not memory; Imagick
+  under LiteSpeed is the likely culprit, and WordPress 7.1 does not cap Imagick's threads). Every studio request
+  now runs `prepare()`: GD before Imagick (`wp_image_editors`), `wp_raise_memory_limit( 'image' )`, crops from the
+  original only when it is JPEG/PNG/WebP ≤ 16 MP (else the `-scaled` copy). Each risky step writes a note
+  (`mark()`, transient `whd_studio_mark_{user}`) that the route wrapper clears on return; when a response is an
+  HTML page, the panel calls `studio/last` and shows where the server stopped. A failed zoom no longer stops the
+  run — it continues on the first look's facts with a warning line.
 - **Who appears in drawn pictures** is one list, `WHD_AI_Images::people()` (filter `whd_ai_image_people`): young
   women with a stated age (23–30) and background — Korean, Thai, Japanese, Chinese, Filipina, alternating with
   white — plus `age_rule()` (22–32) in every brief. Product sets offset the list by product id; journal, page and
