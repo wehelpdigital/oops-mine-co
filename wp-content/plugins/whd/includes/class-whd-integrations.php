@@ -457,6 +457,7 @@ final class WHD_Integrations {
 	 * the whole point.
 	 */
 	private static function push_klaviyo( $row, $o ) {
+		self::$klaviyo_profile_id = '';
 		self::klaviyo_profile( $row, $o );
 
 		$attributes = [
@@ -479,8 +480,32 @@ final class WHD_Integrations {
 				],
 			],
 		];
-		return self::finish( 'klaviyo', 'subscriber #' . (int) $row->id, self::klaviyo_request( $o, 'profile-subscription-bulk-create-jobs/', 'POST', $body ) );
+		$ok = self::finish( 'klaviyo', 'subscriber #' . (int) $row->id, self::klaviyo_request( $o, 'profile-subscription-bulk-create-jobs/', 'POST', $body ) );
+
+		/*
+		 * Then put them in the list with a call that answers for itself.
+		 *
+		 * The subscription job replies 202 before it has done anything, and if it then fails to add
+		 * the person to the list it says nothing at all. Live sign-ups came out exactly so — consent
+		 * SUBSCRIBED, no list — with "sent" in this log. Adding the profile to the list directly
+		 * either lands them in it or comes back with the reason (a key without list access, a list
+		 * id that is wrong), which this log then shows. On a profile that is already a member it is
+		 * a no-op.
+		 */
+		if ( $ok && '' !== self::$klaviyo_profile_id ) {
+			$ok = self::finish(
+				'klaviyo',
+				'list ' . $o['klaviyo_list_id'] . ' for subscriber #' . (int) $row->id,
+				self::klaviyo_request( $o, 'lists/' . rawurlencode( $o['klaviyo_list_id'] ) . '/relationships/profiles/', 'POST', [
+					'data' => [ [ 'type' => 'profile', 'id' => self::$klaviyo_profile_id ] ],
+				] )
+			);
+		}
+		return $ok;
 	}
+
+	/** @var string The profile id the last profile-import returned, for the list call that follows it. */
+	private static $klaviyo_profile_id = '';
 
 	/**
 	 * Name and provenance, written straight onto the profile.
@@ -510,11 +535,13 @@ final class WHD_Integrations {
 			$extra_properties
 		);
 
-		return self::finish(
-			'klaviyo',
-			$row->id ? 'profile for subscriber #' . (int) $row->id : 'profile for ' . $row->email,
-			self::klaviyo_request( $o, 'profile-import/', 'POST', [ 'data' => [ 'type' => 'profile', 'attributes' => $attributes ] ] )
-		);
+		$res = self::klaviyo_request( $o, 'profile-import/', 'POST', [ 'data' => [ 'type' => 'profile', 'attributes' => $attributes ] ] );
+		$ok  = self::finish( 'klaviyo', $row->id ? 'profile for subscriber #' . (int) $row->id : 'profile for ' . $row->email, $res );
+		if ( $ok ) {
+			$data                     = json_decode( (string) wp_remote_retrieve_body( $res ), true );
+			self::$klaviyo_profile_id = (string) ( $data['data']['id'] ?? '' );
+		}
+		return $ok;
 	}
 
 	/* ── Webhook ── */
@@ -697,23 +724,40 @@ final class WHD_Integrations {
 				$name = $data['data']['attributes']['name'] ?? '';
 				/*
 				 * Say which list, and how it takes people in. A double opt-in list accepts the
-				 * sign-up, marks the profile subscribed, and then keeps it out of the list until a
-				 * confirmation is clicked — so the shop sees "subscribed" in Klaviyo and an empty
-				 * list. The shop's SMS list is double opt-in, and pointing this box at a list like
-				 * that looks exactly like a broken integration.
+				 * sign-up with a 202 and then holds the person back until they click a confirmation
+				 * email, so nothing reaches the list in the meantime. The shop's SMS list is double
+				 * opt-in; this box should hold the single opt-in email list.
 				 */
 				$double = 'double_opt_in' === ( $data['data']['attributes']['opt_in_process'] ?? '' );
 				if ( $double ) {
 					return [ false, sprintf(
 						/* translators: %s: Klaviyo list name. */
-						__( 'Connected, but “%s” is a double opt-in list: sign-ups are marked subscribed and stay out of the list until they click a confirmation. Use your single opt-in email list here, or switch this one to single opt-in in Klaviyo.', 'whd' ),
+						__( 'Connected, but “%s” is a double opt-in list: sign-ups only join it after clicking a confirmation email. Use your single opt-in email list here, or switch this one to single opt-in in Klaviyo.', 'whd' ),
 						$name
 					) ];
 				}
+				/*
+				 * Can this key put people in the list? Reading the list only needs read access, and a
+				 * key that may subscribe but not write lists is the other way to end up with
+				 * subscribed profiles and an empty list. An add with nobody in it changes nothing:
+				 * Klaviyo checks the key's permissions first (401/403), and only then the empty body (400).
+				 */
+				$write = self::klaviyo_request( $o, 'lists/' . rawurlencode( $o['klaviyo_list_id'] ) . '/relationships/profiles/', 'POST', [ 'data' => [] ] );
+				$wcode = is_wp_error( $write ) ? 0 : (int) wp_remote_retrieve_response_code( $write );
+				if ( in_array( $wcode, [ 401, 403 ], true ) ) {
+					self::log( 'klaviyo', $wcode, 'list write check — ' . self::short_error( wp_remote_retrieve_body( $write ) ) );
+					return [ false, sprintf(
+						/* translators: 1: Klaviyo list name, 2: Klaviyo's message. */
+						__( 'This key can read “%1$s” but may not add people to it (%2$s). In Klaviyo → Settings → API keys, create a private key with Full access to Lists, Profiles and Subscriptions, and paste it here.', 'whd' ),
+						$name ?: $o['klaviyo_list_id'],
+						self::short_error( wp_remote_retrieve_body( $write ) )
+					) ];
+				}
 				return [ true, '' !== $name ? sprintf(
-					/* translators: %s: Klaviyo list name. */
-					__( 'Klaviyo is connected. List: %s (single opt-in).', 'whd' ),
-					$name
+					/* translators: 1: Klaviyo list name, 2: list id. */
+					__( 'Klaviyo is connected. List: %1$s (%2$s, single opt-in), and this key can add people to it.', 'whd' ),
+					$name,
+					$o['klaviyo_list_id']
 				) : __( 'Klaviyo is connected.', 'whd' ) ];
 
 			case 'webhook':

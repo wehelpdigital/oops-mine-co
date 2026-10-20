@@ -222,10 +222,14 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   as a Klaviyo *profile* with no list behind it. The setting `list_everyone` (WHD → Integrations → "Who joins the
   list", default off) sends all of them to the list instead. Live is on Klaviyo, list `RexmCz` ("OopsMineCo.Com
   Subscribers"), single opt-in. The account also has `SNvVK5` "Email List" (local points there for tests),
-  `UAVPfy` "Preview List" and `WpmGL3` "Text Messaging List", which is **double opt-in**: a List ID pointing at a
-  list like that gives profiles consent = SUBSCRIBED and *no* list membership, which looks exactly like a broken
-  push. "Test connection" now names the list and fails on a double opt-in one. The private key has no
-  data-privacy scope, so test profiles cannot be deleted through the API — remove them from the list instead.
+  `UAVPfy` "Preview List" and `WpmGL3` "Text Messaging List" (double opt-in). Live and local use **different
+  private keys** — Klaviyo shows the key's last four as the consent `method_detail`: live `ea1e`, local `342c`.
+  The subscription job answers 202 before doing anything and never reports a failed list add: on 2026-10-19 live
+  sign-ups came out consent = SUBSCRIBED with no list while the same calls with the local key joined `RexmCz`.
+  So `push_klaviyo()` now also adds the profile with `POST lists/{id}/relationships/profiles/`, which answers for
+  itself (and is a no-op for members), and "Test connection" names the list, fails on a double opt-in one, and
+  checks the key may write to it (an empty add: 401/403 = no permission, 400 = allowed, nobody added). The local
+  key has no data-privacy scope, so test profiles cannot be deleted through the API — remove them from the list.
   Pushes run in the same request once the response has gone (`fastcgi_finish_request` / `litespeed_finish_request`),
   with a one-off cron event behind them as the retry: WP-Cron only fires on a later page view, and a coming-soon
   shop gets almost none, so a cron-only push sat in the queue for hours. Every sign-up pushes again — `synced_at`
