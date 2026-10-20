@@ -337,8 +337,6 @@ final class WHD_AI_Studio {
 			'hintFinish'     => __( 'Alt text on every picture, and the story beside them.', 'whd' ),
 			'hintCopy'       => __( 'A draft copy of this product, so the original stays as it is.', 'whd' ),
 			'tooLong'        => __( 'This step has been running for eight minutes, which is far longer than it should — it has been given up on.', 'whd' ),
-			'loaderShow'     => __( 'Show progress', 'whd' ),
-			'loaderHide'     => __( 'Hide — it keeps working', 'whd' ),
 			'loaderClose'    => __( 'Close', 'whd' ),
 			'loaderProgress' => __( 'Progress', 'whd' ),
 			'loaderDone'     => __( 'Done', 'whd' ),

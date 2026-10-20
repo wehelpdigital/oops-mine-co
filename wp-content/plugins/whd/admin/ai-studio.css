@@ -1142,27 +1142,11 @@
 	to   { opacity: 1; transform: none; }
 }
 
+/* Only there once a run has stopped: the one way out, for the one time a way out is wanted. */
 .whd-studio-loader__foot {
 	margin: 16px 0 0;
-	padding-top: 12px;
+	padding-top: 14px;
 	border-top: 1px solid #f0ebe7;
-}
-
-.whd-studio-loader__foot .button-link {
-	font-size: 12px;
-	color: #8c8f94;
-	text-decoration: none;
-}
-
-.whd-studio-loader__foot .button-link:hover,
-.whd-studio-loader__foot .button-link:focus-visible {
-	color: var(--ink);
-	text-decoration: underline;
-}
-
-.whd-studio-loader.is-bad .whd-studio-loader__foot .button-link {
-	font-size: 13px;
-	color: #2271b1;
 }
 
 /* Still for anyone who has asked for less motion: a fixed line, steady corners, no shine. */

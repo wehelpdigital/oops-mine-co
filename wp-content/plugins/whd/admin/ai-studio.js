@@ -662,8 +662,7 @@
 	   A run takes minutes, so while it works the page is covered by a modal that says what is
 	   happening: the first photograph in a viewfinder with a scan line passing over it, the step and
 	   its detail, a bar, the time so far, and each new picture as it lands. It closes itself when the
-	   run is done, and stays open with the reason when the run stops. Escape does not end a run —
-	   "Hide" puts the loader away while it carries on, and Generate brings it back. */
+	   run is done, and stays open with the reason and a Close button when the run stops. */
 
 	var loader = ( function () {
 		var dialog = null;
@@ -750,31 +749,21 @@
 					'<p class="whd-studio-loader__note"></p>' +
 					'<div class="whd-studio-loader__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-label="' + esc( T.loaderProgress ) + '"><span></span></div>' +
 					'<p class="whd-studio-loader__time"></p>' +
-					'<div class="whd-studio-loader__pics"></div>' +
-					'<p class="whd-studio-loader__foot"><button type="button" class="button-link" data-loader-hide>' + esc( T.loaderHide ) + '</button></p>';
-				// Escape would otherwise close it, and that reads as cancelling — it is not.
+					'<div class="whd-studio-loader__pics"></div>';
+				/*
+				 * Nothing closes it while the run works — not Escape, and no "Hide" link either: a
+				 * page that can be scrolled and edited under a run in progress is a page whose fields
+				 * get typed into while the run is about to fill them. It closes itself when the run is
+				 * done, and gives a Close button only once the run has stopped.
+				 */
 				dialog.addEventListener( 'cancel', function ( e ) {
 					e.preventDefault();
-				} );
-				dialog.querySelector( '[data-loader-hide]' ).addEventListener( 'click', function () {
-					if ( dialog.classList.contains( 'is-bad' ) ) {
-						close();
-					} else {
-						dialog.close();
-					}
 				} );
 				document.body.appendChild( dialog );
 				dialog.showModal();
 				paint();
 				tock();
 				clock = window.setInterval( tock, 1000 );
-			},
-
-			/* Back on screen after Hide, while the run is still going. */
-			show: function () {
-				if ( dialog && ! dialog.open ) {
-					dialog.showModal();
-				}
 			},
 
 			/* hint: a line under the step saying what it is doing, until a note replaces it. */
@@ -839,8 +828,14 @@
 						close( after );
 					}, 1500 );
 				} else {
-					part( '[data-loader-hide]' ).textContent = T.loaderClose;
-					part( '[data-loader-hide]' ).focus();
+					var foot = document.createElement( 'p' );
+					foot.className = 'whd-studio-loader__foot';
+					foot.innerHTML = '<button type="button" class="button">' + esc( T.loaderClose ) + '</button>';
+					foot.firstChild.addEventListener( 'click', function () {
+						close();
+					} );
+					dialog.appendChild( foot );
+					foot.firstChild.focus();
 					if ( after ) {
 						after();
 					}
@@ -1046,7 +1041,6 @@
 	 */
 	function run( skipAsk ) {
 		if ( busy ) {
-			loader.show();
 			return;
 		}
 		var chosen = parts();
@@ -1196,8 +1190,7 @@
 
 	function start( chosen, notes ) {
 		busy = true;
-		// Not disabled: while a run is going the button brings a hidden loader back.
-		el.go.textContent = T.loaderShow;
+		el.go.disabled = true;
 		say( '' );
 		[ el.progress, el.saw, el.drawn, el.result ].forEach( function ( node ) {
 			node.innerHTML = '';

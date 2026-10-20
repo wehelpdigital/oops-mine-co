@@ -329,8 +329,9 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   run — it continues on the first look's facts with a warning line. While a run works, a `<dialog>` loader
   (`loader` in ai-studio.js) covers the page: viewfinder over the first photo (the `view` = medium URL each photo
   object carries), step + hint, a bar ticked once per progress line (`4 + pictures`, `+1` for a repair), time so
-  far against an estimate (150 s + 55 s a picture), drawn thumbnails. Escape is swallowed; "Hide" closes it and
-  the Generate button ("Show progress" while busy) reopens it; it closes itself on success and stays on failure.
+  far against an estimate (150 s + 55 s a picture), drawn thumbnails. Nothing closes it mid-run — Escape is
+  swallowed and there is deliberately no "Hide" (the owner asked for it gone: editing fields under a run that is
+  about to fill them causes trouble); it closes itself on success, and on failure shows the reason and a Close.
   **No request waits on a model.** Live (LiteSpeed) ended "Writing the page" — a 60–110 s wait with no output —
   with a bare 500 and nothing logged, and the WAF passes HTML bodies, so it was the host's time limit. The six model
   steps (`JOBS`) answer 202 `{ job }` at once and do the work in `WHD_Plugin::after_response()` (connection closed
