@@ -276,28 +276,33 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   (`whd-ai-pages`) and **Bulk products** (`whd-ai-products`, `WHD_AI_Products`, WooCommerce only). Admin assets key off
   `$_GET['page']`, never the hook name — the hook carries where an item sits in the menu, so matching on it breaks the
   moment a screen moves under a parent.
-- Bulk products: a table of rows where only the photographs are required. Three REST steps per row, driven one row at a
-  time from `admin/ai-products.js` — `look` (a vision call describing the item as facts), `write` (facts → name, both
-  descriptions, SEO title, snippet, per-image alt/title/caption/description) and `make` (a **draft** `WC_Product_Simple`,
-  pictures dressed and attached, attributes, category, `WHD_AI_Admin::finish_seo()`, score). `WHD_AI_Images::make()`
-  draws a second photograph when the writer asks for one. Each row has a **Commands** box — free text, read both as
-  facts for the copy ("runs small, linen blend") and as instructions for the build ("black, cream and navy, XS to XL,
-  1450, sale 999"). The write step returns a `plan` (type, levels, price/sale/stock/sku/category) and `make()` hands
-  any levels to `WHDV_Model::apply()`, so a product built here opens in the Variation tiers grid like any other.
-  Variations are built **only when the command box is non-empty** and a level has two or more options: left to its
-  own devices the model offers "Colour: Black" off the photograph, which made a variable product with one variation
-  and moved the price off the parent, so the shop page showed no price. A tier's label is also skipped when the
-  descriptive attributes are written, or the product lists Colour twice. Other gotchas the first real run found: a draft WooCommerce saves
-  has **no `post_name`** until published, so the slug is set explicitly or `key_slug` fails on every product; Gemini's
-  reasoning comes out of `max_tokens`, so the write step needs a budget far above the reply length or the JSON arrives
-  truncated and unreadable. Its keywords come from the list like every other writer's (next-but-one bullet); it has
-  no repair pass, so `aim()` there prefers list phrases the copy really carries and a miss is a warning on the row.
+- Bulk products: **one card per piece, each one the product screen’s Write with AI panel** — photographs, the eight
+  parts, keywords, “Anything to specify?”, new pictures (count kept even, model / ghost mannequin + instructions each),
+  plus a folded “Details you already know” row (name, price, sale, stock, SKU, category — typed values win). Each piece
+  runs the studio’s own steps through `whd/v1/ai/studio/*` (look, inspect, write, repair, draw, check, discard), so
+  nothing about how a piece is read, written or drawn differs between the two screens. Two steps are Bulk’s own
+  (`WHD_AI_Products`): `product/create` makes an empty **draft** with the photographs first, because every studio step
+  works on (and checks permission against) a product and a drawn picture needs one to belong to — generating a piece
+  again reuses its draft and deletes pictures a stopped run drew but never got into the gallery; `product/save` does
+  what the product screen’s fields and Update do, from the write step’s `screen` (re-sanitised: it round-trips through
+  the browser): name, slug (`slug_for`), both descriptions, categories, `_whd_size_chart`, SEO meta + keyphrase, price
+  or — with tiers — `WHDV_Model::apply()` with the typed price on every combination, then `WHD_AI_Studio::add_attributes()`
+  (fabric/fit/care, after the tiers because building them rewrites the attributes), the gallery in planned order, then
+  `WHD_AI_Studio::finish()` (alt text, story) and `WHD_AI_Admin::finish_seo()`. A typed name is sent as the fixed name
+  (`name` dropped from the write’s parts, `current.title` = it); with none typed, `name` is always written. Pieces run
+  one at a time under one loader (“Piece 2 of 5” kicker, the piece’s photo in the viewfinder, one bar for the batch);
+  one that stops is marked on its card and the batch moves on. The browser pieces both screens share — the job-polling
+  client, the lightbox and the loader — live in `admin/ai-kit.js` (`window.WHDAIKit`); `ai-studio.css` is loaded on
+  Bulk too, so the card wears the panel’s own styles and `ai-products.css` only adds the card. The keyword picker
+  finds its endpoint through `WHD_AIP.rest`. Gotchas kept from the old table: a draft WooCommerce saves has **no
+  `post_name`** until published (the slug is set explicitly or `key_slug` fails), and variations come **only from the
+  notes** with two or more options (`WHD_AI_Studio::plan()`), never from colours the model sees in a photograph.
 - **Write with AI on the product screen** is `WHD_AI_Studio` (`includes/class-whd-ai-studio.php`, `admin/ai-studio.js`):
   a meta box in its own context `whd_top`, printed at `edit_form_after_title` so it sits above the description (no
   position in the normal column can — the editor is not a meta box). Products no longer get the old `whd-ai-box`
   panel; pages and journal posts still do. Flow: pick photographs (defaults to featured + gallery) → tick parts
-  (name, description, short, story, categories, size chart, product data, SEO) + keywords + a notes box read like
-  Bulk's commands → number of new pictures, offered only as counts that make the total even (3 photos → 1/3/5),
+  (name, description, short, story, categories, size chart, product data, SEO) + keywords + a notes box read two ways (facts for
+  the copy, listing instructions for the build) → number of new pictures, offered only as counts that make the total even (3 photos → 1/3/5),
   each with a mode (model / ghost mannequin) and instructions. Eight REST steps under `whd/v1/ai/studio/`, one
   request each so none runs long: `look` (photos at 1536px, `detail: high` → facts, whole-garment `countables` with
   `all_visible`, `colourways`, `absent`, boxes in thousandths), `inspect` (those boxes cut from the **original**

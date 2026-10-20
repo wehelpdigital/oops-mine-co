@@ -16,7 +16,7 @@
 	var NONCE = '';
 
 	function config() {
-		var d = window.WHD_AI_DATA || window.WHD_AI_WRITER || window.WHD_SEO_DATA || {};
+		var d = window.WHD_AI_DATA || window.WHD_AI_WRITER || window.WHD_SEO_DATA || window.WHD_AIP || {};
 		if ( d.rest ) {
 			ENDPOINT = d.rest.root + 'keywords';
 			NONCE = d.rest.nonce;

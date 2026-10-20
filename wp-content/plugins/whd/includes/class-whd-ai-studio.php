@@ -216,7 +216,7 @@ final class WHD_AI_Studio {
 	}
 
 	/** [ label, what it means ] for each part. */
-	private static function part_labels(): array {
+	public static function part_labels(): array {
 		return [
 			'name'         => [ __( 'Product name', 'whd' ), __( 'the title', 'whd' ) ],
 			'description'  => [ __( 'Description', 'whd' ), __( 'the long one, under the tab', 'whd' ) ],
@@ -239,7 +239,8 @@ final class WHD_AI_Studio {
 
 		wp_enqueue_media();
 		wp_enqueue_style( 'whd-ai-studio', WHD_URL . 'admin/ai-studio.css', [], WHD_VERSION );
-		wp_enqueue_script( 'whd-ai-studio', WHD_URL . 'admin/ai-studio.js', [ 'whd-keyword-picker', 'media-editor' ], WHD_VERSION, true );
+		wp_enqueue_script( 'whd-ai-kit', WHD_URL . 'admin/ai-kit.js', [], WHD_VERSION, true );
+		wp_enqueue_script( 'whd-ai-studio', WHD_URL . 'admin/ai-studio.js', [ 'whd-ai-kit', 'whd-keyword-picker', 'media-editor' ], WHD_VERSION, true );
 
 		$status = $post ? (string) $post->post_status : 'auto-draft';
 		wp_localize_script( 'whd-ai-studio', 'WHD_AI_STUDIO', [
@@ -298,7 +299,7 @@ final class WHD_AI_Studio {
 		return $out;
 	}
 
-	private static function strings(): array {
+	public static function strings(): array {
 		return [
 			'choose'      => __( 'Choose photographs', 'whd' ),
 			'change'      => __( 'Add or change', 'whd' ),
@@ -2019,12 +2020,27 @@ final class WHD_AI_Studio {
 		if ( empty( $_POST['whd_studio_attrs'] ) || ! current_user_can( 'edit_post', $post_id ) ) {
 			return;
 		}
-		$given = json_decode( wp_unslash( $_POST['whd_studio_attrs'] ), true ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- sanitised pair by pair below
+		$given = json_decode( wp_unslash( $_POST['whd_studio_attrs'] ), true ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- sanitised pair by pair in add_attributes()
+		if ( is_array( $given ) ) {
+			self::add_attributes( (int) $post_id, $given );
+		}
+	}
+
+	/**
+	 * Fabric, fit and care onto a product as plain attributes, label => value, leaving its tiers alone.
+	 *
+	 * Bulk products calls this directly, once the variations are built: there is no Update there,
+	 * so nothing comes along afterwards to rebuild the attributes from a tab.
+	 *
+	 * @return int How many were added or rewritten.
+	 */
+	public static function add_attributes( int $post_id, array $given ): int {
 		$product = wc_get_product( $post_id );
-		if ( ! is_array( $given ) || ! $given || ! $product ) {
-			return;
+		if ( ! $given || ! $product ) {
+			return 0;
 		}
 
+		$changed    = 0;
 		$attributes = $product->get_attributes();
 		$tiers      = [];
 		foreach ( $attributes as $attribute ) {
@@ -2050,6 +2066,7 @@ final class WHD_AI_Studio {
 				// A global attribute has terms of its own somebody chose; only a plain one is rewritten.
 				if ( ! $attributes[ $found ]->is_taxonomy() ) {
 					$attributes[ $found ]->set_options( [ $value ] );
+					$changed++;
 				}
 				continue;
 			}
@@ -2060,10 +2077,13 @@ final class WHD_AI_Studio {
 			$attribute->set_visible( true );
 			$attribute->set_variation( false );
 			$attributes[ sanitize_title( $label ) ] = $attribute;
+			$changed++;
 		}
 
 		$product->set_attributes( $attributes );
 		$product->save();
+
+		return $changed;
 	}
 
 	/* ─────────────────────────── what the model is told about the shop ─────────────────────────── */
@@ -2719,6 +2739,17 @@ final class WHD_AI_Studio {
 			if ( '' === $plan[ $key ] ) {
 				$plan[ $key ] = $value;
 			}
+		}
+		/*
+		 * The model puts the price in "sku" as well, given half a chance: "S to L, 1890" came back with
+		 * SKU 1890 on a real run, which the product screen would have typed into the SKU field and
+		 * WooCommerce would then refuse on the next product with that price. A SKU is taken only when
+		 * the shop's words say one, and never when it is just one of the numbers already read.
+		 */
+		$digits = preg_replace( '/[^0-9.]/', '', $plan['sku'] );
+		if ( '' !== $plan['sku'] && ( ! preg_match( '/\b(?:sku|item code|style (?:no|number|code)|product code|code)\b/iu', $commands )
+			|| ( '' !== $digits && in_array( self::money( $digits ), array_filter( [ $plan['price'], $plan['sale'] ] ), true ) ) ) ) {
+			$plan['sku'] = '';
 		}
 		foreach ( (array) ( $raw['levels'] ?? [] ) as $level ) {
 			if ( ! is_array( $level ) ) {

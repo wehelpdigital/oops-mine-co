@@ -1,26 +1,28 @@
 <?php
 /**
- * Bulk AI product adder: a rack of photographs in, a rack of finished products out.
+ * Bulk AI product adder: a stack of pieces in, a stack of finished draft products out.
  *
  * The job this solves is the one that takes an afternoon. A shipment arrives, there are forty
  * photographs on a phone, and every one of them needs a name, a description nobody wants to
- * write forty times, a search snippet, alt text on each picture, a category and a price. The
- * price is the only part of that a person actually knows.
+ * write forty times, a story, a search snippet, alt text on each picture, a category, a size
+ * chart, a price — and usually a few more pictures than the phone took.
  *
- * So the screen asks for the pictures and nothing else. Everything on a row except the images is
- * optional, and whatever is left blank is worked out from the photograph itself: the model looks
- * at the garment, says what it is — cut, colour, fabric, neckline, length, what it would be worn
- * with — and the copy is written from those facts rather than from a guess about a filename.
+ * Each card on this screen is the Write with AI panel from the product screen: the photographs,
+ * what to write, keywords, anything to specify, and how many new pictures to draw, each on a model
+ * or a ghost mannequin with its own instructions. Each piece then goes through the very same steps,
+ * through the very same endpoints (WHD_AI_Studio) — the close look, the zoom, the copy and its
+ * repair, every drawing checked against the photographs. Two things differ, because there is no
+ * product yet and no screen of fields to fill:
  *
- * Three steps per row, each its own request, because one call that did all three would sit for
- * three minutes behind a spinner and time out on the row that mattered:
+ *   create  an empty draft with the photographs on it, made first, so the steps have a product to
+ *           work on (and a drawn picture has a product to belong to)
+ *   save    what the product screen puts into its fields and saves with Update, written into the
+ *           draft here: name, address, both descriptions, categories, size chart, search snippet,
+ *           attributes, price and variations, the gallery — then the alt text and the story, and
+ *           the score
  *
- *   look   the picture is read and described as facts
- *   write  the facts become a name, two descriptions, a snippet and alt text for each picture
- *   make   a draft product is created, scored, and given a photograph if it is short of one
- *
- * Nothing is published. Every product lands as a draft for somebody to look at, which is the
- * same promise the rest of the AI writing makes.
+ * Pieces run one at a time, so a slow one never takes the others with it. Nothing is published:
+ * every product lands as a draft for somebody to look at.
  *
  * @package whd
  */
@@ -30,9 +32,6 @@ defined( 'ABSPATH' ) || exit;
 final class WHD_AI_Products {
 
 	const PAGE = 'whd-ai-products';
-
-	/** How many pictures a product should end up with before we stop drawing more. */
-	const WANT_IMAGES = 2;
 
 	public static function init() {
 		add_action( 'admin_menu', [ __CLASS__, 'menu' ], 11 );
@@ -57,57 +56,139 @@ final class WHD_AI_Products {
 		);
 	}
 
-	public static function assets( $hook ) {
-		if ( false === strpos( (string) $hook, self::PAGE ) ) {
+	public static function assets() {
+		// By the page, never the hook name: the hook carries where the screen sits in the menu.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- only picks which screen this is
+		if ( ! isset( $_GET['page'] ) || self::PAGE !== sanitize_key( wp_unslash( $_GET['page'] ) ) || ! class_exists( 'WHD_AI_Studio' ) ) {
 			return;
 		}
 		wp_enqueue_media();
-		wp_enqueue_style( 'whd-ai-products', WHD_URL . 'admin/ai-products.css', [], WHD_VERSION );
-		wp_enqueue_script( 'whd-ai-products', WHD_URL . 'admin/ai-products.js', [ 'wp-api-fetch', 'media-editor' ], WHD_VERSION, true );
+		wp_enqueue_style( 'whd-keyword-picker', WHD_URL . 'admin/keyword-picker.css', [], WHD_VERSION );
+		// The card is the product screen's panel, so it wears the panel's styles; this file adds the card.
+		wp_enqueue_style( 'whd-ai-studio', WHD_URL . 'admin/ai-studio.css', [], WHD_VERSION );
+		wp_enqueue_style( 'whd-ai-products', WHD_URL . 'admin/ai-products.css', [ 'whd-ai-studio', 'whd-keyword-picker' ], WHD_VERSION );
+		wp_enqueue_script( 'whd-keyword-picker', WHD_URL . 'admin/keyword-picker.js', [], WHD_VERSION, true );
+		wp_enqueue_script( 'whd-ai-kit', WHD_URL . 'admin/ai-kit.js', [], WHD_VERSION, true );
+		wp_enqueue_script( 'whd-ai-products', WHD_URL . 'admin/ai-products.js', [ 'whd-ai-kit', 'whd-keyword-picker', 'media-editor' ], WHD_VERSION, true );
+
+		$parts = [];
+		foreach ( WHD_AI_Studio::part_labels() as $key => $label ) {
+			$parts[] = [ 'key' => $key, 'name' => $label[0], 'note' => $label[1] ];
+		}
+
 		wp_localize_script( 'whd-ai-products', 'WHD_AIP', [
-			'root'       => esc_url_raw( rest_url( 'whd/v1/ai/product/' ) ),
-			'nonce'      => wp_create_nonce( 'wp_rest' ),
-			'currency'   => function_exists( 'get_woocommerce_currency_symbol' ) ? get_woocommerce_currency_symbol() : '',
-			'categories' => self::category_choices(),
-			'i18n'       => [
-				'pickImages'  => __( 'Add photographs', 'whd' ),
-				'onePhoto'    => __( '1 photograph · change', 'whd' ),
-				'manyPhotos'  => __( '%d photographs · change', 'whd' ),
-				'required'    => __( 'required', 'whd' ),
-				'untitled'    => __( 'New piece', 'whd' ),
-				'commands'    => __( 'Commands', 'whd' ),
-				'worksItOut'  => __( 'Worked out for me', 'whd' ),
-				'fromPhoto'   => __( 'from the photograph', 'whd' ),
-				'fName'       => __( 'Name', 'whd' ),
-				'fPrice'      => __( 'Price', 'whd' ),
-				'fSale'       => __( 'Sale', 'whd' ),
-				'fStock'      => __( 'Stock', 'whd' ),
-				'fSku'        => __( 'SKU', 'whd' ),
-				'fCat'        => __( 'Category', 'whd' ),
-				'useImages'   => __( 'Use these', 'whd' ),
-				'noImages'    => __( 'This row needs at least one photograph.', 'whd' ),
-				'looking'     => __( 'Looking at the photograph…', 'whd' ),
-				'writing'     => __( 'Writing it up…', 'whd' ),
-				'making'      => __( 'Creating the product…', 'whd' ),
-				'drawing'     => __( 'Drawing a second photograph…', 'whd' ),
-				'done'        => __( 'Done', 'whd' ),
-				'failed'      => __( 'Failed', 'whd' ),
-				'aimedAt'     => __( 'Focus keyphrase “%s”', 'whd' ),
-				'alsoUses'    => __( 'also uses %s', 'whd' ),
-				'edit'        => __( 'Open it', 'whd' ),
-				'remove'      => __( 'Remove this row', 'whd' ),
-				'confirmRun'  => __( 'This will create %d draft product(s). Carry on?', 'whd' ),
-				'commandHint' => __( 'e.g. comes in black, cream and navy — XS to XL — 1450, sale 999 — runs small, linen blend', 'whd' ),
+			// The keyword picker finds its list at rest.root + 'keywords'.
+			'rest'       => [
+				'root'  => esc_url_raw( rest_url( 'whd/v1/ai/' ) ),
+				'nonce' => wp_create_nonce( 'wp_rest' ),
 			],
+			'studio'     => esc_url_raw( rest_url( 'whd/v1/ai/studio/' ) ),
+			'product'    => esc_url_raw( rest_url( 'whd/v1/ai/product/' ) ),
+			'ready'      => WHD_AI::ready(),
+			'draw'       => class_exists( 'WHD_AI_Images' ) && WHD_AI_Images::ready(),
+			'parts'      => $parts,
+			'totalMax'   => WHD_AI_Studio::TOTAL_MAX,
+			'lookMax'    => WHD_AI_Studio::LOOK_MAX,
+			'currency'   => function_exists( 'get_woocommerce_currency_symbol' ) ? html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8' ) : '',
+			'categories' => self::category_choices(),
+			'i18n'       => array_merge( WHD_AI_Studio::strings(), self::strings() ),
 		] );
 	}
 
-	/** Every product category, so a row can be pinned to one by hand. */
+	/** The words this screen adds to the panel's own. */
+	private static function strings(): array {
+		return [
+			'untitled'     => __( 'New piece', 'whd' ),
+			/* translators: 1: piece number, 2: how many pieces */
+			'pieceOf'      => __( 'Piece %1$d of %2$d', 'whd' ),
+			/* translators: %d: number of photographs */
+			'photosN'      => __( '%d photograph(s)', 'whd' ),
+			/* translators: %d: number of new pictures */
+			'newN'         => __( '+%d new', 'whd' ),
+			'removePiece'  => __( 'Remove this piece', 'whd' ),
+			'fold'         => __( 'Fold this piece away', 'whd' ),
+			'unfold'       => __( 'Open this piece', 'whd' ),
+			'stateNeeds'   => __( 'Needs photographs', 'whd' ),
+			'stateReady'   => __( 'Ready', 'whd' ),
+			'stateWaiting' => __( 'Waiting its turn', 'whd' ),
+			'stateWorking' => __( 'Working…', 'whd' ),
+			'stateDone'    => __( 'Draft created', 'whd' ),
+			'stateFailed'  => __( 'Stopped', 'whd' ),
+			'copyAll'      => __( 'Use these choices on every piece', 'whd' ),
+			/* translators: %d: number of other pieces */
+			'copiedAll'    => __( 'Copied to %d other piece(s): what to write and the new pictures.', 'whd' ),
+			'copiedNone'   => __( 'There is no other piece to copy them to yet.', 'whd' ),
+			'known'        => __( 'Details you already know', 'whd' ),
+			'knownNote'    => __( 'optional — used exactly as typed', 'whd' ),
+			'fPrice'       => __( 'Price', 'whd' ),
+			'fSale'        => __( 'Sale price', 'whd' ),
+			'fStock'       => __( 'Stock', 'whd' ),
+			'fSku'         => __( 'SKU', 'whd' ),
+			'fCat'         => __( 'Category', 'whd' ),
+			'pickedForMe'  => __( 'Picked for me', 'whd' ),
+			'fromPhotos'   => __( 'from the photographs', 'whd' ),
+			'goOne'        => __( 'Generate this piece', 'whd' ),
+			'goAll'        => __( 'Generate all', 'whd' ),
+			/* translators: %d: number of pieces */
+			'goAllN'       => __( 'Generate %d pieces', 'whd' ),
+			/* translators: 1: pieces ready, 2: pieces in all */
+			'readyOf'      => __( '%1$d of %2$d ready', 'whd' ),
+			/* translators: %d: number of drafts made */
+			'madeN'        => __( '%d made', 'whd' ),
+			'nothingReady' => __( 'Add photographs to a piece first — everything is written and drawn from them.', 'whd' ),
+			'stepCreate'   => __( 'Starting the draft product', 'whd' ),
+			'hintCreate'   => __( 'An empty draft with the photographs on it, for the steps below to work on.', 'whd' ),
+			'stepSave'     => __( 'Filling in the product', 'whd' ),
+			'hintSave'     => __( 'Name, descriptions, categories, size chart, snippet, price, variations, gallery, alt text and story — saved on the draft.', 'whd' ),
+			/* translators: %d: number of pieces */
+			'askTitle'     => __( 'Create %d draft product(s)?', 'whd' ),
+			'askLead'      => __( 'Each piece is read, written and drawn in turn, the same way Write with AI does it on the product screen. Nothing is published — every one is saved as a draft for you to look over.', 'whd' ),
+			/* translators: 1: fewest minutes, 2: most minutes */
+			'askTime'      => __( 'About %1$d–%2$d minutes in all. Keep this tab open while it works.', 'whd' ),
+			'askGo'        => __( 'Generate', 'whd' ),
+			/* translators: 1: photographs, 2: new pictures */
+			'askLine'      => __( '%1$d photograph(s), %2$d new', 'whd' ),
+			/* translators: %d: number of drafts */
+			'batchDone'    => __( '%d draft product(s) created — each card has a link to its draft.', 'whd' ),
+			/* translators: 1: drafts made, 2: pieces in all */
+			'batchSome'    => __( '%1$d of %2$d created. The ones that stopped say why on their card — generate again to retry them.', 'whd' ),
+			'leave'        => __( 'Pieces are still being written. Leave anyway?', 'whd' ),
+			'savedHead'    => __( 'Saved on the draft', 'whd' ),
+			'openDraft'    => __( 'Open the draft', 'whd' ),
+			/* translators: %d: SEO score out of 100 */
+			'scoreN'       => __( 'SEO %d', 'whd' ),
+			'draftKept'    => __( 'A draft was started for this piece. Generating again carries on with the same draft.', 'whd' ),
+			'allPictures'  => __( 'The pictures', 'whd' ),
+			'drawnTag'     => __( 'drawn', 'whd' ),
+			'logHead'      => __( 'Steps, picture checks and what the AI saw', 'whd' ),
+			'secPhotos'    => __( 'Photographs of the piece', 'whd' ),
+			/* translators: %d: number of photographs */
+			'somePiece'    => __( '%d chosen. The AI reads these close up and draws every new picture from them; the first is the main image.', 'whd' ),
+			'nonePiece'    => __( 'Add at least one photograph — everything is written and drawn from them.', 'whd' ),
+			'secWrite'     => __( 'What to write', 'whd' ),
+			'secMore'      => __( 'More photographs', 'whd' ),
+			'tickAll'      => __( 'Tick all', 'whd' ),
+			'untickAll'    => __( 'Untick all', 'whd' ),
+			'kwLabel'      => __( 'Keywords to work in', 'whd' ),
+			'kwPlaceholder' => __( 'Search your keyword list, or type your own', 'whd' ),
+			'kwNote'       => __( 'Leave it empty and the AI picks from your keyword list — the phrase that fits best becomes the focus keyphrase. Pick some to choose yourself; the first one you pick is the focus.', 'whd' ),
+			'notesLabel'   => __( 'Anything to specify?', 'whd' ),
+			'notesHint'    => __( 'e.g. comes in black, cream and navy — XS to XL — 1450, sale 999 — runs small, linen blend, has 4 buttons', 'whd' ),
+			'notesNote'    => __( 'Facts about the piece go into the copy and win over what the AI sees. Colours and sizes to choose from, price, sale price and stock build the product — options become real variations.', 'whd' ),
+			'countLabel'   => __( 'How many new pictures?', 'whd' ),
+			'countNote'    => __( 'Always an even number in all, so the story’s picture-and-copy rows come out in pairs.', 'whd' ),
+			'noDraw'       => __( 'Drawing pictures needs a Google AI key — the other providers are text only.', 'whd' ),
+		];
+	}
+
+	/** Every product category, so a piece can be pinned to one by hand. */
 	private static function category_choices(): array {
 		$out   = [];
 		$terms = get_terms( [ 'taxonomy' => 'product_cat', 'hide_empty' => false, 'number' => 300 ] );
 		foreach ( is_wp_error( $terms ) ? [] : $terms as $term ) {
-			$out[] = [ 'id' => (int) $term->term_id, 'name' => $term->name ];
+			if ( 'uncategorized' !== $term->slug ) {
+				$out[] = [ 'id' => (int) $term->term_id, 'name' => html_entity_decode( $term->name, ENT_QUOTES, 'UTF-8' ) ];
+			}
 		}
 
 		return $out;
@@ -120,15 +201,15 @@ final class WHD_AI_Products {
 		<div class="wrap whd-wrap whd-aip">
 			<h1 class="whd-title"><?php esc_html_e( 'Bulk products', 'whd' ); ?></h1>
 			<p class="whd-intro whd-aip__lead">
-				<?php esc_html_e( 'One card per piece. Add the photographs, say anything you want in your own words, and leave the rest blank — everything else is worked out from the picture. Each piece is created as a draft.', 'whd' ); ?>
+				<?php esc_html_e( 'One card per piece, each with everything Write with AI has on the product screen: the photographs, what to write, keywords, anything to specify, and new pictures on a model or a ghost mannequin. Fill in as many as you like, then generate them all — each one is saved as a draft product.', 'whd' ); ?>
 			</p>
 
 			<details class="whd-aip__more">
 				<summary><?php esc_html_e( 'How this works', 'whd' ); ?></summary>
 				<div class="whd-aip__more-body">
-					<p><?php esc_html_e( 'The model looks at each photograph and writes the name, both descriptions, the search snippet and the alt text on every image. Anything you fill in yourself is kept exactly as you typed it — your price, your SKU, your name for it.', 'whd' ); ?></p>
-					<p><?php esc_html_e( 'The Commands box is for everything a field has no room for, written the way you would say it: “comes in black, cream and navy, XS to XL, 1450, runs small”. Options to choose between become real variations, built the way the Variation tiers grid builds them, so the product opens in that grid afterwards. Anything about the piece rather than the listing — a fabric, a fit note — goes into the writing instead.', 'whd' ); ?></p>
-					<p><?php esc_html_e( 'Pieces are made one at a time, so a slow one never takes the others with it. Each finished product keeps a link on its card until you leave the page.', 'whd' ); ?></p>
+					<p><?php esc_html_e( 'Every piece goes through the same steps as on the product screen: the photographs are read edge to edge, the details are cut out at full size and counted again, the copy is written from what is really there and checked against the house rules, your keyword list and the SEO score, and every new picture is drawn from your photographs and checked against them — drawn again if it got the piece wrong.', 'whd' ); ?></p>
+					<p><?php esc_html_e( '“Anything to specify?” is read two ways, as it is there: facts about the piece go into the copy, and instructions about the listing — colours and sizes to choose from, price, sale price, stock — build the product, with options as real variations in the Variation tiers grid. Anything under “Details you already know” is used exactly as typed.', 'whd' ); ?></p>
+					<p><?php esc_html_e( 'Pieces are made one at a time, so a slow one never holds up the rest, and one that stops never stops the others. Each finished card links to its draft until you leave the page.', 'whd' ); ?></p>
 				</div>
 			</details>
 
@@ -139,7 +220,8 @@ final class WHD_AI_Products {
 				</div>
 			<?php elseif ( ! class_exists( 'WHD_AI_Images' ) || ! WHD_AI_Images::ready() ) : ?>
 				<div class="whd-note">
-					<?php esc_html_e( 'Reading photographs works; drawing extra ones needs a Google AI key, so rows with a single picture will keep the single picture.', 'whd' ); ?>
+					<?php esc_html_e( 'Reading photographs and writing work; drawing new pictures needs a Google AI key, so each piece keeps the photographs it has.', 'whd' ); ?>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=whd-ai' ) ); ?>"><?php esc_html_e( 'Add one', 'whd' ); ?></a>
 				</div>
 			<?php endif; ?>
 
@@ -147,780 +229,383 @@ final class WHD_AI_Products {
 
 			<p class="whd-aip__add">
 				<button type="button" class="button" id="whd-aip-add"><?php esc_html_e( '+ Add a piece', 'whd' ); ?></button>
-				<button type="button" class="button" id="whd-aip-add-many"><?php esc_html_e( 'One per photograph…', 'whd' ); ?></button>
+				<button type="button" class="button" id="whd-aip-add-many"><?php esc_html_e( 'One piece per photograph…', 'whd' ); ?></button>
 			</p>
 
 			<div class="whd-aip__bar">
 				<span class="whd-aip__progress" id="whd-aip-progress" role="status" aria-live="polite"></span>
-				<button type="button" class="button button-primary button-hero" id="whd-aip-run"><?php esc_html_e( 'Write and create them', 'whd' ); ?></button>
+				<button type="button" class="button button-primary button-hero" id="whd-aip-run"><?php esc_html_e( 'Generate all', 'whd' ); ?></button>
 			</div>
 		</div>
 		<?php
 	}
 
-	/* ─────────────────────────── step one: look ─────────────────────────── */
+	/* ─────────────────────────── step one: a draft to work on ─────────────────────────── */
 
 	/**
-	 * Read the photographs and say what the garment is.
+	 * An empty draft product with the piece's photographs on it.
 	 *
-	 * Facts only. The writing happens in the next step, against what this returns, so that a
-	 * description can never describe a colour or a neckline the picture does not have.
+	 * The studio's steps all work on a product — it is what they check permission against, and
+	 * what a drawn picture is attached to — so the draft comes first. Generating a piece again
+	 * after it stopped carries on with the same draft rather than leaving one behind per attempt,
+	 * and clears out pictures the stopped run drew but never got as far as putting in the gallery.
 	 *
-	 * @param int[] $ids   Attachment IDs.
-	 * @param array $hints What the person already filled in on the row.
-	 * @return array|WP_Error
+	 * @param array $args images (attachment ids), name, post_id (a draft from an earlier attempt).
+	 * @return array|WP_Error { id, edit }
 	 */
-	public static function look( array $ids, array $hints = [] ) {
-		$ids = array_values( array_filter( array_map( 'absint', $ids ) ) );
+	public static function create( array $args ) {
+		$ids = self::image_ids( $args['images'] ?? [] );
 		if ( ! $ids ) {
-			return new WP_Error( 'whd_aip_no_images', __( 'That row has no photographs to look at.', 'whd' ) );
+			return new WP_Error( 'whd_aip_no_images', __( 'Add at least one photograph to this piece — everything is written and drawn from them.', 'whd' ) );
 		}
 
-		$known = array_filter( [
-			'name'     => (string) ( $hints['name'] ?? '' ),
-			'category' => (string) ( $hints['category_name'] ?? '' ),
-			'commands' => self::commands( $hints ),
-		] );
-
-		$user = "Look at the photograph or photographs and describe the item as facts. It is usually a garment; it may be an accessory or something for the skin.\n\n"
-			. ( $known ? "What the shop has already told us, which is true and must not be contradicted:\n" . wp_json_encode( $known ) . "\n\n" : '' )
-			. "Answer as JSON and nothing else, with these keys:\n"
-			. '{"garment":"what it is in two or three words, e.g. ribbed knit cardigan, or gel moisturiser",'
-			. '"colour":"the main colour as a shopper would say it",'
-			. '"other_colours":["any others visible"],'
-			. '"fabric":"what it looks to be made of, hedged if unsure",'
-			. '"texture":"ribbed, brushed, smooth, pleated…",'
-			. '"silhouette":"how it sits on the body",'
-			. '"neckline":"", "sleeve":"", "length":"", "closure":"",'
-			. '"not_clothing":"if this is not something worn, say what kind of thing it is; otherwise empty",'
-			. '"details":["the things worth pointing out: pockets, buttons, a slit, a tie"],'
-			. '"styling":["what it would be worn with"],'
-			. '"occasion":["where it would be worn"],'
-			. '"season":"",'
-			. '"category":"the single best shop category for it",'
-			. '"name_ideas":["three short product names, no brand, no superlatives"],'
-			. '"images":[{"shows":"what this particular photograph shows, one short phrase"}]'
-			. "}\n\n"
-			. "Rules:\n"
-			. "- One entry in \"images\" per photograph, in the order they were sent.\n"
-			. "- Say only what you can see. If you cannot tell the fabric, say so in the value rather than inventing one.\n"
-			. "- No measurements, no price, no stock, no country of origin, no brand names, no claims about who made it.\n"
-			. '- Plain words a shopper would use, not a catalogue.';
-
-		$reply = WHD_AI::call( self::system(), $user, [ 'json' => true, 'images' => $ids, 'max_tokens' => 6000 ] );
-		if ( is_wp_error( $reply ) ) {
-			return $reply;
+		$product = null;
+		$again   = absint( $args['post_id'] ?? 0 );
+		if ( $again && 'product' === get_post_type( $again ) && 'draft' === get_post_status( $again ) && current_user_can( 'edit_post', $again ) ) {
+			$product = wc_get_product( $again ) ?: null;
 		}
-
-		$facts = self::decode( $reply );
-		if ( ! is_array( $facts ) ) {
-			return new WP_Error( 'whd_aip_unreadable', __( 'The model’s description of the picture could not be read.', 'whd' ) );
+		if ( ! $product ) {
+			$again   = 0;
+			$product = new WC_Product_Simple();
+			$product->set_status( 'draft' );
+			$product->set_catalog_visibility( 'visible' );
 		}
-
-		$facts['image_ids'] = $ids;
-
-		return $facts;
-	}
-
-	/* ─────────────────────────── step two: write ─────────────────────────── */
-
-	/**
-	 * Turn the facts into everything a finished product page needs.
-	 *
-	 * The focus keyphrase and the supporting keywords come from the shop's researched keyword list,
-	 * the same way Write with AI on the product screen chooses them: the model picks from the
-	 * phrases that fit this piece (WHD_AI_Keywords::shortlist()), never one another page is already
-	 * aimed at, and the copy has to carry every one word for word. The keyphrase used to be the
-	 * product's own name, with the list as optional vocabulary, and the researched phrases mostly
-	 * went unused. Only when nothing on the list fits does the name stand in.
-	 *
-	 * @param array $facts What look() returned.
-	 * @param array $hints What the person filled in.
-	 * @return array|WP_Error
-	 */
-	public static function write( array $facts, array $hints = [] ) {
-		$ctx        = self::keyword_context( $facts, $hints );
-		$brief      = $ctx ? WHD_AI_Studio::keyword_brief( $ctx ) : '';
-		$vocabulary = $ctx ? [] : self::vocabulary( $facts );
-
-		$given = array_filter( [
-			'name'     => (string) ( $hints['name'] ?? '' ),
-			'commands' => self::commands( $hints ),
-		] );
-		$levels = min( 3, defined( 'WHDV_MAX_LEVELS' ) ? (int) WHDV_MAX_LEVELS : 3 );
-
-		$user = "Write the shop page for this piece, from these facts and nothing else.\n\n"
-			. "FACTS\n" . wp_json_encode( self::without( $facts, [ 'image_ids' ] ) ) . "\n\n"
-			. ( $given ? "THE SHOP'S OWN WORDS, which win over anything above:\n" . wp_json_encode( $given ) . "\n\n" : '' )
-			. ( '' !== $brief ? $brief . "\n\n" : '' )
-			. ( $vocabulary ? "WORDS SHOPPERS USE for this kind of thing. Work in the ones that genuinely fit, and ignore the rest:\n- " . implode( "\n- ", $vocabulary ) . "\n\n" : '' )
-			. "Answer as JSON and nothing else:\n"
-			. '{"name":"the product name, 3-7 words, no brand, no superlatives, no ALL CAPS",'
-			. ( '' !== $brief ? '"keyphrase":"the focus keyphrase, copied exactly from the keyword list","keywords":["supporting keywords, copied exactly from the keyword list"],' : '' )
-			. '"short":"the line under the title: one or two sentences, what it is and how it sits",'
-			. '"description":"the long description as HTML: 220 to 300 words across four or five <p>, with two <h3> subheadings between them. No <h1>, no <h2>.",'
-			. '"seo_title":"30 to 60 characters, starting with the keyphrase or the product name, one phrase — no pipes, no shop name",'
-			. '"meta_description":"120 to 155 characters, says what it is and who it suits",'
-			. '"attributes":{"Colour":"","Fabric":"","Fit":""},'
-			. '"care":"one sentence, hedged — general advice for this fabric, never a care label you have not read",'
-			. '"images":[{"alt":"what this photograph shows, for somebody who cannot see it","title":"a short title","caption":"","description":"a sentence"}],'
-			. '"second_shot":"if a second photograph would help, one sentence describing what it should show; otherwise an empty string",'
-			. '"plan":{"type":"simple or variable",'
-			. '"levels":[{"label":"Colour","options":["Black","Cream"]}],'
-			. '"price":"","sale":"","stock":"","sku":"","category":"","tags":[]}'
-			. "}\n\n"
-			. "Rules:\n"
-			. ( '' !== $brief
-				? "- \"keyphrase\" and \"keywords\": as the keyword brief above says — from the shop's list, copied exactly. Put the keyphrase in the name too when it reads as a natural product name (\"Korean Fashion Jacket\" can; \"Dress Korean Fashion\" cannot); a name that reads naturally matters more.\n"
-					. "- The keyphrase appears word for word in all of these: the first sentence of \"short\", \"seo_title\" near the start, \"meta_description\", one of the two <h3> subheadings, and the \"alt\" of the first picture. Past that, at most twice more in all the copy.\n"
-					. "- Every one of the \"keywords\" appears word for word in \"short\" or \"description\", in a sentence that reads naturally.\n"
-				: "- The product name must appear word for word in all of these: the first sentence of \"short\", \"seo_title\", \"meta_description\", one of the two <h3> subheadings, and the \"alt\" of the first picture.\n" )
-			. "- Write 220 to 300 words in \"description\". A page shorter than that reads as a stub, and one mention of the name in a short page reads as stuffing.\n"
-			. "- Short sentences. Most under twenty words, and no sentence carrying three ideas joined by dashes where two full stops would do.\n"
-			. "- One entry in \"images\" per photograph in the facts, in the same order.\n"
-			. "- Never state a measurement, a delivery time, a discount, a stock figure, a review count, a brand or a person's name.\n"
-			. "- Never say where it was made unless the shop said so above.\n"
-			. "- Write as the shop, to one person, the way the house rules say.\n\n"
-			. "THE PLAN is how the product is built, and it is where the shop's commands are obeyed.\n"
-			. "- \"variable\" only when the commands name options to choose between — colours, sizes, lengths.\n"
-			. "  A piece that comes one way is \"simple\" and \"levels\" is empty. If the commands are empty,\n"
-			. "  \"levels\" is empty: the colour you can see in the photograph is a fact about the piece, not a\n"
-			. "  choice a shopper makes, and it belongs in the copy.\n"
-			. "- A level needs two or more options. One option is not a choice.\n"
-			. sprintf( "- At most %d levels, in the order a shopper picks them: colour first, then size.\n", $levels )
-			. "- Use the shop's own words for an option. \"S, M, L\" stays \"S\", \"M\", \"L\"; do not invent sizes,\n"
-			. "  colours or a size run that was not asked for.\n"
-			. "- price, sale, stock, sku, category and tags: fill one only when the commands say so. Leave the\n"
-			. "  rest empty rather than guessing — an invented price is worse than no price.\n"
-			. '- Anything in the commands that is about the writing, not the building — a fabric, a fit note, what '
-			. 'to call it — belongs in the copy above, not here.';
-
-		/*
-		 * A generous budget, because these models reason before they answer and the reasoning is
-		 * drawn from the same allowance. Asked for a 300-word description on 4,000, the reply
-		 * came back cut off mid-string — which, when JSON was asked for, is a reply that cannot
-		 * be read at all, and the row simply failed.
-		 */
-		$reply = WHD_AI::call( self::system(), $user, [ 'json' => true, 'max_tokens' => 12000 ] );
-		if ( is_wp_error( $reply ) ) {
-			return $reply;
-		}
-
-		$draft = self::decode( $reply );
-		if ( ! is_array( $draft ) || '' === trim( (string) ( $draft['name'] ?? '' ) ) ) {
-			return new WP_Error(
-				'whd_aip_unwritable',
-				sprintf(
-					/* translators: %d: how many characters came back */
-					__( 'The write-up came back unreadable (%d characters) — usually that means it was cut off part way through. Raise the token limit in WHD → AI content and try the row again.', 'whd' ),
-					strlen( (string) $reply )
-				)
-			);
-		}
-
-		/* The shop's own words win, every time. */
-		if ( '' !== trim( (string) ( $hints['name'] ?? '' ) ) ) {
-			$draft['name'] = sanitize_text_field( (string) $hints['name'] );
-		}
-
-		$draft['name']           = self::tidy_name( (string) $draft['name'] );
-		$draft['image_ids']      = (array) ( $facts['image_ids'] ?? [] );
-		$draft['category_guess'] = (string) ( $facts['category'] ?? '' );
-
-		/* The list is stored in lower case and copied word for word: "korean" → "Korean". */
-		if ( class_exists( 'WHD_AI_Studio' ) ) {
-			foreach ( [ 'short', 'description', 'seo_title', 'meta_description' ] as $field ) {
-				$draft[ $field ] = WHD_AI_Studio::proper( (string) ( $draft[ $field ] ?? '' ) );
-			}
-			foreach ( (array) ( $draft['images'] ?? [] ) as $i => $image ) {
-				foreach ( is_array( $image ) ? [ 'alt', 'title', 'caption', 'description' ] : [] as $field ) {
-					$draft['images'][ $i ][ $field ] = WHD_AI_Studio::proper( (string) ( $image[ $field ] ?? '' ) );
-				}
-			}
-		}
-
-		$copy  = wp_strip_all_tags( (string) ( $draft['short'] ?? '' ) . ' ' . (string) ( $draft['description'] ?? '' ) );
-		$draft = array_merge( $draft, $ctx ? self::aim( $draft, $copy, $ctx ) : [ 'keyphrase' => self::phrase_from_name( $draft['name'] ), 'keywords' => [] ] );
-
-		/*
-		 * The copy is checked for every keyword it is aimed at. There is no second pass here to put
-		 * one in — a row already runs three model calls — so a miss is said on the row instead.
-		 */
-		$aimed           = array_values( array_filter( array_merge( [ (string) $draft['keyphrase'] ], (array) $draft['keywords'] ) ) );
-		$house           = WHD_AI::check( $copy, $aimed );
-		$house['issues'] = array_values( array_filter( (array) $house['issues'], static fn( $i ) => 'keyword' !== ( $i['type'] ?? '' ) ) );
-		foreach ( $ctx ? (array) $house['keywords'] : [] as $keyword => $in ) {
-			if ( ! $in ) {
-				$house['issues'][] = [
-					'type'   => 'keyword',
-					/* translators: %s: a keyword */
-					'detail' => sprintf( __( 'The keyword “%s” from the shop\'s list is not in the copy word for word — add it when you edit the product.', 'whd' ), $keyword ),
-				];
-			}
-		}
-		$draft['house'] = $house;
-
-		return $draft;
-	}
-
-	/**
-	 * What the keyword brief needs: the list phrases that fit this piece. Empty when the studio or
-	 * the list is missing, and the old vocabulary hint is used instead.
-	 */
-	private static function keyword_context( array $facts, array $hints ): array {
-		if ( ! class_exists( 'WHD_AI_Studio' ) || ! class_exists( 'WHD_AI_Keywords' ) ) {
-			return [];
-		}
-		$about = [];
-		foreach ( [ 'garment', 'category', 'colour', 'fabric', 'texture', 'silhouette', 'neckline', 'sleeve', 'length', 'season', 'not_clothing' ] as $key ) {
-			$about[] = is_scalar( $facts[ $key ] ?? null ) ? (string) $facts[ $key ] : '';
-		}
-		foreach ( [ 'other_colours', 'occasion' ] as $key ) {
-			$about[] = implode( ' ', array_filter( (array) ( $facts[ $key ] ?? [] ), 'is_scalar' ) );
-		}
-		$about[] = (string) ( $hints['name'] ?? '' );
-		$about[] = (string) ( $hints['category_name'] ?? '' );
-		$about[] = self::commands( $hints );
-
-		return [
-			'keywords'  => [],
-			'shortlist' => WHD_AI_Keywords::shortlist( implode( ' ', $about ), 0, 20 ),
-			'post_id'   => 0,
-			'facts'     => $facts,
-		];
-	}
-
-	/**
-	 * WHD_AI_Studio::aim(), then held to what the copy really says. The studio repairs copy that
-	 * misses its keyphrase; this screen does not, so a focus phrase the copy does not carry gives
-	 * way to one from the list that it does, and supporting keywords the copy never uses are
-	 * swapped for list phrases it does use.
-	 */
-	private static function aim( array $draft, string $copy, array $ctx ): array {
-		$aim  = WHD_AI_Studio::aim( $draft, (string) $draft['name'], $ctx );
-		$text = mb_strtolower( $copy . ' ' . $draft['name'] );
-		$in   = static fn( string $k ): bool => '' !== trim( $k ) && false !== mb_strpos( $text, mb_strtolower( trim( $k ) ) );
-
-		if ( ! $in( (string) $aim['keyphrase'] ) ) {
-			foreach ( $ctx['shortlist'] as $k ) {
-				if ( ! $k['taken'] && ! $k['general'] && $in( $k['keyword'] ) ) {
-					$aim['keyphrase']        = $k['keyword'];
-					$aim['keyphrase_from']   = 'list';
-					$aim['keyphrase_volume'] = $k['volume'];
-					break;
-				}
-			}
-		}
-		$keywords = array_values( array_filter( (array) $aim['keywords'], $in ) );
-		foreach ( $ctx['shortlist'] as $k ) {
-			if ( count( $keywords ) < 2 && $in( $k['keyword'] ) && ! in_array( $k['keyword'], $keywords, true ) && mb_strtolower( $k['keyword'] ) !== mb_strtolower( $aim['keyphrase'] ) ) {
-				$keywords[] = $k['keyword'];
-			}
-		}
-		// Nothing from the list made it in: say so, rather than quietly aiming at nothing.
-		$aim['keywords'] = $keywords ?: (array) $aim['keywords'];
-
-		return $aim;
-	}
-
-	/* ─────────────────────────── step three: make ─────────────────────────── */
-
-	/**
-	 * Create the draft product, hang the pictures on it, and score it.
-	 *
-	 * @param array $draft What write() returned.
-	 * @param array $hints What the person filled in.
-	 * @return array|WP_Error
-	 */
-	public static function make( array $draft, array $hints = [] ) {
-		if ( ! function_exists( 'wc_get_product' ) ) {
-			return new WP_Error( 'whd_aip_no_woo', __( 'WooCommerce is not active, so there is nothing to create a product in.', 'whd' ) );
-		}
-		$name = self::tidy_name( (string) ( $draft['name'] ?? '' ) );
-		if ( '' === $name ) {
-			return new WP_Error( 'whd_aip_no_name', __( 'That row has no product name.', 'whd' ) );
-		}
-
-		$ids = array_values( array_filter( array_map( 'absint', (array) ( $draft['image_ids'] ?? [] ) ) ) );
-
-		/* The pictures get their words before anything points at them. */
-		self::dress_images( $ids, (array) ( $draft['images'] ?? [] ), $name );
-
-		/* A single photograph is a thin product page, so draw the one the writer asked for. */
-		$drawn = 0;
-		if ( count( $ids ) < self::WANT_IMAGES && '' !== trim( (string) ( $draft['second_shot'] ?? '' ) ) ) {
-			$extra = self::draw( (string) $draft['second_shot'], $name );
-			if ( $extra ) {
-				$ids[]  = $extra;
-				$drawn++;
-			}
-		}
-
-		$product = new WC_Product_Simple();
-		$product->set_name( $name );
-		/* A draft WooCommerce saves has no post_name at all until somebody publishes it, and a
-		   product with no web address fails the check that asks whether its phrase is in one.
-		   Naming it now also means the URL matches the name somebody chose, not a later edit —
-		   with the focus keyphrase in front when the name does not carry it. */
-		$keyphrase = trim( (string) ( $draft['keyphrase'] ?? '' ) ) ?: self::phrase_from_name( $name );
-		$product->set_slug( class_exists( 'WHD_AI_Studio' ) ? WHD_AI_Studio::slug_for( $name, $keyphrase ) : sanitize_title( $name ) );
-		$product->set_status( 'draft' );
-		$product->set_short_description( (string) ( $draft['short'] ?? '' ) );
-		$product->set_description( (string) ( $draft['description'] ?? '' ) );
-		$product->set_catalog_visibility( 'visible' );
-
-		/* The row's fields first, then anything the commands asked for. */
-		$plan  = is_array( $draft['plan'] ?? null ) ? $draft['plan'] : [];
-		$price = self::money( self::pick( $hints, $plan, 'price' ) );
-		if ( '' !== $price ) {
-			$product->set_regular_price( $price );
-		}
-		$sale = self::money( self::pick( $hints, $plan, 'sale' ) );
-		if ( '' !== $sale ) {
-			$product->set_sale_price( $sale );
-		}
-		$sku = sanitize_text_field( self::pick( $hints, $plan, 'sku' ) );
-		if ( '' !== $sku && function_exists( 'wc_get_product_id_by_sku' ) && ! wc_get_product_id_by_sku( $sku ) ) {
-			$product->set_sku( $sku );
-		}
-		$stock = self::pick( $hints, $plan, 'stock' );
-		if ( '' !== trim( $stock ) ) {
-			$product->set_manage_stock( true );
-			$product->set_stock_quantity( (int) $stock );
-		}
-		$product->set_stock_status( '' !== trim( $stock ) && (int) $stock < 1 ? 'outofstock' : 'instock' );
-
-		if ( $ids ) {
-			$product->set_image_id( $ids[0] );
-			if ( count( $ids ) > 1 ) {
-				$product->set_gallery_image_ids( array_slice( $ids, 1 ) );
-			}
-		}
-
-		$category = self::category_for( $hints, self::pick( $hints, $plan, 'category' ) ?: (string) ( $draft['category_guess'] ?? '' ) );
-		if ( $category ) {
-			$product->set_category_ids( [ $category ] );
-		}
+		$product->set_name( self::tidy_name( (string) ( $args['name'] ?? '' ) ) ?: __( 'New piece', 'whd' ) );
+		$product->set_image_id( $ids[0] );
+		$product->set_gallery_image_ids( array_slice( $ids, 1 ) );
 
 		$id = $product->save();
-		if ( is_wp_error( $id ) || ! $id ) {
-			return is_wp_error( $id ) ? $id : new WP_Error( 'whd_aip_save', __( 'The product could not be saved.', 'whd' ) );
+		if ( ! $id ) {
+			return new WP_Error( 'whd_aip_save', __( 'The draft product could not be created.', 'whd' ) );
 		}
-
-		/*
-		 * The descriptive attributes, minus anything that is about to become a tier. Left in,
-		 * a product built from "comes in black, cream and navy" ended up listing Colour twice:
-		 * once as the swatch row a shopper chooses from, and once as a flat line of text saying
-		 * what the model saw in the photograph.
-		 */
-		$tier_labels = [];
-		foreach ( (array) ( $plan['levels'] ?? [] ) as $level ) {
-			if ( is_array( $level ) && '' !== trim( (string) ( $level['label'] ?? '' ) ) ) {
-				$tier_labels[] = mb_strtolower( trim( (string) $level['label'] ) );
+		if ( $again ) {
+			// Its gallery is back to the photographs, so anything drawn last time is no longer in it.
+			self::clear_unused_drawings( $id );
+		}
+		// Photographs nobody has claimed yet belong to this piece in the media library.
+		foreach ( $ids as $aid ) {
+			if ( ! wp_get_post_parent_id( $aid ) ) {
+				wp_update_post( [ 'ID' => $aid, 'post_parent' => $id ] );
 			}
 		}
-		self::attributes( (int) $id, (array) ( $draft['attributes'] ?? [] ), (string) ( $draft['care'] ?? '' ), $tier_labels );
 
-		/*
-		 * The options the commands asked for, as real variations — and only ever from a command.
-		 * Nobody who left the box empty is asking for a variable product, however many colours
-		 * the model can see in the photograph.
-		 */
-		$variations = '' !== self::commands( $hints )
-			? self::build_variations( (int) $id, $plan, $price, $sale, $stock )
-			: [ 'made' => 0, 'notices' => [] ];
+		return [ 'id' => (int) $id, 'edit' => get_edit_post_link( $id, 'raw' ) ];
+	}
 
-		/* Where it came from, and what it is aimed at. */
+	/** Pictures drawn for this draft by a run that stopped before they reached its gallery. */
+	private static function clear_unused_drawings( int $post_id ) {
+		$product = wc_get_product( $post_id );
+		if ( ! $product || ! class_exists( 'WHD_AI_Images' ) ) {
+			return;
+		}
+		$kept  = array_merge( [ (int) $product->get_image_id() ], array_map( 'intval', $product->get_gallery_image_ids() ) );
+		$drawn = get_posts( [
+			'post_type'   => 'attachment',
+			'post_parent' => $post_id,
+			'post_status' => 'inherit',
+			'numberposts' => 50,
+			'fields'      => 'ids',
+			'meta_key'    => WHD_AI_Images::META, // phpcs:ignore WordPress.DB.SlowDBQuery -- a handful of attachments on one draft
+		] );
+		foreach ( $drawn as $id ) {
+			if ( ! in_array( (int) $id, $kept, true ) && current_user_can( 'delete_post', $id ) ) {
+				wp_delete_attachment( (int) $id, true );
+			}
+		}
+	}
+
+	/* ─────────────────────────── the last step: fill it in ─────────────────────────── */
+
+	/**
+	 * Put the written piece into its draft, the way the product screen's fields and Update would.
+	 *
+	 * The write step answers with `screen` — one entry per field the product screen fills in — and
+	 * that is what arrives here, from the browser, so every value is checked again before it is
+	 * written: a name is text, the descriptions are post HTML, a category has to exist, a size
+	 * chart has to be one of the shop's. Whatever the shop typed under "Details you already know"
+	 * wins over what the AI worked out.
+	 *
+	 * Order matters for the attributes: the variations are built first, because building them
+	 * rewrites the product's attributes, and fabric, fit and care are added after, around them.
+	 *
+	 * @param array $args screen, details { name, price, sale, stock, sku, category }, parts,
+	 *                    images [ { id, slot } ] (photographs and drawn pictures, in order),
+	 *                    draft { name, keyphrase, keywords, images, story, used }.
+	 * @return array|WP_Error
+	 */
+	public static function save( int $post_id, array $args ) {
+		$product = wc_get_product( $post_id );
+		if ( ! $product || 'product' !== get_post_type( $post_id ) ) {
+			return new WP_Error( 'whd_aip_gone', __( 'The draft for this piece is not there any more. Generate it again.', 'whd' ) );
+		}
+
+		$screen  = is_array( $args['screen'] ?? null ) ? $args['screen'] : [];
+		$details = is_array( $args['details'] ?? null ) ? $args['details'] : [];
+		$draft   = is_array( $args['draft'] ?? null ) ? $args['draft'] : [];
+		$parts   = array_values( array_intersect( WHD_AI_Studio::PARTS, array_map( 'sanitize_key', array_filter( (array) ( $args['parts'] ?? [] ), 'is_scalar' ) ) ) );
+		$rows    = [];
+		$notices = [];
+
+		/* The pictures, photographs first, in the order the run planned them. */
+		$finals = [];
+		foreach ( (array) ( $args['images'] ?? [] ) as $entry ) {
+			$id = absint( is_array( $entry ) ? ( $entry['id'] ?? 0 ) : $entry );
+			if ( $id && wp_attachment_is_image( $id ) && ! isset( $finals[ $id ] ) ) {
+				$finals[ $id ] = max( 0, (int) ( is_array( $entry ) ? ( $entry['slot'] ?? count( $finals ) ) : count( $finals ) ) );
+			}
+		}
+		asort( $finals );
+		$gallery = array_keys( $finals );
+
+		/* Name and web address. A draft has no address of its own until somebody publishes it, and a
+		   product with none fails the check that asks whether its keyphrase is in one. */
+		$name = self::tidy_name( (string) ( $details['name'] ?? '' ) ) ?: self::tidy_name( (string) ( $screen['title'] ?? '' ) );
+		if ( '' !== $name ) {
+			$product->set_name( $name );
+			$rows[] = [ 'label' => __( 'Name', 'whd' ), 'detail' => $name ];
+		}
+		$name      = $name ?: self::tidy_name( $product->get_name() );
+		$keyphrase = sanitize_text_field( (string) ( $screen['seo']['keyphrase'] ?? ( $draft['keyphrase'] ?? '' ) ) );
+		$slug      = sanitize_title( (string) ( $screen['slug'] ?? '' ) ) ?: WHD_AI_Studio::slug_for( $name, $keyphrase );
+		if ( '' !== $slug ) {
+			$product->set_slug( $slug );
+		}
+
+		if ( ! empty( $screen['description'] ) ) {
+			$product->set_description( wp_kses_post( (string) $screen['description'] ) );
+			$rows[] = [ 'label' => __( 'Description', 'whd' ), 'detail' => sprintf( /* translators: %d: word count */ __( '%d words', 'whd' ), str_word_count( wp_strip_all_tags( (string) $screen['description'] ) ) ) ];
+		}
+		if ( ! empty( $screen['short'] ) ) {
+			$product->set_short_description( wp_kses_post( (string) $screen['short'] ) );
+			$rows[] = [ 'label' => __( 'Short description', 'whd' ), 'detail' => '' ];
+		}
+
+		/* A category the shop pinned is the category; otherwise the ones the AI picked, if they exist. */
+		$pinned = absint( $details['category'] ?? 0 );
+		$cats   = $pinned && term_exists( $pinned, 'product_cat' )
+			? [ $pinned ]
+			: array_values( array_filter( array_map( 'absint', (array) ( $screen['categories'] ?? [] ) ), static fn( $id ) => $id && term_exists( $id, 'product_cat' ) ) );
+		if ( $cats ) {
+			$product->set_category_ids( $cats );
+			$rows[] = [ 'label' => __( 'Categories', 'whd' ), 'detail' => implode( ', ', array_map( static function ( $id ) {
+				$term = get_term( $id, 'product_cat' );
+				return $term && ! is_wp_error( $term ) ? html_entity_decode( $term->name, ENT_QUOTES, 'UTF-8' ) : '';
+			}, $cats ) ) ];
+		}
+
+		/* Price, sale price, stock and SKU: typed beats worked out. On a product with variations they
+		   go on every variation instead, below. */
+		$plan  = is_array( $screen['price'] ?? null ) ? $screen['price'] : [];
+		$typed = static function ( string $key, string $plan_key ) use ( $details, $plan ) {
+			$value = trim( (string) ( $details[ $key ] ?? '' ) );
+			return '' !== $value ? $value : trim( (string) ( $plan[ $plan_key ] ?? '' ) );
+		};
+		$price = self::money( $typed( 'price', 'regular' ) );
+		$sale  = self::money( $typed( 'sale', 'sale' ) );
+		$stock = $typed( 'stock', 'stock' );
+		$stock = is_numeric( $stock ) ? (string) max( 0, (int) $stock ) : '';
+		$sku   = sanitize_text_field( $typed( 'sku', 'sku' ) );
+		$tiers = is_array( $screen['tiers'] ?? null ) && ! empty( $screen['tiers']['levels'] ) ? $screen['tiers'] : null;
+
+		if ( ! $tiers ) {
+			if ( '' !== $price ) {
+				$product->set_regular_price( $price );
+			}
+			if ( '' !== $sale && ( '' === $price || (float) $sale < (float) $price ) ) {
+				$product->set_sale_price( $sale );
+			}
+			if ( '' !== $stock ) {
+				$product->set_manage_stock( true );
+				$product->set_stock_quantity( (int) $stock );
+				$product->set_stock_status( (int) $stock > 0 ? 'instock' : 'outofstock' );
+			}
+			$money = array_filter( [ $price, '' !== $sale ? sprintf( /* translators: %s: sale price */ __( 'sale %s', 'whd' ), $sale ) : '' ] );
+			if ( $money || '' !== $stock ) {
+				$rows[] = [ 'label' => __( 'Price', 'whd' ), 'detail' => implode( ' · ', array_merge( $money, '' !== $stock ? [ sprintf( /* translators: %s: stock count */ __( '%s in stock', 'whd' ), $stock ) ] : [] ) ) ];
+			}
+		}
+		if ( '' !== $sku ) {
+			$taken = function_exists( 'wc_get_product_id_by_sku' ) ? (int) wc_get_product_id_by_sku( $sku ) : 0;
+			if ( $taken && $taken !== $post_id ) {
+				/* translators: %s: the SKU */
+				$notices[] = sprintf( __( 'The SKU “%s” is already another product’s, so it was left off this one.', 'whd' ), $sku );
+			} else {
+				$product->set_sku( $sku );
+			}
+		}
+
+		if ( $gallery ) {
+			$product->set_image_id( $gallery[0] );
+			$product->set_gallery_image_ids( array_slice( $gallery, 1 ) );
+			$rows[] = [ 'label' => __( 'Gallery', 'whd' ), 'detail' => sprintf( /* translators: %d: number of pictures */ _n( '%d picture', '%d pictures', count( $gallery ), 'whd' ), count( $gallery ) ) ];
+		}
+
+		$product->set_status( 'draft' );
+		$product->save();
+
+		/* The size chart, chosen by the AI from the shop's own — or none, when none fits. */
+		if ( array_key_exists( 'size_chart', $screen ) && class_exists( 'WHD_Size_Charts' ) ) {
+			$chart = absint( $screen['size_chart'] );
+			$valid = $chart && WHD_Size_Charts::CPT === get_post_type( $chart ) && 'publish' === get_post_status( $chart );
+			if ( $valid ) {
+				update_post_meta( $post_id, WHD_Size_Charts::META, $chart );
+				$rows[] = [ 'label' => __( 'Size chart', 'whd' ), 'detail' => html_entity_decode( get_the_title( $chart ), ENT_QUOTES, 'UTF-8' ) ];
+			} else {
+				delete_post_meta( $post_id, WHD_Size_Charts::META );
+				$rows[] = [ 'label' => __( 'Size chart: none fits this piece', 'whd' ), 'detail' => '' ];
+			}
+		}
+
+		/* The search snippet and the phrase it is aimed at. */
+		if ( ! empty( $screen['seo'] ) && is_array( $screen['seo'] ) ) {
+			$title = sanitize_text_field( (string) ( $screen['seo']['title'] ?? '' ) );
+			$desc  = sanitize_textarea_field( (string) ( $screen['seo']['description'] ?? '' ) );
+			if ( '' !== $title ) {
+				update_post_meta( $post_id, '_omc_seo_title', $title );
+			}
+			if ( '' !== $desc ) {
+				update_post_meta( $post_id, '_omc_meta_description', $desc );
+			}
+			$rows[] = [ 'label' => __( 'SEO title, meta description and keyphrase', 'whd' ), 'detail' => $keyphrase ];
+		}
+		if ( '' !== $keyphrase && class_exists( 'WHD_SEO' ) ) {
+			update_post_meta( $post_id, WHD_SEO::KEYPHRASE, $keyphrase );
+		}
+
+		/* Variations, through the Variation Tiers model, so the product opens in its grid like any other. */
+		$variations = 0;
+		if ( $tiers ) {
+			if ( class_exists( 'WHDV_Model' ) ) {
+				foreach ( (array) ( $tiers['combos'] ?? [] ) as $key => $combo ) {
+					$combo = is_array( $combo ) ? $combo : [];
+					if ( '' !== $price ) {
+						$combo['regular_price'] = $price;
+					}
+					if ( '' !== $sale ) {
+						$combo['sale_price'] = $sale;
+					}
+					if ( '' !== $stock ) {
+						$combo['stock'] = $stock;
+					}
+					$tiers['combos'][ $key ] = $combo;
+				}
+				$built      = WHDV_Model::apply( $post_id, $tiers );
+				$variations = (int) ( $built['created'] ?? 0 ) + (int) ( $built['updated'] ?? 0 );
+				$notices    = array_merge( $notices, array_values( (array) ( $built['notices'] ?? [] ) ) );
+				$labels     = array_filter( array_map( static fn( $l ) => is_array( $l ) ? sanitize_text_field( (string) ( $l['label'] ?? '' ) ) : '', (array) $tiers['levels'] ) );
+				$rows[]     = [ 'label' => __( 'Variations in the Variation tiers grid', 'whd' ), 'detail' => implode( ' → ', $labels ) . ' · ' . $variations ];
+			} else {
+				$notices[] = __( 'The notes asked for options, but the Variation Tiers plugin is not active, so it was left as a single piece.', 'whd' );
+			}
+		}
+
+		/* Fabric, fit and care, around the tiers rather than in place of them. */
+		$attributes = is_array( $screen['attributes'] ?? null ) ? $screen['attributes'] : [];
+		if ( $attributes && WHD_AI_Studio::add_attributes( $post_id, $attributes ) ) {
+			$rows[] = [ 'label' => __( 'Product data', 'whd' ), 'detail' => implode( ' · ', array_map(
+				static fn( $label, $value ) => sanitize_text_field( (string) $label ) . ': ' . sanitize_text_field( is_scalar( $value ) ? (string) $value : '' ),
+				array_keys( $attributes ),
+				$attributes
+			) ) ];
+		}
+
+		/* Alt text on every picture and the story beside them — the studio's own last step. */
+		$finished = WHD_AI_Studio::finish( $post_id, [
+			'parts'  => $parts,
+			'images' => array_map( static fn( $id, $slot ) => [ 'id' => $id, 'slot' => $slot ], array_keys( $finals ), $finals ),
+			'draft'  => array_merge( $draft, [ 'name' => $name ] ),
+		] );
+		if ( is_array( $finished ) ) {
+			if ( ! empty( $finished['story'] ) ) {
+				$rows[] = [ 'label' => __( 'Product story', 'whd' ), 'detail' => sprintf( /* translators: %d: sections */ __( '%d sections, each beside its picture', 'whd' ), (int) $finished['story'] ) ];
+			}
+			if ( ! empty( $finished['dressed'] ) ) {
+				$rows[] = [ 'label' => __( 'Alt text on the pictures', 'whd' ), 'detail' => sprintf( /* translators: %d: pictures */ _n( '%d picture', '%d pictures', (int) $finished['dressed'], 'whd' ), (int) $finished['dressed'] ) ];
+			}
+		}
+
+		/* Where it came from, anything still missing, and the score. */
 		if ( class_exists( 'WHD_AI_Writer' ) ) {
-			update_post_meta( $id, WHD_AI_Writer::ORIGIN, 'ai' );
+			update_post_meta( $post_id, WHD_AI_Writer::ORIGIN, 'ai' );
 		}
-		update_post_meta( $id, '_omc_seo_title', self::fit( (string) ( $draft['seo_title'] ?? '' ), 60 ) ?: $name );
-		update_post_meta( $id, '_omc_meta_description', self::fit( (string) ( $draft['meta_description'] ?? '' ), 155 ) );
-		if ( class_exists( 'WHD_SEO' ) ) {
-			update_post_meta( $id, WHD_SEO::KEYPHRASE, sanitize_text_field( $keyphrase ) );
-		}
-		$keywords = array_values( array_filter( array_map( 'sanitize_text_field', (array) ( $draft['keywords'] ?? [] ) ) ) );
-		if ( class_exists( 'WHD_AI_Keywords' ) ) {
-			WHD_AI_Keywords::mark_used( array_merge( [ $keyphrase ], $keywords ) );
-		}
+		$seo = class_exists( 'WHD_AI_Admin' ) ? WHD_AI_Admin::finish_seo( $post_id ) : [];
 
-		/* Anything still missing, and the score. */
-		$seo = class_exists( 'WHD_AI_Admin' )
-			? WHD_AI_Admin::finish_seo( (int) $id )
-			: [];
+		$thumbs = [];
+		foreach ( $gallery as $id ) {
+			$thumbs[] = [
+				'id'    => $id,
+				'thumb' => (string) wp_get_attachment_image_url( $id, 'thumbnail' ),
+				'large' => (string) wp_get_attachment_image_url( $id, 'large' ),
+				'drawn' => (bool) get_post_meta( $id, class_exists( 'WHD_AI_Images' ) ? WHD_AI_Images::META : '_whd_ai_image', true ),
+			];
+		}
 
 		return [
-			'id'         => (int) $id,
-			'name'       => $name,
-			'keyphrase'  => $keyphrase,
-			'keywords'   => $keywords,
-			'edit'       => get_edit_post_link( $id, 'raw' ),
-			'images'     => count( $ids ),
-			'drawn'      => $drawn,
+			'id'         => $post_id,
+			'name'       => html_entity_decode( get_the_title( $post_id ), ENT_QUOTES, 'UTF-8' ),
+			'edit'       => get_edit_post_link( $post_id, 'raw' ),
 			'score'      => (int) ( $seo['score'] ?? 0 ),
 			'rating'     => (string) ( $seo['rating'] ?? '' ),
-			'house'      => (array) ( $draft['house']['issues'] ?? [] ),
-			'variations' => (int) $variations['made'],
-			'tiers'      => array_values( array_filter( array_map(
-				static function ( $level ) {
-					return is_array( $level ) ? (string) ( $level['label'] ?? '' ) : '';
-				},
-				(array) ( $plan['levels'] ?? [] )
-			) ) ),
-			'notices'    => $variations['notices'],
+			'rows'       => $rows,
+			'notices'    => array_values( array_unique( $notices ) ),
+			'pictures'   => $thumbs,
+			'variations' => $variations,
 		];
 	}
 
 	/* ─────────────────────────── the small jobs ─────────────────────────── */
 
-	/** The voice, the rules and the banned words the rest of the writing already uses. */
-	private static function system(): string {
-		return WHD_AI::system_prompt();
-	}
-
-	/**
-	 * What the shop typed into the row's command box.
-	 *
-	 * Free text, on purpose. "Comes in black, cream and navy, XS to XL, 1450, runs small" is how
-	 * somebody actually describes a piece, and asking them to put each part in its own little
-	 * field is how a bulk screen stops being quicker than doing it by hand. The model reads it
-	 * both ways: as facts for the copy, and as instructions for how to build the product.
-	 */
-	private static function commands( array $hints ): string {
-		$text = (string) ( $hints['commands'] ?? ( $hints['notes'] ?? '' ) );
-
-		return trim( preg_replace( '/[ \t]+/', ' ', $text ) );
-	}
-
-	/**
-	 * A value the shop typed into the row wins over one the model read out of the commands.
-	 *
-	 * Both are the shop talking; the field is just the less ambiguous of the two.
-	 */
-	private static function pick( array $hints, array $plan, string $key ): string {
-		$typed = trim( (string) ( $hints[ $key ] ?? '' ) );
-
-		return '' !== $typed ? $typed : trim( (string) ( $plan[ $key ] ?? '' ) );
-	}
-
-	/**
-	 * Build the options the commands asked for, as real WooCommerce variations.
-	 *
-	 * Handed to the Variation Tiers model rather than done here: it already knows how to create
-	 * a global attribute, find or make each term, switch the product to variable and reconcile
-	 * the combinations — and a product built through it opens in the Variation tiers grid like
-	 * any other, instead of being a second kind of variable product nothing else understands.
-	 *
-	 * @return array{made:int,notices:string[]}
-	 */
-	private static function build_variations( int $product_id, array $plan, string $price, string $sale, string $stock ): array {
-		$out = [ 'made' => 0, 'notices' => [] ];
-
-		/*
-		 * A level is a choice, so it needs at least two things to choose between.
-		 *
-		 * Asked to describe a photograph with no commands at all, the model still volunteered
-		 * "Colour: Black" — and that built a variable product with exactly one variation, which
-		 * moved the price off the parent and left the shop page showing no price at all. One
-		 * option is a fact about the piece, not a choice a shopper makes.
-		 */
-		$levels = array_values( array_filter( (array) ( $plan['levels'] ?? [] ), static function ( $level ) {
-			if ( ! is_array( $level ) || '' === trim( (string) ( $level['label'] ?? '' ) ) ) {
-				return false;
-			}
-			$options = array_filter( array_map( 'trim', array_map( 'strval', (array) ( $level['options'] ?? [] ) ) ) );
-
-			return count( array_unique( $options ) ) > 1;
-		} ) );
-		if ( ! $levels ) {
-			return $out;
-		}
-		if ( ! class_exists( 'WHDV_Model' ) ) {
-			$out['notices'][] = __( 'The commands asked for options, but the Variation Tiers plugin is not active, so it was left as a single piece.', 'whd' );
-			return $out;
-		}
-
-		$max   = defined( 'WHDV_MAX_LEVELS' ) ? (int) WHDV_MAX_LEVELS : 3;
-		$state = [ 'levels' => [], 'combos' => [], 'groups' => [], 'dirty' => true ];
-
-		foreach ( array_slice( $levels, 0, $max ) as $level ) {
-			$options = [];
-			foreach ( (array) $level['options'] as $option ) {
-				$name = trim( wp_strip_all_tags( is_array( $option ) ? (string) ( $option['name'] ?? '' ) : (string) $option ) );
-				if ( '' === $name ) {
-					continue;
-				}
-				$key = sanitize_title( $name );
-				if ( '' === $key || isset( $options[ $key ] ) ) {
-					continue;
-				}
-				$options[ $key ] = [ 'key' => $key, 'name' => $name ];
-			}
-			if ( $options ) {
-				$state['levels'][] = [
-					'label'   => sanitize_text_field( (string) $level['label'] ),
-					'type'    => 'select',
-					'options' => array_values( $options ),
-				];
+	private static function image_ids( $ids ): array {
+		$out = [];
+		foreach ( array_slice( (array) $ids, 0, WHD_AI_Studio::TOTAL_MAX ) as $id ) {
+			$id = absint( is_array( $id ) ? ( $id['id'] ?? 0 ) : $id );
+			if ( $id && wp_attachment_is_image( $id ) && ! in_array( $id, $out, true ) ) {
+				$out[] = $id;
 			}
 		}
-		if ( ! $state['levels'] ) {
-			return $out;
-		}
-
-		/* Every combination, on, carrying the row's price and stock. */
-		$keys = [ [] ];
-		foreach ( $state['levels'] as $level ) {
-			$next = [];
-			foreach ( $keys as $so_far ) {
-				foreach ( $level['options'] as $option ) {
-					$next[] = array_merge( $so_far, [ $option['key'] ] );
-				}
-			}
-			$keys = $next;
-		}
-		foreach ( $keys as $combo ) {
-			$state['combos'][ implode( '|', $combo ) ] = [
-				'on'            => 1,
-				'sku'           => '',
-				'regular_price' => $price,
-				'sale_price'    => $sale,
-				'stock'         => $stock,
-				'image'         => 0,
-			];
-		}
-
-		$result          = WHDV_Model::apply( $product_id, $state );
-		$out['made']     = (int) ( $result['created'] ?? 0 ) + (int) ( $result['updated'] ?? 0 );
-		$out['notices']  = array_values( (array) ( $result['notices'] ?? [] ) );
-
 		return $out;
 	}
 
-	/** Words shoppers use for this kind of thing, from the researched list. */
-	private static function vocabulary( array $facts ): array {
-		if ( ! class_exists( 'WHD_AI_Keywords' ) ) {
-			return [];
-		}
-		$seeds = array_filter( [
-			(string) ( $facts['garment'] ?? '' ),
-			(string) ( $facts['category'] ?? '' ),
-			(string) ( $facts['colour'] ?? '' ),
-		] );
-		$out = [];
-		foreach ( $seeds as $seed ) {
-			$word = trim( (string) array_slice( preg_split( '/\s+/u', $seed ), -1 )[0] ?? '' );
-			if ( mb_strlen( $word ) < 3 ) {
-				continue;
-			}
-			foreach ( (array) WHD_AI_Keywords::all( [ 'search' => $word, 'limit' => 6 ] ) as $row ) {
-				$phrase = (string) ( is_object( $row ) ? $row->keyword : ( $row['keyword'] ?? '' ) );
-				if ( '' !== $phrase ) {
-					$out[ $phrase ] = true;
-				}
-			}
-		}
-
-		return array_slice( array_keys( $out ), 0, 12 );
-	}
-
-	/** Alt, title, caption and description on each photograph. */
-	private static function dress_images( array $ids, array $words, string $name ) {
-		foreach ( array_values( $ids ) as $i => $id ) {
-			$w   = is_array( $words[ $i ] ?? null ) ? $words[ $i ] : [];
-			$alt = sanitize_text_field( (string) ( $w['alt'] ?? '' ) ) ?: $name;
-
-			/* The first picture is the one a search engine reads, so it says what the thing is
-			   called even when the model described the scene instead. */
-			if ( 0 === $i && false === mb_stripos( $alt, $name ) ) {
-				$alt = $name . ' — ' . lcfirst( $alt );
-			}
-
-			update_post_meta( $id, '_wp_attachment_image_alt', $alt );
-			wp_update_post( [
-				'ID'           => $id,
-				'post_title'   => sanitize_text_field( (string) ( $w['title'] ?? '' ) ) ?: $alt,
-				'post_excerpt' => sanitize_text_field( (string) ( $w['caption'] ?? '' ) ),
-				'post_content' => sanitize_textarea_field( (string) ( $w['description'] ?? '' ) ) ?: $alt,
-			] );
-		}
-	}
-
-	/** One more photograph, in the shop's own look. */
-	private static function draw( string $brief, string $name ) {
-		if ( ! class_exists( 'WHD_AI_Images' ) || ! WHD_AI_Images::ready() ) {
-			return 0;
-		}
-		$id = WHD_AI_Images::make(
-			$brief,
-			sanitize_title( $name ) ?: 'product',
-			$name . ' — ' . wp_strip_all_tags( $brief ),
-			'',
-			[ 'aspect' => '3:4' ]
-		);
-
-		return is_wp_error( $id ) ? 0 : (int) $id;
-	}
-
-	/** What the model saw, as product attributes somebody can filter on later. */
-	private static function attributes( int $id, array $pairs, string $care, array $skip = [] ) {
-		$keep = [];
-		foreach ( $pairs as $label => $value ) {
-			$label = sanitize_text_field( (string) $label );
-			$label = function_exists( 'mb_convert_case' ) ? mb_convert_case( $label, MB_CASE_TITLE, 'UTF-8' ) : ucwords( $label );
-			$value = sanitize_text_field( (string) $value );
-			if ( '' === $label || '' === $value ) {
-				continue;
-			}
-			if ( in_array( mb_strtolower( $label ), $skip, true ) ) {
-				continue; // a shopper chooses this one; it is not a line of text about the piece
-			}
-			$attribute = new WC_Product_Attribute();
-			$attribute->set_name( $label );
-			$attribute->set_options( [ $value ] );
-			$attribute->set_visible( true );
-			$attribute->set_variation( false );
-			$keep[] = $attribute;
-		}
-		if ( '' !== trim( $care ) ) {
-			$attribute = new WC_Product_Attribute();
-			$attribute->set_name( __( 'Care', 'whd' ) );
-			$attribute->set_options( [ sanitize_text_field( $care ) ] );
-			$attribute->set_visible( true );
-			$attribute->set_variation( false );
-			$keep[] = $attribute;
-		}
-		if ( ! $keep ) {
-			return;
-		}
-		$product = wc_get_product( $id );
-		if ( $product ) {
-			$product->set_attributes( $keep );
-			$product->save();
-		}
-	}
-
-	/** The category the row asked for, or the nearest existing one to what the model guessed. */
-	private static function category_for( array $hints, string $guess ) {
-		$chosen = (int) ( $hints['category'] ?? 0 );
-		if ( $chosen && term_exists( $chosen, 'product_cat' ) ) {
-			return $chosen;
-		}
-		$guess = trim( $guess );
-		if ( '' === $guess ) {
-			return 0;
-		}
-		$term = get_term_by( 'name', $guess, 'product_cat' );
-		if ( $term ) {
-			return (int) $term->term_id;
-		}
-		/* A near miss is better than nothing: "Knitwear" for "knitwear and cardigans". */
-		foreach ( (array) get_terms( [ 'taxonomy' => 'product_cat', 'hide_empty' => false, 'number' => 300 ] ) as $t ) {
-			if ( is_object( $t ) && false !== mb_stripos( $guess, $t->name ) ) {
-				return (int) $t->term_id;
-			}
-		}
-
-		return 0;
-	}
-
-	/** A product ranks for the thing it is, and its name says what it is. */
-	private static function phrase_from_name( string $name ): string {
-		$name  = html_entity_decode( $name, ENT_QUOTES, 'UTF-8' );
-		$name  = preg_replace( '/[^\p{L}\p{N}\s-]+/u', ' ', $name );
-		$words = preg_split( '/\s+/u', mb_strtolower( trim( (string) $name ) ), -1, PREG_SPLIT_NO_EMPTY );
-
-		return $words ? trim( implode( ' ', array_slice( $words, -4 ) ) ) : '';
-	}
-
 	private static function tidy_name( string $name ): string {
-		$name = sanitize_text_field( wp_strip_all_tags( $name ) );
+		$name = html_entity_decode( sanitize_text_field( wp_strip_all_tags( $name ) ), ENT_QUOTES, 'UTF-8' );
 		$name = trim( preg_replace( '/\s+/u', ' ', $name ) );
 
 		return mb_substr( $name, 0, 120 );
 	}
 
-	/** Trim to a length without cutting a word in half. */
-	private static function fit( string $text, int $max ): string {
-		$text = trim( preg_replace( '/\s+/u', ' ', wp_strip_all_tags( $text ) ) );
-		if ( mb_strlen( $text ) <= $max ) {
-			return $text;
-		}
-		$cut   = mb_substr( $text, 0, $max );
-		$space = mb_strrpos( $cut, ' ' );
-
-		return rtrim( false !== $space ? mb_substr( $cut, 0, $space ) : $cut, ' ,;:-' );
-	}
-
+	/** "₱1,450" and "1450.00" are the same price. */
 	private static function money( $value ): string {
-		$value = trim( (string) $value );
-		if ( '' === $value ) {
-			return '';
-		}
-		$value = preg_replace( '/[^0-9.]/', '', $value );
+		$value = preg_replace( '/[^0-9.]/', '', (string) $value );
 
-		return '' === $value ? '' : (string) (float) $value;
-	}
-
-	private static function without( array $array, array $keys ): array {
-		foreach ( $keys as $key ) {
-			unset( $array[ $key ] );
-		}
-
-		return $array;
-	}
-
-	/** JSON from a model, which sometimes arrives wrapped in a code fence whatever you ask. */
-	private static function decode( string $reply ) {
-		$reply = trim( $reply );
-		$reply = (string) preg_replace( '/^```(?:json)?\s*|\s*```$/m', '', $reply );
-		$data  = json_decode( $reply, true );
-		if ( is_array( $data ) ) {
-			return $data;
-		}
-		$start = strpos( $reply, '{' );
-		$end   = strrpos( $reply, '}' );
-		if ( false === $start || false === $end || $end <= $start ) {
-			return null;
-		}
-
-		return json_decode( substr( $reply, $start, $end - $start + 1 ), true );
+		return '' === $value || ! is_numeric( $value ) ? '' : wc_format_decimal( $value );
 	}
 
 	/* ─────────────────────────── the wires ─────────────────────────── */
 
 	public static function rest() {
-		$can = static function () {
-			return current_user_can( 'edit_products' );
-		};
-		foreach ( [ 'look', 'write', 'make' ] as $step ) {
-			register_rest_route( 'whd/v1', '/ai/product/' . $step, [
-				'methods'             => 'POST',
-				'callback'            => [ __CLASS__, 'rest_' . $step ],
-				'permission_callback' => $can,
-			] );
-		}
+		register_rest_route( 'whd/v1', '/ai/product/create', [
+			'methods'             => 'POST',
+			'callback'            => [ __CLASS__, 'rest_create' ],
+			'permission_callback' => static function () {
+				return current_user_can( 'edit_products' );
+			},
+		] );
+		register_rest_route( 'whd/v1', '/ai/product/save', [
+			'methods'             => 'POST',
+			'callback'            => [ __CLASS__, 'rest_save' ],
+			'permission_callback' => static function ( WP_REST_Request $r ) {
+				$id = (int) $r->get_param( 'post_id' );
+				return $id && 'product' === get_post_type( $id ) && current_user_can( 'edit_post', $id );
+			},
+		] );
 	}
 
-	public static function rest_look( WP_REST_Request $r ) {
-		return self::answer( self::look(
-			(array) $r->get_param( 'images' ),
-			(array) $r->get_param( 'hints' )
-		) );
+	public static function rest_create( WP_REST_Request $r ) {
+		return self::answer( self::create( $r->get_json_params() ?: [] ) );
 	}
 
-	public static function rest_write( WP_REST_Request $r ) {
-		return self::answer( self::write(
-			(array) $r->get_param( 'facts' ),
-			(array) $r->get_param( 'hints' )
-		) );
-	}
-
-	public static function rest_make( WP_REST_Request $r ) {
-		return self::answer( self::make(
-			(array) $r->get_param( 'draft' ),
-			(array) $r->get_param( 'hints' )
-		) );
+	public static function rest_save( WP_REST_Request $r ) {
+		return self::answer( self::save( (int) $r->get_param( 'post_id' ), $r->get_json_params() ?: [] ) );
 	}
 
 	private static function answer( $result ) {

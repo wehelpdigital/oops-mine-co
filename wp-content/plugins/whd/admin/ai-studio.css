@@ -1037,7 +1037,28 @@
 	transition: transform .5s;
 }
 
+.whd-studio-loader__img[hidden] {
+	display: none;
+}
+
 /* words */
+
+/* Which piece of a batch is being worked on, on Bulk products: small, above the step. */
+.whd-studio-loader__kicker {
+	margin: 0 0 6px;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: .08em;
+	text-transform: uppercase;
+	color: var(--rose-deep);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.whd-studio-loader__kicker[hidden] {
+	display: none;
+}
 
 .whd-studio-loader__h {
 	min-height: 1.35em;
