@@ -1074,7 +1074,8 @@ final class WHD_AI {
 			return new WP_Error( 'whd_ai_off', __( 'No AI provider is connected.', 'whd' ) );
 		}
 
-		$args['timeout'] = $pictures ? 180 : 90;
+		// A caller that is not holding a page open — a background job — can afford to wait longer.
+		$args['timeout'] = (int) ( $options['timeout'] ?? ( $pictures ? 180 : 90 ) );
 		$response        = wp_remote_post( $url, $args );
 
 		if ( is_wp_error( $response ) ) {

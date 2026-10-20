@@ -64,6 +64,13 @@ final class WHD_AI_Studio {
 	/** Most pictures a product ends up with through this panel. */
 	const TOTAL_MAX = 12;
 
+	/**
+	 * Seconds to wait for a model's answer. Writing the whole page took about a minute here and
+	 * ran past the default 90 seconds on the live host ("cURL error 28 … 90001 milliseconds"). These
+	 * calls run in a background job, with no page held open, so waiting longer costs nothing.
+	 */
+	const MODEL_WAIT = 240;
+
 	/** The aspect ratios the image model accepts, as width / height. */
 	const RATIOS = [
 		'1:1'  => 1.0,
@@ -549,6 +556,7 @@ final class WHD_AI_Studio {
 			'json'        => true,
 			'images'      => $read,
 			'max_tokens'  => 10000,
+			'timeout'     => self::MODEL_WAIT,
 			'vision_edge' => self::LOOK_EDGE,
 			'detail'      => 'high',
 		] );
@@ -635,6 +643,7 @@ final class WHD_AI_Studio {
 			'json'       => true,
 			'images'     => array_merge( [ $ids[0] ], wp_list_pluck( $crops, 'path' ) ),
 			'max_tokens' => 10000,
+			'timeout'    => self::MODEL_WAIT,
 			'detail'     => 'high',
 		] );
 		self::forget( $crops );
@@ -890,7 +899,7 @@ final class WHD_AI_Studio {
 		 * a reply cut off part way through is JSON that cannot be read at all.
 		 */
 		self::mark( 'writing the copy with the model' );
-		$reply = WHD_AI::call( WHD_AI::system_prompt(), self::write_prompt( $ctx ), [ 'json' => true, 'max_tokens' => 20000 ] );
+		$reply = WHD_AI::call( WHD_AI::system_prompt(), self::write_prompt( $ctx ), [ 'json' => true, 'max_tokens' => 20000, 'timeout' => self::MODEL_WAIT ] );
 		if ( is_wp_error( $reply ) ) {
 			return $reply;
 		}
@@ -933,7 +942,7 @@ final class WHD_AI_Studio {
 			self::write_prompt( $ctx ) . "\n\nYOUR PREVIOUS ANSWER\n" . wp_json_encode( $raw, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES )
 				. "\n\nWHAT IS WRONG WITH IT\n- " . implode( "\n- ", $issues )
 				. "\n\nAnswer again with the whole JSON, every key, with all of those put right and everything that was already right kept as it was.",
-			[ 'json' => true, 'max_tokens' => 20000 ]
+			[ 'json' => true, 'max_tokens' => 20000, 'timeout' => self::MODEL_WAIT ]
 		);
 		$second = is_wp_error( $again ) ? null : self::decode( $again );
 		if ( is_array( $second ) ) {
@@ -1627,6 +1636,7 @@ final class WHD_AI_Studio {
 			'json'        => true,
 			'images'      => array_merge( $whole, wp_list_pluck( $close, 'path' ), [ $image ] ),
 			'max_tokens'  => 6000,
+			'timeout'     => self::MODEL_WAIT,
 			'vision_edge' => 1280,
 			'detail'      => 'high',
 		] );
