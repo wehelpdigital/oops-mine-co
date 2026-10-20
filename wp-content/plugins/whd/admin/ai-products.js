@@ -39,49 +39,84 @@
 
 	/* ── a row ── */
 
+	function field( label, name, extra ) {
+		return '<p class="whd-aip__f' + ( extra && extra.wide ? ' whd-aip__f--wide' : '' ) + '">' +
+			'<span class="whd-aip__label">' + escape( label ) + '</span>' +
+			( extra && extra.html ? extra.html :
+				'<input type="text" class="whd-aip__in' + ( extra && extra.num ? ' whd-aip__in--num' : '' ) +
+				'" data-f="' + name + '" placeholder="' + escape( ( extra && extra.placeholder ) || '' ) + '">' ) +
+		'</p>';
+	}
+
 	function makeRow( attachment ) {
 		var id = ++seq;
-		var tr = document.createElement( 'tr' );
-		tr.className = 'whd-aip__row';
-		tr.dataset.images = '';
+		var card = document.createElement( 'article' );
+		card.className = 'whd-aip__card';
+		card.dataset.images = '';
 
-		var options = '<option value="">' + '—' + '</option>';
+		var options = '<option value="">' + escape( i18n.worksItOut || 'Worked out for me' ) + '</option>';
 		( cfg.categories || [] ).forEach( function ( c ) {
 			options += '<option value="' + c.id + '">' + escape( c.name ) + '</option>';
 		} );
 
-		tr.innerHTML =
-			'<td class="whd-aip__c-img">' +
-				'<div class="whd-aip__thumbs" data-thumbs></div>' +
-				'<button type="button" class="button-link whd-aip__pick" data-pick>' + escape( i18n.pickImages || 'Choose' ) + '</button>' +
-			'</td>' +
-			'<td><input type="text" class="whd-aip__in" data-f="name" placeholder="' + escape( 'worked out from the photo' ) + '"></td>' +
-			'<td class="whd-aip__c-num"><input type="text" class="whd-aip__in whd-aip__in--num" data-f="price" placeholder="' + escape( cfg.currency || '' ) + '"></td>' +
-			'<td class="whd-aip__c-num"><input type="text" class="whd-aip__in whd-aip__in--num" data-f="sale"></td>' +
-			'<td class="whd-aip__c-num"><input type="text" class="whd-aip__in whd-aip__in--num" data-f="stock"></td>' +
-			'<td><input type="text" class="whd-aip__in" data-f="sku"></td>' +
-			'<td><select class="whd-aip__in" data-f="category">' + options + '</select></td>' +
-			'<td><textarea class="whd-aip__in whd-aip__cmd" data-f="commands" rows="2" placeholder="' +
-				escape( i18n.commandHint || '' ) + '"></textarea></td>' +
-			'<td class="whd-aip__c-state"><span class="whd-aip__state" data-state></span></td>' +
-			'<td class="whd-aip__c-x"><button type="button" class="button-link whd-aip__x" data-remove title="' + escape( i18n.remove || 'Remove' ) + '">&times;</button></td>';
+		card.innerHTML =
+			'<header class="whd-aip__head">' +
+				'<span class="whd-aip__n" aria-hidden="true"></span>' +
+				'<h2 class="whd-aip__name" data-cardtitle>' + escape( i18n.untitled || 'New piece' ) + '</h2>' +
+				'<button type="button" class="whd-aip__x" data-remove aria-label="' + escape( i18n.remove || 'Remove' ) + '"></button>' +
+			'</header>' +
 
-		rows.appendChild( tr );
+			'<div class="whd-aip__body">' +
+				'<div class="whd-aip__media">' +
+					'<div class="whd-aip__thumbs" data-thumbs></div>' +
+					'<button type="button" class="whd-aip__drop" data-pick>' +
+						'<span class="whd-aip__drop-plus" aria-hidden="true">+</span>' +
+						'<span class="whd-aip__drop-text">' + escape( i18n.pickImages || 'Add photographs' ) + '</span>' +
+						'<span class="whd-aip__drop-req">' + escape( i18n.required || 'required' ) + '</span>' +
+					'</button>' +
+				'</div>' +
 
-		tr.querySelector( '[data-pick]' ).addEventListener( 'click', function () {
-			pick( tr );
+				'<div class="whd-aip__fields">' +
+					'<p class="whd-aip__f whd-aip__f--cmd">' +
+						'<span class="whd-aip__label">' + escape( i18n.commands || 'Commands' ) + '</span>' +
+						'<textarea class="whd-aip__in whd-aip__cmd" data-f="commands" rows="2" placeholder="' +
+							escape( i18n.commandHint || '' ) + '"></textarea>' +
+					'</p>' +
+
+					'<div class="whd-aip__grid">' +
+						field( i18n.fName || 'Name', 'name', { wide: true, placeholder: i18n.fromPhoto || 'from the photograph' } ) +
+						field( ( i18n.fPrice || 'Price' ) + ( cfg.currency ? ' (' + cfg.currency + ')' : '' ), 'price', { num: true } ) +
+						field( i18n.fSale || 'Sale', 'sale', { num: true } ) +
+						field( i18n.fStock || 'Stock', 'stock', { num: true } ) +
+						field( i18n.fSku || 'SKU', 'sku', {} ) +
+						field( i18n.fCat || 'Category', 'category', { wide: true, html: '<select class="whd-aip__in" data-f="category">' + options + '</select>' } ) +
+					'</div>' +
+				'</div>' +
+			'</div>' +
+
+			'<footer class="whd-aip__foot" data-foot hidden><span class="whd-aip__state" data-state></span></footer>';
+
+		rows.appendChild( card );
+
+		card.querySelector( '[data-pick]' ).addEventListener( 'click', function () {
+			pick( card );
 		} );
-		tr.querySelector( '[data-remove]' ).addEventListener( 'click', function () {
-			tr.parentNode.removeChild( tr );
+		card.querySelector( '[data-remove]' ).addEventListener( 'click', function () {
+			card.parentNode.removeChild( card );
 			count();
 		} );
 
+		/* The heading follows whatever it is called, so a long list stays scannable. */
+		card.querySelector( '[data-f="name"]' ).addEventListener( 'input', function () {
+			card.querySelector( '[data-cardtitle]' ).textContent = this.value.trim() || ( i18n.untitled || 'New piece' );
+		} );
+
 		if ( attachment ) {
-			setImages( tr, [ attachment ] );
+			setImages( card, [ attachment ] );
 		}
 		count();
 
-		return tr;
+		return card;
 	}
 
 	function escape( text ) {
@@ -103,6 +138,15 @@
 			box.appendChild( img );
 		} );
 		tr.dataset.images = ids.join( ',' );
+
+		/* With pictures in, the big dashed invitation becomes a quiet "change these". */
+		tr.classList.toggle( 'has-images', ids.length > 0 );
+		var drop = tr.querySelector( '.whd-aip__drop-text' );
+		if ( drop ) {
+			drop.textContent = ids.length
+				? ( ids.length === 1 ? ( i18n.onePhoto || '1 photograph · change' ) : ( i18n.manyPhotos || '%d photographs · change' ).replace( '%d', ids.length ) )
+				: ( i18n.pickImages || 'Add photographs' );
+		}
 	}
 
 	function imagesOf( tr ) {
@@ -122,6 +166,8 @@
 	}
 
 	function state( tr, text, kind ) {
+		var foot = tr.querySelector( '[data-foot]' );
+		if ( foot ) { foot.hidden = false; }
 		var el = tr.querySelector( '[data-state]' );
 		el.textContent = text;
 		el.className = 'whd-aip__state' + ( kind ? ' is-' + kind : '' );
@@ -164,8 +210,8 @@
 	/* ── running them ── */
 
 	function count() {
-		var all = rows.querySelectorAll( '.whd-aip__row' ).length;
-		var ready = Array.prototype.filter.call( rows.querySelectorAll( '.whd-aip__row' ), function ( tr ) {
+		var all = rows.querySelectorAll( '.whd-aip__card' ).length;
+		var ready = Array.prototype.filter.call( rows.querySelectorAll( '.whd-aip__card' ), function ( tr ) {
 			return imagesOf( tr ).length > 0;
 		} ).length;
 		tally.textContent = all ? ready + ' / ' + all : '';
@@ -191,6 +237,8 @@
 				return post( 'make', { draft: draft, hints: hints } );
 			} )
 			.then( function ( made ) {
+				var foot = tr.querySelector( '[data-foot]' );
+				if ( foot ) { foot.hidden = false; }
 				var el = tr.querySelector( '[data-state]' );
 				el.className = 'whd-aip__state is-done';
 				el.innerHTML = '';
@@ -235,7 +283,7 @@
 		if ( busy ) {
 			return;
 		}
-		var todo = Array.prototype.filter.call( rows.querySelectorAll( '.whd-aip__row' ), function ( tr ) {
+		var todo = Array.prototype.filter.call( rows.querySelectorAll( '.whd-aip__card' ), function ( tr ) {
 			return ! tr.classList.contains( 'is-done' ) && imagesOf( tr ).length;
 		} );
 		if ( ! todo.length ) {

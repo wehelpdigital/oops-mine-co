@@ -1,138 +1,412 @@
-/* Bulk products: a working table, not a form — wide rows, small type, thumbnails that read. */
+/*
+ * Bulk products: one card per piece.
+ *
+ * This was a ten-column table, and a table was the wrong shape for the work. Only the
+ * photographs are required and only the command box is really written in, but a table gives
+ * every column the same weight — so the two things that matter were the same size as SKU, the
+ * headings collapsed into stacked letters as soon as a column was added, and a screen for
+ * adding forty pieces looked like a spreadsheet nobody wanted to fill in.
+ *
+ * A card gives the photographs and the commands the room they are owed, drops the rest into a
+ * quiet grid underneath, and numbers itself with a CSS counter so removing one renumbers the
+ * others for free.
+ */
 
-.whd-aip__table {
-	margin-top: 18px;
-	table-layout: fixed;
+/* One measure for the whole screen, so the cards stop stretching their fields across a
+   twenty-seven inch monitor and the lead above them lines up with their left edge. */
+.whd-aip__lead,
+.whd-aip__more,
+.whd-aip__list,
+.whd-aip__add {
+	max-width: 1180px;
 }
 
-.whd-aip__table th {
-	font-size: 12px;
-	letter-spacing: .02em;
+.whd-aip__lead {
+	font-size: 14px;
+	line-height: 1.6;
+	max-width: 92ch;
 }
 
-.whd-aip__req {
-	font-weight: 400;
+/* the explanation, out of the way until it is wanted */
+
+.whd-aip__more {
+	margin: 0 0 20px;
+	font-size: 13px;
+}
+
+.whd-aip__more > summary {
+	cursor: pointer;
+	color: #2271b1;
+	width: max-content;
+	padding: 2px 0;
+}
+
+.whd-aip__more > summary:hover {
+	color: #135e96;
+}
+
+.whd-aip__more-body {
+	margin-top: 8px;
+	padding: 2px 0 2px 14px;
+	border-left: 3px solid #dcdcde;
+	color: #50575e;
+	line-height: 1.65;
+}
+
+.whd-aip__more-body p {
+	margin: 0 0 10px;
+	max-width: 68ch;
+}
+
+.whd-aip__more-body p:last-child {
+	margin-bottom: 0;
+}
+
+/* the stack of cards */
+
+.whd-aip__list {
+	counter-reset: whd-aip;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	margin: 18px 0 0;
+}
+
+.whd-aip__card {
+	counter-increment: whd-aip;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+}
+
+.whd-aip__card.is-done {
+	border-color: #c3e0c8;
+	background: #fbfefb;
+}
+
+/* the strip across the top: number, name, close */
+
+.whd-aip__head {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 10px 12px;
+	border-bottom: 1px solid #f0f0f1;
+}
+
+.whd-aip__n {
+	flex: 0 0 auto;
+	display: grid;
+	place-items: center;
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	background: #f0f0f1;
+	color: #50575e;
 	font-size: 11px;
-	color: #b32d2e;
-	margin-left: 4px;
+	font-weight: 600;
 }
 
-/* Every column is sized, because the table is laid out fixed: leave one without a width and
-   the others take what is left, which turned "Name", "SKU" and "Category" into single columns
-   of stacked letters the moment the command box arrived. */
-.whd-aip__c-img   { width: 150px; }
-.whd-aip__c-name  { width: 150px; }
-.whd-aip__c-num   { width: 68px; }
-.whd-aip__c-sku   { width: 90px; }
-.whd-aip__c-cat   { width: 120px; }
-.whd-aip__c-state { width: 230px; }
-.whd-aip__c-x     { width: 30px; text-align: right; }
+.whd-aip__n::before {
+	content: counter(whd-aip);
+}
 
-.whd-aip__table td {
-	vertical-align: top;
-	padding: 10px 8px;
+.whd-aip__card.is-done .whd-aip__n {
+	background: #d6ead9;
+	color: #1f5b2a;
+}
+
+.whd-aip__name {
+	flex: 1 1 auto;
+	margin: 0;
+	padding: 0;
+	font-size: 13px;
+	font-weight: 600;
+	color: #1d2327;
+	line-height: 1.4;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.whd-aip__x {
+	position: relative;
+	flex: 0 0 auto;
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	border: 0;
+	background: none;
+	cursor: pointer;
+	color: #a7aaad;
+	border-radius: 3px;
+}
+
+/* Drawn rather than typed: the "×" glyph sat a pixel and a half low, as it does in any font that
+   puts it by its own metrics. Two bars on the centre line sit dead centre everywhere. */
+.whd-aip__x::before,
+.whd-aip__x::after {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 11px;
+	height: 1.75px;
+	border-radius: 1px;
+	background: currentColor;
+	transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.whd-aip__x::after {
+	transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.whd-aip__x:hover {
+	color: #b32d2e;
+	background: #fcf0f1;
+}
+
+/* photographs on the left, the writing on the right */
+
+.whd-aip__body {
+	display: flex;
+	gap: 16px;
+	padding: 14px 12px;
+	align-items: flex-start;
+}
+
+.whd-aip__media {
+	flex: 0 0 168px;
+}
+
+.whd-aip__thumbs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 5px;
+}
+
+.whd-aip__thumbs:not(:empty) {
+	margin-bottom: 7px;
+}
+
+.whd-aip__thumb {
+	width: 52px;
+	height: 68px;
+	object-fit: cover;
+	border-radius: 4px;
+	border: 1px solid #dcdcde;
+	background: #f6f7f7;
+}
+
+/* empty: a place to drop things. filled: a quiet line that says change them. */
+
+.whd-aip__drop {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 3px;
+	width: 100%;
+	min-height: 104px;
+	padding: 10px;
+	border: 1px dashed #c3c4c7;
+	border-radius: 5px;
+	background: #fcfcfc;
+	color: #50575e;
+	cursor: pointer;
+	font-size: 12px;
+	text-align: center;
+	transition: border-color .15s, background .15s, color .15s;
+}
+
+.whd-aip__drop:hover,
+.whd-aip__drop:focus-visible {
+	border-color: #2271b1;
+	background: #f6fbff;
+	color: #135e96;
+}
+
+.whd-aip__drop-plus {
+	font-size: 19px;
+	line-height: 1;
+	color: #a7aaad;
+}
+
+.whd-aip__drop:hover .whd-aip__drop-plus {
+	color: #2271b1;
+}
+
+.whd-aip__drop-req {
+	font-size: 10px;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+	color: #b32d2e;
+}
+
+.whd-aip__card.has-images .whd-aip__drop {
+	min-height: 0;
+	flex-direction: row;
+	gap: 6px;
+	padding: 5px 8px;
+	border-style: solid;
+	border-color: #e0e0e1;
+	background: #fff;
+	font-size: 11.5px;
+}
+
+.whd-aip__card.has-images .whd-aip__drop-plus,
+.whd-aip__card.has-images .whd-aip__drop-req {
+	display: none;
+}
+
+/* the fields */
+
+.whd-aip__fields {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.whd-aip__f {
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	min-width: 0;
+}
+
+.whd-aip__label {
+	font-size: 10.5px;
+	font-weight: 600;
+	letter-spacing: .05em;
+	text-transform: uppercase;
+	color: #646970;
 }
 
 .whd-aip__in {
 	width: 100%;
 	min-height: 30px;
 	font-size: 13px;
+	border-radius: 4px;
 }
 
 .whd-aip__in--num {
 	text-align: right;
 }
 
-/* The command box: the widest thing on the row, because it is where the work goes. */
-.whd-aip__c-cmd   { width: 270px; }
+.whd-aip__f--cmd {
+	margin-bottom: 12px;
+}
 
 .whd-aip__cmd {
-	min-height: 54px;
+	min-height: 58px;
 	resize: vertical;
-	line-height: 1.45;
-	font-size: 12.5px;
+	line-height: 1.5;
+	font-size: 13px;
 }
 
 .whd-aip__cmd::placeholder {
 	color: #8c8f94;
-	font-size: 12px;
+	font-size: 12.5px;
 }
 
-.whd-aip__thumbs {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 4px;
-	margin-bottom: 6px;
-	min-height: 4px;
+/* the optional details, deliberately quieter than the box above them */
+
+.whd-aip__grid {
+	display: grid;
+	grid-template-columns: repeat(6, minmax(0, 1fr));
+	gap: 10px;
+	padding-top: 12px;
+	border-top: 1px solid #f0f0f1;
 }
 
-.whd-aip__thumb {
-	width: 46px;
-	height: 60px;
-	object-fit: cover;
-	border-radius: 3px;
-	border: 1px solid #dcdcde;
-	background: #f6f7f7;
+.whd-aip__f--wide {
+	grid-column: span 2;
 }
 
-.whd-aip__pick {
-	font-size: 12px;
+/* what happened to this one */
+
+.whd-aip__foot {
+	padding: 10px 12px;
+	border-top: 1px solid #f0f0f1;
+	background: #fafafa;
+	border-radius: 0 0 5px 5px;
 }
 
-.whd-aip__x {
-	color: #b32d2e;
-	font-size: 18px;
-	line-height: 1;
-	text-decoration: none;
+.whd-aip__card.is-done .whd-aip__foot {
+	background: #f4faf5;
 }
-
-/* what each row is doing */
 
 .whd-aip__state {
 	display: block;
-	font-size: 12px;
+	font-size: 12.5px;
 	line-height: 1.5;
 	color: #50575e;
 	word-break: break-word;
 }
 
-.whd-aip__state.is-busy  { color: #2271b1; }
-.whd-aip__state.is-bad   { color: #b32d2e; }
-.whd-aip__state.is-done  { color: #1d2327; }
+.whd-aip__state.is-busy { color: #2271b1; }
+.whd-aip__state.is-bad  { color: #b32d2e; }
+.whd-aip__state.is-done { color: #1d2327; }
 
 .whd-aip__score {
 	color: #646970;
 }
 
 .whd-aip__warn {
-	margin-top: 4px;
-	padding: 5px 7px;
+	margin-top: 6px;
+	padding: 6px 8px;
 	border-left: 3px solid #dba617;
 	background: #fcf9e8;
 	color: #4a3f20;
-	font-size: 11px;
+	font-size: 11.5px;
 	line-height: 1.5;
 }
 
-.whd-aip__row.is-done {
-	background: #f6fbf6;
-}
+/* adding and running */
 
-.whd-aip__actions {
-	margin-top: 14px;
+.whd-aip__add {
+	/* Clear of the sticky bar, which would otherwise sit on top of the last card. */
+	margin: 14px 0 76px;
 	display: flex;
-	align-items: center;
 	gap: 8px;
 	flex-wrap: wrap;
 }
 
+.whd-aip__bar {
+	position: sticky;
+	bottom: 0;
+	z-index: 10;
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 14px;
+	margin: 18px -20px 0;
+	padding: 12px 20px;
+	background: rgba(255, 255, 255, .96);
+	border-top: 1px solid #dcdcde;
+	backdrop-filter: blur(4px);
+}
+
 .whd-aip__progress {
-	font-size: 12px;
+	font-size: 12.5px;
 	color: #646970;
-	margin-left: 4px;
+}
+
+/* narrower screens: the details wrap, then the photographs move above them */
+
+@media (max-width: 1400px) {
+	.whd-aip__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
 @media (max-width: 1100px) {
-	.whd-aip__c-state { width: 200px; }
-	.whd-aip__c-img   { width: 150px; }
+	.whd-aip__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 782px) {
+	.whd-aip__body { flex-direction: column; }
+	.whd-aip__media { flex: 1 1 auto; width: 100%; }
+	.whd-aip__drop { min-height: 76px; }
+	.whd-aip__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.whd-aip__bar { margin-left: -10px; margin-right: -10px; padding-left: 10px; padding-right: 10px; }
 }

@@ -70,7 +70,20 @@ final class WHD_AI_Products {
 			'currency'   => function_exists( 'get_woocommerce_currency_symbol' ) ? get_woocommerce_currency_symbol() : '',
 			'categories' => self::category_choices(),
 			'i18n'       => [
-				'pickImages'  => __( 'Choose the photographs', 'whd' ),
+				'pickImages'  => __( 'Add photographs', 'whd' ),
+				'onePhoto'    => __( '1 photograph · change', 'whd' ),
+				'manyPhotos'  => __( '%d photographs · change', 'whd' ),
+				'required'    => __( 'required', 'whd' ),
+				'untitled'    => __( 'New piece', 'whd' ),
+				'commands'    => __( 'Commands', 'whd' ),
+				'worksItOut'  => __( 'Worked out for me', 'whd' ),
+				'fromPhoto'   => __( 'from the photograph', 'whd' ),
+				'fName'       => __( 'Name', 'whd' ),
+				'fPrice'      => __( 'Price', 'whd' ),
+				'fSale'       => __( 'Sale', 'whd' ),
+				'fStock'      => __( 'Stock', 'whd' ),
+				'fSku'        => __( 'SKU', 'whd' ),
+				'fCat'        => __( 'Category', 'whd' ),
 				'useImages'   => __( 'Use these', 'whd' ),
 				'noImages'    => __( 'This row needs at least one photograph.', 'whd' ),
 				'looking'     => __( 'Looking at the photograph…', 'whd' ),
@@ -104,12 +117,18 @@ final class WHD_AI_Products {
 		?>
 		<div class="wrap whd-wrap whd-aip">
 			<h1 class="whd-title"><?php esc_html_e( 'Bulk products', 'whd' ); ?></h1>
-			<p class="whd-intro">
-				<?php esc_html_e( 'One row per piece. Drop the photographs in and leave the rest blank: the model looks at each picture, works out what the thing is, and writes the name, both descriptions, the search snippet and the alt text on every image. Anything you do fill in is kept exactly as you typed it — your price, your SKU, your name for it. Everything is created as a draft, so nothing reaches the shop until you say so.', 'whd' ); ?>
+			<p class="whd-intro whd-aip__lead">
+				<?php esc_html_e( 'One card per piece. Add the photographs, say anything you want in your own words, and leave the rest blank — everything else is worked out from the picture. Each piece is created as a draft.', 'whd' ); ?>
 			</p>
-			<p class="whd-intro">
-				<?php esc_html_e( 'The Commands box is for everything a field has no room for, written the way you would say it: “comes in black, cream and navy, XS to XL, 1450, runs small”. Options to choose between become real variations, built the same way the Variation tiers grid builds them, so the product opens in that grid afterwards. Anything that is about the piece rather than the listing — a fabric, a fit note — goes into the writing instead.', 'whd' ); ?>
-			</p>
+
+			<details class="whd-aip__more">
+				<summary><?php esc_html_e( 'How this works', 'whd' ); ?></summary>
+				<div class="whd-aip__more-body">
+					<p><?php esc_html_e( 'The model looks at each photograph and writes the name, both descriptions, the search snippet and the alt text on every image. Anything you fill in yourself is kept exactly as you typed it — your price, your SKU, your name for it.', 'whd' ); ?></p>
+					<p><?php esc_html_e( 'The Commands box is for everything a field has no room for, written the way you would say it: “comes in black, cream and navy, XS to XL, 1450, runs small”. Options to choose between become real variations, built the way the Variation tiers grid builds them, so the product opens in that grid afterwards. Anything about the piece rather than the listing — a fabric, a fit note — goes into the writing instead.', 'whd' ); ?></p>
+					<p><?php esc_html_e( 'Pieces are made one at a time, so a slow one never takes the others with it. Each finished product keeps a link on its card until you leave the page.', 'whd' ); ?></p>
+				</div>
+			</details>
 
 			<?php if ( ! WHD_AI::ready() ) : ?>
 				<div class="whd-note whd-note--warn">
@@ -122,34 +141,17 @@ final class WHD_AI_Products {
 				</div>
 			<?php endif; ?>
 
-			<table class="whd-aip__table widefat" id="whd-aip-table">
-				<thead>
-					<tr>
-						<th class="whd-aip__c-img"><?php esc_html_e( 'Photographs', 'whd' ); ?> <span class="whd-aip__req"><?php esc_html_e( 'required', 'whd' ); ?></span></th>
-						<th class="whd-aip__c-name"><?php esc_html_e( 'Name', 'whd' ); ?></th>
-						<th class="whd-aip__c-num"><?php esc_html_e( 'Price', 'whd' ); ?></th>
-						<th class="whd-aip__c-num"><?php esc_html_e( 'Sale', 'whd' ); ?></th>
-						<th class="whd-aip__c-num"><?php esc_html_e( 'Stock', 'whd' ); ?></th>
-						<th class="whd-aip__c-sku"><?php esc_html_e( 'SKU', 'whd' ); ?></th>
-						<th class="whd-aip__c-cat"><?php esc_html_e( 'Category', 'whd' ); ?></th>
-						<th class="whd-aip__c-cmd"><?php esc_html_e( 'Commands', 'whd' ); ?></th>
-						<th class="whd-aip__c-state"><?php esc_html_e( 'State', 'whd' ); ?></th>
-						<th class="whd-aip__c-x"><span class="screen-reader-text"><?php esc_html_e( 'Remove', 'whd' ); ?></span></th>
-					</tr>
-				</thead>
-				<tbody id="whd-aip-rows"></tbody>
-			</table>
+			<div class="whd-aip__list" id="whd-aip-rows"></div>
 
-			<p class="whd-aip__actions">
-				<button type="button" class="button" id="whd-aip-add"><?php esc_html_e( '+ Add a row', 'whd' ); ?></button>
-				<button type="button" class="button" id="whd-aip-add-many"><?php esc_html_e( 'Add a row per photograph…', 'whd' ); ?></button>
-				<button type="button" class="button button-primary" id="whd-aip-run"><?php esc_html_e( 'Write and create them', 'whd' ); ?></button>
+			<p class="whd-aip__add">
+				<button type="button" class="button" id="whd-aip-add"><?php esc_html_e( '+ Add a piece', 'whd' ); ?></button>
+				<button type="button" class="button" id="whd-aip-add-many"><?php esc_html_e( 'One per photograph…', 'whd' ); ?></button>
+			</p>
+
+			<div class="whd-aip__bar">
 				<span class="whd-aip__progress" id="whd-aip-progress" role="status" aria-live="polite"></span>
-			</p>
-
-			<p class="description">
-				<?php esc_html_e( 'A row at a time, so a slow one never takes the others with it. Each finished product keeps a link here until you leave the page.', 'whd' ); ?>
-			</p>
+				<button type="button" class="button button-primary button-hero" id="whd-aip-run"><?php esc_html_e( 'Write and create them', 'whd' ); ?></button>
+			</div>
 		</div>
 		<?php
 	}
