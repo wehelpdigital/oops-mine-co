@@ -64,6 +64,7 @@ final class WHD_Plugin {
 			'from_email'              => get_option( 'admin_email' ),
 			'share_card_on'           => 1,        // "Just got mine" story card on the order-received page
 			'share_card'              => 0,        // an Image Editor design to draw it from; 0 = the built-in card
+			'all_product_types'       => 0,        // 0: the product screen offers Simple and Variable only, no Virtual/Downloadable
 		] );
 	}
 

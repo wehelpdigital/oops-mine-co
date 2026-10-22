@@ -1078,3 +1078,66 @@ function omc_pdp_related_count( $args ) {
 	return $args;
 }
 add_filter( 'woocommerce_output_related_products_args', 'omc_pdp_related_count', 20 );
+
+/* ─────────────────────────── The custom badge ───────────────────────────
+ * The parent theme's "Custom badge" product tab asks for a title and two colour pickers. The words
+ * are the owner's; the colours are not left to chance: every custom badge wears the shop's own
+ * pair — cream on the deep brown of its buttons — set here, not chosen per product. The parent
+ * declares these three functions pluggable (`function_exists`), and this file loads first.
+ */
+if ( ! function_exists( 'ideapark_custom_badge_tab_admin' ) ) {
+	function ideapark_custom_badge_tab_admin() {
+		global $post;
+		$title = (string) get_post_meta( $post->ID, 'ideapark_custom_badge_tab_title', true );
+		?>
+		<div id="ideapark_custom_badge_tab" class="panel wc-metaboxes-wrapper woocommerce_options_panel">
+			<div class="options_group">
+				<p class="form-field">
+					<label for="ideapark_custom_badge_tab_title"><?php esc_html_e( 'Title', 'moderno-child' ); ?></label>
+					<input type="text" class="short" name="ideapark_custom_badge_tab_title" id="ideapark_custom_badge_tab_title" value="<?php echo esc_attr( $title ); ?>" placeholder="<?php esc_attr_e( 'e.g. Bestseller', 'moderno-child' ); ?>">
+				</p>
+				<p class="form-field">
+					<label><?php esc_html_e( 'Colours', 'moderno-child' ); ?></label>
+					<span class="omc-badge-preview" style="display:inline-block;padding:6px 10px;border:1px solid #3a2b26;background:#3a2b26;color:#f7f2ed;font:600 11px/1 sans-serif;letter-spacing:.04em;text-transform:uppercase;">
+						<?php echo esc_html( '' !== $title ? $title : __( 'Badge', 'moderno-child' ) ); ?>
+					</span>
+					<span class="description" style="display:block;clear:both;margin-top:6px;"><?php esc_html_e( 'Set automatically: the shop’s cream on deep brown, the same as its buttons, on every product.', 'moderno-child' ); ?></span>
+				</p>
+			</div>
+		</div>
+		<?php
+	}
+}
+
+if ( ! function_exists( 'ideapark_custom_badge_tab_save' ) ) {
+	function ideapark_custom_badge_tab_save( $post_id, $post = null ) {
+		if ( empty( $post_id ) ) {
+			return;
+		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- inside WooCommerce's own product save, which checks its nonce
+		$title = isset( $_POST['ideapark_custom_badge_tab_title'] ) ? sanitize_text_field( wp_unslash( $_POST['ideapark_custom_badge_tab_title'] ) ) : '';
+		if ( '' !== $title ) {
+			update_post_meta( $post_id, 'ideapark_custom_badge_tab_title', $title );
+			do_action( 'wpml_register_single_string', defined( 'IDEAPARK_SLUG' ) ? IDEAPARK_SLUG : 'moderno', 'Custom badge title - ' . $title, $title );
+		} else {
+			delete_post_meta( $post_id, 'ideapark_custom_badge_tab_title' );
+		}
+		// The colours are the theme's now; any chosen before are dropped.
+		delete_post_meta( $post_id, 'ideapark_custom_badge_tab_color' );
+		delete_post_meta( $post_id, 'ideapark_custom_badge_tab_bg_color' );
+	}
+}
+
+if ( ! function_exists( 'ideapark_custom_badge' ) ) {
+	function ideapark_custom_badge() {
+		global $product;
+		if ( ! $product instanceof WC_Product ) {
+			return;
+		}
+		$title = (string) get_post_meta( $product->get_id(), 'ideapark_custom_badge_tab_title', true );
+		if ( '' !== $title ) {
+			// No inline colours: .c-badge--custom in omc-pages.css, whatever a product had saved.
+			echo '<span class="c-badge c-badge--custom">' . esc_html( $title ) . '</span>';
+		}
+	}
+}

@@ -40,6 +40,52 @@ final class WHD_Product_Admin {
 		add_action( 'manage_product_posts_custom_column', [ __CLASS__, 'column_content' ], 20, 2 );
 		add_action( 'restrict_manage_posts', [ __CLASS__, 'filter_control' ] );
 		add_filter( 'parse_query', [ __CLASS__, 'filter_query' ] );
+
+		// Only the product types this shop sells (WHD → Settings → "Product types" brings the rest back).
+		add_filter( 'product_type_selector', [ __CLASS__, 'product_types' ], 99 );
+		add_filter( 'product_type_options', [ __CLASS__, 'type_options' ], 99 );
+	}
+
+	/* ─────────────────────────── product types ─────────────────────────── */
+
+	/** The product being edited, when there is one. */
+	private static function editing() {
+		$id = isset( $GLOBALS['post'] ) && $GLOBALS['post'] instanceof WP_Post && 'product' === $GLOBALS['post']->post_type ? (int) $GLOBALS['post']->ID : 0;
+		return $id ? wc_get_product( $id ) : null;
+	}
+
+	/**
+	 * Simple and Variable only. Variable stays because Variation tiers builds every piece with
+	 * options as a variable product (it switches this very dropdown); grouped and external/affiliate
+	 * are for shops this is not. A product that already is one of those keeps its own type in the
+	 * list, so opening it can never quietly turn it into something else.
+	 */
+	public static function product_types( $types ) {
+		// The product screen only: the REST API and the importer validate a type against this same
+		// list, and they must go on accepting every type WooCommerce has.
+		if ( ! is_admin() || wp_doing_ajax() || ! empty( WHD_Plugin::settings()['all_product_types'] ) ) {
+			return $types;
+		}
+		$keep    = [ 'simple', 'variable' ];
+		$product = self::editing();
+		if ( $product ) {
+			$keep[] = $product->get_type();
+		}
+		return array_intersect_key( $types, array_flip( $keep ) );
+	}
+
+	/** No Virtual / Downloadable boxes: everything here is a garment that ships. */
+	public static function type_options( $options ) {
+		if ( ! is_admin() || ! empty( WHD_Plugin::settings()['all_product_types'] ) ) {
+			return $options;
+		}
+		$product = self::editing();
+		foreach ( [ 'virtual' => 'is_virtual', 'downloadable' => 'is_downloadable' ] as $key => $is ) {
+			if ( ! $product || ! $product->$is() ) {
+				unset( $options[ $key ] );
+			}
+		}
+		return $options;
 	}
 
 	/* ─────────────────────────── the checks ─────────────────────────── */

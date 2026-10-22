@@ -96,6 +96,7 @@ final class WHD_Admin {
 			'from_email'              => sanitize_email( $in['from_email'] ?? '' ),
 			'share_card_on'           => empty( $in['share_card_on'] ) ? 0 : 1,
 			'share_card'              => absint( $in['share_card'] ?? 0 ),
+			'all_product_types'       => empty( $in['all_product_types'] ) ? 0 : 1,
 		];
 	}
 
@@ -559,6 +560,10 @@ final class WHD_Admin {
 				__( 'Or draw your own in the <a href="%s">Image Editor</a>: choose the Story / Reel size, start from the “Just got mine (order card)” template, save, then pick it here. The photo you start from is swapped for the piece that was bought, and <code>{product}</code> and <code>{first_name}</code> in the words are filled in. The card is made on the shopper’s phone; nothing is uploaded.', 'whd' ),
 				esc_url( admin_url( 'admin.php?page=' . WHD_Image_Editor::PAGE . '&edit=1' ) )
 			) ) . '</p></td></tr>';
+		/* Which product types the product screen offers (WHD_Product_Admin::product_types()). */
+		echo '<tr><th>' . esc_html__( 'Product types', 'whd' ) . '</th><td>'
+			. '<label><input type="checkbox" name="whd_settings[all_product_types]" value="1" ' . checked( $s['all_product_types'], 1, false ) . '> ' . esc_html__( 'Offer every product type — grouped and external/affiliate too — and the Virtual and Downloadable boxes', 'whd' ) . '</label>'
+			. '<p class="description">' . esc_html__( 'Off: the product screen offers Simple and Variable only (Variable stays: Variation tiers builds every piece with options as one), with no Virtual or Downloadable boxes. A product that already uses one of the others keeps it.', 'whd' ) . '</p></td></tr>';
 		echo '<tr><th><label for="fn">' . esc_html__( 'Sender name (automations)', 'whd' ) . '</label></th><td><input class="regular-text" id="fn" name="whd_settings[from_name]" value="' . esc_attr( $s['from_name'] ) . '"></td></tr>';
 		list( $from, $reply ) = WHD_Emails::sender();
 		$sender_note          = $reply

@@ -660,3 +660,7 @@
 	.track_order .form-row-last { float: none; width: 100%; }
 	.track_order .form-row .button { width: 100%; }
 }
+
+/* ─── The custom badge (inc/pdp.php): the shop's cream on the deep brown of its buttons, on every
+   product, beside the theme's outlined New / Sale badges. ─── */
+.c-badge.c-badge--custom { color: var(--omc-cream); background-color: var(--omc-ink); border-color: var(--omc-ink); }
