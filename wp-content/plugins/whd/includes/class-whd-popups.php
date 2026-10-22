@@ -26,6 +26,11 @@ final class WHD_Popups {
 				'trigger'     => 'delay',
 				'description' => __( 'Shows once after a delay (or scroll depth). A cookie is set as soon as it appears, so the visitor never sees it twice within the cookie period.', 'whd' ),
 			],
+			'spin_wheel'  => [
+				'label'       => __( 'Spin-to-win popup', 'whd' ),
+				'trigger'     => 'delay',
+				'description' => __( 'A prize wheel: name and email, one spin, and the code it lands on goes to the inbox. Prizes and chances are in WHD → Spin to win. It opens after a delay like the welcome popup, so switch on one or the other, not both.', 'whd' ),
+			],
 		];
 	}
 
@@ -121,6 +126,16 @@ final class WHD_Popups {
 				],
 			];
 		}
+		if ( 'spin_wheel' === $id ) {
+			return [
+				'settings' => array_merge( $settings, [ 'delay' => 8, 'cookie_days' => 14, 'width' => 560, 'show_on' => 'not_checkout' ] ),
+				'blocks'   => [
+					[ 'type' => 'heading', 'props' => [ 'text' => 'Spin for a little something', 'level' => 'h2', 'align' => 'center', 'color' => '#3a2b26' ] ],
+					[ 'type' => 'text', 'props' => [ 'text' => 'One spin per email. Wherever it stops, the code goes straight to your inbox.', 'align' => 'center', 'size' => 15, 'color' => '#4a3f3a' ] ],
+					[ 'type' => 'wheel', 'props' => [] ],
+				],
+			];
+		}
 		return [
 			'settings' => array_merge( $settings, [ 'delay' => 6, 'cookie_days' => 14 ] ),
 			'blocks'   => [
@@ -179,6 +194,10 @@ final class WHD_Popups {
 		foreach ( self::all() as $id => $design ) {
 			$s = $design['settings'];
 			if ( ( empty( $s['enabled'] ) && $preview !== $id ) || ! self::should_show( $s ) ) {
+				continue;
+			}
+			// A wheel with nothing it may land on would be a popup promising a prize that does not exist.
+			if ( in_array( 'wheel', array_column( $design['blocks'], 'type' ), true ) && ( ! class_exists( 'WHD_Wheel' ) || ! WHD_Wheel::segments() ) ) {
 				continue;
 			}
 			$config = [

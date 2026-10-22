@@ -1,0 +1,23 @@
+/* The admin piece search (assets/js/omc-piece-picker.js), shared by the Page Editor and Shoppable videos. */
+.omc-pp {
+	position: absolute;
+	z-index: 160000;
+	background: #fff;
+	border: 1px solid #dcd3cb;
+	border-radius: 8px;
+	box-shadow: 0 24px 50px -20px rgba(58, 43, 38, .4);
+	overflow: hidden;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+.omc-pp__bar { display: flex; align-items: center; gap: 6px; padding: 8px; border-bottom: 1px solid #efe6de; }
+.omc-pp__in { flex: 1 1 auto; min-height: 36px; padding: 0 10px; border: 1px solid #dcd3cb; border-radius: 6px; font-size: 14px; }
+.omc-pp__in:focus { border-color: #9c6f63; box-shadow: 0 0 0 1px #9c6f63; outline: none; }
+.omc-pp__x { width: 32px; height: 32px; border: 0; background: none; font-size: 22px; line-height: 1; color: #6f5348; cursor: pointer; }
+.omc-pp__list { max-height: 320px; margin: 0; padding: 4px; overflow: auto; list-style: none; }
+.omc-pp__list li { margin: 0; }
+.omc-pp__msg { padding: 14px 10px; color: #8a7d76; font-size: 13px; }
+.omc-pp__item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px; border: 0; border-radius: 6px; background: none; text-align: left; cursor: pointer; }
+.omc-pp__item:hover, .omc-pp__item:focus { background: #f7f2ed; outline: none; }
+.omc-pp__item img, .omc-pp__ph { flex: 0 0 auto; width: 40px; height: 48px; object-fit: cover; background: #efe6de; border-radius: 4px; }
+.omc-pp__name { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 13px; line-height: 1.3; color: #3a2b26; }
+.omc-pp__name small { color: #9c6f63; font-size: 12px; }

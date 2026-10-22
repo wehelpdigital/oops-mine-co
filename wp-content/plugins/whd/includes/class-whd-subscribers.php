@@ -25,6 +25,14 @@ final class WHD_Subscribers {
 	 */
 	const CODE_SOURCES = [ 'popup', 'welcome', 'exit_intent', 'discount', 'newsletter', 'fb_live' ];
 
+	/**
+	 * Sign-ups whose own form sends the email that matters.
+	 *
+	 * The wheel emails the code it landed on; a welcome email with a second, different code on top
+	 * of that would leave somebody holding two codes and unsure which one they won.
+	 */
+	const OWN_EMAIL_SOURCES = [ 'wheel' ];
+
 	public static function table() {
 		global $wpdb;
 		return $wpdb->prefix . 'whd_subscribers';
@@ -178,7 +186,9 @@ final class WHD_Subscribers {
 		if ( ! $id ) {
 			return false;
 		}
-		self::send_welcome( $email, $name );
+		if ( ! in_array( $source, self::OWN_EMAIL_SOURCES, true ) ) {
+			self::send_welcome( $email, $name );
+		}
 		do_action( 'whd_subscriber_added', $id, $email, $name, $source, $phone, $consent );
 		return $id;
 	}

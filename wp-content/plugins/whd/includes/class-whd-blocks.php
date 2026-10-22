@@ -121,6 +121,24 @@ final class WHD_Blocks {
 					'hide_on_expire' => [ 'type' => 'toggle', 'label' => __( 'Hide the popup once expired', 'whd' ), 'default' => 0 ],
 				],
 			];
+			// The prizes and their chances live in WHD → Spin to win; the block is the wheel and its form.
+			$types['wheel'] = [
+				'label'  => __( 'Spin the wheel', 'whd' ),
+				'icon'   => '◎',
+				'fields' => [
+					'show_name'         => [ 'type' => 'toggle', 'label' => __( 'Ask for a first name', 'whd' ), 'default' => 1 ],
+					'name_placeholder'  => [ 'type' => 'text', 'label' => __( 'Name placeholder', 'whd' ), 'default' => __( 'First name', 'whd' ) ],
+					'email_placeholder' => [ 'type' => 'text', 'label' => __( 'Email placeholder', 'whd' ), 'default' => __( 'Your email', 'whd' ) ],
+					'button_text'       => [ 'type' => 'text', 'label' => __( 'Button label', 'whd' ), 'default' => __( 'Spin the wheel', 'whd' ) ],
+					'result_text'       => [ 'type' => 'textarea', 'label' => __( 'After the spin (HTML allowed)', 'whd' ), 'default' => __( 'It landed on <b>{prize}</b>. The code is on its way to your inbox — use it at checkout.', 'whd' ), 'help' => __( '{prize} is what it landed on. The code itself is only ever emailed.', 'whd' ) ],
+					'done_text'         => [ 'type' => 'textarea', 'label' => __( 'For someone who has already spun', 'whd' ), 'default' => __( 'You’ve had your spin — the code is in your inbox.', 'whd' ) ],
+					'note'              => [ 'type' => 'text', 'label' => __( 'Small print under the button', 'whd' ), 'default' => __( 'One spin per email address. Codes are emailed, never shown here.', 'whd' ) ],
+					'size'              => [ 'type' => 'number', 'label' => __( 'Wheel size (px)', 'whd' ), 'default' => 300, 'min' => 200, 'max' => 440 ],
+					'bg'                => [ 'type' => 'color', 'label' => __( 'Button background', 'whd' ), 'default' => '#3a2b26' ],
+					'color'             => [ 'type' => 'color', 'label' => __( 'Button text colour', 'whd' ), 'default' => '#f7f2ed' ],
+					'radius'            => [ 'type' => 'number', 'label' => __( 'Corner radius (px)', 'whd' ), 'default' => 0, 'min' => 0, 'max' => 40 ],
+				],
+			];
 		}
 
 		if ( 'email' === $mode ) {
@@ -212,6 +230,11 @@ final class WHD_Blocks {
 			'set_password_url' => __( 'Set-password link (new accounts)', 'whd' ),
 			'user_login'       => __( 'Username', 'whd' ),
 			'unsubscribe_url'  => __( 'Unsubscribe link', 'whd' ),
+			'prize_label'      => __( 'Spin to win: what the wheel landed on', 'whd' ),
+			'prize_code'       => __( 'Spin to win: the prize coupon code', 'whd' ),
+			'drop_title'       => __( 'Drop reminder: the drop’s name', 'whd' ),
+			'drop_url'         => __( 'Drop reminder: where the drop is', 'whd' ),
+			'drop_image'       => __( 'Drop reminder: the drop’s photo (use in an image block)', 'whd' ),
 			'year'             => __( 'Current year', 'whd' ),
 		];
 	}
@@ -374,8 +397,10 @@ final class WHD_Blocks {
 				break;
 
 			case 'image':
-				if ( $p['url'] ) {
-					$img   = '<img src="' . esc_url( self::merge( $p['url'], $ctx ) ) . '" alt="' . esc_attr( $p['alt'] ) . '" width="' . (int) $p['width'] . '%" style="display:inline-block;width:' . (int) $p['width'] . '%;max-width:100%;height:auto;border:0">';
+				// A merge tag with nothing behind it (a drop without a photo) leaves no empty frame.
+				$src = $p['url'] ? self::merge( $p['url'], $ctx ) : '';
+				if ( '' !== $src && ! preg_match( '/^\{[a-z_]+\}$/', $src ) ) {
+					$img   = '<img src="' . esc_url( $src ) . '" alt="' . esc_attr( $p['alt'] ) . '" width="' . (int) $p['width'] . '%" style="display:inline-block;width:' . (int) $p['width'] . '%;max-width:100%;height:auto;border:0">';
 					$link  = $p['link'] ? self::merge( $p['link'], $ctx ) : '';
 					$inner = '<div class="whd-b whd-b-image" style="text-align:' . esc_attr( $p['align'] ) . ';margin:0 0 16px">' . ( $link ? '<a href="' . esc_url( $link ) . '">' . $img . '</a>' : $img ) . '</div>';
 				}
@@ -426,6 +451,12 @@ final class WHD_Blocks {
 					. '<button type="submit" class="whd-form__btn" style="background:' . esc_attr( $p['bg'] ) . ';color:' . esc_attr( $p['color'] ) . ';border-radius:' . (int) $p['radius'] . 'px">' . esc_html( self::merge( $p['button_text'], $ctx ) ) . '</button>'
 					. '<p class="whd-form__status" role="status" aria-live="polite"></p>'
 					. '</form>';
+				break;
+
+			case 'wheel':
+				if ( ! $email && class_exists( 'WHD_Wheel' ) ) {
+					$inner = WHD_Wheel::render_block( $p, $ctx );
+				}
 				break;
 
 			case 'countdown':

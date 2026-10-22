@@ -19,7 +19,7 @@ define( 'OMC_DIR', get_stylesheet_directory() );
 define( 'OMC_URI', get_stylesheet_directory_uri() );
 
 /* Feature modules (each file is self-contained and hooks itself). */
-foreach ( [ 'video', 'landing', 'pdp', 'cart', 'social', 'perf', 'schema', 'images', 'seo-doc', 'page-editor' ] as $omc_module ) {
+foreach ( [ 'video', 'landing', 'pdp', 'cart', 'social', 'perf', 'schema', 'images', 'seo-doc', 'page-editor', 'shop-kit', 'pdp-extras', 'video-shop', 'my-size', 'drops', 'swipe', 'returns' ] as $omc_module ) {
 	$omc_module_file = OMC_DIR . '/inc/' . $omc_module . '.php';
 	if ( file_exists( $omc_module_file ) ) {
 		require_once $omc_module_file;
@@ -59,6 +59,17 @@ function moderno_child_enqueue_styles() {
 		if ( is_page_template( 'templates/page-video.php' ) ) {
 			wp_enqueue_script( 'omc-video', OMC_URI . '/assets/js/omc-video.js', [], $ver( '/assets/js/omc-video.js' ), true );
 		}
+	}
+
+	// The shop kit (inc/shop-kit.php) in the head where it is certain to be used — the home page's
+	// hotspots, a product's "Wear it with", a video's pieces — so those are styled from the first paint.
+	if ( class_exists( 'WooCommerce' ) && ( omc_is_home_template() || is_page_template( 'templates/page-video.php' ) || ( function_exists( 'is_product' ) && is_product() ) ) ) {
+		wp_enqueue_style( 'omc-shop', OMC_URI . '/assets/css/omc-shop.css', [ 'omc' ], $ver( '/assets/css/omc-shop.css' ) );
+	}
+	// "This or that" (inc/swipe.php) lives on the home page only.
+	if ( omc_is_home_template() ) {
+		wp_enqueue_style( 'omc-swipe', OMC_URI . '/assets/css/omc-swipe.css', [ 'omc' ], $ver( '/assets/css/omc-swipe.css' ) );
+		wp_enqueue_script( 'omc-swipe', OMC_URI . '/assets/js/omc-swipe.js', [ 'omc' ], $ver( '/assets/js/omc-swipe.js' ), true );
 	}
 
 	// Cart persuasion layer: the drawer lives in the header, so it loads on every page.
@@ -858,6 +869,20 @@ function omc_logo_img( $variant = 'rose', $class = '', $attrs = [] ) {
 	return $html . '>';
 }
 
+/**
+ * The "Just got mine" story card after checkout (WHD → Settings → Order share card) draws the shop's
+ * mark and handle on its built-in design: the rose logo under the photo, the Instagram handle when
+ * one is set in Customizer → Social Media Links.
+ */
+add_filter( 'whd_share_card_brand', static function ( $brand ) {
+	$brand['logo'] = omc_logo( 'rose' )['url'];
+	$ig            = (string) ( omc_social_links()['instagram']['url'] ?? '' );
+	if ( preg_match( '#instagram\.com/([A-Za-z0-9._]{2,30})/?$#i', $ig, $m ) ) {
+		$brand['handle'] = '@' . $m[1];
+	}
+	return $brand;
+} );
+
 /** Tiny inline line-icons (no icon font needed). */
 function omc_icon( $name ) {
 	$icons = [
@@ -874,6 +899,10 @@ function omc_icon( $name ) {
 		'instagram' => '<rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="3.8"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none"/>',
 		'tiktok'    => '<path fill="currentColor" stroke="none" d="M16.1 3h-2.6v11.4a2.3 2.3 0 1 1-2-2.3V9.4a5 5 0 1 0 4.6 5V8.6a6 6 0 0 0 3.4 1.1V7.1a3.6 3.6 0 0 1-3.4-3.6z"/>',
 		'email'    => '<rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3.5 7l8.5 6 8.5-6"/>',
+		'messenger' => '<path d="M12 3.2c-5 0-8.8 3.6-8.8 8.2 0 2.5 1.1 4.6 3 6.1V21l3-1.7c.9.3 1.8.4 2.8.4 5 0 8.8-3.6 8.8-8.2S17 3.2 12 3.2z"/><path d="m7.4 13.6 3-3.3 2.4 2.3 3.8-3.5-3 3.4-2.4-2.3z"/>',
+		'heart'    => '<path d="M12 20.3s-7.5-4.6-9-9.3C1.9 7.6 4.2 4.5 7.4 4.5c1.9 0 3.4 1 4.6 2.6 1.2-1.6 2.7-2.6 4.6-2.6 3.2 0 5.5 3.1 4.4 6.5-1.5 4.7-9 9.3-9 9.3z"/>',
+		'x'        => '<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
+		'bell'     => '<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2H4.5z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/>',
 		'star'     => '<path fill="currentColor" stroke="none" d="M12 2.6l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.5l-5.9 3.1 1.2-6.5L2.5 9.5l6.6-.9z"/>',
 		'pinterest' => '<path fill="currentColor" stroke="none" d="M12 2.5a9.5 9.5 0 0 0-3.5 18.4c-.1-.8-.2-2 0-2.8l1.2-5s-.3-.6-.3-1.5c0-1.4.8-2.4 1.8-2.4.8 0 1.3.6 1.3 1.4 0 .9-.6 2.1-.8 3.3-.2 1 .5 1.8 1.5 1.8 1.8 0 3.1-1.9 3.1-4.6 0-2.4-1.7-4.1-4.2-4.1-2.9 0-4.5 2.1-4.5 4.4 0 .9.3 1.8.7 2.3.1.1.1.2.1.3l-.3 1.2c0 .2-.2.2-.4.1-1.3-.6-2-2.4-2-3.9 0-3.2 2.3-6.1 6.6-6.1 3.5 0 6.2 2.5 6.2 5.8 0 3.4-2.2 6.2-5.2 6.2-1 0-2-.5-2.3-1.1l-.6 2.4c-.2.9-.8 2-1.2 2.6A9.5 9.5 0 1 0 12 2.5z"/>',
 	];
@@ -1711,6 +1740,8 @@ function omc_subscribe_ajax() {
 	 */
 	if ( 'fb_live' === $source ) {
 		$message = __( 'You’re in. We’ll send you the link before we go live — see you there.', 'moderno-child' );
+	} elseif ( 'drop' === $source ) {
+		$message = __( 'You’re on the list. We’ll email you the moment the drop opens.', 'moderno-child' );
 	} elseif ( 'discount' === $source ) {
 		$message = __( 'Sent — check your email for the code.', 'moderno-child' );
 	} else {

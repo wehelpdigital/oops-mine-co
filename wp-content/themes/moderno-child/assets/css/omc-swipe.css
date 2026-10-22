@@ -1,0 +1,102 @@
+/* ==========================================================================
+   Oops, Mine Co. — "This or that" deck on the home page (inc/swipe.php, assets/js/omc-swipe.js)
+   ========================================================================== */
+.omc-swipe { background: linear-gradient(180deg, var(--omc-cream) 0%, #fff 100%); padding: var(--omc-gap) 0; }
+.omc-swipe__inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 420px); align-items: center; gap: clamp(28px, 6vw, 96px); }
+.omc-swipe__copy { max-width: 520px; }
+.omc-swipe__text { margin: 14px 0 22px; font: 400 16px/1.7 var(--omc-sans); color: var(--omc-text); }
+.omc-swipe__tally { display: inline-flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 10px 16px; background: #fff; border: 1px solid var(--omc-line); font: 600 12px/1 var(--omc-sans); letter-spacing: .12em; text-transform: uppercase; color: var(--omc-muted); }
+.omc-swipe__tally .omc-icon { width: 18px; height: 18px; color: var(--omc-rose-dark); fill: rgba(156, 111, 99, .18); }
+.omc-swipe__count { font-family: var(--omc-serif); font-size: 24px; font-weight: 500; letter-spacing: 0; font-variant-numeric: lining-nums tabular-nums; color: var(--omc-ink); }
+.omc-swipe__links { display: flex; flex-wrap: wrap; gap: 16px; }
+
+.omc-swipe__play { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.omc-swipe__deck { position: relative; width: 100%; max-width: 420px; aspect-ratio: 3 / 4.25; touch-action: pan-y; user-select: none; -webkit-user-select: none; outline: none; }
+.omc-swipe__deck:focus-visible { outline: 2px solid var(--omc-rose); outline-offset: 8px; }
+.omc-swipe__card {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	background: #fff;
+	border: 1px solid var(--omc-line);
+	box-shadow: 0 26px 50px -30px rgba(42, 31, 27, .45);
+	transform-origin: 50% 90%;
+	transition: transform .42s var(--omc-ease), opacity .42s var(--omc-ease);
+	cursor: grab;
+	will-change: transform;
+}
+.omc-swipe__card[hidden] { display: none; }
+.omc-swipe__card.is-dragging { transition: none; cursor: grabbing; }
+.omc-swipe__card.is-next { transform: translateY(14px) scale(.955); }
+.omc-swipe__card.is-third { transform: translateY(28px) scale(.91); opacity: .7; }
+.omc-swipe__card.is-under { transform: translateY(28px) scale(.91); opacity: 0; }
+.omc-swipe__card.is-next, .omc-swipe__card.is-third, .omc-swipe__card.is-under { pointer-events: none; }
+.omc-swipe__card.is-gone { opacity: 0; pointer-events: none; }
+.omc-swipe__media { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; background: var(--omc-sand); }
+.omc-swipe__media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; -webkit-user-drag: none; }
+.omc-swipe__stamp {
+	position: absolute;
+	top: 22px;
+	padding: 8px 14px;
+	border: 2px solid currentColor;
+	background: rgba(255, 255, 255, .85);
+	font: 700 14px/1 var(--omc-sans);
+	letter-spacing: .22em;
+	text-transform: uppercase;
+	opacity: 0;
+	transition: opacity .15s;
+}
+.omc-swipe__stamp--love { left: 20px; color: var(--omc-rose-dark); transform: rotate(-12deg); }
+.omc-swipe__stamp--skip { right: 20px; color: var(--omc-ink); transform: rotate(12deg); }
+.omc-swipe__card.is-love .omc-swipe__stamp--love, .omc-swipe__card.is-skip .omc-swipe__stamp--skip { opacity: 1; }
+.omc-swipe__info { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; padding: 14px 16px 16px; }
+.omc-swipe__name { margin: 0; font-family: var(--omc-serif); font-size: 21px; font-weight: 500; line-height: 1.15; }
+.omc-swipe__name a { color: var(--omc-ink); text-decoration: none; }
+.omc-swipe__name a:hover { color: var(--omc-rose-dark); }
+.omc-swipe__price { flex: 0 0 auto; font: 600 14px/1.2 var(--omc-sans); color: var(--omc-rose-dark); white-space: nowrap; }
+.omc-swipe__price del { opacity: .6; margin-right: 4px; }
+.omc-swipe__price ins { text-decoration: none; }
+
+.omc-swipe__end { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 28px; background: #fff; border: 1px dashed var(--omc-pink-deep); text-align: center; }
+.omc-swipe__end[hidden] { display: none; }
+.omc-swipe__end-title { margin: 0 0 6px; font-family: var(--omc-serif); font-size: 26px; line-height: 1.15; color: var(--omc-rose-dark); }
+.omc-swipe__again { margin-top: 4px; border: 0; background: none; font: 600 11px/1.4 var(--omc-sans); letter-spacing: .14em; text-transform: uppercase; color: var(--omc-muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+.omc-swipe__actions { display: flex; justify-content: center; gap: 22px; }
+.omc-swipe.is-done .omc-swipe__actions { visibility: hidden; }
+.omc-swipe__btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 64px;
+	height: 64px;
+	border: 1px solid var(--omc-line);
+	border-radius: 50%;
+	background: #fff;
+	color: var(--omc-ink);
+	box-shadow: 0 14px 26px -18px rgba(42, 31, 27, .6);
+	cursor: pointer;
+	transition: transform .2s var(--omc-ease), background-color .2s, color .2s, border-color .2s;
+}
+.omc-swipe__btn .omc-icon { width: 26px; height: 26px; }
+.omc-swipe__btn--love { width: 72px; height: 72px; color: var(--omc-rose-dark); }
+.omc-swipe__btn--love .omc-icon { width: 30px; height: 30px; fill: rgba(156, 111, 99, .14); }
+.omc-swipe__btn:hover { transform: translateY(-2px); border-color: var(--omc-ink); }
+.omc-swipe__btn--love:hover { background: var(--omc-rose-dark); border-color: var(--omc-rose-dark); color: #fff; }
+.omc-swipe__btn--skip:hover { background: var(--omc-ink); color: #fff; }
+.omc-swipe__btn:focus-visible { outline: 2px solid var(--omc-rose); outline-offset: 3px; }
+
+@media (max-width: 900px) {
+	.omc-swipe__inner { grid-template-columns: 1fr; }
+	.omc-swipe__copy { max-width: none; text-align: center; }
+	.omc-swipe__links { justify-content: center; }
+}
+@media (max-width: 640px) {
+	.omc-swipe__deck { max-width: min(380px, 88vw); }
+	.omc-swipe__text { font-size: 15px; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.omc-swipe__card { transition: opacity .2s; }
+	.omc-swipe__card.is-next, .omc-swipe__card.is-third { transform: none; }
+}

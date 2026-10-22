@@ -4,9 +4,13 @@
  * Template Post Type: page
  *
  * Editorial storefront home page for Oops, Mine Co. Sections, top to bottom:
- * hero → trust strip → Facebook Live card → shop-the-look mosaic → split campaign banner
- * → edit carousel → mirrored campaign banner → shop by category → brand story → new arrivals
- * → wide banners → most loved → styling notes (journal) → reviews → from our feed → newsletter.
+ * hero → trust strip → stylist band → Facebook Live card → next drop → shop-the-look mosaic → split
+ * campaign banner → edit carousel → mirrored campaign banner → shop by category → shop by style →
+ * brand story → new arrivals → wide banners → most loved → this or that → style videos → styling
+ * notes (journal) → reviews → from our feed → newsletter.
+ *
+ * The hero, mosaic and journal photos can carry hotspots — points that open the piece and add it to
+ * the bag (Page Editor; inc/shop-kit.php renders them, assets/js/omc-shop.js places them).
  *
  * Product grids come from WooCommerce's [products] shortcode so they render
  * with the parent theme's product cards, quick-view, wishlist and swatches.
@@ -132,6 +136,21 @@ get_header();
 				<a class="omc-btn omc-btn--ghost" href="<?php echo esc_url( $omc_cta2['url'] ); ?>"><?php echo esc_html( $omc_cta2['text'] ); ?></a>
 			</div>
 		</div>
+		<?php
+		$omc_hero_spots = function_exists( 'omc_pe_spotmap' ) ? omc_pe_spotmap( 'hero.spots' ) : [];
+		if ( $omc_hero_spots && function_exists( 'omc_spots_layer' ) ) {
+			foreach ( $omc_hero_imgs as $omc_i => $omc_hero_img ) {
+				$omc_hid = omc_attachment_id( $omc_hero_img );
+				if ( ! empty( $omc_hero_spots[ $omc_hid ] ) ) {
+					echo omc_spots_layer( $omc_hero_spots[ $omc_hid ], '.omc-hero__media > img:nth-of-type(' . ( $omc_i + 1 ) . ')', [ // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside
+						'class' => 'omc-spots--hero',
+						'index' => $omc_i,
+						'pause' => '.omc-hero__media',
+					] );
+				}
+			}
+		}
+		?>
 	</section>
 
 	<!-- ───────────── Trust strip ───────────── -->
@@ -238,6 +257,13 @@ get_header();
 		</section>
 	<?php endif; ?>
 
+	<!-- ───────────── Next drop: countdown + "Remind me" (Page Editor → Next drop; inc/drops.php) ───────────── -->
+	<?php
+	if ( function_exists( 'omc_drop_card' ) ) {
+		omc_drop_card();
+	}
+	?>
+
 	<!-- ───────────── Shop-the-look mosaic (fixed balanced pattern; omc_home_mosaic()) ───────────── -->
 	<?php $omc_tiles = omc_home_mosaic(); ?>
 	<?php if ( count( $omc_tiles ) >= 4 ) : ?>
@@ -252,12 +278,28 @@ get_header();
 							continue;
 						}
 						?>
-						<a class="omc-mosaic__item omc-mosaic__item--<?php echo esc_attr( preg_replace( '/[^0-9x]/', '', $omc_t['size'] ) ?: '1x1' ); ?>" href="<?php echo esc_url( $omc_t['url'] ); ?>">
-							<?php echo $omc_img; ?>
-							<?php if ( $omc_t['label'] ) : ?>
-								<span class="omc-mosaic__label"><?php echo esc_html( $omc_t['label'] ); ?><?php echo omc_icon( 'arrow' ); ?></span>
-							<?php endif; ?>
-						</a>
+						<?php
+						$omc_size  = preg_replace( '/[^0-9x]/', '', $omc_t['size'] ) ?: '1x1';
+						$omc_layer = ! empty( $omc_t['spots'] ) && function_exists( 'omc_spots_layer' ) ? omc_spots_layer( $omc_t['spots'], 'img' ) : '';
+						?>
+						<?php if ( $omc_layer ) : ?>
+							<div class="omc-mosaic__item omc-mosaic__item--<?php echo esc_attr( $omc_size ); ?> omc-mosaic__item--spots">
+								<a class="omc-mosaic__link" href="<?php echo esc_url( $omc_t['url'] ); ?>">
+									<?php echo $omc_img; ?>
+									<?php if ( $omc_t['label'] ) : ?>
+										<span class="omc-mosaic__label"><?php echo esc_html( $omc_t['label'] ); ?><?php echo omc_icon( 'arrow' ); ?></span>
+									<?php endif; ?>
+								</a>
+								<?php echo $omc_layer; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside ?>
+							</div>
+						<?php else : ?>
+							<a class="omc-mosaic__item omc-mosaic__item--<?php echo esc_attr( $omc_size ); ?>" href="<?php echo esc_url( $omc_t['url'] ); ?>">
+								<?php echo $omc_img; ?>
+								<?php if ( $omc_t['label'] ) : ?>
+									<span class="omc-mosaic__label"><?php echo esc_html( $omc_t['label'] ); ?><?php echo omc_icon( 'arrow' ); ?></span>
+								<?php endif; ?>
+							</a>
+						<?php endif; ?>
 					<?php endforeach; ?>
 				</div>
 			</div>
@@ -470,6 +512,13 @@ get_header();
 		</div>
 	</section>
 
+	<!-- ───────────── This or that: swipe to love or skip (Page Editor → This or that; inc/swipe.php) ───────────── -->
+	<?php
+	if ( function_exists( 'omc_swipe_section' ) ) {
+		omc_swipe_section();
+	}
+	?>
+
 	<!-- ───────────── Style videos ───────────── -->
 	<?php
 	$omc_vids = function_exists( 'omc_video_pages' ) ? omc_video_pages() : [];
@@ -502,11 +551,25 @@ get_header();
 			<div class="l-section__container-wide">
 				<?php omc_pe_head( 'journal', omc_page_url( 'blog', '/blog/' ), 'omc-journal-title' ); ?>
 				<div class="omc-journal__grid">
+					<?php $omc_journal_spots = function_exists( 'omc_pe_spotmap' ) ? omc_pe_spotmap( 'journal.spots' ) : []; ?>
 					<?php foreach ( $omc_posts as $omc_post ) : ?>
+						<?php
+						$omc_thumb = (int) get_post_thumbnail_id( $omc_post );
+						$omc_layer = $omc_thumb && ! empty( $omc_journal_spots[ $omc_thumb ] ) && function_exists( 'omc_spots_layer' ) ? omc_spots_layer( $omc_journal_spots[ $omc_thumb ], 'img' ) : '';
+						?>
 						<article class="omc-card">
-							<a class="omc-card__media" href="<?php echo esc_url( get_permalink( $omc_post ) ); ?>" tabindex="-1" aria-hidden="true">
-								<?php echo get_the_post_thumbnail( $omc_post, 'large', [ 'loading' => 'lazy', 'class' => 'omc-card__img' ] ); ?>
-							</a>
+							<?php if ( $omc_layer ) : ?>
+								<div class="omc-card__media omc-card__media--spots">
+									<a class="omc-card__link" href="<?php echo esc_url( get_permalink( $omc_post ) ); ?>" tabindex="-1" aria-hidden="true">
+										<?php echo get_the_post_thumbnail( $omc_post, 'large', [ 'loading' => 'lazy', 'class' => 'omc-card__img' ] ); ?>
+									</a>
+									<?php echo $omc_layer; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside ?>
+								</div>
+							<?php else : ?>
+								<a class="omc-card__media" href="<?php echo esc_url( get_permalink( $omc_post ) ); ?>" tabindex="-1" aria-hidden="true">
+									<?php echo get_the_post_thumbnail( $omc_post, 'large', [ 'loading' => 'lazy', 'class' => 'omc-card__img' ] ); ?>
+								</a>
+							<?php endif; ?>
 							<div class="omc-card__body">
 								<time class="omc-card__date" datetime="<?php echo esc_attr( get_the_date( 'c', $omc_post ) ); ?>"><?php echo esc_html( get_the_date( '', $omc_post ) ); ?></time>
 								<h3 class="omc-card__title"><a href="<?php echo esc_url( get_permalink( $omc_post ) ); ?>"><?php echo esc_html( get_the_title( $omc_post ) ); ?></a></h3>

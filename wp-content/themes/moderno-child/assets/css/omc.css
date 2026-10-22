@@ -2328,3 +2328,20 @@ body:has(.js-cart-sidebar.c-shop-sidebar--active) .omc-disctab { display: none; 
 		object-position: bottom right;
 	}
 }
+
+/* ─── Next drop (inc/drops.php): the Facebook Live card mirrored — words left, photo right — counting
+   down to new arrivals. Before it opens: countdown + "Remind me"; after (.is-over): a link to the drop. ─── */
+.omc-drop { padding-top: var(--omc-seam); }
+.omc-drop .omc-live__card { grid-template-columns: minmax(0, 1.35fr) minmax(0, .85fr); background: #f7efe9; }
+.omc-drop .omc-live__media { order: 2; }
+.omc-drop .omc-live__media::after { right: auto; left: var(--omc-wm-inset, 12px); } /* the mark on the outer edge */
+.omc-drop__now { display: none; }
+.omc-drop__card.is-over .omc-drop__soon { display: none; }
+.omc-drop__card.is-over .omc-drop__now { display: block; }
+.omc-drop__card.is-over span.omc-drop__now { display: inline; }
+.omc-drop__form { width: 100%; }
+.omc-drop .omc-live__form.omc-newsletter__form--named .omc-btn { flex: 0 0 auto; }
+@media (max-width: 1023px) {
+	.omc-drop .omc-live__card { grid-template-columns: 1fr; }
+	.omc-drop .omc-live__media { order: 0; }
+}

@@ -1,0 +1,59 @@
+/* WHD — "Just got mine" card on the order-received page (class-whd-share-card.php, share-card.js) */
+.whd-share {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(200px, 300px);
+	align-items: center;
+	gap: clamp(20px, 4vw, 48px);
+	margin: 8px 0 40px;
+	padding: clamp(22px, 3vw, 36px);
+	background: #f7f2ed;
+	border: 1px solid #e9e1da;
+	color: #3a2b26;
+	font-family: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+	text-align: left;
+}
+.whd-share__eyebrow { margin: 0 0 8px; font-size: 11px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: #9c6f63; }
+.whd-share__title { margin: 0 0 10px; font-family: "Cormorant Garamond", Georgia, serif; font-size: clamp(30px, 3vw, 42px); font-weight: 500; line-height: 1.05; color: #9c6f63; }
+.whd-share__title em { font-style: italic; color: #3a2b26; }
+.whd-share__text { margin: 0 0 16px; max-width: 46ch; font-size: 15px; line-height: 1.7; color: #4a3f3a; }
+.whd-share__picks { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+.whd-share__pick { width: 56px; height: 56px; padding: 0; border: 1px solid #e9e1da; background: #fff; cursor: pointer; opacity: .65; transition: opacity .2s, border-color .2s; }
+.whd-share__pick img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.whd-share__pick.is-on, .whd-share__pick:hover { opacity: 1; border-color: #3a2b26; }
+.whd-share__pick:focus-visible { outline: 2px solid #b98b7e; outline-offset: 2px; }
+.whd-share__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.whd-share__btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 48px;
+	padding: 0 24px;
+	border: 1px solid #3a2b26;
+	background: transparent;
+	color: #3a2b26;
+	font: 600 12px/1 "Manrope", system-ui, sans-serif;
+	letter-spacing: .16em;
+	text-transform: uppercase;
+	text-decoration: none;
+	cursor: pointer;
+	transition: background-color .2s, color .2s;
+}
+.whd-share__btn--share { background: #3a2b26; color: #f7f2ed; }
+.whd-share__btn:hover { background: #9c6f63; border-color: #9c6f63; color: #f7f2ed; }
+.whd-share__btn[hidden] { display: none; }
+.whd-share__note { margin: 10px 0 0; font-size: 13px; color: #6f5348; }
+.whd-share__note:empty { margin: 0; }
+.whd-share__preview { position: relative; margin: 0; aspect-ratio: 9 / 16; background: #efe6de; box-shadow: 0 24px 50px -28px rgba(58, 43, 38, .45); overflow: hidden; }
+.whd-share__img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.whd-share__wait { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; font-family: "Cormorant Garamond", Georgia, serif; font-style: italic; font-size: 20px; color: #9c6f63; text-align: center; }
+.whd-share__wait[hidden] { display: none; }
+.whd-share.is-busy .whd-share__wait { animation: whd-share-pulse 1.4s ease-in-out infinite; }
+@keyframes whd-share-pulse { 50% { opacity: .45; } }
+@media (max-width: 720px) {
+	.whd-share { grid-template-columns: 1fr; }
+	.whd-share__preview { width: min(260px, 70vw); justify-self: center; order: -1; }
+	.whd-share__actions .whd-share__btn { flex: 1 1 auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.whd-share.is-busy .whd-share__wait { animation: none; }
+}

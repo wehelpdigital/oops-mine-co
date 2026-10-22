@@ -226,7 +226,7 @@ final class WHD_Stylist {
 		$name = trim( $first . ' ' . $last );
 		WHD_Subscribers::add( $email, $name, 'stylist' );
 
-		$result = self::recommend( $answers );
+		$result = self::recommend( $answers, self::likes() );
 		$picks  = $result['picks'];
 
 		global $wpdb;
@@ -328,8 +328,8 @@ final class WHD_Stylist {
 	 *
 	 * @return array [ picks, intro, used_ai ]
 	 */
-	public static function recommend( array $answers ) {
-		$shortlist = self::shortlist( $answers, 18 );
+	public static function recommend( array $answers, array $likes = [] ) {
+		$shortlist = self::shortlist( $answers, 18, $likes );
 		if ( ! $shortlist ) {
 			return [ 'picks' => [], 'intro' => __( 'Nothing on the rail matches that just now — which happens when the runs are this small. Have a look at what has just landed.', 'whd' ), 'used_ai' => false ];
 		}
@@ -354,7 +354,8 @@ final class WHD_Stylist {
 	 * Only published, purchasable, in-stock pieces: recommending something nobody can buy is worse
 	 * than recommending nothing.
 	 */
-	public static function shortlist( array $answers, $limit = 18 ) {
+	public static function shortlist( array $answers, $limit = 18, array $likes = [] ) {
+		$taste    = self::taste( $likes );
 		$products = wc_get_products( [
 			'status'       => 'publish',
 			'limit'        => 200,
@@ -383,7 +384,7 @@ final class WHD_Stylist {
 
 		$scored = [];
 		foreach ( $products as $product ) {
-			$score = self::score( $product, $answers, $cheap, $dear );
+			$score = self::score( $product, $answers, $cheap, $dear, $taste );
 			if ( $score <= 0 ) {
 				continue;
 			}
@@ -407,7 +408,7 @@ final class WHD_Stylist {
 	}
 
 	/** One product against one set of answers. */
-	private static function score( WC_Product $product, array $answers, $cheap, $dear ) {
+	private static function score( WC_Product $product, array $answers, $cheap, $dear, array $taste = [] ) {
 		$score = 1; // everything purchasable starts on the board
 		$text  = strtolower( $product->get_name() . ' ' . wp_strip_all_tags( $product->get_short_description() ) );
 		$cats  = array_map( 'strtolower', (array) wp_get_post_terms( $product->get_id(), 'product_cat', [ 'fields' => 'names' ] ) );
@@ -417,14 +418,7 @@ final class WHD_Stylist {
 		$attr    = (string) $product->get_attribute( 'pa_color' );
 		$colours = $attr ? array_map( 'strtolower', array_map( 'trim', explode( ',', $attr ) ) ) : [];
 		$wants   = (array) ( $answers['colours'] ?? [] );
-		$map     = [
-			'black'  => [ 'black', 'charcoal', 'graphite', 'onyx' ],
-			'cream'  => [ 'cream', 'ivory', 'oat', 'white', 'ecru', 'bone' ],
-			'earth'  => [ 'brown', 'mocha', 'rust', 'olive', 'camel', 'tan', 'khaki' ],
-			'pastel' => [ 'pink', 'blush', 'blue', 'lilac', 'mint', 'lavender' ],
-			'bright' => [ 'red', 'green', 'yellow', 'orange', 'cobalt', 'emerald', 'fuchsia' ],
-			'print'  => [ 'floral', 'print', 'paisley', 'stripe', 'check' ],
-		];
+		$map     = self::colour_map();
 		foreach ( $wants as $want ) {
 			foreach ( $map[ $want ] ?? [] as $needle ) {
 				if ( in_array( $needle, $colours, true ) || false !== strpos( $text, $needle ) ) {
@@ -504,7 +498,167 @@ final class WHD_Stylist {
 		// A photograph, because a recommendation without one does not land.
 		$score += $product->get_image_id() ? 2 : -4;
 
+		// What they have hearted ("This or that", the wishlist): the same shelves and colours, a little higher.
+		if ( $taste ) {
+			$bonus = in_array( $product->get_id(), $taste['ids'], true ) ? 4 : 0;
+			foreach ( (array) $product->get_category_ids() as $cat ) {
+				$bonus += isset( $taste['cats'][ $cat ] ) ? 3 : 0;
+			}
+			foreach ( $colours as $c ) {
+				$bonus += isset( $taste['colours'][ $c ] ) ? 3 : 0;
+			}
+			$score += min( 8, $bonus );
+		}
+
 		return $score;
+	}
+
+	/** The pieces this visitor has hearted: the theme's wishlist cookie, which the swipe deck fills too. */
+	public static function likes(): array {
+		$raw = isset( $_COOKIE['ip-wishlist-items'] ) ? json_decode( wp_unslash( (string) $_COOKIE['ip-wishlist-items'] ), true ) : []; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- ids, cast below
+		return array_slice( array_values( array_unique( array_filter( array_map( 'absint', (array) $raw ) ) ) ), -40 );
+	}
+
+	/** Liked pieces boiled down to shelves and colours: [ ids, cats => [ id => n ], colours => [ word => n ] ]. */
+	private static function taste( array $likes ): array {
+		if ( ! $likes ) {
+			return [];
+		}
+		$out = [ 'ids' => $likes, 'cats' => [], 'colours' => [] ];
+		foreach ( $likes as $id ) {
+			$p = wc_get_product( $id );
+			if ( ! $p ) {
+				continue;
+			}
+			foreach ( (array) $p->get_category_ids() as $cat ) {
+				$out['cats'][ $cat ] = ( $out['cats'][ $cat ] ?? 0 ) + 1;
+			}
+			$attr = (string) $p->get_attribute( 'pa_color' );
+			foreach ( $attr ? array_map( 'strtolower', array_map( 'trim', explode( ',', $attr ) ) ) : [] as $c ) {
+				$out['colours'][ $c ] = ( $out['colours'][ $c ] ?? 0 ) + 1;
+			}
+		}
+		// The shop's top shelf holds everything, so it says nothing about taste.
+		foreach ( (array) get_terms( [ 'taxonomy' => 'product_cat', 'parent' => 0, 'hide_empty' => false, 'fields' => 'ids' ] ) as $root ) {
+			unset( $out['cats'][ (int) $root ] );
+		}
+		return $out;
+	}
+
+	/* ─────────────────────────── wear it with ─────────────────────────── */
+
+	/** What a piece is, for pairing it — categories first (the shop's own filing), then the name. */
+	public static function family( WC_Product $product ): string {
+		$words = [
+			'dress'  => [ 'dress', 'dresses', 'gown', 'jumpsuit', 'romper', 'playsuit' ],
+			'set'    => [ 'set', 'sets', 'co-ord', 'co-ords', 'coord', 'two-piece' ],
+			'outer'  => [ 'coat', 'jacket', 'blazer', 'trench', 'shacket', 'gilet', 'vest', 'outerwear', 'parka', 'cape' ],
+			'bottom' => [ 'skirt', 'skirts', 'trouser', 'trousers', 'pant', 'pants', 'jean', 'jeans', 'shorts', 'culottes', 'leggings', 'bottoms' ],
+			'top'    => [ 'top', 'tops', 'blouse', 'blouses', 'shirt', 'shirts', 'tee', 't-shirt', 'knit', 'knitwear', 'sweater', 'jumper', 'cardigan', 'cami', 'tank', 'bodysuit', 'sweatshirt', 'hoodie', 'pullover', 'polo', 'corset', 'bustier' ],
+			'shoes'  => [ 'shoe', 'shoes', 'heels', 'boots', 'sandals', 'sneakers', 'loafers', 'mules' ],
+			'extra'  => [ 'bag', 'bags', 'belt', 'scarf', 'hat', 'jewellery', 'jewelry', 'earrings', 'necklace', 'accessories' ],
+		];
+		$cats = strtolower( implode( ' | ', (array) wp_get_post_terms( $product->get_id(), 'product_cat', [ 'fields' => 'names' ] ) ) );
+		foreach ( [ $cats, strtolower( $product->get_name() ) ] as $text ) {
+			foreach ( $words as $family => $list ) {
+				if ( preg_match( '/\b(' . implode( '|', array_map( 'preg_quote', $list ) ) . ')\b/', $text ) ) {
+					return $family;
+				}
+			}
+		}
+		return '';
+	}
+
+	/**
+	 * Two or three pieces to wear with this one, by the same scoring the stylist uses.
+	 *
+	 * The piece answers the stylist's questions for itself: its colours decide which colours go with
+	 * it (a print or a bright wants a quiet partner, a neutral takes anything calm), and how loud it
+	 * is decides how loud the partner may be. The shortlist is then kept to what completes it — a top
+	 * for a skirt, a jacket for a dress — one of each first. Only pieces in the catalogue and in
+	 * stock can come back, because those are all the scoring ever sees.
+	 *
+	 * @return int[] Product ids, best first.
+	 */
+	public static function goes_with( $product_id, $limit = 3 ): array {
+		$product = wc_get_product( $product_id );
+		if ( ! $product ) {
+			return [];
+		}
+		$cache = get_transient( 'whd_goes_' . $product->get_id() );
+		if ( is_array( $cache ) ) {
+			return array_slice( $cache, 0, $limit );
+		}
+
+		$pairs = [
+			'top'    => [ 'bottom', 'outer' ],
+			'bottom' => [ 'top', 'outer' ],
+			'dress'  => [ 'outer', 'shoes', 'extra' ],
+			'outer'  => [ 'dress', 'top', 'bottom' ],
+			'set'    => [ 'outer', 'shoes', 'extra' ],
+			'shoes'  => [ 'dress', 'bottom', 'top' ],
+			'extra'  => [ 'dress', 'top', 'bottom' ],
+		];
+		$want = $pairs[ self::family( $product ) ] ?? [];
+		if ( ! $want ) {
+			set_transient( 'whd_goes_' . $product->get_id(), [], 6 * HOUR_IN_SECONDS );
+			return [];
+		}
+
+		$text = strtolower( $product->get_name() . ' ' . $product->get_attribute( 'pa_color' ) );
+		$own  = [];
+		foreach ( self::colour_map() as $family => $needles ) {
+			foreach ( $needles as $needle ) {
+				if ( false !== strpos( $text, $needle ) ) {
+					$own[] = $family;
+					break;
+				}
+			}
+		}
+		$loud    = (bool) preg_match( '/\b(sequin\w*|embellish\w*|ruffle\w*|organza|feather\w*|metallic|crystal\w*|print\w*|floral)\b/', $text );
+		$answers = [
+			'colours'   => ( $loud || array_intersect( $own, [ 'print', 'bright' ] ) ) ? [ 'black', 'cream' ] : array_values( array_unique( array_merge( [ 'black', 'cream', 'earth' ], $own ) ) ),
+			'statement' => $loud ? 'quiet' : 'middle',
+		];
+
+		$by_family = [];
+		foreach ( self::shortlist( $answers, 80 ) as $pick ) {
+			if ( (int) $pick['id'] === $product->get_id() ) {
+				continue;
+			}
+			$other  = wc_get_product( $pick['id'] );
+			$family = $other ? self::family( $other ) : '';
+			if ( in_array( $family, $want, true ) && $other->get_image_id() ) {
+				$by_family[ $family ][] = (int) $pick['id'];
+			}
+		}
+		// One of each kind it needs, in the order it needs them; then the best of what is left.
+		$out = [];
+		foreach ( $want as $family ) {
+			if ( ! empty( $by_family[ $family ] ) ) {
+				$out[] = array_shift( $by_family[ $family ] );
+			}
+		}
+		foreach ( $want as $family ) {
+			foreach ( $by_family[ $family ] ?? [] as $id ) {
+				$out[] = $id;
+			}
+		}
+		$out = array_slice( array_values( array_unique( $out ) ), 0, 6 );
+		set_transient( 'whd_goes_' . $product->get_id(), $out, 6 * HOUR_IN_SECONDS );
+		return array_slice( $out, 0, $limit );
+	}
+
+	/** Colour families the stylist asks about, and the words that put a piece in each. */
+	private static function colour_map(): array {
+		return [
+			'black'  => [ 'black', 'charcoal', 'graphite', 'onyx' ],
+			'cream'  => [ 'cream', 'ivory', 'oat', 'white', 'ecru', 'bone' ],
+			'earth'  => [ 'brown', 'mocha', 'rust', 'olive', 'camel', 'tan', 'khaki' ],
+			'pastel' => [ 'pink', 'blush', 'blue', 'lilac', 'mint', 'lavender' ],
+			'bright' => [ 'red', 'green', 'yellow', 'orange', 'cobalt', 'emerald', 'fuchsia' ],
+			'print'  => [ 'floral', 'print', 'paisley', 'stripe', 'check' ],
+		];
 	}
 
 	/** The line under a pick when no model wrote one. */

@@ -204,8 +204,9 @@ function omc_pe_schema() {
 		return $b;
 	};
 
-	$about = omc_pe_about_id();
-	$icons = [
+	$about      = omc_pe_about_id();
+	$spots_help = __( 'Click the photo where a piece is, then choose it from the shop. Shoppers tap the point to see the piece and add it to the bag; two or more points add a “Shop the look” button for all of them. Drag a point to move it.', 'moderno-child' );
+	$icons      = [
 		'sparkle' => __( 'Sparkle', 'moderno-child' ),
 		'hand'    => __( 'Hand', 'moderno-child' ),
 		'return'  => __( 'Return arrow', 'moderno-child' ),
@@ -226,6 +227,7 @@ function omc_pe_schema() {
 					'note'   => __( 'The full-width photo at the very top.', 'moderno-child' ),
 					'fields' => [
 						'hero.images'  => [ 'type' => 'images', 'label' => __( 'Slideshow photos', 'moderno-child' ), 'help' => __( 'The first shows first and loads fastest. One photo turns the slideshow off.', 'moderno-child' ), 'default' => static fn() => omc_hero_images() ],
+						'hero.spots'   => [ 'type' => 'spotmap', 'images' => 'hero.images', 'label' => __( 'Pieces in the photos', 'moderno-child' ), 'help' => $spots_help, 'default' => [] ],
 						'hero.title'   => $text( __( 'Headline', 'moderno-child' ), __( 'Found with intention.', 'moderno-child' ) ),
 						'hero.phrases' => [ 'type' => 'lines', 'label' => __( 'Second line, in turns', 'moderno-child' ), 'help' => __( 'One per line. The first is what search engines read; the rest take turns after it.', 'moderno-child' ), 'default' => static fn() => omc_hero_phrases() ],
 						'hero.lede'    => $area( __( 'Intro', 'moderno-child' ), __( 'Curated Korean and Thai fashion for the pieces you weren’t looking for — and can’t leave without.', 'moderno-child' ) ),
@@ -273,6 +275,22 @@ function omc_pe_schema() {
 						'live.url'     => [ 'type' => 'url', 'label' => __( 'Facebook page or live link', 'moderno-child' ), 'mod' => 'omc_live_url', 'default' => 'https://www.facebook.com/' ],
 					],
 				],
+				'drop'       => [
+					'label'  => __( 'Next drop', 'moderno-child' ),
+					'note'   => __( 'A countdown to new arrivals with “Remind me”. Everyone who leaves an email gets the “Drop reminder — it is open” email (WHD → Emails) when it opens; then the card links to the drop for a week and goes away on its own.', 'moderno-child' ),
+					'fields' => [
+						'drop.enabled'    => [ 'type' => 'toggle', 'label' => __( 'Show the card', 'moderno-child' ), 'default' => false ],
+						'drop.when'       => [ 'type' => 'datetime', 'label' => __( 'When it opens', 'moderno-child' ), 'default' => '', 'help' => __( 'Shop time. The card stays hidden until this is set.', 'moderno-child' ) ],
+						'drop.image'      => [ 'type' => 'image', 'label' => __( 'Photo', 'moderno-child' ), 'default' => static fn() => omc_images()['edit_b'] ?? '' ],
+						'drop.eyebrow'    => $text( __( 'Small heading', 'moderno-child' ), __( 'Next drop', 'moderno-child' ) ),
+						'drop.title'      => $text( __( 'Name of the drop', 'moderno-child' ), __( 'The new drop', 'moderno-child' ), [ 'help' => __( 'The card’s heading, and what the reminder email calls it: “It’s open: The new drop”.', 'moderno-child' ) ] ),
+						'drop.text'       => $area( __( 'Text', 'moderno-child' ), __( 'A small run of new pieces. Leave your name and email and we’ll write to you the moment it opens.', 'moderno-child' ) ),
+						'drop.button'     => $text( __( 'Button text', 'moderno-child' ), __( 'Remind me', 'moderno-child' ) ),
+						'drop.open_title' => $text( __( 'Heading once it is open', 'moderno-child' ), __( 'It’s open', 'moderno-child' ) ),
+						'drop.open_text'  => $area( __( 'Text once it is open', 'moderno-child' ), __( 'The new pieces are live. Runs are small, so sizes go in the order people arrive.', 'moderno-child' ) ),
+						'drop.link'       => [ 'type' => 'link', 'label' => __( 'Where the drop is', 'moderno-child' ), 'default' => static fn() => [ 'text' => __( 'Shop the drop', 'moderno-child' ), 'url' => omc_new_arrivals_url() ] ],
+					],
+				],
 				'mosaic'     => [
 					'label'  => __( 'Shop the look', 'moderno-child' ),
 					'note'   => __( 'The photo grid of seven tiles.', 'moderno-child' ),
@@ -282,7 +300,7 @@ function omc_pe_schema() {
 							'label'   => __( 'Tiles', 'moderno-child' ),
 							'item'    => __( 'Tile', 'moderno-child' ),
 							'max'     => 12,
-							'help'    => __( 'Seven tiles in this order keep the grid balanced: large, small, tall, small, small, wide, small.', 'moderno-child' ),
+							'help'    => __( 'Seven tiles in this order keep the grid balanced: large, small, tall, small, small, wide, small.', 'moderno-child' ) . ' ' . $spots_help,
 							'fields'  => [
 								'image' => [ 'type' => 'image', 'label' => __( 'Photo', 'moderno-child' ) ],
 								'label' => [ 'type' => 'text', 'label' => __( 'Label', 'moderno-child' ) ],
@@ -297,6 +315,7 @@ function omc_pe_schema() {
 										'2x1' => __( 'Wide (2 × 1)', 'moderno-child' ),
 									],
 								],
+								'spots' => [ 'type' => 'spots', 'image' => 'image', 'label' => __( 'Pieces in this photo', 'moderno-child' ) ],
 							],
 							'default' => static fn() => array_map( static fn( $t ) => array_intersect_key( wp_parse_args( $t, [ 'image' => '', 'label' => '', 'url' => '', 'size' => '1x1' ] ), array_flip( [ 'image', 'label', 'url', 'size' ] ) ), omc_home_mosaic() ),
 						],
@@ -376,6 +395,17 @@ function omc_pe_schema() {
 					'label'  => __( 'Most loved', 'moderno-child' ),
 					'fields' => $prefix( 'loved', $head( __( 'Most loved', 'moderno-child' ), __( 'The pieces everyone keeps *reaching for*', 'moderno-child' ), __( 'Shop best sellers', 'moderno-child' ) ) ),
 				],
+				'swipe'      => [
+					'label'  => __( 'This or that', 'moderno-child' ),
+					'note'   => __( 'A deck of the newest pieces to swipe through: right to love — it goes in the wishlist, and the stylist learns from it — left to skip.', 'moderno-child' ),
+					'fields' => [
+						'swipe.enabled' => [ 'type' => 'toggle', 'label' => __( 'Show the deck', 'moderno-child' ), 'default' => true ],
+						'swipe.eyebrow' => $text( __( 'Small heading', 'moderno-child' ), __( 'This or that', 'moderno-child' ) ),
+						'swipe.title'   => $em( __( 'Heading', 'moderno-child' ), __( 'Swipe what you *love*', 'moderno-child' ) ),
+						'swipe.text'    => $area( __( 'Text', 'moderno-child' ), __( 'Right for love, left for not this one. Everything you love is saved to your wishlist, and our digital stylist takes it into account the next time it picks for you.', 'moderno-child' ) ),
+						'swipe.done'    => $text( __( 'When the deck runs out', 'moderno-child' ), __( 'You’ve seen everything new.', 'moderno-child' ) ),
+					],
+				],
 				'videos'     => [
 					'label'  => __( 'Style videos', 'moderno-child' ),
 					'note'   => __( 'Shows the three newest style videos.', 'moderno-child' ),
@@ -386,7 +416,9 @@ function omc_pe_schema() {
 				'journal'    => [
 					'label'  => __( 'Journal', 'moderno-child' ),
 					'note'   => __( 'Shows the three newest journal posts.', 'moderno-child' ),
-					'fields' => $prefix( 'journal', $head( __( 'Styling notes', 'moderno-child' ), __( 'From the *journal*', 'moderno-child' ), __( 'All stories', 'moderno-child' ) ) ),
+					'fields' => $prefix( 'journal', $head( __( 'Styling notes', 'moderno-child' ), __( 'From the *journal*', 'moderno-child' ), __( 'All stories', 'moderno-child' ) ) ) + [
+						'journal.spots' => [ 'type' => 'spotmap', 'choices' => static fn() => omc_pe_journal_photos(), 'label' => __( 'Pieces in the journal photos', 'moderno-child' ), 'help' => __( 'The photos of the three newest posts, as the home page shows them. A point stays with its photo, so it shows again wherever that photo is used.', 'moderno-child' ), 'default' => [] ],
+					],
 				],
 				'quotes'     => [
 					'label'  => __( 'Reviews', 'moderno-child' ),
@@ -532,6 +564,19 @@ function omc_pe_clean( array $field, $value ) {
 			$out = [];
 			foreach ( array_slice( (array) $value, 0, (int) ( $field['max'] ?? 12 ) ) as $item ) {
 				$out[] = omc_pe_clean( [ 'type' => 'group', 'fields' => $field['fields'] ], is_array( $item ) ? $item : [] );
+			}
+			return $out;
+		case 'spots':
+			return function_exists( 'omc_spots_clean' ) ? omc_spots_clean( $value ) : [];
+		case 'spotmap':
+			// Hotspots per photograph, keyed by its attachment id.
+			$out = [];
+			foreach ( is_array( $value ) ? $value : [] as $image => $spots ) {
+				$image = absint( $image );
+				$spots = function_exists( 'omc_spots_clean' ) ? omc_spots_clean( $spots ) : [];
+				if ( $image && $spots ) {
+					$out[ $image ] = $spots;
+				}
 			}
 			return $out;
 	}
@@ -758,10 +803,14 @@ add_action( 'admin_enqueue_scripts', static function () {
 	wp_enqueue_editor();
 	wp_enqueue_style( 'omc-pe-fonts', 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap', [], null ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
 	wp_enqueue_style( 'omc-page-editor', OMC_URI . '/assets/css/page-editor.css', [], $ver( '/assets/css/page-editor.css' ) );
-	wp_enqueue_script( 'omc-page-editor', OMC_URI . '/assets/js/page-editor.js', [ 'media-editor', 'editor' ], $ver( '/assets/js/page-editor.js' ), true );
+	if ( function_exists( 'omc_piece_picker_assets' ) ) {
+		omc_piece_picker_assets();
+	}
+	wp_enqueue_script( 'omc-page-editor', OMC_URI . '/assets/js/page-editor.js', [ 'media-editor', 'editor', 'omc-piece-picker' ], $ver( '/assets/js/page-editor.js' ), true );
 
-	$pages = [];
-	$media = [];
+	$pages  = [];
+	$media  = [];
+	$pieces = [];
 	foreach ( omc_pe_schema() as $page => $def ) {
 		$id       = omc_pe_page_id( $page );
 		$sections = [];
@@ -773,6 +822,10 @@ add_action( 'admin_enqueue_scripts', static function () {
 				$values[ $key ]   = omc_pe_current( $page, $key );
 				$defaults[ $key ] = omc_pe_clean( $field, omc_pe_default( $page, $key ) );
 				unset( $field['default'] );
+				if ( isset( $field['choices'] ) && $field['choices'] instanceof Closure ) {
+					$field['choices'] = ( $field['choices'] )();
+				}
+				omc_pe_collect_pieces( $field, $values[ $key ], $pieces );
 				$fields[] = [ 'key' => $key ] + $field;
 				omc_pe_collect_media( $field, $values[ $key ], $media );
 				omc_pe_collect_media( $field, $defaults[ $key ], $media );
@@ -795,8 +848,9 @@ add_action( 'admin_enqueue_scripts', static function () {
 		'rest'  => esc_url_raw( rest_url( 'omc/v1/page-editor' ) ),
 		'nonce' => wp_create_nonce( 'wp_rest' ),
 		'tab'   => $tab,
-		'pages' => $pages,
-		'media' => (object) $media,
+		'pages'  => $pages,
+		'media'  => (object) $media,
+		'pieces' => (object) ( function_exists( 'omc_piece_brief' ) ? omc_piece_brief( $pieces ) : [] ),
 		'i18n'  => [
 			'save'       => __( 'Save changes', 'moderno-child' ),
 			'saving'     => __( 'Saving…', 'moderno-child' ),
@@ -828,6 +882,14 @@ add_action( 'admin_enqueue_scripts', static function () {
 			'leave'      => __( 'You have changes that are not saved. Leave anyway?', 'moderno-child' ),
 			'sections'   => __( 'Sections', 'moderno-child' ),
 			'shown'      => __( 'Shown', 'moderno-child' ),
+			'spotsNone'  => __( 'Choose the photo first, then put the pieces on it.', 'moderno-child' ),
+			'spotsEmpty' => __( 'No pieces on this photo yet — click where one is.', 'moderno-child' ),
+			'spotsMax'   => __( 'Twelve points is the most a photo takes.', 'moderno-child' ),
+			'noPhotos'   => __( 'There are no photos here yet.', 'moderno-child' ),
+			/* translators: %d: number of points */
+			'spotsCount' => __( '%d on it', 'moderno-child' ),
+			'changePc'   => __( 'Change piece', 'moderno-child' ),
+			'unknown'    => __( 'A piece no longer in the shop', 'moderno-child' ),
 		],
 	] );
 } );
@@ -861,7 +923,57 @@ function omc_pe_collect_media( array $field, $value, array &$media ) {
 				omc_pe_collect_media( [ 'type' => 'group', 'fields' => $field['fields'] ], $item, $media );
 			}
 			break;
+		case 'spotmap':
+			array_map( $add, array_keys( (array) $value ) );
+			foreach ( (array) ( $field['choices'] ?? [] ) as $choice ) {
+				$add( $choice['image'] ?? 0 );
+			}
+			break;
 	}
+}
+
+/** Every product a hotspot field points at. */
+function omc_pe_collect_pieces( array $field, $value, array &$ids ) {
+	switch ( $field['type'] ) {
+		case 'spots':
+			foreach ( (array) $value as $s ) {
+				$ids[] = (int) ( $s['product'] ?? 0 );
+			}
+			break;
+		case 'spotmap':
+			foreach ( (array) $value as $spots ) {
+				omc_pe_collect_pieces( [ 'type' => 'spots' ], $spots, $ids );
+			}
+			break;
+		case 'group':
+			foreach ( $field['fields'] as $k => $sub ) {
+				omc_pe_collect_pieces( $sub, $value[ $k ] ?? null, $ids );
+			}
+			break;
+		case 'list':
+			foreach ( (array) $value as $item ) {
+				omc_pe_collect_pieces( [ 'type' => 'group', 'fields' => $field['fields'] ], $item, $ids );
+			}
+			break;
+	}
+}
+
+/** The journal photos the home page shows: the three newest posts' pictures. */
+function omc_pe_journal_photos() {
+	$out = [];
+	foreach ( get_posts( [ 'numberposts' => 3, 'post_status' => 'publish', 'ignore_sticky_posts' => true ] ) as $post ) {
+		$thumb = (int) get_post_thumbnail_id( $post );
+		if ( $thumb ) {
+			$out[] = [ 'image' => $thumb, 'label' => html_entity_decode( get_the_title( $post ), ENT_QUOTES, 'UTF-8' ) ];
+		}
+	}
+	return $out;
+}
+
+/** The saved hotspots of a home-page field ("hero.spots", "journal.spots"): [ attachment id => spots ]. */
+function omc_pe_spotmap( $key ) {
+	$value = omc_pe( 'home', $key, [] );
+	return is_array( $value ) ? $value : [];
 }
 
 function omc_pe_screen() {

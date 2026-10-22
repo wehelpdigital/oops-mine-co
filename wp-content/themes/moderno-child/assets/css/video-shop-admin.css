@@ -1,0 +1,61 @@
+/* Page Editor → Shoppable videos (inc/video-shop.php, assets/js/video-shop-admin.js) */
+.omc-vsa { max-width: 1180px; padding-bottom: 90px; }
+.omc-vsa__eyebrow { margin: 18px 0 2px; font-size: 11px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: #9c6f63; }
+.omc-vsa__title { margin: 0 0 6px; padding: 0; font-family: "Cormorant Garamond", Georgia, serif; font-size: 34px; font-weight: 500; color: #3a2b26; }
+.omc-vsa__lead { max-width: 760px; margin: 0 0 18px; font-size: 14px; line-height: 1.6; color: #50575e; }
+.omc-vsa__none { padding: 20px; background: #fff; border: 1px dashed #dcd3cb; border-radius: 8px; color: #6f5348; }
+.omc-vsa__list { display: flex; flex-direction: column; gap: 22px; }
+.omc-vsa__video { padding: 18px 20px 20px; background: #fff; border: 1px solid #e3ddd7; border-radius: 10px; }
+.omc-vsa__vhead { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+.omc-vsa__h { margin: 0; font-family: "Cormorant Garamond", Georgia, serif; font-size: 24px; font-weight: 500; color: #3a2b26; }
+.omc-vsa__view { font-size: 13px; color: #9c6f63; }
+.omc-vsa__grid { display: grid; grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); gap: 24px; }
+.omc-vsa__player video { display: block; width: 100%; max-height: 520px; background: #111; border-radius: 6px; }
+.omc-vsa__chh { margin: 12px 0 6px; font-size: 12px; color: #6f5348; }
+.omc-vsa__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.omc-vsa__chip { padding: 5px 9px; border: 1px solid #e3ddd7; border-radius: 999px; background: #f7f2ed; font-size: 12px; color: #3a2b26; cursor: pointer; }
+.omc-vsa__chip:hover { border-color: #9c6f63; }
+.omc-vsa__chip b { color: #9c6f63; }
+.omc-vsa__addrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px; }
+.omc-vsa__add .omc-vsa__clock { display: inline-block; min-width: 34px; margin-left: 4px; padding: 0 6px; background: rgba(255, 255, 255, .2); border-radius: 3px; font-variant-numeric: tabular-nums; }
+.omc-vsa__hint { font-size: 12px; color: #8a7d76; }
+.omc-vsa__moments { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.omc-vsa__empty { padding: 16px; border: 1px dashed #dcd3cb; border-radius: 8px; color: #8a7d76; }
+.omc-vsa__row { display: flex; align-items: center; gap: 8px; padding: 8px; background: #fbf8f5; border: 1px solid #efe6de; border-radius: 8px; }
+.omc-vsa__row.is-empty { border-color: #e8c9c1; background: #fff7f4; }
+.omc-vsa__time input { width: 64px; min-height: 34px; text-align: center; font-variant-numeric: tabular-nums; }
+.omc-vsa__ib { width: 32px; height: 32px; border: 1px solid #e3ddd7; border-radius: 6px; background: #fff; color: #3a2b26; font-size: 15px; line-height: 1; cursor: pointer; }
+.omc-vsa__ib:hover { border-color: #3a2b26; }
+.omc-vsa__ib.is-danger:hover { border-color: #b32d2e; color: #b32d2e; }
+.omc-vsa__pick { display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0; min-height: 44px; padding: 4px 10px 4px 4px; border: 1px solid #e3ddd7; border-radius: 6px; background: #fff; text-align: left; cursor: pointer; }
+.omc-vsa__pick:hover { border-color: #9c6f63; }
+.omc-vsa__pick img { flex: 0 0 auto; width: 34px; height: 42px; object-fit: cover; border-radius: 3px; background: #efe6de; }
+.omc-vsa__pick span { display: flex; flex-direction: column; min-width: 0; font-size: 13px; color: #3a2b26; }
+.omc-vsa__pick small { color: #9c6f63; }
+.omc-vsa__choose { padding-left: 6px; color: #9c6f63 !important; font-weight: 600; }
+.omc-vsa__save {
+	position: fixed;
+	right: 0;
+	bottom: 0;
+	left: 160px;
+	z-index: 50;
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 16px;
+	padding: 12px 24px;
+	background: rgba(255, 255, 255, .96);
+	border-top: 1px solid #e3ddd7;
+	box-shadow: 0 -8px 24px -18px rgba(58, 43, 38, .4);
+}
+.folded .omc-vsa__save { left: 36px; }
+.omc-vsa__status { font-size: 13px; color: #6f5348; }
+.omc-vsa__status.is-dirty { color: #9c6f63; }
+.omc-vsa__status.is-bad { color: #b32d2e; }
+.omc-vsa__go { min-height: 40px; padding: 0 22px; border: 0; border-radius: 6px; background: #3a2b26; color: #fff; font-weight: 600; cursor: pointer; }
+.omc-vsa__go[disabled] { opacity: .45; cursor: default; }
+@media (max-width: 960px) {
+	.omc-vsa__grid { grid-template-columns: 1fr; }
+	.omc-vsa__player video { max-height: 360px; }
+	.omc-vsa__save { left: 0; }
+}

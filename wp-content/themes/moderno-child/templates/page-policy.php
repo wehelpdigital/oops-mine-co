@@ -42,6 +42,8 @@ while ( have_posts() ) :
 	if ( $omc_data['faqs'] ) {
 		$omc_nav[] = [ 'id' => 'faq', 'label' => __( 'Questions', 'moderno-child' ) ];
 	}
+	// Anything a module prints under the text (the returns form) can add itself to the list.
+	$omc_nav = (array) apply_filters( 'omc_policy_nav', $omc_nav, $omc_id );
 	?>
 
 	<article <?php post_class( 'omc-lp omc-lp--policy' ); ?>>
@@ -81,6 +83,8 @@ while ( have_posts() ) :
 							<?php omc_landing_faq( $omc_data['faqs'] ); ?>
 						</section>
 					<?php endif; ?>
+
+					<?php do_action( 'omc_policy_after_text', $omc_id, $omc_data ); // the returns request form (inc/returns.php) ?>
 
 					<?php omc_contact_help_card(); ?>
 

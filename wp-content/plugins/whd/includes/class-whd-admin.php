@@ -37,6 +37,9 @@ final class WHD_Admin {
 		if ( class_exists( 'WHD_Stylist' ) ) {
 			add_submenu_page( 'whd', __( 'AI stylist', 'whd' ), __( 'AI stylist', 'whd' ), $cap, 'whd-stylist', [ __CLASS__, 'page_stylist' ] );
 		}
+		if ( class_exists( 'WHD_Wheel' ) && class_exists( 'WooCommerce' ) ) {
+			add_submenu_page( 'whd', __( 'Spin to win', 'whd' ), __( 'Spin to win', 'whd' ), $cap, WHD_Wheel::PAGE, [ 'WHD_Wheel', 'page' ] );
+		}
 		add_submenu_page( 'whd', __( 'Integrations', 'whd' ), __( 'Integrations', 'whd' ), $cap, 'whd-integrations', [ 'WHD_Integrations', 'page' ] );
 		add_submenu_page( 'whd', __( 'Tracking scripts', 'whd' ), __( 'Tracking scripts', 'whd' ), $cap, 'whd-scripts', [ __CLASS__, 'page_scripts' ] );
 		// Registered here rather than from WHD_AI_Admin so the parent menu is guaranteed to exist first.
@@ -77,6 +80,8 @@ final class WHD_Admin {
 			'remember_sizes'          => empty( $in['remember_sizes'] ) ? 0 : 1,
 			'from_name'               => sanitize_text_field( $in['from_name'] ?? '' ),
 			'from_email'              => sanitize_email( $in['from_email'] ?? '' ),
+			'share_card_on'           => empty( $in['share_card_on'] ) ? 0 : 1,
+			'share_card'              => absint( $in['share_card'] ?? 0 ),
 		];
 	}
 
@@ -178,6 +183,13 @@ final class WHD_Admin {
 		self::card( __( 'Email designs', 'whd' ), sprintf( __( '%1$d of %2$d active', 'whd' ), $on( $emails ), count( $emails ) ), admin_url( 'admin.php?page=whd-emails' ) );
 		self::card( __( 'Abandoned carts', 'whd' ), sprintf( __( '%1$d waiting · %2$d reminded · %3$d recovered', 'whd' ), $stats['active'], $stats['sent'], $stats['recovered'] ), admin_url( 'admin.php?page=whd-carts' ) );
 		self::card( __( 'Subscribers', 'whd' ), sprintf( _n( '%d address', '%d addresses', WHD_Subscribers::count(), 'whd' ), WHD_Subscribers::count() ), admin_url( 'admin.php?page=whd-subscribers' ) );
+		if ( class_exists( 'WHD_Reminders' ) ) {
+			$drop = WHD_Reminders::counts();
+			self::card( __( 'Drop reminders', 'whd' ), sprintf( __( '%1$d waiting · %2$d sent', 'whd' ), $drop['waiting'], $drop['sent'] ), admin_url( 'admin.php?page=whd-emails' ) );
+		}
+		if ( class_exists( 'WHD_Wheel' ) && class_exists( 'WooCommerce' ) ) {
+			self::card( __( 'Spin to win', 'whd' ), sprintf( _n( '%d spin', '%d spins', WHD_Wheel::count(), 'whd' ), WHD_Wheel::count() ), admin_url( 'admin.php?page=' . WHD_Wheel::PAGE ) );
+		}
 		self::card( __( 'Integrations', 'whd' ), implode( ' · ', WHD_Integrations::status_lines() ), admin_url( 'admin.php?page=whd-integrations' ) );
 		self::card( __( 'Tracking', 'whd' ), implode( ' · ', array_filter( [ $s['ga4_id'] ? 'GA4' : '', $s['gsc_verification'] ? 'Search Console' : '', $s['fb_pixel_id'] ? 'Meta Pixel' : '', WHD_Capi::enabled() ? 'Conversions API' : '' ] ) ) ?: __( 'Nothing configured yet', 'whd' ), admin_url( 'admin.php?page=whd-scripts' ) );
 		echo '</div></div>';
@@ -520,6 +532,19 @@ final class WHD_Admin {
 			. '<label><input type="checkbox" name="whd_settings[remember_details]" value="1" ' . checked( $s['remember_details'], 1, false ) . '> ' . esc_html__( 'Fill in their details at checkout — name, email, phone and address from their last order, or the bag they left', 'whd' ) . '</label><br>'
 			. '<label><input type="checkbox" name="whd_settings[remember_sizes]" value="1" ' . checked( $s['remember_sizes'], 1, false ) . '> ' . esc_html__( 'Pick their size on product pages — the size, fit or length they chose before, never a colour', 'whd' ) . '</label>'
 			. '<p class="description">' . esc_html__( 'Only on the browser that placed the order, typed the email at checkout, or followed the cart reminder link — never looked up from an email address somebody types. The checkout says “Welcome back — not you? Clear them”, which makes the browser forget everything.', 'whd' ) . '</p></td></tr>';
+		/* "Just got mine": the story card on the order-received page. */
+		echo '<tr><th><label for="scd">' . esc_html__( 'Order share card', 'whd' ) . '</label></th><td>'
+			. '<label><input type="checkbox" name="whd_settings[share_card_on]" value="1" ' . checked( $s['share_card_on'], 1, false ) . '> ' . esc_html__( 'After an order, make a “Just got mine” card of the piece, sized for an Instagram story, to save or share', 'whd' ) . '</label><br>'
+			. '<select id="scd" name="whd_settings[share_card]" style="margin-top:8px;max-width:420px"><option value="0">' . esc_html__( 'The built-in card (photo, “Just got mine.”, the piece’s name)', 'whd' ) . '</option>';
+		foreach ( WHD_Share_Card::designs() as $id => $title ) {
+			echo '<option value="' . (int) $id . '" ' . selected( (int) $s['share_card'], $id, false ) . '>' . esc_html( $title ) . '</option>';
+		}
+		echo '</select>'
+			. '<p class="description">' . wp_kses_post( sprintf(
+				/* translators: %s: link to the Image Editor */
+				__( 'Or draw your own in the <a href="%s">Image Editor</a>: choose the Story / Reel size, start from the “Just got mine (order card)” template, save, then pick it here. The photo you start from is swapped for the piece that was bought, and <code>{product}</code> and <code>{first_name}</code> in the words are filled in. The card is made on the shopper’s phone; nothing is uploaded.', 'whd' ),
+				esc_url( admin_url( 'admin.php?page=' . WHD_Image_Editor::PAGE . '&edit=1' ) )
+			) ) . '</p></td></tr>';
 		echo '<tr><th><label for="fn">' . esc_html__( 'Sender name (automations)', 'whd' ) . '</label></th><td><input class="regular-text" id="fn" name="whd_settings[from_name]" value="' . esc_attr( $s['from_name'] ) . '"></td></tr>';
 		list( $from, $reply ) = WHD_Emails::sender();
 		$sender_note          = $reply

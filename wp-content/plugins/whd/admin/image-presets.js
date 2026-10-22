@@ -167,6 +167,16 @@
 	   editor builds each piece with its own makers, so a template's text is ordinary text afterwards. */
 
 	var templates = [
+		/* The order-received card (WHD → Settings → "Order share card"): pick the Story / Reel size
+		   first. The photo is swapped for the piece that was bought; {product} and {first_name}
+		   are filled in on the shopper's screen. */
+		{ name: 'Just got mine (order card)', pieces: [
+			{ kind: 'shade', side: 'bottom', strength: 0.65 },
+			{ kind: 'text', text: 'Just got mine.', font: 'Cormorant Garamond', style: 'italic', weight: 600, s: 0.13, fill: WHITE, x: 0.5, y: 0.78, shadow: true },
+			{ kind: 'text', text: '{product}', font: 'Montserrat', weight: 500, s: 0.036, fill: WHITE, x: 0.5, y: 0.855, width: 0.82 },
+			{ kind: 'line', x: 0.5, y: 0.9, w: 0.1, color: WHITE },
+			{ kind: 'text', text: 'OOPS, MINE CO.', font: 'Montserrat', weight: 700, s: 0.028, fill: WHITE, spacing: 400, x: 0.5, y: 0.935, brand: true }
+		] },
 		{ name: 'New arrival', pieces: [
 			{ kind: 'shade', side: 'bottom', strength: 0.6 },
 			{ kind: 'text', text: 'New Arrival', font: 'Cormorant Garamond', style: 'italic', weight: 600, s: 0.11, fill: WHITE, x: 0.07, y: 0.8, align: 'left', origin: 'left' },

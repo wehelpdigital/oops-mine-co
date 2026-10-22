@@ -607,3 +607,17 @@
 }
 .c-product__tabs-panel p:last-child,
 #tab-description p:last-child { margin-bottom: 0; }
+
+/* ─── "Only show my size" switch above the shop grids (inc/my-size.php) ─── */
+.omc-mysize { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 0 0 22px; }
+.omc-mysize[hidden] { display: none; }
+.omc-mysize__switch { display: inline-flex; align-items: center; gap: 12px; padding: 9px 16px 9px 10px; border: 1px solid var(--omc-line); border-radius: 999px; background: #fff; color: var(--omc-ink); font: 500 13px/1.3 var(--omc-sans); text-decoration: none; transition: border-color .2s, background-color .2s; }
+.omc-mysize__switch:hover { border-color: var(--omc-ink); color: var(--omc-ink); }
+.omc-mysize__switch b { font-weight: 700; color: var(--omc-rose-dark); }
+.omc-mysize__track { position: relative; flex: 0 0 auto; width: 36px; height: 20px; border-radius: 999px; background: var(--omc-line); transition: background-color .2s; }
+.omc-mysize__knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(42, 31, 27, .35); transition: transform .2s var(--omc-ease); }
+.omc-mysize.is-on .omc-mysize__switch { background: var(--omc-cream); border-color: var(--omc-rose); }
+.omc-mysize.is-on .omc-mysize__track { background: var(--omc-rose-dark); }
+.omc-mysize.is-on .omc-mysize__knob { transform: translateX(16px); }
+.omc-mysize__note { font: 400 12px/1.5 var(--omc-sans); color: var(--omc-muted); }
+.omc-mysize__switch:focus-visible { outline: 2px solid var(--omc-rose); outline-offset: 2px; }

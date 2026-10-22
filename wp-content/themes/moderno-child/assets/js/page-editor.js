@@ -21,6 +21,7 @@
 	}
 
 	var media = D.media || {};
+	var pieces = D.pieces || {};      // products the hotspots point at: { id: { name, thumb, price } }
 	var tab = D.pages[ D.tab ] ? D.tab : 'home';
 	var state = {};
 	var saved = {};
@@ -51,7 +52,7 @@
 	}
 
 	function fmt( text, value ) {
-		return String( text || '' ).replace( '%s', value );
+		return String( text || '' ).replace( /%[sd]/, value );
 	}
 
 	function h( tag, cls, html ) {
@@ -74,7 +75,8 @@
 		plus: '<path d="M12 5v14M5 12h14"/>',
 		reset: '<path d="M4 11.5A8 8 0 1 0 6.3 6"/><path d="M3.5 4v4.5H8"/>',
 		photo: '<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m20.5 16-4.5-4.5L7 19.5"/>',
-		out: '<path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'
+		out: '<path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+		tag: '<path d="M3.5 12.5 11.5 4.5H19.5V12.5L11.5 20.5Z"/><circle cx="15.5" cy="8.5" r="1.4"/>'
 	};
 
 	function svg( name, size ) {
@@ -364,8 +366,19 @@
 				return groupControl( f, slot );
 			case 'list':
 				return listControl( f, slot );
+			case 'spots':
+				return spotsControl( slot, slot.image || function () {
+					return 0;
+				} );
+			case 'spotmap':
+				return spotmapControl( f, slot );
 		}
 		return h( 'span' );
+	}
+
+	/* A picture changed somewhere: hotspot editors that sit on it repaint. */
+	function pictureChanged( n ) {
+		n.dispatchEvent( new CustomEvent( 'omc-pe-image', { bubbles: true } ) );
 	}
 
 	function linkControl( slot, id ) {
@@ -426,6 +439,7 @@
 						if ( ids[ 0 ] ) {
 							slot.set( ids[ 0 ] );
 							paintIt();
+							pictureChanged( n );
 						}
 					} );
 				} );
@@ -462,6 +476,7 @@
 						}
 						slot.set( next );
 						paintIt();
+						pictureChanged( n );
 					} );
 				} );
 				n.appendChild( fig );
@@ -475,6 +490,7 @@
 						return list.indexOf( x ) === -1;
 					} ) ).slice( 0, 12 ) );
 					paintIt();
+					pictureChanged( n );
 				} );
 			} );
 			n.appendChild( add );
@@ -548,12 +564,22 @@
 					var g = clone( slot.get() || {} );
 					g[ k ] = v;
 					slot.set( g );
-				}
+				},
+				image: sub.image ? function () {
+					return ( slot.get() || {} )[ sub.image ];
+				} : null
 			}, id ) );
 			if ( sub.help ) {
 				row.appendChild( h( 'p', 'omc-pe__help', esc( sub.help ) ) );
 			}
 			n.appendChild( row );
+		} );
+		n.addEventListener( 'omc-pe-image', function () {
+			n.querySelectorAll( '.omc-pe__spots' ).forEach( function ( sp ) {
+				if ( sp.repaint ) {
+					sp.repaint();
+				}
+			} );
 		} );
 		return n;
 	}
@@ -607,7 +633,7 @@
 					var blank = {};
 					Object.keys( f.fields ).forEach( function ( k ) {
 						var t = f.fields[ k ].type;
-						blank[ k ] = 'image' === t ? 0 : ( 'select' === t ? Object.keys( f.fields[ k ].options )[ 0 ] : '' );
+						blank[ k ] = 'image' === t ? 0 : ( 'select' === t ? Object.keys( f.fields[ k ].options )[ 0 ] : ( 'spots' === t ? [] : '' ) );
 					} );
 					slot.set( ( slot.get() || [] ).concat( [ blank ] ) );
 					paintIt();
@@ -618,6 +644,217 @@
 			}
 		};
 		paintIt();
+		return n;
+	}
+
+	/* ─────────────────────────── hotspots ─────────────────────────── */
+
+	function pieceOf( id ) {
+		return pieces[ id ] || ( window.OMCPiecePicker && window.OMCPiecePicker.known[ id ] ) || null;
+	}
+
+	function round1( v ) {
+		return Math.round( Math.max( 0, Math.min( 100, v ) ) * 10 ) / 10;
+	}
+
+	/*
+	 * Points on one photograph: click where a piece is, choose it; drag a point to move it. Positions
+	 * are percent of the photo's own frame, which is what the site works from after it crops the photo.
+	 */
+	function spotsControl( slot, imageOf ) {
+		var n = h( 'div', 'omc-pe__spots' );
+		var paintIt = function () {
+			var list = ( Array.isArray( slot.get() ) ? slot.get() : [] ).map( function ( s ) {
+				return { x: s.x, y: s.y, product: s.product };
+			} );
+			var img = imageOf();
+			var m = media[ img ];
+			n.innerHTML = '';
+			if ( ! img || ! m ) {
+				n.appendChild( h( 'p', 'omc-pe__help', esc( T.spotsNone ) ) );
+				return;
+			}
+			var put = function ( next ) {
+				slot.set( next.length ? next : [] );
+				paintIt();
+			};
+			var stage = h( 'div', 'omc-pe__stage', '<img src="' + esc( m.large || m.thumb ) + '" alt="" draggable="false">' );
+			list.forEach( function ( s, i ) {
+				var p = pieceOf( s.product );
+				var dot = h( 'button', 'omc-pe__dot', '<span>' + ( i + 1 ) + '</span>' );
+				dot.type = 'button';
+				dot.style.left = s.x + '%';
+				dot.style.top = s.y + '%';
+				dot.title = p ? p.name : T.unknown;
+				dot.addEventListener( 'pointerdown', function ( e ) {
+					e.preventDefault();
+					e.stopPropagation();
+					var r = stage.getBoundingClientRect();
+					var moved = false;
+					var move = function ( ev ) {
+						moved = true;
+						s.x = round1( ( ev.clientX - r.left ) / r.width * 100 );
+						s.y = round1( ( ev.clientY - r.top ) / r.height * 100 );
+						dot.style.left = s.x + '%';
+						dot.style.top = s.y + '%';
+					};
+					var up = function () {
+						document.removeEventListener( 'pointermove', move );
+						document.removeEventListener( 'pointerup', up );
+						if ( moved ) {
+							put( list );
+						}
+					};
+					document.addEventListener( 'pointermove', move );
+					document.addEventListener( 'pointerup', up );
+				} );
+				dot.addEventListener( 'click', function ( e ) {
+					e.stopPropagation();
+				} );
+				stage.appendChild( dot );
+			} );
+			stage.addEventListener( 'click', function ( e ) {
+				if ( list.length >= 12 ) {
+					window.alert( T.spotsMax );
+					return;
+				}
+				var r = stage.getBoundingClientRect();
+				var s = { x: round1( ( e.clientX - r.left ) / r.width * 100 ), y: round1( ( e.clientY - r.top ) / r.height * 100 ), product: 0 };
+				var pending = h( 'span', 'omc-pe__dot is-pending', '<span>' + ( list.length + 1 ) + '</span>' );
+				pending.style.left = s.x + '%';
+				pending.style.top = s.y + '%';
+				stage.appendChild( pending );
+				if ( ! window.OMCPiecePicker ) {
+					return;
+				}
+				window.OMCPiecePicker.open( pending, function ( p ) {
+					pieces[ p.id ] = p;
+					s.product = p.id;
+					put( list.concat( [ s ] ) );
+				}, function () {
+					pending.remove();
+				} );
+			} );
+			n.appendChild( stage );
+
+			var ol = h( 'ol', 'omc-pe__spotlist' );
+			if ( ! list.length ) {
+				ol.appendChild( h( 'li', 'omc-pe__spotempty', esc( T.spotsEmpty ) ) );
+			}
+			list.forEach( function ( s, i ) {
+				var p = pieceOf( s.product );
+				var li = h( 'li', 'omc-pe__spotrow',
+					'<span class="omc-pe__spotn">' + ( i + 1 ) + '</span>' +
+					( p && p.thumb ? '<img src="' + esc( p.thumb ) + '" alt="">' : '<span class="omc-pe__spotph">' + svg( 'tag', 16 ) + '</span>' ) +
+					'<span class="omc-pe__spotname">' + esc( p ? p.name : T.unknown ) + ( p && p.price ? '<small>' + esc( p.price ) + '</small>' : '' ) + '</span>' +
+					'<button type="button" class="omc-pe__btn" data-a="change">' + esc( T.changePc ) + '</button>' +
+					'<button type="button" class="omc-pe__iconbtn is-danger" data-a="x" aria-label="' + esc( T.remove ) + '">' + svg( 'x', 14 ) + '</button>' );
+				li.querySelector( '[data-a="change"]' ).addEventListener( 'click', function ( e ) {
+					if ( window.OMCPiecePicker ) {
+						window.OMCPiecePicker.open( e.currentTarget, function ( np ) {
+							pieces[ np.id ] = np;
+							list[ i ].product = np.id;
+							put( list );
+						} );
+					}
+				} );
+				li.querySelector( '[data-a="x"]' ).addEventListener( 'click', function () {
+					list.splice( i, 1 );
+					put( list );
+				} );
+				ol.appendChild( li );
+			} );
+			n.appendChild( ol );
+		};
+		paintIt();
+		n.repaint = paintIt;
+		return n;
+	}
+
+	/*
+	 * Points on several photographs: the hero's slides, or the journal's photos. One photo at a time
+	 * is open for editing; the strip above says how many points each one has.
+	 */
+	function spotmapControl( f, slot ) {
+		var n = h( 'div', 'omc-pe__spotmap' );
+		var current = 0;
+		var mapOf = function () {
+			var v = slot.get();
+			return v && ! Array.isArray( v ) && 'object' === typeof v ? v : {};
+		};
+		var photos = function () {
+			if ( f.images ) {
+				return ( state[ tab ][ f.images ] || [] ).map( function ( id ) {
+					return { image: id, label: '' };
+				} );
+			}
+			return f.choices || [];
+		};
+		var paintIt = function () {
+			var list = photos();
+			n.innerHTML = '';
+			if ( ! list.length ) {
+				n.appendChild( h( 'p', 'omc-pe__help', esc( T.noPhotos ) ) );
+				return;
+			}
+			if ( ! list.some( function ( c ) {
+				return c.image === current;
+			} ) ) {
+				current = list[ 0 ].image;
+			}
+			var strip = h( 'div', 'omc-pe__spotstrip' );
+			list.forEach( function ( c ) {
+				var count = ( mapOf()[ c.image ] || [] ).length;
+				var b = h( 'button', 'omc-pe__spotthumb' + ( c.image === current ? ' is-on' : '' ),
+					picture( c.image ) + ( count ? '<span class="omc-pe__spotcount">' + esc( fmt( T.spotsCount, count ) ) + '</span>' : '' ) +
+					( c.label ? '<span class="omc-pe__spotlabel">' + esc( c.label ) + '</span>' : '' ) );
+				b.type = 'button';
+				b.addEventListener( 'click', function () {
+					current = c.image;
+					paintIt();
+				} );
+				strip.appendChild( b );
+			} );
+			n.appendChild( strip );
+			n.appendChild( spotsControl( {
+				get: function () {
+					return mapOf()[ current ] || [];
+				},
+				set: function ( v ) {
+					var map = clone( mapOf() );
+					if ( v && v.length ) {
+						map[ current ] = v;
+					} else {
+						delete map[ current ];
+					}
+					// Empty is [] on the server too, so an emptied map reads as unchanged.
+					slot.set( Object.keys( map ).length ? map : [] );
+					var counts = strip.querySelectorAll( '.omc-pe__spotthumb' );
+					list.forEach( function ( c, i ) {
+						var k = ( ( Object.keys( map ).length ? map : {} )[ c.image ] || [] ).length;
+						var badge = counts[ i ].querySelector( '.omc-pe__spotcount' );
+						if ( k && ! badge ) {
+							badge = h( 'span', 'omc-pe__spotcount' );
+							counts[ i ].appendChild( badge );
+						}
+						if ( badge ) {
+							badge.textContent = k ? fmt( T.spotsCount, k ) : '';
+							badge.hidden = ! k;
+						}
+					} );
+				}
+			}, function () {
+				return current;
+			} ) );
+		};
+		paintIt();
+		if ( f.images ) {
+			app.addEventListener( 'omc-pe-image', function () {
+				if ( document.body.contains( n ) ) {
+					paintIt();
+				}
+			} );
+		}
 		return n;
 	}
 

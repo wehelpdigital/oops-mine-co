@@ -40,6 +40,11 @@ $omc_hub = get_page_by_path( 'videos' );
 
 			<div class="omc-video__media">
 				<?php omc_video_player( $omc_v ); ?>
+				<?php
+				if ( function_exists( 'omc_video_shop_now' ) ) {
+					omc_video_shop_now( $omc_v ); // the piece on screen now, with its Add to bag
+				}
+				?>
 			</div>
 
 			<div class="omc-video__intro">
@@ -56,6 +61,11 @@ $omc_hub = get_page_by_path( 'videos' );
 				<?php endif; ?>
 				<?php omc_video_shop_links( $omc_v['shop'] ); ?>
 				<?php omc_video_chapters( $omc_v ); ?>
+				<?php
+				if ( function_exists( 'omc_video_shop' ) ) {
+					omc_video_shop( $omc_v ); // Page Editor → Shoppable videos
+				}
+				?>
 			</div>
 
 		</div>

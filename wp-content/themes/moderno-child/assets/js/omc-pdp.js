@@ -286,10 +286,48 @@
 
 	/* ───────────────── Boot ───────────────── */
 
+	/* ───────────────── Ask about this piece: the chat opens with the message written ───────────────── */
+
+	function chosenOptions() {
+		var form = document.querySelector('form.variations_form');
+		var parts = [];
+		if (!form) { return ''; }
+		form.querySelectorAll('table.variations select').forEach(function (s) {
+			if (s.value) {
+				var o = s.options[s.selectedIndex];
+				parts.push(o ? o.text.trim() : s.value);
+			}
+		});
+		return parts.join(' / ');
+	}
+
+	function initAsk() {
+		var box = document.querySelector('[data-omc-ask]');
+		if (!box) { return; }
+		var note = box.querySelector('.omc-ask__note');
+		box.querySelectorAll('.omc-ask__btn').forEach(function (a) {
+			a.addEventListener('click', function () {
+				var picked = chosenOptions();
+				var piece = box.getAttribute('data-name') + (picked ? ' (' + picked + ')' : '');
+				var msg = (box.getAttribute('data-hello') || '%s').replace('%s', piece) + ' — ' + box.getAttribute('data-url');
+				// Messenger takes the words in its link; Instagram does not, so both also get them copied.
+				if (a.getAttribute('data-prefill') === '1') {
+					a.href = a.getAttribute('data-base') + '?text=' + encodeURIComponent(msg);
+				}
+				if (navigator.clipboard && navigator.clipboard.writeText) {
+					navigator.clipboard.writeText(msg).then(function () {
+						if (note) { note.textContent = box.getAttribute('data-copied') || ''; }
+					}, function () {});
+				}
+			});
+		});
+	}
+
 	function boot() {
 		initModal();
 		placeSizeGuide();
 		initReviewPhotos();
+		initAsk();
 
 		if (window.jQuery) {
 			// WooCommerce rebuilds the variations form on quick view / AJAX.

@@ -89,6 +89,109 @@
 		});
 	}
 
+	/* ─────────── spin the wheel ───────────
+	   The server picks the prize and says which segment to stop on; this only animates to it. The
+	   code is emailed, so all the popup ever says is what it landed on and where to look. */
+
+	var SPUN = 'whd_spun';
+	var reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+	function escHtml(s) {
+		return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
+	}
+
+	function wheelDone(form, html) {
+		if (!form.parentNode) { return; }
+		var div = document.createElement('div');
+		div.className = 'whd-form__done whd-wheel__done';
+		div.setAttribute('role', 'status');
+		div.innerHTML = html || '';
+		form.parentNode.replaceChild(div, form);
+	}
+
+	/* Turn the disc so segment `index` stops under the pin, a few full turns on from where it is. */
+	function turn(disc, n, index) {
+		return new Promise(function (resolve) {
+			var a = 360 / n;
+			var jitter = (Math.random() - 0.5) * a * 0.6;           // not dead centre every time
+			var target = (((360 - (index + 0.5) * a + jitter) % 360) + 360) % 360;
+			var from = disc.__whdTurn || 0;
+			var end = from - (from % 360) + 360 * 5 + target;
+			if (end - from < 360 * 4) { end += 360; }
+			disc.__whdTurn = end;
+			var finished = false;
+			var fin = function () { if (!finished) { finished = true; resolve(); } };
+			disc.style.transition = reduceMotion ? 'none' : 'transform 4.8s cubic-bezier(.15, .7, .1, 1)';
+			disc.style.transform = 'rotate(' + end + 'deg)';
+			if (reduceMotion) { fin(); return; }
+			disc.addEventListener('transitionend', fin, { once: true });
+			setTimeout(fin, 5300);
+		});
+	}
+
+	function spin(wheel, form, disc, ev) {
+		ev.preventDefault();
+		if (form.__whdBusy) { return; }
+		var status = form.querySelector('.whd-form__status');
+		var button = form.querySelector('.whd-form__btn');
+		var email = form.querySelector('input[type="email"]');
+		var n = parseInt(wheel.getAttribute('data-segments'), 10) || 6;
+		var say = function (msg, isError) {
+			if (!status) { return; }
+			status.textContent = msg || '';
+			status.classList.toggle('is-error', !!isError);
+		};
+		if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.value.trim())) {
+			say(form.getAttribute('data-invalid') || 'Please enter a valid email address.', true);
+			email.focus();
+			return;
+		}
+		if (wheel.closest('.whd-popup--preview')) {
+			turn(disc, n, Math.floor(Math.random() * n));
+			say(form.getAttribute('data-preview') || 'Preview only — nothing was sent.');
+			return;
+		}
+		form.__whdBusy = true;
+		if (button) { button.disabled = true; button.classList.add('is-busy'); }
+		say('');
+		var data = new FormData(form);
+		fetch(form.getAttribute('action'), { method: 'POST', body: data, credentials: 'same-origin' })
+			.then(function (r) { return r.json().catch(function () { return { success: false }; }); })
+			.then(function (res) {
+				if (!res || !res.success) {
+					throw new Error((res && res.data && res.data.message) || form.getAttribute('data-error') || 'Something went wrong. Please try again.');
+				}
+				var d = res.data || {};
+				return turn(disc, n, parseInt(d.segment, 10) || 0).then(function () {
+					cookie.set(SPUN, '1', 365);
+					cookie.set(SUBSCRIBED, '1', 90);
+					document.dispatchEvent(new CustomEvent('whd:subscribed', {
+						detail: { email: data.get('email'), source: 'wheel', event_id: d.event_id || '' }
+					}));
+					var html = (form.getAttribute('data-result') || '').replace(/\{prize\}/g, escHtml(d.label));
+					if (!d.mailed && d.message) { html += '<small>' + escHtml(d.message) + '</small>'; }
+					wheelDone(form, html);
+				});
+			})
+			.catch(function (err) {
+				say(err.message, true);
+				form.__whdBusy = false;
+				if (button) { button.disabled = false; button.classList.remove('is-busy'); }
+			});
+	}
+
+	function initWheels(scope) {
+		(scope || document).querySelectorAll('.whd-wheel').forEach(function (wheel) {
+			if (wheel.__whd) { return; }
+			wheel.__whd = true;
+			var form = wheel.querySelector('.whd-wheel__form');
+			var disc = wheel.querySelector('.whd-wheel__disc');
+			if (!form || !disc) { return; }
+			if (!wheel.closest('.whd-popup--preview') && cookie.get(SPUN)) { wheelDone(form, form.getAttribute('data-done')); return; }
+			form.addEventListener('submit', function (ev) { spin(wheel, form, disc, ev); });
+		});
+	}
+
 	function pad(n) { return (n < 10 ? '0' : '') + n; }
 	function format(ms) {
 		var s = Math.max(0, Math.round(ms / 1000));
@@ -201,6 +304,7 @@
 	function boot() {
 		document.querySelectorAll('.whd-popup').forEach(function (el) { if (!el.__whd) { el.__whd = new Popup(el); } });
 		initForms(document);
+		initWheels(document);
 	}
 	if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
 })();

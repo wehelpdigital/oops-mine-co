@@ -155,7 +155,7 @@ Chromium harness for that lives in the session scratchpad, not in the repo.
 `functions.php` requires every name in one list near the top:
 
 ```php
-foreach ( [ 'video', 'landing', 'pdp', 'cart', 'social', 'perf', 'schema', 'images', 'seo-doc', 'page-editor' ] as $omc_module ) { ... }
+foreach ( [ 'video', 'landing', 'pdp', 'cart', 'social', 'perf', 'schema', 'images', 'seo-doc', 'page-editor', 'shop-kit', 'pdp-extras', 'video-shop', 'my-size', 'drops', 'swipe', 'returns' ] as $omc_module ) { ... }
 ```
 
 Each file is self-contained and hooks itself, so adding a feature means dropping in `inc/<name>.php` and adding the
@@ -170,6 +170,13 @@ in `moderno_child_enqueue_styles()` (video, cart, pdp), always with the `omc` or
 | `cart.php` | Slide-out cart drawer, free-shipping progress bar, drawer trust line. |
 | `social.php` | Social/UGC band and the feed on the home and product pages. |
 | `page-editor.php` | **Page Editor** (top-level admin menu, page `omc-page-editor`, `edit_theme_options`): the home and About pages' words and photos. See below. |
+| `shop-kit.php` | Selling outside product grids: `omc_piece()` (name, price, photo, every buyable size combination), `omc_pieces_use()` registers pieces and prints them once as `#omc-shop-data` JSON for `assets/js/omc-shop.js` (size picker, `OMCShop.add()` through `?wc-ajax=add_to_cart` then jQuery `added_to_cart`, so drawer/fragments/pixel react as usual; sizes preselected from `whd_fit`), photo hotspots (`omc_spots_layer()`, points stored as % of the photo's own frame and re-placed after the object-fit crop by the script), the "Shop the look" sheet, REST `omc/v1/pieces` + `assets/js/omc-piece-picker.js` for admin product search. |
+| `pdp-extras.php` | Under the buy box: "Ask about this piece" (Messenger `m.me/<page>?text=` prefilled with piece, picked size and link, Instagram `ig.me/m/<user>`; message also copied; a button shows only for a profile actually set) and "Wear it with" (`WHD_Stylist::goes_with()`, 2–3 in-stock pieces + "Add the look"). |
+| `video-shop.php` | **Shoppable videos** (Page Editor submenu, page `omc-video-shop`): pieces tied to moments of each style video, option `omc_video_shop` keyed by video **slug** (import-videos.php rewrites `_omc_video`). Video page: the piece on screen under the player (`omc_video_shop_now`) and a card per moment (`omc_video_shop`), followed by `omc-video.js`. |
+| `my-size.php` | "Only show my size" switch on shop/category grids, drawn client-side from `whd_fit`; `?my_size=<pa_size slug>` filters the main query to pieces in stock in that size or an equivalent the catalogue itself defines (`m-8-10` makes M, 8 and 10 one size); one-size pieces stay in, and one-size is never "my size". |
+| `drops.php` | "Next drop" card on the home page (Page Editor → Next drop, off until enabled with a date): the Live card's countdown, "Remind me" form with source `drop`, then a link to the drop for a week. Feeds `whd_drop` to the plugin. |
+| `swipe.php` | "This or that" deck on the home page (Page Editor → This or that): swipe/♥ adds to the theme wishlist (`ideapark_wishlist_toggle`, only when not already there), skips are kept in localStorage; `assets/js/omc-swipe.js`. |
+| `returns.php` | Returns & exchanges request form: My account endpoint `returns` (+ a button on view-order) and under the returns policy page (`omc_policy_after_text` hook in page-policy.php). Guests find the order by number + billing email (rate-limited); every order carries an HMAC token. A request adds a private order note, `_omc_return_requests` meta, photos in the media library (`_omc_return_order`), and emails the shop (`omc_returns_recipient`). Nothing is refunded automatically. |
 
 Two shared filters tie them together: `omc_meta_description` (a page supplies its own description to
 `omc_seo_head()`) and `omc_social_links` / `omc_social_profiles` (footer icons and the Organization `sameAs`).
@@ -189,7 +196,10 @@ picture and body override the page's own title/`omc_tagline`/thumbnail/content *
 `wp.editor.initialize` (the classic `editor` script — not the `wp-editor` block package, which replaces `wp.editor`),
 and paints after DOMContentLoaded because WordPress prints TinyMCE after the page's own scripts. Ways in: the Pages
 list row action and an "Edit this page" admin-bar link on either page. Adding an editable thing = a schema entry +
-reading it in the template or through the data function's filter.
+reading it in the template or through the data function's filter. Two field types carry hotspots: `spots` (inside a
+list item, on its sibling `image` — the mosaic tiles) and `spotmap` (points per photo keyed by attachment id —
+`hero.spots` on the hero slides, `journal.spots` on the three newest posts' pictures via `choices`). The home tab also
+has "Next drop" (`drop.*`) and "This or that" (`swipe.*`).
 
 **The free-shipping bar makes a commercial promise.** `omc_free_shipping_rule()` has no fallback number on purpose:
 it reads a real WooCommerce free-shipping zone first, then `whd_settings['free_shipping_threshold']` (0 means off).
@@ -438,6 +448,23 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   white — plus `age_rule()` (22–32) in every brief. Product sets offset the list by product id; journal, page and
   Bulk-products pictures (`make()`) take the next person from a random start. The old casting ran "twenties"
   to "fifties" with a rule demanding a different age per picture, so every set had an older woman in it.
+- **Spin to win** (`WHD_Wheel`, WHD → Spin to win, table `{prefix}whd_spins`, option `whd_wheel`): a `wheel` block in the
+  popup editor (drawn as SVG in PHP so the editor preview is the real thing; spin animation in `assets/popups.js`) and
+  a ready-made, disabled `spin_wheel` popup. Prizes are real coupons — saving a code that does not exist creates it
+  (one use per customer, individual use); a coupon that is deleted, expired or used up leaves the wheel. The server
+  picks the prize by weight and tells the browser which segment to stop on; the code is only emailed (`wheel_prize`
+  design). One spin per address: a repeat lands on the same prize and resends it. Sign-ups get source `wheel`, which
+  is in `WHD_Subscribers::OWN_EMAIL_SOURCES` (no welcome email with a second code).
+- **Drop reminders** (`WHD_Reminders`, table `{prefix}whd_reminders`, one row per address): sign-ups with source `drop`
+  wait for the theme's `whd_drop`; at the drop's time (single cron event + the 15-min `whd_reminders_cron` sweep) each
+  gets the `drop_open` design, skipping `whd_unsubscribed`. A later sign-up puts a sent row back to waiting.
+- **"Just got mine" card** (`WHD_Share_Card`, `assets/share-card.js`): on the order-received page, a 1080×1920 card of
+  the bought piece drawn in the browser with the Image Editor's Fabric.js — from a design chosen in WHD → Settings →
+  "Order share card" (its base photo swapped for the piece, `{product}` / `{first_name}` filled; template "Just got
+  mine (order card)" in `image-presets.js`), or a built-in card; Save / Web Share. Theme filter `whd_share_card_brand`.
+- **Wear it with** (`WHD_Stylist::goes_with()`): the stylist's scoring with answers derived from the piece (its colour
+  families, a quiet partner for a loud piece), kept to complementary garment families (`family()`), cached 6 h per
+  product in `whd_goes_<id>`. The stylist also reads the wishlist cookie (`likes()`/`taste()`) as a small bonus.
 - `WHD_AI::call()` takes `$options['images']` (attachment IDs or paths) and sends them as vision parts for all three
   providers; `WHD_AI::picture_part()` resizes a copy to `VISION_EDGE` first so a phone photo is not sent whole.
 - Admin: menu `WHD`; editor screen `admin.php?page=whd-editor&type=popup|email&id=<id>` (vanilla JS in

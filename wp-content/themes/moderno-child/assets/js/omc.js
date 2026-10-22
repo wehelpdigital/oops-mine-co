@@ -76,12 +76,15 @@
 		} else { start(); }
 	});
 
-	/* Facebook Live band: counts down to data-until (ISO 8601). Inside the live window (data-live-window
-	   seconds) the card says "live now"; after that, "wrapped". Ticks once a second while on screen. */
+	/* Facebook Live band and the drop card: count down to data-until (ISO 8601). Inside the live window
+	   (data-live-window seconds) the card says "live now"; after that, "wrapped". A drop card has no
+	   window (data-live-window="0"): once its time comes it is simply open. Ticks once a second while
+	   on screen. */
 	document.querySelectorAll('.js-omc-countdown').forEach(function (box) {
 		var until = Date.parse(box.getAttribute('data-until') || '');
 		if (isNaN(until)) { return; }
-		var windowMs = (parseInt(box.getAttribute('data-live-window'), 10) || 7200) * 1000;
+		var given = parseInt(box.getAttribute('data-live-window'), 10);
+		var windowMs = (isNaN(given) ? 7200 : given) * 1000;
 		var cells = {};
 		box.querySelectorAll('.omc-live__num').forEach(function (n) { cells[n.getAttribute('data-unit')] = n; });
 		var pad = function (n) { return (n < 10 ? '0' : '') + n; };
@@ -167,6 +170,9 @@
 				banner.addEventListener('pointerenter', function () { hovered = true; stop(); });
 				banner.addEventListener('pointerleave', function () { hovered = false; start(); });
 			}
+			/* Asked to hold still from outside: the hotspots over a slide (omc-shop.js). */
+			banner.addEventListener('omc:pause', function () { hovered = true; stop(); });
+			banner.addEventListener('omc:resume', function () { hovered = false; start(); });
 			if ('IntersectionObserver' in window) {
 				new IntersectionObserver(function (entries) { visible = entries[0].isIntersecting; start(); }, { threshold: 0.3 }).observe(banner);
 			} else { visible = true; start(); }

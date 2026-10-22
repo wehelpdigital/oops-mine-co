@@ -143,3 +143,32 @@ body.whd-popup-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
 	.whd-popup, .whd-popup__dialog { transition: none; }
 }
+
+/* spin the wheel (block `wheel`; prizes in WHD → Spin to win) */
+.whd-wheel { display: flex; flex-direction: column; align-items: center; gap: 18px; margin: 4px 0 2px; }
+.whd-wheel__stage { position: relative; width: min(var(--whd-wheel, 300px), 100%); aspect-ratio: 1 / 1; }
+.whd-wheel__disc { display: block; width: 100%; height: 100%; border-radius: 50%; transform-origin: 50% 50%; filter: drop-shadow(0 14px 22px rgba(58, 43, 38, .18)); will-change: transform; }
+.whd-wheel__disc text { font: 600 9px/1 "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: .03em; }
+.whd-wheel__pin {
+	position: absolute;
+	top: -8px;
+	left: 50%;
+	z-index: 2;
+	width: 0;
+	height: 0;
+	transform: translateX(-50%);
+	border-left: 13px solid transparent;
+	border-right: 13px solid transparent;
+	border-top: 26px solid #3a2b26;
+	filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .22));
+}
+.whd-wheel__form { position: relative; width: 100%; }
+.whd-wheel__hp { position: absolute !important; left: -9999px; width: 1px; height: 1px; overflow: hidden; margin: 0; }
+.whd-wheel__note { margin: 10px 0 0; font-size: 12px; line-height: 1.5; color: #8a7d76; text-align: center; }
+.whd-wheel__done { width: 100%; box-sizing: border-box; }
+.whd-wheel__done small { display: block; margin-top: 6px; font-size: 12px; color: #6f5348; }
+.whd-wheel--empty p { margin: 0; padding: 14px; border: 1px dashed #e9e1da; color: #8a7d76; font-size: 13px; line-height: 1.5; text-align: center; }
+@media (max-width: 640px) {
+	.whd-wheel { gap: 14px; }
+	.whd-wheel__stage { width: min(var(--whd-wheel, 300px), 74vw); }
+}

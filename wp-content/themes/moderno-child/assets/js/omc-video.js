@@ -40,6 +40,51 @@
 		});
 	}
 
+	/* Shoppable moments (inc/video-shop.php): each card seeks to its moment; while the video plays, the
+	   card for what is on screen is marked and that piece, with its Add to bag, sits under the player.
+	   The picker comes from the shop kit (omc-shop.js), which prints after this file — so it is asked
+	   for once the page has finished parsing. */
+	var moments = Array.prototype.slice.call(document.querySelectorAll('.omc-vshop__item'));
+	var now = document.querySelector('[data-omc-vshop-now]');
+	var shown = null;
+
+	function paintNow(li, playing) {
+		if (!now || !window.OMCShop) { return; }
+		var piece = li ? window.OMCShop.piece(li.getAttribute('data-piece')) : null;
+		if (!piece) { now.hidden = true; return; }
+		var esc = function (s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; };
+		now.innerHTML = '<a class="omc-vshop-now__media" href="' + esc(piece.url) + '" tabindex="-1" aria-hidden="true"><img src="' + esc(piece.image) + '" alt=""></a>' +
+			'<div class="omc-vshop-now__body"><p class="omc-vshop-now__k">' + esc(now.getAttribute(playing ? 'data-label-now' : 'data-label-first')) + '</p>' +
+			'<a class="omc-vshop-now__name" href="' + esc(piece.url) + '">' + esc(piece.name) + '</a>' +
+			'<span class="omc-vshop-now__price">' + esc(piece.price) + '</span></div>';
+		now.querySelector('.omc-vshop-now__body').appendChild(window.OMCShop.picker(piece, { compact: true }));
+		now.hidden = false;
+	}
+
+	function follow() {
+		var t = video.currentTime, cur = -1;
+		for (var i = 0; i < moments.length; i++) { if (t >= (parseInt(moments[i].getAttribute('data-at'), 10) || 0)) { cur = i; } }
+		var li = cur >= 0 ? moments[cur] : moments[0];
+		moments.forEach(function (m, i) { m.classList.toggle('is-current', i === cur); });
+		if (li !== shown) { shown = li; paintNow(li, cur >= 0 && !video.paused); }
+	}
+
+	if (moments.length) {
+		document.querySelectorAll('.js-omc-moment').forEach(function (b) {
+			b.addEventListener('click', function () {
+				seek(parseInt(b.getAttribute('data-at'), 10) || 0);
+				video.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+			});
+		});
+		video.addEventListener('timeupdate', follow);
+		video.addEventListener('play', function () { shown = null; follow(); });
+		if (document.readyState === 'loading') {
+			document.addEventListener('DOMContentLoaded', follow);
+		} else {
+			follow();
+		}
+	}
+
 	/* /page/#t=23 jumps straight to that moment — the links Google surfaces as key moments. */
 	function fromHash() {
 		var m = /(?:^|#)t=(\d+)/.exec(window.location.hash || '');
