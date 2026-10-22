@@ -1395,7 +1395,7 @@ add_filter( 'omc_stripe_ready', '__return_true' );
  * The four marks along the bottom of the footer.
  *
  * Four because they sit in a row of four and a grid of two: a shopper reads a line of equal cards
- * and skips a ragged one. Each says a different kind of thing - the connection, the processor,
+ * and skips a ragged one. Each says a different kind of thing - the connection, how to pay,
  * where it ships, what happens if it does not fit - so there is no room to add a fifth without one
  * of them repeating another.
  *
@@ -1411,14 +1411,30 @@ function omc_trust_marks() {
 		],
 	];
 
-	if ( omc_stripe_ready() ) {
+	/*
+	 * How a shopper can pay: cards (Stripe), Google Pay and PayPal, in one card with their marks —
+	 * one claim, not three. The owner's own statement, like `omc_stripe_ready` below: on live none of
+	 * the three gateways is switched on yet, so WooCommerce cannot be asked. `omc_payment_methods`
+	 * takes one out (return the list without it) once the arrangement changes.
+	 */
+	$pay = (array) apply_filters( 'omc_payment_methods', omc_stripe_ready() ? [ 'card', 'googlepay', 'paypal' ] : [ 'googlepay', 'paypal' ] );
+	if ( $pay ) {
+		$names = [
+			'card'      => __( 'card', 'moderno-child' ),
+			'googlepay' => __( 'Google Pay', 'moderno-child' ),
+			'paypal'    => __( 'PayPal', 'moderno-child' ),
+		];
+		$said  = array_values( array_intersect_key( $names, array_flip( $pay ) ) );
+		$last  = array_pop( $said );
+		$list  = $said ? sprintf( /* translators: 1: "card, Google Pay", 2: "PayPal" */ __( '%1$s or %2$s', 'moderno-child' ), implode( ', ', $said ), $last ) : $last;
 		$marks[] = [
-			'kind'  => 'brand',
-			'mark'  => 'stripe',
-			'label' => __( 'Secured by Stripe', 'moderno-child' ),
-			'note'  => __( 'Card details go to Stripe, never to us', 'moderno-child' ),
-			// The cards Stripe settles, inside the card about Stripe: one claim, not two.
-			'cards' => [ 'visa', 'mastercard', 'americanexpress' ],
+			'kind'  => 'card',
+			/* translators: %s: e.g. "card, Google Pay or PayPal" */
+			'label' => sprintf( __( 'Pay by %s', 'moderno-child' ), $list ),
+			'note'  => in_array( 'card', $pay, true )
+				? __( 'Card details go to Stripe, never to us', 'moderno-child' )
+				: __( 'Your details stay with the payment provider', 'moderno-child' ),
+			'cards' => array_merge( in_array( 'card', $pay, true ) ? [ 'visa', 'mastercard', 'americanexpress' ] : [], array_values( array_intersect( [ 'googlepay', 'paypal' ], $pay ) ) ),
 		];
 	}
 

@@ -91,7 +91,10 @@ $omc_show_news = apply_filters( 'omc_footer_newsletter', ! is_front_page() );
 							<?php if ( ! empty( $omc_m['cards'] ) ) : ?>
 								<span class="omc-footer__cards">
 									<?php foreach ( $omc_m['cards'] as $omc_c ) : ?>
-										<?php echo omc_brand_mark( $omc_c, 14 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- bundled SVG ?>
+										<?php
+										// The Google Pay mark is a wordmark on a square canvas, a third of its height: drawn larger to read the same.
+										echo omc_brand_mark( $omc_c, 'googlepay' === $omc_c ? 24 : 14 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- bundled SVG
+										?>
 									<?php endforeach; ?>
 								</span>
 							<?php endif; ?>

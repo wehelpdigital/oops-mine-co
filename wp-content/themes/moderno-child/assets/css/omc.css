@@ -1175,6 +1175,7 @@
 }
 /* Line icons: drawn, not filled, in the one accent this footer uses. */
 .omc-footer__trust-item--lock > svg,
+.omc-footer__trust-item--card > svg,
 .omc-footer__trust-item--globe > svg,
 .omc-footer__trust-item--return > svg,
 .omc-footer__trust-link > svg {
@@ -1219,7 +1220,7 @@
 	text-wrap: pretty;
 }
 
-/* The cards Stripe settles. Greyed back so they support the claim above rather than compete. */
+/* The cards and wallets it takes. Greyed back so they support the claim above rather than compete. */
 .omc-footer__cards {
 	display: inline-flex;
 	align-items: center;
@@ -1229,7 +1230,8 @@
 	filter: grayscale(1);
 	transition: opacity .25s ease, filter .25s ease;
 }
-.omc-footer__trust-item--brand:hover .omc-footer__cards {
+.omc-footer__trust-item--brand:hover .omc-footer__cards,
+.omc-footer__trust-item--card:hover .omc-footer__cards {
 	opacity: 1;
 	filter: none;
 }
