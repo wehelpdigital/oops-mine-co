@@ -65,6 +65,11 @@ final class WHD_AI_Image_Builder {
 		wp_enqueue_style( 'whd-image-builder', WHD_URL . 'admin/image-builder.css', [ 'whd-ai-studio' ], WHD_VERSION );
 		wp_enqueue_script( 'whd-ai-kit', WHD_URL . 'admin/ai-kit.js', [], WHD_VERSION, true );
 		wp_enqueue_script( 'whd-image-builder', WHD_URL . 'admin/image-builder.js', [ 'whd-ai-kit', 'media-editor' ], WHD_VERSION, true );
+		// The Image Editor under the results, built only when a picture is sent to it.
+		if ( class_exists( 'WHD_Image_Editor' ) ) {
+			WHD_Image_Editor::enqueue( [], true );
+			wp_enqueue_script( 'whd-image-builder-edit', WHD_URL . 'admin/image-builder-edit.js', [ 'whd-image-editor-screen', 'whd-image-builder' ], WHD_VERSION, true );
+		}
 
 		wp_localize_script( 'whd-image-builder', 'WHD_IB', [
 			'rest'    => [
@@ -328,10 +333,24 @@ final class WHD_AI_Image_Builder {
 				<header class="whd-ib__results-head">
 					<h2 class="whd-ib__h" id="whd-ib-h-results"><?php esc_html_e( 'Your images', 'whd' ); ?></h2>
 					<p class="whd-ib__sub"><?php esc_html_e( 'Every image is saved to your media library as soon as it is made. Newest first.', 'whd' ); ?></p>
+					<?php if ( class_exists( 'WHD_Image_Editor' ) ) : ?>
+						<button type="button" class="button whd-ib__edit-all" id="whd-ib-edit-all" hidden><?php esc_html_e( 'Edit these images ↓', 'whd' ); ?></button>
+					<?php endif; ?>
 				</header>
 				<div class="whd-ib__tiles" id="whd-ib-tiles"></div>
 				<p class="whd-ib__empty" id="whd-ib-empty"><?php esc_html_e( 'Images you make appear here.', 'whd' ); ?></p>
 			</section>
+
+			<?php if ( class_exists( 'WHD_Image_Editor' ) ) : ?>
+				<section class="whd-ib__edit" id="whd-ib-edit" aria-labelledby="whd-ib-h-edit" hidden>
+					<header class="whd-ib__results-head">
+						<h2 class="whd-ib__h" id="whd-ib-h-edit"><?php esc_html_e( 'Image Editor', 'whd' ); ?></h2>
+						<p class="whd-ib__sub"><?php esc_html_e( 'Add text, stickers, shapes, templates and filters. Saving adds a new image to the media library; the one you made is kept as it is.', 'whd' ); ?></p>
+						<button type="button" class="button-link" data-ib-edit-close><?php esc_html_e( 'Close the editor', 'whd' ); ?></button>
+					</header>
+					<div class="whd-ie" id="whd-ie"></div>
+				</section>
+			<?php endif; ?>
 		</div>
 		<?php
 	}

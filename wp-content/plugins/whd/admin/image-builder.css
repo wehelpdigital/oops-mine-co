@@ -1254,3 +1254,11 @@
 		transform: none !important;
 	}
 }
+
+/* the Image Editor under the results (admin/image-builder-edit.js) */
+.whd-ib__results-head { position: relative; }
+.whd-ib__edit-all { margin-top: 10px; }
+.whd-ib__edit-all[hidden] { display: none; }
+.whd-ib__edit { margin-top: 28px; }
+.whd-ib__edit[hidden] { display: none; }
+.whd-ib__edit .whd-ib__results-head .button-link { position: absolute; top: 4px; right: 0; color: #9c6f63; }

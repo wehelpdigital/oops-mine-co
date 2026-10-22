@@ -515,6 +515,17 @@
 .whd-ie__shape.is-shade-top .whd-ie__shape-art { background: linear-gradient(#3a2b26, transparent); }
 .whd-ie__shape.is-tint .whd-ie__shape-art { background: rgba(0, 0, 0, .45); }
 .whd-ie__shape.is-glow .whd-ie__shape-art { background: #f6f7f7; box-shadow: inset 0 0 0 1px #dcdcde; }
+/* shapes described in image-presets.js draw their own picture */
+.whd-ie__shape-art.is-svg { width: 38px; height: 38px; background: none; }
+.whd-ie__shape-art.is-svg svg { display: block; width: 100%; height: 100%; }
+
+/* the newer badge shapes */
+.whd-ie__badge.is-hex span { width: 60px; height: 56px; clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
+.whd-ie__badge.is-seal span { width: 60px; height: 60px; border-radius: 50%; box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px rgba(0, 0, 0, .12); }
+.whd-ie__badge.is-square span { width: 56px; height: 56px; border-radius: 9px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .08); }
+.whd-ie__badge.is-oval span { width: 66px; height: 44px; border-radius: 50%; }
+.whd-ie__badge.is-bubble span { position: relative; min-width: 56px; min-height: 36px; border-radius: 9px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .1); margin-bottom: 8px; }
+.whd-ie__badge.is-bubble span::after { content: ""; position: absolute; left: 12px; bottom: -8px; border-left: 4px solid transparent; border-right: 6px solid transparent; border-top: 9px solid var(--bg); }
 
 .whd-ie__fx {
 	display: flex;

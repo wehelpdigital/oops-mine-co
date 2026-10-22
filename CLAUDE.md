@@ -441,8 +441,17 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   (Google Fonts, filter `whd_image_editor_fonts`), badges/stickers/emoji, shapes, filters + adjustments, sizes, layers,
   undo. Saving (`whd/v1/image-editor/save`, a data URL checked with `getimagesizefromstring`) writes a **new**
   attachment and keeps the layers on it (`_whd_design` JSON, `_whd_design_source`), so reopening restores them.
-  `?ids=1,2` (or `?edit=1`) opens images directly — the media library's row action / attachment details and Image
-  Builder's tiles link there.
+  `?ids=1,2` (or `?edit=1`) opens images directly — the media library's row action / attachment details link there.
+  What it offers is data in `image-presets.js`: 57 text combinations (a `fx` key gives one its own look — neon, echo,
+  retro, gradient — through `styleText()`, the same function as the props panel's Effects row), 39 badges (shapes
+  circle, burst, star, stamp, pill, ribbon, tag, hex, seal, square, oval, bubble), 49 decorations (a `layers` array
+  makes a multi-colour mark), 114 emoji, 46 shapes under `shapeGroups` headings (the first twelve drawn by
+  `makeShape()`'s own cases, the rest described — `sides`, `path`, `ring`, `outline`, `line`, or a frame/overlay
+  with `full`, `place`, `under` — and drawn by `describedShape()`/`overlay()`, previewed by `shapeSvg()`), 31 filters,
+  13 adjustments (sharpen, fade, rose tint and pixelate are the newest), 27 templates and 20 sizes. The editor also
+  lives **under Image Builder's results**: `WHD_Image_Editor::enqueue( [], true )` loads it lazily there and
+  `admin/image-builder-edit.js` opens a tile's pencil, or "Edit these images", in it through
+  `WHDImageEditorScreen.open( ids )` (`image-editor-screen.js`) instead of a new tab.
 - **Who appears in drawn pictures** is one list, `WHD_AI_Images::people()` (filter `whd_ai_image_people`): young
   women with a stated age (23–30) and background — Korean, Thai, Japanese, Chinese, Filipina, alternating with
   white — plus `age_rule()` (22–32) in every brief. Product sets offset the list by product id; journal, page and

@@ -153,6 +153,19 @@ final class WHD_Image_Editor {
 		if ( ! isset( $_GET['page'] ) || self::PAGE !== sanitize_key( wp_unslash( $_GET['page'] ) ) ) {
 			return;
 		}
+		// Opened on images from elsewhere — the media library, Image Builder: ?ids=1,2,3 (or ?edit=1).
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- only picks what to show
+		$given = isset( $_GET['ids'] ) ? sanitize_text_field( wp_unslash( $_GET['ids'] ) ) : ( isset( $_GET['edit'] ) ? absint( $_GET['edit'] ) : '' );
+		self::enqueue( array_slice( wp_parse_id_list( (string) $given ), 0, self::START_MAX ) );
+	}
+
+	/**
+	 * Everything the editor needs on a screen: its sheet, Fabric, the presets, the editor and its boot.
+	 *
+	 * Its own screen opens straight away on `$ids`. Image Builder loads it `$lazy`: nothing is drawn
+	 * until a picture there is sent to be edited, and then it opens under the results.
+	 */
+	public static function enqueue( array $ids = [], bool $lazy = false ) {
 		wp_enqueue_media();
 		// No version on the fonts: WordPress would rebuild the address and keep only the last family.
 		wp_enqueue_style( 'whd-ie-fonts', self::fonts_url(), [], null ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
@@ -163,10 +176,7 @@ final class WHD_Image_Editor {
 		wp_enqueue_script( 'whd-image-editor', WHD_URL . 'admin/image-editor.js', [ 'whd-ai-kit', 'whd-fabric', 'whd-image-presets', 'media-editor' ], WHD_VERSION, true );
 		wp_enqueue_script( 'whd-image-editor-screen', WHD_URL . 'admin/image-editor-screen.js', [ 'whd-image-editor' ], WHD_VERSION, true );
 
-		// Opened on images from elsewhere — the media library, Image Builder: ?ids=1,2,3 (or ?edit=1).
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- only picks what to show
-		$given = isset( $_GET['ids'] ) ? sanitize_text_field( wp_unslash( $_GET['ids'] ) ) : ( isset( $_GET['edit'] ) ? absint( $_GET['edit'] ) : '' );
-		$start = array_values( array_filter( array_map( [ __CLASS__, 'photo' ], array_slice( wp_parse_id_list( (string) $given ), 0, self::START_MAX ) ) ) );
+		$start = array_values( array_filter( array_map( [ __CLASS__, 'photo' ], array_map( 'intval', $ids ) ) ) );
 
 		wp_localize_script( 'whd-image-editor-screen', 'WHD_IE', [
 			'rest'     => [
@@ -174,6 +184,8 @@ final class WHD_Image_Editor {
 				'nonce' => wp_create_nonce( 'wp_rest' ),
 			],
 			'start'    => $start,
+			'lazy'     => $lazy,
+			'max'      => self::START_MAX,
 			'fonts'    => array_keys( self::fonts() ),
 			'logos'    => self::logos(),
 			'brand'    => [
@@ -239,6 +251,10 @@ final class WHD_Image_Editor {
 			'blur'          => __( 'Blur', 'whd' ),
 			'grain'         => __( 'Grain', 'whd' ),
 			'vignette'      => __( 'Vignette', 'whd' ),
+			'sharpen'       => __( 'Sharpen', 'whd' ),
+			'fade'          => __( 'Fade', 'whd' ),
+			'tint'          => __( 'Rose tint', 'whd' ),
+			'pixelate'      => __( 'Pixelate', 'whd' ),
 			'resetFx'       => __( 'Reset', 'whd' ),
 			'fxOn'          => __( 'Applies to the selected photo, or the background photo when nothing is selected.', 'whd' ),
 			'addPhoto'      => __( 'Add a photo on top', 'whd' ),

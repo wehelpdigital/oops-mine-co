@@ -31,7 +31,7 @@
 		return d.innerHTML;
 	};
 
-	var PROPS = [ 'whdKind', 'whdName', 'whdFx', 'whdBadge', 'whdDecor', 'whdCentre', 'whdLocked', 'whdAuto', 'whdFull', 'strokeUniform', 'selectable', 'evented', 'hasControls',
+	var PROPS = [ 'whdKind', 'whdName', 'whdFx', 'whdBadge', 'whdDecor', 'whdCentre', 'whdLocked', 'whdAuto', 'whdFull', 'whdTextColour', 'strokeUniform', 'selectable', 'evented', 'hasControls',
 		'lockMovementX', 'lockMovementY', 'lockScalingX', 'lockScalingY', 'lockRotation', 'visible', 'clipPath' ];
 	var EMOJI_FONT = '"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
 
@@ -107,6 +107,16 @@
 			return new F.Shadow( { color: 'rgba(185,139,126,0.9)', blur: 0, offsetX: size * 0.06, offsetY: size * 0.06 } );
 		}
 		return new F.Shadow( { color: 'rgba(0,0,0,0.35)', blur: size * 0.25, offsetX: 0, offsetY: size * 0.06 } );
+	}
+
+	/* A regular polygon with n corners, one corner at the top (turned by `turn` radians). */
+	function regular( n, r, turn ) {
+		var pts = [];
+		for ( var i = 0; i < n; i++ ) {
+			var a = 2 * Math.PI * i / n - Math.PI / 2 + ( turn || ( n % 2 ? 0 : Math.PI / n ) );
+			pts.push( { x: Math.cos( a ) * r, y: Math.sin( a ) * r } );
+		}
+		return pts;
 	}
 
 	function starPoints( n, outer, inner ) {
@@ -655,6 +665,9 @@
 				t.whdAuto = true;
 				refit( t );
 			}
+			if ( st.fx ) {
+				styleText( t, st.fx );
+			}
 			return t;
 		} );
 	}
@@ -701,14 +714,31 @@
 				} else if ( 'stamp' === shape ) {
 					pieces.push( new F.Circle( { radius: r, fill: def.fill, stroke: def.color, strokeWidth: size * 0.03, originX: 'center', originY: 'center', left: 0, top: 0 } ) );
 					pieces.push( new F.Circle( { radius: r * 0.82, fill: '', stroke: def.color, strokeWidth: size * 0.012, strokeDashArray: [ size * 0.03, size * 0.02 ], originX: 'center', originY: 'center', left: 0, top: 0 } ) );
+				} else if ( 'hex' === shape ) {
+					pieces.push( new F.Polygon( regular( 6, r, 0 ), { fill: def.fill, originX: 'center', originY: 'center', left: 0, top: 0 } ) );
+				} else if ( 'seal' === shape ) {
+					pieces.push( new F.Polygon( starPoints( 28, r, r * 0.9 ), { fill: def.fill, originX: 'center', originY: 'center', left: 0, top: 0 } ) );
+					pieces.push( new F.Circle( { radius: r * 0.74, fill: '', stroke: def.color, strokeWidth: size * 0.01, opacity: 0.6, originX: 'center', originY: 'center', left: 0, top: 0 } ) );
+				} else if ( 'square' === shape ) {
+					pieces.push( new F.Rect( { width: size * 0.92, height: size * 0.92, rx: size * 0.1, ry: size * 0.1, fill: def.fill, stroke: 'rgba(0,0,0,0.08)', strokeWidth: 1, originX: 'center', originY: 'center', left: 0, top: 0 } ) );
+				} else if ( 'oval' === shape ) {
+					pieces.push( new F.Ellipse( { rx: r, ry: r * 0.66, fill: def.fill, originX: 'center', originY: 'center', left: 0, top: 0 } ) );
+				} else if ( 'bubble' === shape ) {
+					pieces.push( new F.Path( 'M-46 -38 H46 Q50 -38 50 -34 V22 Q50 26 46 26 H-6 L-26 46 L-22 26 H-46 Q-50 26 -50 22 V-34 Q-50 -38 -46 -38 Z', {
+						fill: def.fill, stroke: 'rgba(0,0,0,0.12)', strokeWidth: 1, scaleX: size / 100, scaleY: size / 100, originX: 'center', originY: 'center', left: 0, top: size * 0.04
+					} ) );
 				}
 				// The words made to fit inside: smaller until the longest line clears the edge.
-				var room = ( 'star' === shape ? 0.9 : 1.32 ) * r;
+				var room = ( 'star' === shape ? 0.9 : ( 'square' === shape || 'bubble' === shape || 'oval' === shape ? 1.5 : 1.32 ) ) * r;
+				var tall = ( 'oval' === shape || 'bubble' === shape ? 0.8 : 1.25 ) * r;
 				fs = size * ( 'star' === shape ? 0.15 : 0.2 );
 				label.set( { fontSize: fs, width: room } );
-				for ( var i = 0; i < 40 && ( label.calcTextWidth() > room * 0.98 || label.height > r * 1.25 ); i++ ) {
+				for ( var i = 0; i < 40 && ( label.calcTextWidth() > room * 0.98 || label.height > tall ); i++ ) {
 					fs *= 0.93;
 					label.set( 'fontSize', fs );
+				}
+				if ( 'bubble' === shape ) {
+					label.set( 'top', -size * 0.08 );
 				}
 			}
 			pieces.push( label );
@@ -743,14 +773,26 @@
 				petals.push( new F.Ellipse( { rx: 13, ry: 22, fill: d.fill, originX: 'center', originY: 'center', left: Math.cos( b ) * 22, top: Math.sin( b ) * 22, angle: j * 60 + 90 } ) );
 			}
 			obj = new F.Group( petals.concat( [ new F.Circle( { radius: 12, fill: d.centre, originX: 'center', originY: 'center', left: 0, top: 0, whdCentre: true } ) ] ) );
+		} else if ( d.layers ) {
+			obj = new F.Group( d.layers.map( decorPath ) );
 		} else {
-			obj = new F.Path( d.path, d.stroke
-				? { fill: '', stroke: d.stroke, strokeWidth: d.width || 4, strokeLineCap: 'round', strokeLineJoin: 'round' }
-				: { fill: d.fill } );
+			obj = decorPath( d );
 		}
 		var s = size / Math.max( obj.width || 100, obj.height || 100 );
 		obj.set( { scaleX: s, scaleY: s, whdKind: 'decor', whdName: d.name, whdDecor: d.name } );
 		return obj;
+	}
+
+	/* One path of a mark: filled, outlined, or both (a white bubble with a soft edge). */
+	function decorPath( d ) {
+		var o = { fill: d.fill || '' };
+		if ( d.stroke ) {
+			o.stroke = d.stroke;
+			o.strokeWidth = d.width || 4;
+			o.strokeLineCap = 'round';
+			o.strokeLineJoin = 'round';
+		}
+		return new F.Path( d.path, o );
 	}
 
 	function makeShape( kind ) {
@@ -773,11 +815,174 @@
 			case 'shade-top': return shade( 'shade-top' === kind ? 'top' : 'bottom', 0.55 );
 			case 'tint': o = new F.Rect( { width: W, height: H, fill: 'rgba(0,0,0,0.3)', whdFull: true } ); break;
 			case 'glow': o = new F.Rect( { width: W, height: H, fill: 'rgba(255,255,255,0.3)', whdFull: true } ); break;
+			default: o = describedShape( kind );
 		}
 		o.set( { whdKind: 'shape', whdName: ( P.shapes.filter( function ( s ) {
 			return s.kind === kind;
 		} )[ 0 ] || {} ).name } );
 		return o;
+	}
+
+	function shapeDef( kind ) {
+		return P.shapes.filter( function ( s ) {
+			return s.kind === kind;
+		} )[ 0 ] || {};
+	}
+
+	/* The shapes the presets describe rather than the cases above: polygons, paths, outlines, lines,
+	   frames and the overlays that cover the whole picture. */
+	function describedShape( kind ) {
+		var C = P.colors;
+		var d = shapeDef( kind );
+		var thin = Math.max( 2, W * 0.005 );
+		var o;
+		if ( d.sides ) {
+			o = new F.Polygon( regular( d.sides, W * 0.14 ), { fill: d.fill || C.rose } );
+		} else if ( d.path ) {
+			o = new F.Path( d.path, d.stroke
+				? { fill: '', stroke: d.stroke, strokeWidth: 3, strokeUniform: true, strokeLineJoin: 'round' }
+				: { fill: d.fill || C.rose, stroke: C.white === d.fill ? '#d9c9c0' : null, strokeWidth: C.white === d.fill ? 1 : 0, strokeUniform: true } );
+			var k = ( d.wide ? 0.42 : 0.28 ) * W / Math.max( o.width || 100, o.height || 100 );
+			o.set( { scaleX: k, scaleY: k } );
+			if ( d.stroke ) {
+				o.set( 'strokeWidth', Math.max( 2, W * 0.006 ) );
+			}
+		} else if ( d.ring ) {
+			o = new F.Circle( { radius: W * 0.12, fill: '', stroke: C.rose, strokeWidth: W * 0.035, strokeUniform: true } );
+		} else if ( d.outline ) {
+			o = 'circle' === d.outline
+				? new F.Circle( { radius: W * 0.14, fill: '', stroke: C.ink, strokeWidth: thin, strokeUniform: true } )
+				: new F.Rect( { width: W * 0.38, height: W * 0.24, rx: 'rounded' === d.outline ? W * 0.04 : 0, ry: 'rounded' === d.outline ? W * 0.04 : 0, fill: '', stroke: C.ink, strokeWidth: thin, strokeUniform: true } );
+		} else if ( d.line ) {
+			var len = W * 0.4;
+			if ( 'double' === d.line ) {
+				o = new F.Group( [
+					new F.Line( [ 0, 0, len, 0 ], { stroke: C.ink, strokeWidth: thin } ),
+					new F.Line( [ 0, thin * 3, len, thin * 3 ], { stroke: C.ink, strokeWidth: thin } )
+				] );
+			} else {
+				o = new F.Line( [ 0, 0, len, 0 ], {
+					stroke: C.ink,
+					strokeWidth: 'thick' === d.line ? W * 0.014 : ( 'dot' === d.line ? W * 0.008 : thin ),
+					strokeLineCap: 'dot' === d.line || 'thick' === d.line ? 'round' : 'butt',
+					strokeDashArray: 'dash' === d.line ? [ W * 0.022, W * 0.014 ] : ( 'dot' === d.line ? [ 0.01, W * 0.02 ] : null )
+				} );
+			}
+		} else {
+			o = overlay( kind );
+		}
+		return o;
+	}
+
+	/* Frames and washes: edge to edge, so they stretch with the picture when its size changes. */
+	function overlay( kind ) {
+		var C = P.colors;
+		var o;
+		var line = Math.max( 2, W * 0.004 );
+		var inset = Math.min( W, H ) * 0.04;
+		switch ( kind ) {
+			case 'frame-double':
+				o = new F.Group( [
+					new F.Rect( { width: W - inset * 2, height: H - inset * 2, fill: '', stroke: C.white, strokeWidth: line * 2, originX: 'center', originY: 'center' } ),
+					new F.Rect( { width: W - inset * 3.2, height: H - inset * 3.2, fill: '', stroke: C.white, strokeWidth: line, originX: 'center', originY: 'center' } )
+				] );
+				break;
+			case 'frame-thin':
+				o = new F.Rect( { width: W - inset * 1.6, height: H - inset * 1.6, fill: '', stroke: C.white, strokeWidth: line, strokeUniform: true } );
+				break;
+			case 'corners': {
+				var a = Math.min( W, H ) * 0.12;
+				var x = W / 2 - inset;
+				var y = H / 2 - inset;
+				var corner = function ( sx, sy ) {
+					return new F.Polyline( [ { x: sx * x, y: sy * ( y - a ) }, { x: sx * x, y: sy * y }, { x: sx * ( x - a ), y: sy * y } ], { fill: '', stroke: C.white, strokeWidth: line * 2, strokeLineCap: 'square' } );
+				};
+				o = new F.Group( [ corner( -1, -1 ), corner( 1, -1 ), corner( 1, 1 ), corner( -1, 1 ) ] );
+				break;
+			}
+			case 'frame-arch':
+			case 'frame-circle': {
+				// The picture seen through a window: a cream sheet with an arch (or a circle) cut out of it.
+				var w = W * 0.62;
+				var top = H * 0.16;
+				var bottom = H * 0.86;
+				var x1 = ( W - w ) / 2;
+				var hole = 'frame-arch' === kind
+					? 'M' + x1 + ' ' + bottom + ' V' + ( top + w / 2 ) + ' A' + ( w / 2 ) + ' ' + ( w / 2 ) + ' 0 0 1 ' + ( x1 + w ) + ' ' + ( top + w / 2 ) + ' V' + bottom + ' Z'
+					: 'M' + ( W / 2 - w / 2 ) + ' ' + ( H / 2 ) + ' a' + ( w / 2 ) + ' ' + ( w / 2 ) + ' 0 1 0 ' + w + ' 0 a' + ( w / 2 ) + ' ' + ( w / 2 ) + ' 0 1 0 ' + ( -w ) + ' 0 Z';
+				o = new F.Path( 'M0 0 H' + W + ' V' + H + ' H0 Z ' + hole, { fill: C.sand, fillRule: 'evenodd' } );
+				break;
+			}
+			case 'band-top':
+				o = new F.Rect( { width: W, height: H * 0.16, fill: C.sand } );
+				break;
+			case 'panel-left':
+				o = new F.Rect( { width: W * 0.38, height: H, fill: 'rgba(247,242,237,0.92)' } );
+				break;
+			case 'wash-rose':
+			case 'wash-cream':
+				o = new F.Rect( { width: W, height: H } );
+				o.set( 'fill', new F.Gradient( {
+					type: 'linear',
+					gradientUnits: 'pixels',
+					coords: { x1: 0, y1: H, x2: 0, y2: 0 },
+					colorStops: 'wash-rose' === kind
+						? [ { offset: 0, color: 'rgba(185,139,126,0.75)' }, { offset: 1, color: 'rgba(185,139,126,0)' } ]
+						: [ { offset: 0, color: 'rgba(247,242,237,0.95)' }, { offset: 0.6, color: 'rgba(247,242,237,0.4)' }, { offset: 1, color: 'rgba(247,242,237,0)' } ]
+				} ) );
+				break;
+			case 'shade-left':
+				o = new F.Rect( { width: W * 0.6, height: H } );
+				o.set( 'fill', new F.Gradient( {
+					type: 'linear',
+					gradientUnits: 'pixels',
+					coords: { x1: 0, y1: 0, x2: W * 0.6, y2: 0 },
+					colorStops: [ { offset: 0, color: 'rgba(0,0,0,0.6)' }, { offset: 1, color: 'rgba(0,0,0,0)' } ]
+				} ) );
+				break;
+			default:
+				o = new F.Rect( { width: W * 0.3, height: W * 0.3, fill: C.rose } );
+		}
+		o.set( { whdFull: true } );
+		return o;
+	}
+
+	/* The drawer's picture of a shape the presets describe. */
+	function shapeSvg( d ) {
+		var C = P.colors;
+		var body = '';
+		if ( d.sides ) {
+			body = '<polygon points="' + regular( d.sides, 44 ).map( function ( pt ) {
+				return ( 50 + pt.x ).toFixed( 1 ) + ',' + ( 50 + pt.y ).toFixed( 1 );
+			} ).join( ' ' ) + '" fill="' + ( d.fill || C.rose ) + '"/>';
+		} else if ( d.path ) {
+			body = '<path d="' + d.path + '" ' + ( d.stroke ? 'fill="none" stroke="' + d.stroke + '" stroke-width="5" stroke-linejoin="round"' : 'fill="' + ( d.fill || C.rose ) + '"' + ( C.white === d.fill ? ' stroke="#d9c9c0" stroke-width="2"' : '' ) ) + '/>';
+		} else if ( d.ring ) {
+			body = '<circle cx="50" cy="50" r="34" fill="none" stroke="' + C.rose + '" stroke-width="12"/>';
+		} else if ( d.outline ) {
+			body = 'circle' === d.outline
+				? '<circle cx="50" cy="50" r="40" fill="none" stroke="' + C.ink + '" stroke-width="4"/>'
+				: '<rect x="8" y="22" width="84" height="56" rx="' + ( 'rounded' === d.outline ? 12 : 0 ) + '" fill="none" stroke="' + C.ink + '" stroke-width="4"/>';
+		} else if ( d.line ) {
+			body = 'double' === d.line
+				? '<path d="M6 44 H94 M6 56 H94" stroke="' + C.ink + '" stroke-width="4"/>'
+				: '<path d="M6 50 H94" stroke="' + C.ink + '" stroke-width="' + ( 'thick' === d.line ? 10 : ( 'dot' === d.line ? 7 : 4 ) ) + '" stroke-linecap="' + ( 'dot' === d.line || 'thick' === d.line ? 'round' : 'butt' ) + '"' + ( 'dash' === d.line ? ' stroke-dasharray="12 8"' : ( 'dot' === d.line ? ' stroke-dasharray="0.1 13"' : '' ) ) + '/>';
+		} else {
+			var pics = {
+				'frame-double': '<rect x="8" y="8" width="84" height="84" fill="#d9c9c0"/><rect x="14" y="14" width="72" height="72" fill="none" stroke="#fff" stroke-width="5"/><rect x="21" y="21" width="58" height="58" fill="none" stroke="#fff" stroke-width="2"/>',
+				'frame-thin': '<rect x="8" y="8" width="84" height="84" fill="#d9c9c0"/><rect x="15" y="15" width="70" height="70" fill="none" stroke="#fff" stroke-width="2"/>',
+				corners: '<rect x="8" y="8" width="84" height="84" fill="#d9c9c0"/><path d="M16 32V16H32M68 16H84V32M84 68V84H68M32 84H16V68" fill="none" stroke="#fff" stroke-width="5"/>',
+				'frame-arch': '<path d="M8 8H92V92H8Z M30 84V44A20 20 0 0 1 70 44V84Z" fill="' + C.sand + '" fill-rule="evenodd" stroke="#d9c9c0" stroke-width="1"/>',
+				'frame-circle': '<path d="M8 8H92V92H8Z M26 50a24 24 0 1 0 48 0a24 24 0 1 0 -48 0Z" fill="' + C.sand + '" fill-rule="evenodd" stroke="#d9c9c0" stroke-width="1"/>',
+				'band-top': '<rect x="8" y="8" width="84" height="84" fill="#d9c9c0"/><rect x="8" y="8" width="84" height="18" fill="' + C.sand + '"/>',
+				'panel-left': '<rect x="8" y="8" width="84" height="84" fill="#d9c9c0"/><rect x="8" y="8" width="32" height="84" fill="' + C.sand + '"/>',
+				'wash-rose': '<defs><linearGradient id="wr" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="' + C.rose + '"/><stop offset="1" stop-color="' + C.rose + '" stop-opacity="0"/></linearGradient></defs><rect x="8" y="8" width="84" height="84" fill="#efe6de"/><rect x="8" y="8" width="84" height="84" fill="url(#wr)"/>',
+				'wash-cream': '<defs><linearGradient id="wc" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><rect x="8" y="8" width="84" height="84" fill="#b98b7e"/><rect x="8" y="8" width="84" height="84" fill="url(#wc)"/>',
+				'shade-left': '<defs><linearGradient id="sl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3a2b26"/><stop offset="1" stop-color="#3a2b26" stop-opacity="0"/></linearGradient></defs><rect x="8" y="8" width="84" height="84" fill="#d9c9c0"/><rect x="8" y="8" width="60" height="84" fill="url(#sl)"/>'
+			};
+			body = pics[ d.kind ] || '';
+		}
+		return '<svg viewBox="0 0 100 100" aria-hidden="true">' + body + '</svg>';
 	}
 
 	/* A gradient from nothing to dark over half the picture: what makes white words readable on a photo. */
@@ -903,6 +1108,21 @@
 		if ( a.grain ) {
 			list.push( new Fl.Noise( { noise: a.grain } ) );
 		}
+		if ( a.sharpen ) {
+			var k = a.sharpen;
+			list.push( new Fl.Convolute( { matrix: [ 0, -k, 0, -k, 1 + 4 * k, -k, 0, -k, 0 ] } ) );
+		}
+		if ( a.fade ) {
+			// Lifted blacks, softened whites: the matte look of a faded print.
+			var m = 1 - a.fade;
+			list.push( new Fl.ColorMatrix( { matrix: [ m, 0, 0, 0, a.fade * 0.6, 0, m, 0, 0, a.fade * 0.6, 0, 0, m, 0, a.fade * 0.62, 0, 0, 0, 1, 0 ] } ) );
+		}
+		if ( a.tint ) {
+			list.push( new Fl.BlendColor( { color: P.colors.rose, mode: 'tint', alpha: a.tint } ) );
+		}
+		if ( a.pixelate >= 2 ) {
+			list.push( new Fl.Pixelate( { blocksize: a.pixelate } ) );
+		}
 		img.whdFx = { preset: preset.key, adjust: a };
 		img.filters = list;
 		img.applyFilters();
@@ -1010,9 +1230,16 @@
 				return '<button type="button" class="whd-ie__emoji" data-emoji="' + esc( e ) + '">' + esc( e ) + '</button>';
 			} ).join( '' ) + '</div>';
 		} else if ( 'shapes' === tab ) {
-			html = '<h4 class="whd-ie__h">' + esc( T.tabShapes ) + '</h4><div class="whd-ie__grid is-three">' + P.shapes.map( function ( s ) {
-				return '<button type="button" class="whd-ie__shape is-' + s.kind + '" data-shape="' + s.kind + '"><span class="whd-ie__shape-art"></span><small>' + esc( s.name ) + '</small></button>';
-			} ).join( '' ) + '</div>';
+			var drawn = [ 'rect', 'rounded', 'circle', 'triangle', 'line', 'star', 'frame', 'band', 'shade-bottom', 'shade-top', 'tint', 'glow' ];
+			html = ( P.shapeGroups || [ { key: '', name: T.tabShapes } ] ).map( function ( g ) {
+				var list = P.shapes.filter( function ( s ) {
+					return ! g.key || ( s.group || 'basic' ) === g.key;
+				} );
+				return list.length ? '<h4 class="whd-ie__h">' + esc( g.name ) + '</h4><div class="whd-ie__grid is-three">' + list.map( function ( s ) {
+					var art = drawn.indexOf( s.kind ) !== -1 ? '<span class="whd-ie__shape-art"></span>' : '<span class="whd-ie__shape-art is-svg">' + shapeSvg( s ) + '</span>';
+					return '<button type="button" class="whd-ie__shape is-' + s.kind + '" data-shape="' + s.kind + '">' + art + '<small>' + esc( s.name ) + '</small></button>';
+				} ).join( '' ) + '</div>' : '';
+			} ).join( '' );
 		} else if ( 'effects' === tab ) {
 			var target = fxTarget();
 			var fx = target && target.whdFx ? target.whdFx : { preset: 'none', adjust: {} };
@@ -1064,7 +1291,10 @@
 		if ( d.flower ) {
 			return '<svg viewBox="0 0 100 100"><g fill="' + d.fill + '"><ellipse cx="50" cy="26" rx="13" ry="20"/><ellipse cx="50" cy="74" rx="13" ry="20"/><ellipse cx="29" cy="38" rx="13" ry="20" transform="rotate(-60 29 38)"/><ellipse cx="71" cy="62" rx="13" ry="20" transform="rotate(-60 71 62)"/><ellipse cx="71" cy="38" rx="13" ry="20" transform="rotate(60 71 38)"/><ellipse cx="29" cy="62" rx="13" ry="20" transform="rotate(60 29 62)"/></g><circle cx="50" cy="50" r="12" fill="' + d.centre + '"/></svg>';
 		}
-		return '<svg viewBox="0 0 100 100"><path d="' + d.path + '" ' + ( d.stroke ? 'fill="none" stroke="' + d.stroke + '" stroke-width="' + ( d.width || 4 ) + '" stroke-linecap="round" stroke-linejoin="round"' : 'fill="' + d.fill + '" stroke="' + ( '#ffffff' === d.fill ? '#d9c9c0' : 'none' ) + '" stroke-width="2"' ) + '/></svg>';
+		var one = function ( x ) {
+			return '<path d="' + x.path + '" fill="' + ( x.fill || 'none' ) + '" ' + ( x.stroke ? 'stroke="' + x.stroke + '" stroke-width="' + ( x.width || 4 ) + '" stroke-linecap="round" stroke-linejoin="round"' : 'stroke="' + ( '#ffffff' === x.fill ? '#d9c9c0' : 'none' ) + '" stroke-width="2"' ) + '/>';
+		};
+		return '<svg viewBox="0 0 100 100">' + ( d.layers ? d.layers.map( one ).join( '' ) : one( d ) ) + '</svg>';
 	}
 
 	function wireDrawer( d ) {
@@ -1103,10 +1333,16 @@
 		} );
 		on( '[data-shape]', function ( b ) {
 			var kind = b.getAttribute( 'data-shape' );
+			var def = shapeDef( kind );
 			var o = makeShape( kind );
 			add( o, 'shade-top' === kind || 'shade-bottom' === kind );
+			if ( 'top' === def.place ) {
+				o.set( { top: o.height / 2 } );
+			} else if ( 'left' === def.place ) {
+				o.set( { left: o.width / 2 } );
+			}
 			// Washes and bands go just above the photo, under any words; a frame stays on top.
-			if ( [ 'tint', 'glow', 'band', 'shade-top', 'shade-bottom' ].indexOf( kind ) !== -1 ) {
+			if ( def.under || [ 'tint', 'glow', 'band', 'shade-top', 'shade-bottom' ].indexOf( kind ) !== -1 ) {
 				if ( 'band' === kind ) {
 					o.set( { top: H - o.height / 2 } );
 				}
@@ -1302,7 +1538,7 @@
 			} ).join( '' ) + '</div>' +
 			'<p class="whd-ie__label">' + esc( T.colour ) + '</p>' + colourRow( 'fill', o.fill ) +
 			'<p class="whd-ie__label">' + esc( T.highlight ) + '</p>' + colourRow( 'textBackgroundColor', o.textBackgroundColor || '#ffffff' ) +
-			'<p class="whd-ie__label">Effects</p><div class="whd-ie__seg is-wide is-fx">' + [ [ 'none', 'None' ], [ 'shadow', 'Shadow' ], [ 'lift', 'Lift' ], [ 'glow', 'Glow' ], [ 'hollow', 'Hollow' ], [ 'outline', 'Outline' ], [ 'splice', 'Splice' ] ].map( function ( e ) {
+			'<p class="whd-ie__label">Effects</p><div class="whd-ie__seg is-wide is-fx">' + [ [ 'none', 'None' ], [ 'shadow', 'Shadow' ], [ 'lift', 'Lift' ], [ 'glow', 'Glow' ], [ 'hollow', 'Hollow' ], [ 'outline', 'Outline' ], [ 'splice', 'Splice' ], [ 'neon', 'Neon' ], [ 'echo', 'Echo' ], [ 'retro', 'Retro' ], [ 'gradient', 'Gradient' ] ].map( function ( e ) {
 				return '<button type="button" data-texteffect="' + e[ 0 ] + '">' + e[ 1 ] + '</button>';
 			} ).join( '' ) + '</div>' +
 			slider( 'charSpacing', T.spacing, -100, 1000, 10, o.charSpacing || 0 ) +
@@ -1402,12 +1638,22 @@
 	}
 
 	function textEffect( o, kind ) {
+		styleText( o, kind );
+		canvas.requestRenderAll();
+		commit();
+		paintProps();
+	}
+
+	/* The look itself, without the bookkeeping, so a preset can carry one too. */
+	function styleText( o, kind ) {
 		var size = o.fontSize;
-		var fill = o.fill && 'rgba(0,0,0,0)' !== o.fill ? o.fill : ( o.stroke || '#3a2b26' );
+		var base0 = o.whdTextColour || ( 'string' === typeof o.fill && 'rgba(0,0,0,0)' !== o.fill ? o.fill : ( o.stroke || '#3a2b26' ) );
+		var fill = base0;
 		o.set( { shadow: null, stroke: null, strokeWidth: 0 } );
-		if ( 'rgba(0,0,0,0)' === o.fill ) {
+		if ( 'string' !== typeof o.fill || 'rgba(0,0,0,0)' === o.fill ) {
 			o.set( 'fill', fill );
 		}
+		o.whdTextColour = null;
 		if ( 'shadow' === kind || 'lift' === kind || 'glow' === kind || 'splice' === kind ) {
 			o.set( 'shadow', shadowOf( size, kind ) );
 		}
@@ -1420,9 +1666,31 @@
 		if ( 'splice' === kind ) {
 			o.set( { fill: 'rgba(0,0,0,0)', stroke: fill, strokeWidth: Math.max( 1, size * 0.025 ) } );
 		}
-		canvas.requestRenderAll();
-		commit();
-		paintProps();
+		if ( 'neon' === kind ) {
+			// A pale core and the colour as light around it.
+			var glow = '#ffffff' === hex( fill ) ? '#f4a6b8' : fill;
+			o.set( { fill: '#fff8fb', shadow: new F.Shadow( { color: glow, blur: size * 0.45, offsetX: 0, offsetY: 0 } ), stroke: glow, strokeWidth: Math.max( 1, size * 0.012 ), paintFirst: 'stroke' } );
+			o.whdTextColour = glow;
+		}
+		if ( 'echo' === kind ) {
+			var c = hex( fill );
+			var rgb = [ 1, 3, 5 ].map( function ( i ) {
+				return parseInt( c.substr( i, 2 ), 16 );
+			} );
+			o.set( 'shadow', new F.Shadow( { color: 'rgba(' + rgb.join( ',' ) + ',0.35)', blur: 0, offsetX: size * 0.07, offsetY: size * 0.07 } ) );
+		}
+		if ( 'retro' === kind ) {
+			o.set( { shadow: new F.Shadow( { color: '#3a2b26', blur: 0, offsetX: size * 0.05, offsetY: size * 0.05 } ), stroke: '#3a2b26', strokeWidth: Math.max( 1, size * 0.02 ), paintFirst: 'stroke' } );
+		}
+		if ( 'gradient' === kind ) {
+			o.set( 'fill', new F.Gradient( {
+				type: 'linear',
+				gradientUnits: 'percentage',
+				coords: { x1: 0, y1: 0, x2: 1, y2: 1 },
+				colorStops: [ { offset: 0, color: fill }, { offset: 1, color: '#ffffff' === hex( fill ) ? '#f4a6b8' : '#b98b7e' } ]
+			} ) );
+			o.whdTextColour = fill;
+		}
 	}
 
 	function wireProps( p, o ) {
