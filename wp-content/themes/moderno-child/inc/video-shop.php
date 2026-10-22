@@ -8,10 +8,10 @@
  * page id: .ftp-sync/import-videos.php rewrites the video's own data (`_omc_video`) every time it
  * runs, and the slug is what stays the same on every copy of the site.
  *
- * On the video page each moment does three things (assets/js/omc-video.js follows the video's time):
- * at its time the piece slides in as a small window over the video — photo, name, price, size and
- * Add to bag — and stays for that moment's seconds (8 unless set) or until the next piece; it sits
- * under the player as the piece on screen; and it has a card in the list, "Shop this look at 1:23".
+ * On the video page each moment does two things (assets/js/omc-video.js follows the video's time):
+ * at its time the piece slides in as a window over the video — photo, name, price, size and Add to
+ * bag — and stays for that moment's seconds (8 unless set) or until the next piece; and it has a
+ * card in the list, "Shop this look at 1:23".
  *
  * @package moderno-child
  */
@@ -53,14 +53,6 @@ function omc_video_shop_moments( array $v ) {
 	return $cache[ $v['slug'] ];
 }
 
-/** Under the player: the piece on screen right now, with its Add to bag (filled by omc-video.js). */
-function omc_video_shop_now( array $v ) {
-	list( $moments ) = omc_video_shop_moments( $v );
-	if ( $moments ) {
-		echo '<div class="omc-vshop-now" data-omc-vshop-now data-label-now="' . esc_attr__( 'On screen now', 'moderno-child' ) . '" data-label-first="' . esc_attr__( 'In this video', 'moderno-child' ) . '" aria-live="polite" hidden></div>';
-	}
-}
-
 /** "Shop this video": every moment as a card — "Shop this look at 1:23" — with its size picker. */
 function omc_video_shop( array $v ) {
 	list( $moments, $pieces ) = omc_video_shop_moments( $v );
@@ -68,7 +60,7 @@ function omc_video_shop( array $v ) {
 		return;
 	}
 	?>
-	<section class="omc-vshop" data-omc-vshop aria-labelledby="omc-vshop-title">
+	<section class="omc-vshop" data-omc-vshop data-label-now="<?php esc_attr_e( 'On screen now', 'moderno-child' ); ?>" aria-labelledby="omc-vshop-title">
 		<div class="omc-vshop__head">
 			<p class="omc-eyebrow" id="omc-vshop-title"><?php esc_html_e( 'Shop this video', 'moderno-child' ); ?></p>
 		</div>

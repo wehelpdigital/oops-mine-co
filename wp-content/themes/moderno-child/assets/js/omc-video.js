@@ -40,36 +40,19 @@
 		});
 	}
 
-	/* Shoppable moments (inc/video-shop.php): each card seeks to its moment; while the video plays, the
-	   card for what is on screen is marked and that piece, with its Add to bag, sits under the player.
-	   The picker comes from the shop kit (omc-shop.js), which prints after this file — so it is asked
-	   for once the page has finished parsing. */
+	/* Shoppable moments (inc/video-shop.php): each card seeks to its moment, and while the video plays
+	   the card for what is on screen is marked. The pickers come from the shop kit (omc-shop.js),
+	   which prints after this file — so they are asked for once the page has finished parsing. */
 	var moments = Array.prototype.slice.call(document.querySelectorAll('.omc-vshop__item'));
-	var now = document.querySelector('[data-omc-vshop-now]');
-	var shown = null;
-
-	function paintNow(li, playing) {
-		if (!now || !window.OMCShop) { return; }
-		var piece = li ? window.OMCShop.piece(li.getAttribute('data-piece')) : null;
-		if (!piece) { now.hidden = true; return; }
-		var esc = function (s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; };
-		now.innerHTML = '<a class="omc-vshop-now__media" href="' + esc(piece.url) + '" tabindex="-1" aria-hidden="true"><img src="' + esc(piece.image) + '" alt=""></a>' +
-			'<div class="omc-vshop-now__body"><p class="omc-vshop-now__k">' + esc(now.getAttribute(playing ? 'data-label-now' : 'data-label-first')) + '</p>' +
-			'<a class="omc-vshop-now__name" href="' + esc(piece.url) + '">' + esc(piece.name) + '</a>' +
-			'<span class="omc-vshop-now__price">' + esc(piece.price) + '</span></div>';
-		now.querySelector('.omc-vshop-now__body').appendChild(window.OMCShop.picker(piece, { compact: true }));
-		now.hidden = false;
-	}
+	var shop = document.querySelector('[data-omc-vshop]');
 
 	function follow() {
 		var t = video.currentTime, cur = -1;
 		for (var i = 0; i < moments.length; i++) { if (t >= (parseInt(moments[i].getAttribute('data-at'), 10) || 0)) { cur = i; } }
-		var li = cur >= 0 ? moments[cur] : moments[0];
 		moments.forEach(function (m, i) { m.classList.toggle('is-current', i === cur); });
-		if (li !== shown) { shown = li; paintNow(li, cur >= 0 && !video.paused); }
 	}
 
-	/* The small window over the player: at each moment its piece slides in over the video and stays
+	/* The window over the player: at each moment its piece slides in over the video and stays
 	   for that moment's seconds (data-for), or until the next piece comes in. While somebody is using
 	   it — pointer over it, a size being chosen — it stays; × closes it until that moment comes round
 	   again. Nothing shows before the video has been started. */
@@ -110,8 +93,8 @@
 			pop.addEventListener('focusout', function () { setTimeout(function () { held = pop.contains(document.activeElement); sync(); }, 0); });
 		}
 		var T = window.OMCShop.i18n || {};
-		var label = (now && now.getAttribute('data-label-now')) || '';
-		var bag = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>';
+		var label = (shop && shop.getAttribute('data-label-now')) || '';
+		var bag = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>';
 		pop.setAttribute('aria-label', label + ': ' + piece.name);
 		pop.classList.remove('is-open');
 		// Small by default: the piece and one button. A size is asked for only when the button is pressed.
@@ -168,7 +151,7 @@
 			});
 		});
 		video.addEventListener('timeupdate', follow);
-		video.addEventListener('play', function () { shown = null; follow(); });
+		video.addEventListener('play', follow);
 		if (document.readyState === 'loading') {
 			document.addEventListener('DOMContentLoaded', follow);
 		} else {
