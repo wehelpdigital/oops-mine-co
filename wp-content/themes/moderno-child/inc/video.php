@@ -234,6 +234,20 @@ function omc_video_meta_description( $desc ) {
 }
 add_filter( 'omc_meta_description', 'omc_video_meta_description' );
 
+/*
+ * "Past Live Streams" in the menus wears the look of a button (omc.css, .omc-nav-live). Marked by
+ * what it links to — the video hub — rather than by menu-item id, which differs on every copy of the
+ * site. Priority 110: the theme's mega menu rewrites every item's classes at 100 and keeps only its
+ * own, so anything added earlier is lost.
+ */
+add_filter( 'nav_menu_css_class', static function ( $classes, $item, $args = null, $depth = 0 ) {
+	if ( 0 === (int) $depth && 'page' === ( $item->object ?? '' ) && $item->object_id
+		&& ( get_post_meta( (int) $item->object_id, '_omc_video_hub', true ) || 'videos' === get_post_field( 'post_name', (int) $item->object_id ) ) ) {
+		$classes[] = 'omc-nav-live';
+	}
+	return $classes;
+}, 110, 4 );
+
 function omc_video_document_title( $parts ) {
 	if ( is_page_template( 'templates/page-video.php' ) || is_page_template( 'templates/page-videos.php' ) ) {
 		$v   = omc_video_data();

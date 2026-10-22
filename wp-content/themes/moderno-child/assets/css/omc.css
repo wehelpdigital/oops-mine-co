@@ -1638,6 +1638,51 @@
 	padding: 11px 20px;
 	box-sizing: border-box;
 }
+/* ─── "Past Live Streams" in the menus (inc/video.php marks it .omc-nav-live): a dark pill with the
+   live bar's pulsing dot, so it reads as the thing to press rather than one more word in the row. ─── */
+.c-top-menu__item.omc-nav-live { display: flex; align-items: center; }
+.c-top-menu__item.omc-nav-live > a {
+	gap: 8px;
+	height: auto;
+	margin: 0 calc(var(--top-menu-item-space, 16px) / 2);
+	padding: 10px 16px 10px 14px;
+	border-radius: 999px;
+	background: var(--omc-ink);
+	color: var(--omc-cream);
+	line-height: 1;
+	box-shadow: 0 8px 18px -12px rgba(58, 43, 38, .7);
+	transition: background-color .25s var(--omc-ease), transform .25s var(--omc-ease);
+}
+.c-top-menu__item.omc-nav-live > a:hover,
+.c-top-menu__item.omc-nav-live.current-menu-item > a { background: var(--omc-rose-dark); color: #fff; transform: translateY(-1px); }
+.omc-nav-live > a::before {
+	content: "";
+	flex: 0 0 auto;
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--omc-livebar-cta, #f2c14e);
+	box-shadow: 0 0 0 0 rgba(242, 193, 78, .7);
+	animation: omc-nav-live-pulse 2.4s infinite;
+}
+@keyframes omc-nav-live-pulse {
+	70% { box-shadow: 0 0 0 6px rgba(242, 193, 78, 0); }
+	100% { box-shadow: 0 0 0 0 rgba(242, 193, 78, 0); }
+}
+/* The phone menu: the same pill, at the start of its row. */
+.c-mobile-menu__item.omc-nav-live > a {
+	display: inline-flex;
+	align-items: center;
+	gap: 9px;
+	margin: 6px 0;
+	padding: 11px 18px 11px 15px;
+	border-radius: 999px;
+	background: var(--omc-ink);
+	color: var(--omc-cream);
+	line-height: 1;
+}
+@media (prefers-reduced-motion: reduce) { .omc-nav-live > a::before { animation: none; } }
+
 /* The strip itself has to stop constraining the row it now contains. */
 .c-header__advert_bar { min-height: 0; height: auto; line-height: 1; }
 .c-header__advert_bar .omc-announce__social { align-self: center; }
