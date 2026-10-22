@@ -24,6 +24,9 @@
  * Pieces run one at a time, so a slow one never takes the others with it. Nothing is published:
  * every product lands as a draft for somebody to look at.
  *
+ * Product Builder is the same screen for one piece: one card, no batch, a choice between a draft
+ * and publishing it straight away, and the finished product handed back with links to open it.
+ *
  * @package whd
  */
 
@@ -33,6 +36,9 @@ final class WHD_AI_Products {
 
 	const PAGE = 'whd-ai-products';
 
+	/** Product Builder: the same card, one piece. */
+	const PAGE_ONE = 'whd-ai-product-builder';
+
 	public static function init() {
 		add_action( 'admin_menu', [ __CLASS__, 'menu' ], 11 );
 		add_action( 'admin_enqueue_scripts', [ __CLASS__, 'assets' ] );
@@ -41,11 +47,19 @@ final class WHD_AI_Products {
 
 	/* ─────────────────────────── where it lives ─────────────────────────── */
 
-	/** Under AI Writer, beside AI Posts and AI Pages. */
+	/** Under AI Writer, beside AI Posts and AI Pages: Product Builder first, then the batch. */
 	public static function menu() {
 		if ( ! class_exists( 'WHD_AI_Writer' ) || ! current_user_can( 'edit_products' ) ) {
 			return;
 		}
+		add_submenu_page(
+			WHD_AI_Writer::PAGE_POST,
+			__( 'Product Builder', 'whd' ),
+			__( 'Product Builder', 'whd' ),
+			'edit_products',
+			self::PAGE_ONE,
+			[ __CLASS__, 'screen_one' ]
+		);
 		add_submenu_page(
 			WHD_AI_Writer::PAGE_POST,
 			__( 'Bulk products', 'whd' ),
@@ -59,7 +73,8 @@ final class WHD_AI_Products {
 	public static function assets() {
 		// By the page, never the hook name: the hook carries where the screen sits in the menu.
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- only picks which screen this is
-		if ( ! isset( $_GET['page'] ) || self::PAGE !== sanitize_key( wp_unslash( $_GET['page'] ) ) || ! class_exists( 'WHD_AI_Studio' ) ) {
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+		if ( ! in_array( $page, [ self::PAGE, self::PAGE_ONE ], true ) || ! class_exists( 'WHD_AI_Studio' ) ) {
 			return;
 		}
 		wp_enqueue_media();
@@ -91,6 +106,9 @@ final class WHD_AI_Products {
 			'lookMax'    => WHD_AI_Studio::LOOK_MAX,
 			'currency'   => function_exists( 'get_woocommerce_currency_symbol' ) ? html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8' ) : '',
 			'categories' => self::category_choices(),
+			// Product Builder: one piece, and it may be published as soon as it is made.
+			'single'     => self::PAGE_ONE === $page,
+			'publish'    => current_user_can( 'publish_products' ),
 			'i18n'       => array_merge( WHD_AI_Studio::strings(), self::strings() ),
 		] );
 	}
@@ -178,6 +196,21 @@ final class WHD_AI_Products {
 			'countLabel'   => __( 'How many new pictures?', 'whd' ),
 			'countNote'    => __( 'Always an even number in all, so the story’s picture-and-copy rows come out in pairs.', 'whd' ),
 			'noDraw'       => __( 'Drawing pictures needs a Google AI key — the other providers are text only.', 'whd' ),
+			// Product Builder.
+			'untitledOne'  => __( 'New product', 'whd' ),
+			'stateDoneOne' => __( 'Product created', 'whd' ),
+			'createOne'    => __( 'Create the product', 'whd' ),
+			'createAgain'  => __( 'Create it again', 'whd' ),
+			'oneDone'      => __( 'Your product is ready.', 'whd' ),
+			'doneHead'     => __( 'Your product is ready', 'whd' ),
+			'doneDraft'    => __( 'Saved as a draft — read it over, then publish it from the product screen.', 'whd' ),
+			'donePub'      => __( 'Published — it is in the shop now.', 'whd' ),
+			'openProduct'  => __( 'Open the product', 'whd' ),
+			'viewShop'     => __( 'View in the shop', 'whd' ),
+			'preview'      => __( 'Preview', 'whd' ),
+			'another'      => __( 'Build another product', 'whd' ),
+			'isDraft'      => __( 'Draft', 'whd' ),
+			'isPub'        => __( 'Published', 'whd' ),
 		];
 	}
 
@@ -194,7 +227,49 @@ final class WHD_AI_Products {
 		return $out;
 	}
 
-	/* ─────────────────────────── the screen ─────────────────────────── */
+	/* ─────────────────────────── the screens ─────────────────────────── */
+
+	/** Product Builder: one card, one product, made and handed back. */
+	public static function screen_one() {
+		?>
+		<div class="wrap whd-wrap whd-aip whd-aip--single">
+			<header class="whd-aip__hero">
+				<p class="whd-aip__eyebrow"><?php esc_html_e( 'AI Writer', 'whd' ); ?></p>
+				<h1 class="whd-title"><?php esc_html_e( 'Product Builder', 'whd' ); ?></h1>
+				<p class="whd-intro whd-aip__lead">
+					<?php esc_html_e( 'Photos of a piece in, a finished product out: the name, both descriptions, the story, categories, size chart, product data, search snippet and new pictures — written and drawn by AI from your photos, then saved as a new product. The same steps as Write with AI on the product screen.', 'whd' ); ?>
+				</p>
+			</header>
+
+			<?php if ( ! WHD_AI::ready() ) : ?>
+				<div class="whd-note whd-note--warn">
+					<?php esc_html_e( 'No model is connected yet, so nothing can be written.', 'whd' ); ?>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=whd-ai' ) ); ?>"><?php esc_html_e( 'Connect one in WHD → AI content.', 'whd' ); ?></a>
+				</div>
+			<?php elseif ( ! class_exists( 'WHD_AI_Images' ) || ! WHD_AI_Images::ready() ) : ?>
+				<div class="whd-note">
+					<?php esc_html_e( 'Reading photographs and writing work; drawing new pictures needs a Google AI key, so the product keeps the photographs it has.', 'whd' ); ?>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=whd-ai' ) ); ?>"><?php esc_html_e( 'Add one', 'whd' ); ?></a>
+				</div>
+			<?php endif; ?>
+
+			<div class="whd-aip__done" id="whd-aip-done" hidden></div>
+			<div class="whd-aip__list" id="whd-aip-rows"></div>
+
+			<div class="whd-aip__bar">
+				<?php if ( current_user_can( 'publish_products' ) ) : ?>
+					<fieldset class="whd-aip__status">
+						<legend><?php esc_html_e( 'When it is made', 'whd' ); ?></legend>
+						<label><input type="radio" name="whd-aip-status" value="draft" checked> <span><?php esc_html_e( 'Save as a draft', 'whd' ); ?></span></label>
+						<label><input type="radio" name="whd-aip-status" value="publish"> <span><?php esc_html_e( 'Publish it', 'whd' ); ?></span></label>
+					</fieldset>
+				<?php endif; ?>
+				<span class="whd-aip__progress" id="whd-aip-progress" role="status" aria-live="polite"></span>
+				<button type="button" class="button button-primary button-hero" id="whd-aip-run"><?php esc_html_e( 'Create the product', 'whd' ); ?></button>
+			</div>
+		</div>
+		<?php
+	}
 
 	public static function screen() {
 		?>
@@ -530,6 +605,14 @@ final class WHD_AI_Products {
 		}
 		$seo = class_exists( 'WHD_AI_Admin' ) ? WHD_AI_Admin::finish_seo( $post_id ) : [];
 
+		/* Product Builder may publish it straight away; everything else stays a draft for somebody to read. */
+		if ( 'publish' === ( $details['status'] ?? '' ) && current_user_can( 'publish_products' ) ) {
+			$product = wc_get_product( $post_id );
+			$product->set_status( 'publish' );
+			$product->save();
+		}
+		$published = 'publish' === get_post_status( $post_id );
+
 		$thumbs = [];
 		foreach ( $gallery as $id ) {
 			$thumbs[] = [
@@ -544,6 +627,8 @@ final class WHD_AI_Products {
 			'id'         => $post_id,
 			'name'       => html_entity_decode( get_the_title( $post_id ), ENT_QUOTES, 'UTF-8' ),
 			'edit'       => get_edit_post_link( $post_id, 'raw' ),
+			'view'       => $published ? (string) get_permalink( $post_id ) : (string) get_preview_post_link( $post_id ),
+			'status'     => $published ? 'publish' : 'draft',
 			'score'      => (int) ( $seo['score'] ?? 0 ),
 			'rating'     => (string) ( $seo['rating'] ?? '' ),
 			'rows'       => $rows,

@@ -288,9 +288,9 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   an open, empty level that offers the value (skipping `whdv-locked` rows, so the colour still comes first, and swatches
   marked unavailable), once — a shopper who clears it is left alone. Client-side on purpose, so a cached page never
   carries one visitor’s size to another.
-- **AI Writer** is one top-level menu with five screens: AI Posts (`whd-ai-posts`, also the parent slug), AI Pages
-  (`whd-ai-pages`), **Bulk products** (`whd-ai-products`, `WHD_AI_Products`), **Image Builder** (both WooCommerce only) and
-  **Image Editor**. Admin assets key off
+- **AI Writer** is one top-level menu with six screens: AI Posts (`whd-ai-posts`, also the parent slug), AI Pages
+  (`whd-ai-pages`), **Product Builder** (`whd-ai-product-builder`) and **Bulk products** (`whd-ai-products`, both
+  `WHD_AI_Products`), **Image Builder** (all three WooCommerce only) and **Image Editor**. Admin assets key off
   `$_GET['page']`, never the hook name — the hook carries where an item sits in the menu, so matching on it breaks the
   moment a screen moves under a parent.
 - Bulk products: **one card per piece, each one the product screen’s Write with AI panel** — photographs, the eight
@@ -314,6 +314,12 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   finds its endpoint through `WHD_AIP.rest`. Gotchas kept from the old table: a draft WooCommerce saves has **no
   `post_name`** until published (the slug is set explicitly or `key_slug` fails), and variations come **only from the
   notes** with two or more options (`WHD_AI_Studio::plan()`), never from colours the model sees in a photograph.
+- **Product Builder** is Bulk products for one piece — the same class, `ai-products.js` and card, switched by
+  `WHD_AIP.single` (`WHD_AI_Products::PAGE_ONE`, `screen_one()`): one card that cannot be removed or folded, no
+  batch confirmation, and a *Save as a draft / Publish it* choice in the bar (only for `publish_products`) that
+  rides along as `details.status`; `save()` publishes at the very end and answers with `view` (permalink, or the
+  preview link for a draft) and `status`. The finished product is shown above the card (`paintDone()`) with Open
+  the product / View in the shop / Build another.
 - **Write with AI on the product screen** is `WHD_AI_Studio` (`includes/class-whd-ai-studio.php`, `admin/ai-studio.js`):
   a meta box in its own context `whd_top`, printed at `edit_form_after_title` so it sits above the description (no
   position in the normal column can — the editor is not a meta box). Products no longer get the old `whd-ai-box`

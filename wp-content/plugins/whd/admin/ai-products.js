@@ -11,6 +11,10 @@
  *
  * Pieces run one after another, so the person watching sees which one is being worked on, a slow
  * one never takes the others with it, and one that stops never stops the rest.
+ *
+ * Product Builder (WHD_AIP.single) is this screen for one piece: one card that cannot be removed,
+ * no batch confirmation, a draft-or-publish choice in the bar, and the finished product handed back
+ * above the card with links to open it, see it and start another.
  */
 ( function () {
 	'use strict';
@@ -40,6 +44,12 @@
 	var pieces = [];
 	var seq = 0;
 	var busy = false;
+	var single = !! D.single;
+	var done = document.getElementById( 'whd-aip-done' );
+	if ( single ) {
+		T.untitled = T.untitledOne || T.untitled;
+		T.stateDone = T.stateDoneOne || T.stateDone;
+	}
 
 	/* ─────────────────────────── one piece ─────────────────────────── */
 
@@ -116,9 +126,15 @@
 				} );
 			} );
 		} );
-		q( '[data-copy-all]' ).addEventListener( 'click', function () {
-			copyToAll( p );
-		} );
+		if ( single ) {
+			var copy = q( '[data-copy-all]' );
+			copy.previousElementSibling.remove(); // the " · " before it
+			copy.remove();
+		} else {
+			q( '[data-copy-all]' ).addEventListener( 'click', function () {
+				copyToAll( p );
+			} );
+		}
 		q( '[data-f="name"]' ).addEventListener( 'input', function () {
 			paintHead( p );
 		} );
@@ -761,6 +777,10 @@
 		if ( ! known.name && write.indexOf( 'name' ) === -1 ) {
 			write.unshift( 'name' );
 		}
+		var status = document.querySelector( 'input[name="whd-aip-status"]:checked' );
+		if ( single && status ) {
+			known.status = status.value;
+		}
 		return { known: known, parts: write, notes: p.el.notes.value.trim(), keywords: keywordsOf( p ) };
 	}
 
@@ -871,6 +891,9 @@
 			} );
 		} ).then( function ( saved ) {
 			line.done( fmt( T.scoreN, saved.score ) );
+			if ( single ) {
+				paintDone( saved );
+			}
 			p.done = true;
 			p.made = saved.name || p.made;
 			p.editUrl = saved.edit || p.editUrl;
@@ -975,6 +998,34 @@
 		} );
 	}
 
+	/* Product Builder: the finished product, above the card, with the ways on from here. */
+	function paintDone( saved ) {
+		if ( ! done ) {
+			return;
+		}
+		var pub = 'publish' === saved.status;
+		var pic = ( saved.pictures || [] )[ 0 ];
+		done.innerHTML =
+			'<div class="whd-aip__done-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.2 4.2L19 7"/></svg></div>' +
+			( pic ? '<img class="whd-aip__done-img" src="' + esc( pic.large || pic.thumb ) + '" alt="">' : '' ) +
+			'<div class="whd-aip__done-body">' +
+				'<p class="whd-aip__done-kicker">' + esc( T.doneHead ) + '</p>' +
+				'<h2 class="whd-aip__done-name">' + esc( saved.name || T.untitled ) + '</h2>' +
+				'<p class="whd-aip__done-meta">' +
+					'<span class="whd-aip__chip is-' + ( pub ? 'pub' : 'draft' ) + '">' + esc( pub ? T.isPub : T.isDraft ) + '</span>' +
+					'<span class="whd-aip__score is-' + esc( saved.rating || 'none' ) + '">' + esc( fmt( T.scoreN, saved.score ) ) + '</span>' +
+					( saved.pictures ? '<span>' + esc( fmt( T.pictures, saved.pictures.length ) ) + '</span>' : '' ) +
+				'</p>' +
+				'<p class="whd-aip__done-note">' + esc( pub ? T.donePub : T.doneDraft ) + '</p>' +
+				'<p class="whd-aip__done-acts">' +
+					'<a class="button button-primary button-large" href="' + esc( saved.edit ) + '">' + esc( T.openProduct ) + '</a>' +
+					( saved.view ? '<a class="button button-large" href="' + esc( saved.view ) + '" target="_blank" rel="noopener">' + esc( pub ? T.viewShop : T.preview ) + '</a>' : '' ) +
+					'<a class="button button-large" href="' + esc( window.location.href.split( '#' )[ 0 ] ) + '">' + esc( T.another ) + '</a>' +
+				'</p>' +
+			'</div>';
+		done.hidden = false;
+	}
+
 	/* ─────────────────────────── the batch ─────────────────────────── */
 
 	function ready() {
@@ -989,6 +1040,12 @@
 			return p.done;
 		} ).length;
 		var left = pieces.length - made;
+		if ( single ) {
+			// One piece: once it is made the button makes it again, into the same draft if it is one.
+			runAllButton.textContent = made ? T.createAgain : T.createOne;
+			runAllButton.disabled = busy;
+			return;
+		}
 		tally.textContent = [ left ? fmt( T.readyOf, waiting, left ) : '', made ? fmt( T.madeN, made ) : '' ].filter( Boolean ).join( ' · ' );
 		runAllButton.textContent = waiting > 1 ? fmt( T.goAllN, waiting ) : T.goAll;
 		runAllButton.disabled = busy || ! waiting;
@@ -1103,7 +1160,9 @@
 				document.body.classList.remove( 'whd-aip-busy' );
 				paintTally();
 				if ( made === go.length ) {
-					loader.finish( true, fmt( T.batchDone, made ) );
+					loader.finish( true, single ? T.oneDone : fmt( T.batchDone, made ), single && done ? function () {
+						done.scrollIntoView( { behavior: 'smooth', block: 'start' } );
+					} : null );
 				} else {
 					loader.finish( false, go.length > 1 ? fmt( T.batchSome, made, go.length ) : last );
 				}
@@ -1113,44 +1172,61 @@
 
 	/* ─────────────────────────── the buttons ─────────────────────────── */
 
-	document.getElementById( 'whd-aip-add' ).addEventListener( 'click', function () {
-		var p = makePiece( null );
-		p.card.scrollIntoView( { behavior: 'smooth', block: 'start' } );
-	} );
+	// Product Builder has neither button: it is one piece.
+	var addOne = document.getElementById( 'whd-aip-add' );
+	var addMany = document.getElementById( 'whd-aip-add-many' );
 
-	document.getElementById( 'whd-aip-add-many' ).addEventListener( 'click', function () {
-		if ( ! window.wp || ! wp.media ) {
-			return;
-		}
-		var frame = wp.media( {
-			title: T.choose,
-			button: { text: T.use },
-			library: { type: 'image' },
-			multiple: true
+	if ( addOne ) {
+		addOne.addEventListener( 'click', function () {
+			var p = makePiece( null );
+			p.card.scrollIntoView( { behavior: 'smooth', block: 'start' } );
 		} );
-		frame.on( 'open', function () {
-			frame.content.mode( 'browse' );
-		} );
-		frame.on( 'select', function () {
-			// An empty card left over is filled first, so this does not leave a blank one on top.
-			var spare = pieces.filter( function ( p ) {
-				return ! p.photos.length && ! p.done;
+	}
+
+	if ( addMany ) {
+		addMany.addEventListener( 'click', function () {
+			if ( ! window.wp || ! wp.media ) {
+				return;
+			}
+			var frame = wp.media( {
+				title: T.choose,
+				button: { text: T.use },
+				library: { type: 'image' },
+				multiple: true
 			} );
-			frame.state().get( 'selection' ).map( photoOf ).forEach( function ( photo ) {
-				var p = spare.shift();
-				if ( p ) {
-					p.photos = [ photo ];
-					changedPhotos( p );
-				} else {
-					makePiece( photo );
-				}
+			frame.on( 'open', function () {
+				frame.content.mode( 'browse' );
 			} );
+			frame.on( 'select', function () {
+				// An empty card left over is filled first, so this does not leave a blank one on top.
+				var spare = pieces.filter( function ( p ) {
+					return ! p.photos.length && ! p.done;
+				} );
+				frame.state().get( 'selection' ).map( photoOf ).forEach( function ( photo ) {
+					var p = spare.shift();
+					if ( p ) {
+						p.photos = [ photo ];
+						changedPhotos( p );
+					} else {
+						makePiece( photo );
+					}
+				} );
+			} );
+			frame.open();
 		} );
-		frame.open();
-	} );
+	}
 
 	runAllButton.addEventListener( 'click', function () {
 		if ( busy ) {
+			return;
+		}
+		if ( single ) {
+			// One piece, asked for by name: no "Create 1 product?" in between. Made again, it starts over.
+			if ( done ) {
+				done.hidden = true;
+			}
+			pieces[ 0 ].done = false;
+			runBatch( [ pieces[ 0 ] ], false );
 			return;
 		}
 		var todo = ready();

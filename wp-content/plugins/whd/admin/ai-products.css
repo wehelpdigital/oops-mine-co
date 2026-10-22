@@ -754,3 +754,254 @@ body.whd-aip-busy .whd-aip__x {
 		transition: none;
 	}
 }
+
+/* ─────────────────────────── Product Builder: one piece ─────────────────────────── */
+
+.whd-aip--single .whd-aip__done,
+.whd-aip--single .whd-aip__hero {
+	max-width: 1180px;
+}
+
+.whd-aip__hero {
+	margin: 14px 0 20px;
+}
+
+.whd-aip__eyebrow {
+	margin: 0 0 2px;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: .14em;
+	text-transform: uppercase;
+	color: #9c6f63;
+}
+
+.whd-aip--single .whd-title {
+	margin: 0 0 6px;
+	padding: 0;
+	font-size: 34px;
+	line-height: 1.15;
+	color: #3a2b26;
+}
+
+.whd-aip--single .whd-aip__lead {
+	margin: 0;
+}
+
+/* The card is the only one: nothing to number, fold away or remove, and the bar does the creating. */
+.whd-aip--single .whd-aip__n,
+.whd-aip--single .whd-aip__fold,
+.whd-aip--single .whd-aip__x,
+.whd-aip--single .whd-aip__go [data-go] {
+	display: none;
+}
+
+.whd-aip--single .whd-aip__card.is-folded .whd-aip__body {
+	display: block;
+}
+
+.whd-aip__status {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	align-items: center;
+	margin: 0 auto 0 0;
+	padding: 4px;
+	border: 0;
+	border-radius: 11px;
+	background: #efe6de;
+}
+
+.whd-aip__status legend {
+	float: left;
+	margin: 0 8px 0 8px;
+	padding: 0;
+	font-size: 12px;
+	color: #6f6560;
+}
+
+.whd-aip__status label {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	padding: 7px 13px;
+	border-radius: 8px;
+	color: #6f6560;
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.whd-aip__status input {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.whd-aip__status label:has(input:checked) {
+	background: #fff;
+	color: #3a2b26;
+	box-shadow: 0 1px 3px rgba(58, 43, 38, .16);
+}
+
+.whd-aip__status label:has(input:focus-visible) {
+	box-shadow: 0 0 0 3px rgba(185, 139, 126, .35);
+}
+
+.whd-aip--single .whd-aip__bar .button-primary {
+	border-color: #3a2b26;
+	border-radius: 10px;
+	background: #3a2b26;
+}
+
+.whd-aip--single .whd-aip__bar .button-primary:hover,
+.whd-aip--single .whd-aip__bar .button-primary:focus {
+	border-color: #241a17;
+	background: #241a17;
+}
+
+/* the finished product */
+
+.whd-aip__done {
+	box-sizing: border-box;
+	display: flex;
+	gap: 22px;
+	align-items: center;
+	margin: 0 0 22px;
+	padding: 22px 24px;
+	border: 1px solid #cfe3d5;
+	border-radius: 16px;
+	background: linear-gradient(135deg, #f3faf5, #fff 60%);
+	box-shadow: 0 10px 28px -18px rgba(31, 91, 42, .45);
+	animation: whd-aip-done .4s ease both;
+}
+
+.whd-aip__done[hidden] {
+	display: none;
+}
+
+@keyframes whd-aip-done {
+	from { opacity: 0; transform: translateY(8px); }
+	to   { opacity: 1; transform: none; }
+}
+
+.whd-aip__done-mark {
+	display: grid;
+	flex: 0 0 auto;
+	place-items: center;
+	width: 46px;
+	height: 46px;
+	border-radius: 50%;
+	background: #1f6a40;
+	color: #fff;
+	align-self: flex-start;
+}
+
+.whd-aip__done-img {
+	flex: 0 0 auto;
+	width: 120px;
+	height: 150px;
+	border-radius: 12px;
+	object-fit: cover;
+	background: #efe6de;
+	box-shadow: 0 8px 20px -12px rgba(58, 43, 38, .5);
+}
+
+.whd-aip__done-body {
+	min-width: 0;
+}
+
+.whd-aip__done-kicker {
+	margin: 0;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: .12em;
+	text-transform: uppercase;
+	color: #1f6a40;
+}
+
+.whd-aip__done-name {
+	margin: 4px 0 8px;
+	padding: 0;
+	font-family: "Cormorant Garamond", Georgia, serif;
+	font-size: 28px;
+	font-weight: 500;
+	line-height: 1.15;
+	color: #3a2b26;
+}
+
+.whd-aip__done-meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin: 0 0 8px;
+	font-size: 12px;
+	color: #6f6560;
+}
+
+.whd-aip__done-meta .whd-aip__score {
+	margin: 0;
+}
+
+.whd-aip__chip {
+	padding: 3px 9px;
+	border-radius: 999px;
+	font-size: 11px;
+	font-weight: 700;
+}
+
+.whd-aip__chip.is-draft { background: #efe6de; color: #5d514b; }
+.whd-aip__chip.is-pub   { background: #e3f1e6; color: #1f5b2a; }
+
+.whd-aip__done-note {
+	margin: 0 0 14px;
+	font-size: 13px;
+	color: #50575e;
+}
+
+.whd-aip__done-acts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 0;
+}
+
+.whd-aip__done-acts .button {
+	border-color: #d6ccc6;
+	border-radius: 9px;
+	color: #3a2b26;
+}
+
+.whd-aip__done-acts .button:hover,
+.whd-aip__done-acts .button:focus {
+	border-color: #b98b7e;
+	background: #f7f2ed;
+	color: #3a2b26;
+}
+
+.whd-aip__done-acts .button-primary {
+	border-color: #3a2b26;
+	background: #3a2b26;
+}
+
+.whd-aip__done-acts .button-primary:hover,
+.whd-aip__done-acts .button-primary:focus {
+	border-color: #241a17;
+	background: #241a17;
+}
+
+@media (max-width: 782px) {
+	.whd-aip__done {
+		flex-wrap: wrap;
+	}
+
+	.whd-aip__status {
+		margin: 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.whd-aip__done {
+		animation: none;
+	}
+}
