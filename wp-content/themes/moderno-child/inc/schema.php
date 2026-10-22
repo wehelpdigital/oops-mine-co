@@ -43,7 +43,7 @@ function omc_schema_breadcrumb( array $trail ) {
 		$item = [
 			'@type'    => 'ListItem',
 			'position' => $i + 1,
-			'name'     => $name,
+			'name'     => function_exists( 'omc_serp_plain' ) ? omc_serp_plain( $name ) : $name, // a result shows entities as they are
 		];
 		// The last crumb is the page itself; Google asks that it carry no item URL.
 		if ( $url && $i + 1 < count( $trail ) ) {

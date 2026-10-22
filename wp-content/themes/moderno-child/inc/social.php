@@ -537,7 +537,11 @@ function omc_social_product_meta() {
 
 	// When the generic pass is still hooked it already printed og:type/title/description/image at priority 1.
 	$full  = false === has_action( 'wp_head', 'omc_seo_head' );
-	$desc  = omc_social_product_description( $product );
+	/*
+	 * Through the same filter as every other page, so the snippet written in the SEO box (and WHD's
+	 * tidy-up of it) is what goes out; the short description is only where nothing was written.
+	 */
+	$desc  = trim( preg_replace( '/\s+/', ' ', (string) apply_filters( 'omc_meta_description', omc_social_product_description( $product ) ) ) );
 	$image = omc_social_product_image( $product );
 	$out   = '';
 

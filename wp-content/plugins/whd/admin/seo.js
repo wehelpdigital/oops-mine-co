@@ -156,6 +156,63 @@
 	var pvTitle = document.getElementById( 'whd-seo-preview-title' );
 	var pvDesc = document.getElementById( 'whd-seo-preview-desc' );
 	var pvUrl = document.getElementById( 'whd-seo-preview-url' );
+	var pvSite = document.getElementById( 'whd-seo-preview-site' );
+	var pvIcon = document.getElementById( 'whd-seo-preview-icon' );
+	var pvRich = document.getElementById( 'whd-seo-preview-rich' );
+	var pvDate = document.getElementById( 'whd-seo-preview-date' );
+	var S = D.serp || {};
+
+	if ( pvSite ) {
+		pvSite.textContent = S.site || '';
+	}
+	if ( pvIcon ) {
+		if ( S.icon ) {
+			var img = document.createElement( 'img' );
+			img.src = S.icon;
+			img.alt = '';
+			pvIcon.appendChild( img );
+		} else {
+			pvIcon.textContent = ( S.site || '?' ).charAt( 0 );
+		}
+	}
+	if ( pvRich && S.rich ) {
+		pvRich.textContent = S.rich;
+		pvRich.hidden = false;
+	}
+	if ( pvDate && S.date ) {
+		pvDate.textContent = S.date + ' — ';
+	}
+
+	var flat = function ( s ) {
+		return String( s || '' ).toLowerCase().replace( /[^a-z0-9]+/g, '' );
+	};
+
+	/* The address as Google writes it: https://oopsmineco.com › shop › the-piece */
+	function address( slug ) {
+		var url = ( S.base || ( 'https://' + ( D.home || '' ) ) ) + ( slug ? slug + '/' : '' );
+		var parts = url.replace( /\/+$/, '' ).split( '/' );
+		var host = parts.slice( 0, 3 ).join( '/' );
+		return [ host ].concat( parts.slice( 3 ).filter( Boolean ) ).join( ' › ' );
+	}
+
+	/* A product's snippet, tidied as WHD_SEO::tidy_snippet() does on the page. */
+	function tidy( desc, title ) {
+		desc = String( desc || '' ).replace( /\s+/g, ' ' ).trim();
+		if ( 'product' !== S.type ) {
+			return desc;
+		}
+		var name = String( title || '' ).trim();
+		if ( name && desc.toLowerCase().indexOf( name.toLowerCase() ) === 0 ) {
+			var m = /^\s*[.:|\u2013\u2014-]\s+(.+)$/.exec( desc.slice( name.length ) );
+			if ( m && m[ 1 ].length >= 60 ) {
+				desc = m[ 1 ].charAt( 0 ).toUpperCase() + m[ 1 ].slice( 1 );
+			}
+		}
+		if ( desc && desc.length < 115 && S.tail && ( desc + ' ' + S.tail ).length <= 158 ) {
+			desc += ' ' + S.tail;
+		}
+		return desc;
+	}
 
 	function clip( text, max ) {
 		text = ( text || '' ).replace( /\s+/g, ' ' ).trim();
@@ -170,10 +227,14 @@
 		var title = ( seoTitle && seoTitle.value.trim() ) || state.title || '';
 		var desc = seoDesc ? seoDesc.value.trim() : '';
 
-		pvUrl.textContent = ( D.home || '' ) + ( state.slug ? state.slug + '/' : '' );
-		pvTitle.textContent = clip( title, 60 ) || ( T.noTitle || 'Untitled' );
+		// The page's title with the shop's name after it, unless it already says it — as the theme writes <title>.
+		var full = title && S.suffix && flat( title ).indexOf( flat( S.site ) ) === -1 ? title + S.suffix : title;
+		desc = tidy( desc, state.title );
+
+		pvUrl.textContent = address( state.slug || S.slug || '' );
+		pvTitle.textContent = clip( full, 62 ) || ( T.noTitle || 'Untitled' );
 		pvDesc.textContent = desc ? clip( desc, 158 ) : ( T.noDesc || 'Google will write this itself from the copy.' );
-		pvDesc.className = 'whd-seo__preview-desc' + ( desc ? '' : ' is-empty' );
+		pvDesc.className = desc ? '' : 'is-empty';
 
 		count( seoTitle, document.getElementById( 'whd-seo-title-count' ), 60, 30 );
 		count( seoDesc, document.getElementById( 'whd-seo-desc-count' ), 158, 100 );

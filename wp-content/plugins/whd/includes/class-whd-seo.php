@@ -37,6 +37,7 @@ class WHD_SEO {
 		add_action( 'save_post', [ __CLASS__, 'save' ], 10, 2 );
 		add_action( 'admin_enqueue_scripts', [ __CLASS__, 'assets' ] );
 		add_action( 'rest_api_init', [ __CLASS__, 'rest' ] );
+		add_filter( 'omc_meta_description', [ __CLASS__, 'snippet' ], 40 ); // the theme's meta description
 
 		foreach ( self::TYPES as $type ) {
 			$slug = 'post' === $type ? '' : $type . '_';
@@ -52,6 +53,81 @@ class WHD_SEO {
 		 * page was last opened by hand — which is worse than showing none.
 		 */
 		add_action( 'save_post', [ __CLASS__, 'rescore' ], 99, 2 );
+	}
+
+	/* ─────────────────────────── the snippet as it goes out ─────────────────────────── */
+
+	/** A product's search snippet, tidied on its way into the page (the editor's preview does the same). */
+	public static function snippet( $desc ) {
+		if ( ! is_singular( 'product' ) ) {
+			return $desc;
+		}
+		return self::tidy_snippet( (string) $desc, get_the_title( get_queried_object_id() ) );
+	}
+
+	/**
+	 * Most product snippets open with the product's name — "Hooded Flannel Overshirt. A brushed
+	 * flannel…" — and the result's title is that name already, so the first words of the snippet
+	 * said it twice. The name goes when a full stop, colon or dash follows it (never when the name
+	 * starts a sentence), and a short snippet gets the shop's name at the end, in the room left.
+	 * The same rules are in admin/seo.js for the preview.
+	 */
+	public static function tidy_snippet( string $desc, string $title ): string {
+		$plain = static fn( $t ) => trim( preg_replace( '/\s+/u', ' ', html_entity_decode( wp_strip_all_tags( (string) $t ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ) ) );
+		$desc  = $plain( $desc );
+		$name  = $plain( $title );
+		if ( '' !== $name && preg_match( '/^' . preg_quote( $name, '/' ) . '\s*[.:|\x{2013}\x{2014}-]\s+(.+)$/iu', $desc, $m ) && mb_strlen( $m[1] ) >= 60 ) {
+			$desc = mb_strtoupper( mb_substr( $m[1], 0, 1 ) ) . mb_substr( $m[1], 1 );
+		}
+		if ( '' !== $desc && mb_strlen( $desc ) < 115 ) {
+			/* translators: %s: the shop's name */
+			$more = sprintf( __( 'Shop it at %s.', 'whd' ), rtrim( $plain( get_bloginfo( 'name' ) ), '.' ) ); // "Co." ends a sentence once
+			if ( mb_strlen( $desc . ' ' . $more ) <= 158 ) {
+				$desc .= ' ' . $more;
+			}
+		}
+		return $desc;
+	}
+
+	/** What the editor's preview needs to draw the result the way Google does. */
+	private static function preview_data( $post ) {
+		$site = html_entity_decode( get_bloginfo( 'name' ), ENT_QUOTES, 'UTF-8' );
+		$url  = '';
+		$slug = '';
+		if ( $post ) {
+			if ( 'publish' === $post->post_status ) {
+				$url  = get_permalink( $post );
+				$slug = $post->post_name;
+			} elseif ( function_exists( 'get_sample_permalink' ) ) {
+				list( $template, $slug ) = get_sample_permalink( $post->ID );
+				$url = str_replace( [ '%postname%', '%pagename%', '%product%' ], $slug, $template );
+			}
+		}
+		$base = $url && $slug ? substr( $url, 0, strrpos( rtrim( $url, '/' ), '/' ) + 1 ) : trailingslashit( home_url( '/' ) );
+		$out  = [
+			'site'   => $site,
+			'icon'   => (string) get_site_icon_url( 64 ),
+			'base'   => $base,
+			'slug'   => (string) $slug,
+			'suffix' => ' | ' . $site,
+			'type'   => $post ? $post->post_type : '',
+			'date'   => $post && 'post' === $post->post_type ? get_the_date( 'M j, Y', $post ) : '',
+			'rich'   => '',
+			'tail'   => sprintf( __( 'Shop it at %s.', 'whd' ), rtrim( $site, '.' ) ),
+		];
+		if ( $post && 'product' === $post->post_type && function_exists( 'wc_get_product' ) ) {
+			$product = wc_get_product( $post->ID );
+			if ( $product ) {
+				$bits = array_filter( [
+					trim( html_entity_decode( wp_strip_all_tags( $product->get_price_html() ), ENT_QUOTES, 'UTF-8' ) ),
+					$product->is_in_stock() ? __( 'In stock', 'whd' ) : __( 'Out of stock', 'whd' ),
+					/** What the shop's returns read as under a product's result (the theme fills it in). */
+					(string) apply_filters( 'whd_seo_preview_returns', '', $product ),
+				] );
+				$out['rich'] = implode( ' · ', $bits );
+			}
+		}
+		return $out;
 	}
 
 	/* ─────────────────────────── where it appears ─────────────────────────── */
@@ -103,10 +179,20 @@ class WHD_SEO {
 				<span class="whd-seo__count" id="whd-seo-desc-count"></span>
 			</p>
 
-			<div class="whd-seo__preview" id="whd-seo-preview" aria-hidden="true">
-				<span class="whd-seo__preview-url" id="whd-seo-preview-url"></span>
-				<span class="whd-seo__preview-title" id="whd-seo-preview-title"></span>
-				<span class="whd-seo__preview-desc" id="whd-seo-preview-desc"></span>
+			<div class="whd-serp" id="whd-seo-preview" aria-hidden="true">
+				<span class="whd-serp__label"><?php esc_html_e( 'How it can look in Google', 'whd' ); ?></span>
+				<div class="whd-serp__card">
+					<div class="whd-serp__site">
+						<span class="whd-serp__icon" id="whd-seo-preview-icon"></span>
+						<span class="whd-serp__where">
+							<span class="whd-serp__name" id="whd-seo-preview-site"></span>
+							<span class="whd-serp__url" id="whd-seo-preview-url"></span>
+						</span>
+					</div>
+					<span class="whd-serp__title" id="whd-seo-preview-title"></span>
+					<span class="whd-serp__rich" id="whd-seo-preview-rich" hidden></span>
+					<span class="whd-serp__desc"><span class="whd-serp__date" id="whd-seo-preview-date"></span><span id="whd-seo-preview-desc"></span></span>
+				</div>
 			</div>
 
 			<p class="whd-seo__field whd-seo__field--tick">
@@ -197,6 +283,7 @@ class WHD_SEO {
 		wp_localize_script( 'whd-seo', 'WHD_SEO_DATA', [
 			'rest'  => [ 'root' => esc_url_raw( rest_url( 'whd/v1/seo/' ) ), 'nonce' => wp_create_nonce( 'wp_rest' ) ],
 			'home'  => trailingslashit( preg_replace( '#^https?://#', '', home_url( '/' ) ) ),
+			'serp'  => self::preview_data( get_post() ),
 			'i18n'  => [
 				'reading' => __( 'Reading the page…', 'whd' ),
 				'error'   => __( 'Could not read the page.', 'whd' ),
