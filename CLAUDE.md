@@ -155,7 +155,7 @@ Chromium harness for that lives in the session scratchpad, not in the repo.
 `functions.php` requires every name in one list near the top:
 
 ```php
-foreach ( [ 'video', 'landing', 'pdp', 'cart', 'social', 'perf', 'schema', 'images', 'seo-doc', 'page-editor', 'shop-kit', 'pdp-extras', 'video-shop', 'video-writer', 'my-size', 'drops', 'swipe', 'reel', 'returns' ] as $omc_module ) { ... }
+foreach ( [ 'video', 'landing', 'pdp', 'cart', 'social', 'perf', 'schema', 'images', 'seo-doc', 'page-editor', 'shop-kit', 'pdp-extras', 'video-shop', 'video-writer', 'my-size', 'drops', 'swipe', 'returns' ] as $omc_module ) { ... }
 ```
 
 Each file is self-contained and hooks itself, so adding a feature means dropping in `inc/<name>.php` and adding the
@@ -164,7 +164,7 @@ in `moderno_child_enqueue_styles()` (video, cart, pdp), always with the `omc` or
 
 | Module | What it owns |
 |---|---|
-| `video.php` | Style-video pages: `_omc_video` meta, player, chapters, `VideoObject` + `Clip` schema, the hub's `ItemList`. |
+| `video.php` | Style-video pages: `_omc_video` meta, player, chapters, `VideoObject` + `Clip` schema, the hub's `ItemList`. Shoppers see them as **Past live streams** (the owner's name for them): the menu item right after Home (publish-site.php), the hub's title/SEO/intro (`_hub.json` via import-videos.php), the video pages' eyebrow and "All past live streams" link, and the home section (Page Editor defaults). The URL stays `/videos/`. |
 | `landing.php` | The four content templates: `_omc_landing` meta, section/table/FAQ renderers, `FAQPage` schema, the contact form endpoint, `omc-landing-page--{landing,faq,contact,policy}` body classes. |
 | `pdp.php` | Product page: size-guide modal, scarcity line, trust badges, review photos. |
 | `cart.php` | Slide-out cart drawer, free-shipping progress bar, drawer trust line. |
@@ -177,7 +177,6 @@ in `moderno_child_enqueue_styles()` (video, cart, pdp), always with the `omc` or
 | `my-size.php` | "Only show my size" switch on shop/category grids, drawn client-side from `whd_fit`; `?my_size=<pa_size slug>` filters the main query to pieces in stock in that size or an equivalent the catalogue itself defines (`m-8-10` makes M, 8 and 10 one size); one-size pieces stay in, and one-size is never "my size". |
 | `drops.php` | "Next drop" card on the home page (Page Editor → Next drop, off until enabled with a date): the Live card's countdown, "Remind me" form with source `drop`, then a link to the drop for a week. Feeds `whd_drop` to the plugin. |
 | `swipe.php` | "This or that" deck on the home page, a cream band right under the stylist band (Page Editor → This or that): swipe/♥ adds to the theme wishlist (`ideapark_wishlist_toggle`, only when not already there), skips are kept in localStorage; `assets/js/omc-swipe.js`. |
-| `reel.php` | "Watch & shop" on the home page, right under the Facebook Live card (Page Editor → Watch & shop): a dark band, one style video per slide on a native scroll-snap track (arrows, dots, arrow keys; on phones 84%-wide slides so the next peeks in), each with its title, a ~30-word excerpt of its intro, the tagged pieces (rows with a play-from-here time chip, lit while that piece is on screen), "Watch the full video" and "Shop all N" (`data-outfit`). `assets/js/omc-reel.js`: one video plays at a time, a slide swiped away or the section scrolled off pauses; while playing, each moment's piece pops up over the video as the video page's `.omc-vpop` (same timing/hold/× rules as omc-video.js, CSS from omc-video.css which the home page loads). Moments are `omc_video_shop_moments()` (Page Editor → Shoppable videos). |
 | `returns.php` | Returns & exchanges request form: My account endpoint `returns` (+ a button on view-order) and under the returns policy page (`omc_policy_after_text` hook in page-policy.php). Guests find the order by number + billing email (rate-limited); every order carries an HMAC token. A request adds a private order note, `_omc_return_requests` meta, photos in the media library (`_omc_return_order`), and emails the shop (`omc_returns_recipient`). Nothing is refunded automatically. |
 
 Two shared filters tie them together: `omc_meta_description` (a page supplies its own description to

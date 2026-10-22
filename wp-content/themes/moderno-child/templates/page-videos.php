@@ -22,7 +22,7 @@ $omc_intro  = $omc_hub && ! empty( $omc_hub['intro'] ) ? $omc_hub['intro'] : get
 
 	<section class="omc-videos__hero">
 		<div class="l-section__container">
-			<p class="omc-eyebrow"><?php esc_html_e( 'Style videos', 'moderno-child' ); ?></p>
+			<p class="omc-eyebrow"><?php esc_html_e( 'Watch again', 'moderno-child' ); ?></p>
 			<h1 class="omc-videos__title"><?php the_title(); ?></h1>
 			<?php if ( $omc_intro ) : ?>
 				<p class="omc-videos__lede"><?php echo wp_kses_post( $omc_intro ); ?></p>

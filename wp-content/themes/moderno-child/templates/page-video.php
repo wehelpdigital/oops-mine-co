@@ -45,9 +45,9 @@ $omc_hub = get_page_by_path( 'videos' );
 			<div class="omc-video__intro">
 				<p class="omc-eyebrow">
 					<?php if ( $omc_hub ) : ?>
-						<a href="<?php echo esc_url( get_permalink( $omc_hub ) ); ?>"><?php esc_html_e( 'Style videos', 'moderno-child' ); ?></a>
+						<a href="<?php echo esc_url( get_permalink( $omc_hub ) ); ?>"><?php esc_html_e( 'Past live streams', 'moderno-child' ); ?></a>
 					<?php else : ?>
-						<?php esc_html_e( 'Style videos', 'moderno-child' ); ?>
+						<?php esc_html_e( 'Past live streams', 'moderno-child' ); ?>
 					<?php endif; ?>
 				</p>
 				<h1 class="omc-video__title"><?php echo esc_html( $omc_v['title'] ); ?></h1>
@@ -89,9 +89,9 @@ $omc_hub = get_page_by_path( 'videos' );
 				<?php
 				omc_section_head(
 					__( 'Keep watching', 'moderno-child' ),
-					__( 'More from the <em>rack</em>', 'moderno-child' ),
+					__( 'More past <em>live streams</em>', 'moderno-child' ),
 					$omc_hub ? get_permalink( $omc_hub ) : '',
-					$omc_hub ? __( 'All videos', 'moderno-child' ) : ''
+					$omc_hub ? __( 'All past live streams', 'moderno-child' ) : ''
 				);
 				?>
 				<div class="omc-video-cards">

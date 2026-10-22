@@ -286,16 +286,6 @@ function omc_pe_schema() {
 						'live.url'     => [ 'type' => 'url', 'label' => __( 'Facebook page or live link', 'moderno-child' ), 'mod' => 'omc_live_url', 'default' => 'https://www.facebook.com/' ],
 					],
 				],
-				'reel'       => [
-					'label'  => __( 'Watch & shop', 'moderno-child' ),
-					'note'   => __( 'The style videos one at a time, under the Facebook Live card. While one plays, each piece tagged in it pops up at its moment — the pieces and their times are set in Page Editor → Shoppable videos.', 'moderno-child' ),
-					'fields' => [
-						'reel.enabled' => [ 'type' => 'toggle', 'label' => __( 'Show the videos', 'moderno-child' ), 'default' => true ],
-						'reel.eyebrow' => $text( __( 'Small heading', 'moderno-child' ), __( 'Watch & shop', 'moderno-child' ) ),
-						'reel.title'   => $em( __( 'Heading', 'moderno-child' ), __( 'Press play, *shop the look*', 'moderno-child' ) ),
-						'reel.text'    => $area( __( 'Text', 'moderno-child' ), __( 'Each piece pops up the moment it is on screen — tap the bag to add it, or swipe on to the next video.', 'moderno-child' ) ),
-					],
-				],
 				'drop'       => [
 					'label'  => __( 'Next drop', 'moderno-child' ),
 					'note'   => __( 'A countdown to new arrivals with “Remind me”. Everyone who leaves an email gets the “Drop reminder — it is open” email (WHD → Emails) when it opens; then the card links to the drop for a week and goes away on its own.', 'moderno-child' ),
@@ -417,10 +407,10 @@ function omc_pe_schema() {
 					'fields' => $prefix( 'loved', $head( __( 'Most loved', 'moderno-child' ), __( 'The pieces everyone keeps *reaching for*', 'moderno-child' ), __( 'Shop best sellers', 'moderno-child' ) ) ),
 				],
 				'videos'     => [
-					'label'  => __( 'Style videos', 'moderno-child' ),
-					'note'   => __( 'Shows the three newest style videos.', 'moderno-child' ),
-					'fields' => $prefix( 'videos', $head( __( 'Watch', 'moderno-child' ), __( 'See how it *moves*', 'moderno-child' ), __( 'All videos', 'moderno-child' ) ) ) + [
-						'videos.lede' => $area( __( 'Intro', 'moderno-child' ), __( 'Photographs give you the colour. Video gives you the movement — how a korean fashion skirt swings when you walk, where a waistband actually sits, how a sheer panel reads in daylight. We film every rack before it goes online: the ruffles and organza, the chic boho clothes, the one statement fashion piece that gets asked about twice.', 'moderno-child' ), [ 'help' => __( 'Carries search phrases (korean fashion, chic boho clothes, statement fashion) — keep them if you rewrite it.', 'moderno-child' ) ] ),
+					'label'  => __( 'Past live streams', 'moderno-child' ),
+					'note'   => __( 'Shows the three newest past live streams (the style videos).', 'moderno-child' ),
+					'fields' => $prefix( 'videos', $head( __( 'Past live streams', 'moderno-child' ), __( 'Missed a live? *Watch it again*', 'moderno-child' ), __( 'All past live streams', 'moderno-child' ) ) ) + [
+						'videos.lede' => $area( __( 'Intro', 'moderno-child' ), __( 'Missed one of our live streams? Every past live stream is here to watch again — how a korean fashion skirt swings when you walk, where a waistband actually sits, how a sheer panel reads in daylight. The ruffles and organza, the chic boho clothes, the one statement fashion piece that gets asked about twice.', 'moderno-child' ), [ 'help' => __( 'Carries search phrases (korean fashion, chic boho clothes, statement fashion) — keep them if you rewrite it.', 'moderno-child' ) ] ),
 					],
 				],
 				'journal'    => [

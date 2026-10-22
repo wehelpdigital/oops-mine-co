@@ -1320,6 +1320,11 @@ $tree = [];
 /* Home first. The logo links there too, but a shopper three pages deep looks for the word, and on
    a phone the logo is a monogram rather than something that reads as "go back to the start". */
 $tree[] = $menu_link( 'Home', home_url( '/' ) );
+// The style videos are the past live streams; the owner wants them next to Home, under that name.
+$videos_item = $menu_post( 'videos', 'Past Live Streams' );
+if ( $videos_item ) {
+	$tree[] = $videos_item;
+}
 $shop_children = array_values( array_filter( [
 	$column_new ? $menu_link( 'New & Now', '#' ) + [ 'children' => $column_new ] : null,
 	$column_category ? $menu_link( 'Shop by category', '#' ) + [ 'children' => $column_category ] : null,
@@ -1341,11 +1346,6 @@ foreach ( [
 	if ( $item ) {
 		$tree[] = $item;
 	}
-}
-// Style videos, when import-videos.php has created the hub.
-$videos_item = $menu_post( 'videos', 'Videos' );
-if ( $videos_item ) {
-	$tree[] = $videos_item;
 }
 $tree[] = $journal_item;
 if ( $about_id ) {
