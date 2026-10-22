@@ -1894,6 +1894,9 @@
 @media (max-width: 767px) {
 	.woocommerce-cart .omc-disctab,
 	.woocommerce-checkout .omc-disctab { display: none; }
+	/* On a product page the theme pins its quantity + Add to bag bar to the foot of the screen
+	   (70px tall), and the pill sat on the Add to bag button. It rides just above the bar there. */
+	body:has(.c-product__atc-row-1--sticky) .omc-disctab { bottom: 84px; }
 }
 body:has(.js-cart-sidebar.c-shop-sidebar--active) .omc-disctab { display: none; }
 

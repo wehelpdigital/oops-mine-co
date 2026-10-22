@@ -621,3 +621,42 @@
 .omc-mysize.is-on .omc-mysize__knob { transform: translateX(16px); }
 .omc-mysize__note { font: 400 12px/1.5 var(--omc-sans); color: var(--omc-muted); }
 .omc-mysize__switch:focus-visible { outline: 2px solid var(--omc-rose); outline-offset: 2px; }
+
+/* ─── Headings inside posts and pages: the serif at every level (h3 fell back to the theme's heavy
+   sans, a second, louder voice on a phone — the journal's "Questions, answered"), and no automatic
+   hyphenation, which split "han-bok" and "tradi-tional" across lines. ─── */
+.entry-content :is(h3, h4) { font-family: var(--omc-serif); font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--omc-ink); }
+.entry-content :is(h1, h2, h3, h4, h5, h6) { hyphens: manual; overflow-wrap: break-word; text-wrap: balance; }
+
+/* ─── Checkout tick boxes with a sentence beside them (the newsletter opt-in, the terms): the words
+   hang beside the box instead of wrapping back under it, in sentence case rather than capitals. ─── */
+.woocommerce-checkout .woocommerce-input-wrapper > label.checkbox,
+.woocommerce-checkout .c-form__terms-and-conditions label.checkbox {
+	position: relative;
+	display: block;
+	padding-left: 30px;
+	font-size: 14px;
+	font-weight: 400;
+	line-height: 1.5;
+	letter-spacing: 0;
+	text-transform: none;
+}
+/* The theme pins every checkbox `position: relative !important`, so the box is pulled back into the
+   padding with a negative margin rather than positioned: 18px box + 12px gap = the 30px indent. */
+.woocommerce-checkout .woocommerce-input-wrapper > label.checkbox > input,
+.woocommerce-checkout .c-form__terms-and-conditions label.checkbox > input { margin: -0.15rem 12px 0 -30px; }
+
+@media (max-width: 767px) {
+	/* The breadcrumb over a page title: one line, the current page's name cut short. On a journal post
+	   it repeated the whole title in capitals, two lines of it, right above the title itself. */
+	.c-page-header .c-breadcrumbs { max-width: 100%; overflow: hidden; }
+	.c-page-header .c-breadcrumbs__list { flex-wrap: nowrap; max-width: 100%; }
+	.c-page-header .c-breadcrumbs__item { flex: 0 0 auto; }
+	.c-page-header .c-breadcrumbs__item--last { flex: 0 1 auto; min-width: 0; overflow: hidden; }
+	.c-page-header .c-breadcrumbs__item--last > span { display: block; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+	/* Order tracking: the email box and Track sat side by side, the placeholder cut off mid-word. */
+	.track_order .form-row-first,
+	.track_order .form-row-last { float: none; width: 100%; }
+	.track_order .form-row .button { width: 100%; }
+}
