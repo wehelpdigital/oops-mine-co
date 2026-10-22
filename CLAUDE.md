@@ -152,7 +152,7 @@ Chromium harness for that lives in the session scratchpad, not in the repo.
 `functions.php` requires every name in one list near the top:
 
 ```php
-foreach ( [ 'video', 'landing', 'pdp', 'cart', 'social' ] as $omc_module ) { ... }
+foreach ( [ 'video', 'landing', 'pdp', 'cart', 'social', 'perf', 'schema', 'images', 'seo-doc', 'page-editor' ] as $omc_module ) { ... }
 ```
 
 Each file is self-contained and hooks itself, so adding a feature means dropping in `inc/<name>.php` and adding the
@@ -166,9 +166,27 @@ in `moderno_child_enqueue_styles()` (video, cart, pdp), always with the `omc` or
 | `pdp.php` | Product page: size-guide modal, scarcity line, trust badges, review photos. |
 | `cart.php` | Slide-out cart drawer, free-shipping progress bar, drawer trust line. |
 | `social.php` | Social/UGC band and the feed on the home and product pages. |
+| `page-editor.php` | **Page Editor** (top-level admin menu, page `omc-page-editor`, `edit_theme_options`): the home and About pages' words and photos. See below. |
 
 Two shared filters tie them together: `omc_meta_description` (a page supplies its own description to
 `omc_seo_head()`) and `omc_social_links` / `omc_social_profiles` (footer icons and the Organization `sameAs`).
+
+**Page Editor.** `omc_pe_schema()` lists every editable field, page → section → field in page order, with its
+default (a value, or a closure called with the override filters off — `omc_pe_raw()`). Overrides live in the option
+`omc_page_content` (`[ 'home' => [ key => value ], 'about' => [...] ]`) and only where a value differs from its
+default; an emptied field means "the default", so code improvements still reach untouched fields. Templates read
+copy with `omc_pe_copy()` / `omc_pe_link()` / `omc_pe_head( $section, $url, $id )` (`*word*` → `<em>` via
+`omc_pe_em()`); the data functions (`omc_images`, `omc_hero_images`, `omc_hero_phrases`, `omc_usp_items`,
+`omc_home_mosaic`, `omc_home_banners`, `omc_home_type_words`, `omc_stylist_band`, `omc_testimonials_fallback`) take
+the overrides through their own filters at priority 20. Pictures are stored as attachment ids. The Facebook Live
+fields are the Customizer's `omc_live_*` theme mods, read and written in place. The About page's heading, tagline,
+picture and body override the page's own title/`omc_tagline`/thumbnail/content **without touching the post** —
+`publish-site.php` rewrites that page every run and would otherwise put the old words back. The admin screen
+(`assets/js/page-editor.js` + `assets/css/page-editor.css`) is built from the schema; the About body uses
+`wp.editor.initialize` (the classic `editor` script — not the `wp-editor` block package, which replaces `wp.editor`),
+and paints after DOMContentLoaded because WordPress prints TinyMCE after the page's own scripts. Ways in: the Pages
+list row action and an "Edit this page" admin-bar link on either page. Adding an editable thing = a schema entry +
+reading it in the template or through the data function's filter.
 
 **The free-shipping bar makes a commercial promise.** `omc_free_shipping_rule()` has no fallback number on purpose:
 it reads a real WooCommerce free-shipping zone first, then `whd_settings['free_shipping_threshold']` (0 means off).

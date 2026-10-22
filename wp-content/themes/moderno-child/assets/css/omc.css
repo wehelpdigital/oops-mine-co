@@ -484,6 +484,55 @@
 .omc-cat:hover .omc-cat__name::after { right: 0; }
 .omc-cat__count { font: 500 11px/1 var(--omc-sans); letter-spacing: .14em; text-transform: uppercase; color: var(--omc-muted); }
 
+/* ─── Shop by style: text cards for the keyword pages (omc_home_styles()), under the category tiles.
+   No photos on purpose — the tiles above already carry the pictures; this row is the words people
+   search with, and a fifth row of images would bury them. 4 → 3 → 2 → 1 columns. ─── */
+.omc-styles__lede {
+	max-width: 760px;
+	margin: calc(-1 * clamp(10px, 1.6vw, 22px)) 0 clamp(22px, 2.6vw, 34px);
+	font: 400 clamp(15px, 1.2vw, 18px)/1.7 var(--omc-sans);
+	color: var(--omc-text);
+	text-wrap: pretty;
+}
+.omc-styles__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(12px, 1.4vw, 18px); }
+.omc-style {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: clamp(18px, 1.8vw, 24px);
+	background: var(--omc-cream);
+	border: 1px solid var(--omc-line);
+	color: inherit;
+	text-decoration: none;
+	transition: border-color .25s var(--omc-ease), transform .25s var(--omc-ease), box-shadow .25s var(--omc-ease);
+}
+.omc-style:hover { border-color: var(--omc-rose); transform: translateY(-3px); box-shadow: 0 24px 48px -34px rgba(58, 43, 38, .5); }
+.omc-style__title { font-family: var(--omc-serif); font-weight: 500; font-size: clamp(20px, 1.7vw, 24px); line-height: 1.2; color: var(--omc-ink); }
+.omc-style__text { font: 400 14px/1.6 var(--omc-sans); color: var(--omc-text); }
+.omc-style__more { display: inline-flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 6px; font: 600 11px/1 var(--omc-sans); letter-spacing: .16em; text-transform: uppercase; color: var(--omc-rose-dark); }
+.omc-style__more .omc-icon { width: 15px; height: 15px; transition: transform .25s var(--omc-ease); }
+.omc-style:hover .omc-style__more .omc-icon { transform: translateX(4px); }
+@media (max-width: 1023px) { .omc-styles__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+/* Phones: twelve stacked cards ran to two screens, so the row scrolls sideways instead, one and a
+   bit cards in view so the next one shows there is more. */
+@media (max-width: 767px) {
+	.omc-styles__grid {
+		grid-template-columns: none;
+		grid-auto-flow: column;
+		grid-auto-columns: 72%;   /* not minmax(0, …): the minimum lets the columns collapse to fit */
+		overflow-x: auto;
+		overscroll-behavior-x: contain;
+		scroll-snap-type: x mandatory;
+		scrollbar-width: none;
+		padding-bottom: 4px;
+	}
+	.omc-styles__grid::-webkit-scrollbar { display: none; }
+	.omc-style { scroll-snap-align: start; }
+	.omc-style:hover { transform: none; }
+	.omc-style__text { font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) { .omc-style, .omc-style__more .omc-icon { transition: none; } .omc-style:hover { transform: none; } }
+
 /* ─── Product sections: the theme's product cards restyled to match the category cards
    (sand card inside a hairline border, square white photo frame, serif name). Hover buttons,
    quick view, wishlist, badges and swatches are the parent's and keep working. ─── */

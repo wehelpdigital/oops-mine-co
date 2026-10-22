@@ -669,7 +669,9 @@ function omc_landing_related( $slugs, $args = [] ) {
 		if ( ! $slug || $slug === get_post_field( 'post_name', get_the_ID() ) ) {
 			continue;
 		}
-		$page = get_page_by_path( $slug );
+		// Journal posts are siblings too. get_page_by_path() looks at pages only unless told
+		// otherwise, so every post named here was being dropped without a word.
+		$page = get_page_by_path( $slug, OBJECT, [ 'page', 'post' ] );
 		if ( ! $page || 'publish' !== $page->post_status ) {
 			continue;
 		}
