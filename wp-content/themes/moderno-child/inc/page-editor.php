@@ -286,6 +286,16 @@ function omc_pe_schema() {
 						'live.url'     => [ 'type' => 'url', 'label' => __( 'Facebook page or live link', 'moderno-child' ), 'mod' => 'omc_live_url', 'default' => 'https://www.facebook.com/' ],
 					],
 				],
+				'reel'       => [
+					'label'  => __( 'Watch & shop', 'moderno-child' ),
+					'note'   => __( 'The style videos one at a time, under the Facebook Live card. While one plays, each piece tagged in it pops up at its moment — the pieces and their times are set in Page Editor → Shoppable videos.', 'moderno-child' ),
+					'fields' => [
+						'reel.enabled' => [ 'type' => 'toggle', 'label' => __( 'Show the videos', 'moderno-child' ), 'default' => true ],
+						'reel.eyebrow' => $text( __( 'Small heading', 'moderno-child' ), __( 'Watch & shop', 'moderno-child' ) ),
+						'reel.title'   => $em( __( 'Heading', 'moderno-child' ), __( 'Press play, *shop the look*', 'moderno-child' ) ),
+						'reel.text'    => $area( __( 'Text', 'moderno-child' ), __( 'Each piece pops up the moment it is on screen — tap the bag to add it, or swipe on to the next video.', 'moderno-child' ) ),
+					],
+				],
 				'drop'       => [
 					'label'  => __( 'Next drop', 'moderno-child' ),
 					'note'   => __( 'A countdown to new arrivals with “Remind me”. Everyone who leaves an email gets the “Drop reminder — it is open” email (WHD → Emails) when it opens; then the card links to the drop for a week and goes away on its own.', 'moderno-child' ),

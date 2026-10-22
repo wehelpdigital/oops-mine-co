@@ -4,7 +4,7 @@
  * Template Post Type: page
  *
  * Editorial storefront home page for Oops, Mine Co. Sections, top to bottom:
- * hero → trust strip → stylist band → this or that → Facebook Live card → next drop → shop-the-look mosaic → split
+ * hero → trust strip → stylist band → this or that → Facebook Live card → watch & shop (videos) → next drop → shop-the-look mosaic → split
  * campaign banner → edit carousel → mirrored campaign banner → shop by category → shop by style →
  * brand story → new arrivals → wide banners → most loved → style videos → styling
  * notes (journal) → reviews → from our feed → newsletter.
@@ -263,6 +263,13 @@ get_header();
 			</div>
 		</section>
 	<?php endif; ?>
+
+	<!-- ───────────── Watch & shop: the style videos one at a time, shoppable as they play (Page Editor → Watch & shop; inc/reel.php) ───────────── -->
+	<?php
+	if ( function_exists( 'omc_reel_section' ) ) {
+		omc_reel_section();
+	}
+	?>
 
 	<!-- ───────────── Next drop: countdown + "Remind me" (Page Editor → Next drop; inc/drops.php) ───────────── -->
 	<?php

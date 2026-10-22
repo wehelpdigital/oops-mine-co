@@ -19,7 +19,7 @@ define( 'OMC_DIR', get_stylesheet_directory() );
 define( 'OMC_URI', get_stylesheet_directory_uri() );
 
 /* Feature modules (each file is self-contained and hooks itself). */
-foreach ( [ 'video', 'landing', 'pdp', 'cart', 'social', 'perf', 'schema', 'images', 'seo-doc', 'page-editor', 'shop-kit', 'pdp-extras', 'video-shop', 'video-writer', 'my-size', 'drops', 'swipe', 'returns' ] as $omc_module ) {
+foreach ( [ 'video', 'landing', 'pdp', 'cart', 'social', 'perf', 'schema', 'images', 'seo-doc', 'page-editor', 'shop-kit', 'pdp-extras', 'video-shop', 'video-writer', 'my-size', 'drops', 'swipe', 'reel', 'returns' ] as $omc_module ) {
 	$omc_module_file = OMC_DIR . '/inc/' . $omc_module . '.php';
 	if ( file_exists( $omc_module_file ) ) {
 		require_once $omc_module_file;
