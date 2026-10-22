@@ -475,6 +475,16 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
 - **Wear it with** (`WHD_Stylist::goes_with()`): the stylist's scoring with answers derived from the piece (its colour
   families, a quiet partner for a loud piece), kept to complementary garment families (`family()`), cached 6 h per
   product in `whd_goes_<id>`. The stylist also reads the wishlist cookie (`likes()`/`taste()`) as a small bonus.
+- **Product picks in emails** (email block `products`, "You might want to check these"): a 2- or 3-across grid of
+  photo, name, price and "Shop it", chosen at send time by `WHD_Emails::picks( $ctx, $from, $count, $size )` —
+  `auto` = `goes_with()` for each piece in the order/bag, then `wc_get_related_products()`, topped up with the newest;
+  or `new` / `best` / `sale`. Only published, visible, in-stock, photographed pieces not already in the order or bag;
+  fewer than two → the block prints nothing. Links carry `utm_source=whd&utm_medium=email&utm_campaign=<trigger>`
+  (`$ctx['trigger']`, set by `render_wc()`, `send_custom()` and `preview_context()`). `picks_plan()` lists the
+  emails that carry it (order processing/completed, new account, the three cart reminders, welcome, wheel prize,
+  drop) — not password, verify, failed/cancelled/refunded, on-hold, invoice, note, back-in-stock or the stylist's
+  edit. Defaults include it; `add_picks()` put it into designs saved before 1.18.0, once (flag `whd_emails_picks`),
+  so deleting the block in the editor sticks. Product photos are all square, which keeps the grid even.
 - `WHD_AI::call()` takes `$options['images']` (attachment IDs or paths) and sends them as vision parts for all three
   providers; `WHD_AI::picture_part()` resizes a copy to `VISION_EDGE` first so a phone photo is not sent whole.
 - Admin: menu `WHD`; editor screen `admin.php?page=whd-editor&type=popup|email&id=<id>` (vanilla JS in

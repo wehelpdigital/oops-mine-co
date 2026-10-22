@@ -157,6 +157,26 @@ final class WHD_Blocks {
 				'icon'   => '🛒',
 				'fields' => [ 'show_images' => [ 'type' => 'toggle', 'label' => __( 'Show product images', 'whd' ), 'default' => 1 ] ],
 			];
+			// Pieces from the shop with their photos — chosen when the email is sent (WHD_Emails::picks()).
+			$types['products'] = [
+				'label'  => __( 'Product picks', 'whd' ),
+				'icon'   => '❖',
+				'fields' => [
+					'title'   => [ 'type' => 'text', 'label' => __( 'Heading', 'whd' ), 'default' => __( 'You might want to check these', 'whd' ) ],
+					'text'    => [ 'type' => 'text', 'label' => __( 'Line under it (optional)', 'whd' ), 'default' => '' ],
+					'from'    => [ 'type' => 'select', 'label' => __( 'Which pieces', 'whd' ), 'default' => 'auto', 'options' => [
+						'auto' => __( 'What goes with the order or bag (else the newest)', 'whd' ),
+						'new'  => __( 'Newest arrivals', 'whd' ),
+						'best' => __( 'Best sellers', 'whd' ),
+						'sale' => __( 'On sale', 'whd' ),
+					] ],
+					'count'   => [ 'type' => 'number', 'label' => __( 'How many', 'whd' ), 'default' => 4, 'min' => 2, 'max' => 6 ],
+					'columns' => [ 'type' => 'select', 'label' => __( 'Per row', 'whd' ), 'default' => '2', 'options' => [ '2' => '2', '3' => '3' ] ],
+					'price'   => [ 'type' => 'toggle', 'label' => __( 'Show prices', 'whd' ), 'default' => 1 ],
+					'button'  => [ 'type' => 'text', 'label' => __( 'Link under each piece (leave empty for none)', 'whd' ), 'default' => __( 'Shop it', 'whd' ) ],
+					'more'    => [ 'type' => 'text', 'label' => __( 'Link to the shop under them (leave empty for none)', 'whd' ), 'default' => __( 'See what’s new', 'whd' ) ],
+				],
+			];
 		}
 
 		return apply_filters( 'whd_block_types', $types, $mode );
@@ -476,6 +496,12 @@ final class WHD_Blocks {
 			case 'order_summary':
 				$inner = self::render_summary( $ctx, ! empty( $p['show_addresses'] ) );
 				break;
+
+			case 'products':
+				if ( $email && class_exists( 'WHD_Emails' ) ) {
+					$inner = self::render_picks( $p, $ctx );
+				}
+				break;
 		}
 
 		if ( '' === $inner ) {
@@ -502,6 +528,53 @@ final class WHD_Blocks {
 		}
 		return '<div class="whd-b whd-b-items" style="margin:0 0 16px"><div style="font-family:' . self::SANS . ';font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#b98b7e;margin:0 0 6px">' . esc_html( $caption ) . '</div>'
 			. '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #e9e1da;border-bottom:1px solid #e9e1da">' . $rows . '</table></div>';
+	}
+
+	/**
+	 * "You might want to check these": a grid of pieces, each a photograph, name, price and link.
+	 * Tables and inline styles only, like everything else in an email; nothing at all when the shop
+	 * has fewer than two pieces to offer, rather than a heading over an empty grid.
+	 */
+	private static function render_picks( $p, $ctx ) {
+		$cols  = '3' === (string) $p['columns'] ? 3 : 2;
+		$picks = WHD_Emails::picks( $ctx, (string) $p['from'], (int) $p['count'], 3 === $cols ? 'woocommerce_thumbnail' : 'woocommerce_single' );
+		if ( count( $picks ) < 2 ) {
+			return '';
+		}
+		$track = static function ( $url ) use ( $ctx ) {
+			// Which email a visit came from, for the shop's analytics.
+			return empty( $ctx['trigger'] ) ? $url : add_query_arg( [ 'utm_source' => 'whd', 'utm_medium' => 'email', 'utm_campaign' => $ctx['trigger'] ], $url );
+		};
+		$cell  = (int) floor( 100 / $cols );
+		$rows  = '';
+		foreach ( array_chunk( $picks, $cols ) as $row ) {
+			$rows .= '<tr>';
+			for ( $i = 0; $i < $cols; $i++ ) {
+				$it = $row[ $i ] ?? null;
+				if ( ! $it ) {
+					$rows .= '<td width="' . $cell . '%" style="width:' . $cell . '%;padding:0 6px 22px"></td>';
+					continue;
+				}
+				$url   = esc_url( $track( $it['url'] ) );
+				$rows .= '<td width="' . $cell . '%" valign="top" style="width:' . $cell . '%;padding:0 6px 22px;vertical-align:top;text-align:center">'
+					. '<a href="' . $url . '" style="text-decoration:none"><img src="' . esc_url( $it['image'] ) . '" alt="' . esc_attr( $it['name'] ) . '" width="' . ( 3 === $cols ? 168 : 252 ) . '" style="display:block;width:100%;height:auto;border:0;background:#f4efea"></a>'
+					. '<p style="margin:12px 0 4px;font-family:' . self::SERIF . ';font-size:' . ( 3 === $cols ? 16 : 18 ) . 'px;font-weight:500;line-height:1.25;color:#3a2b26"><a href="' . $url . '" style="color:#3a2b26;text-decoration:none">' . esc_html( $it['name'] ) . '</a></p>'
+					. ( ! empty( $p['price'] ) && '' !== $it['price'] ? '<p style="margin:0 0 8px;font-family:' . self::SANS . ';font-size:13px;font-weight:600;line-height:1.4;color:#9c6f63">' . $it['price'] . '</p>' : '' )
+					. ( '' !== trim( $p['button'] ) ? '<a href="' . $url . '" style="font-family:' . self::SANS . ';font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#3a2b26;text-decoration:underline">' . esc_html( self::merge( $p['button'], $ctx ) ) . '</a>' : '' )
+					. '</td>';
+			}
+			$rows .= '</tr>';
+		}
+		$more = '' !== trim( $p['more'] ) && ! empty( $ctx['data']['shop_url'] )
+			? '<div style="text-align:center;margin:0 0 6px"><a href="' . esc_url( $track( $ctx['data']['shop_url'] ) ) . '" style="display:inline-block;padding:13px 26px;border:1px solid #3a2b26;color:#3a2b26;text-decoration:none;font-family:' . self::SANS . ';font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;line-height:1">' . esc_html( self::merge( $p['more'], $ctx ) ) . '</a></div>'
+			: '';
+
+		return '<div class="whd-b whd-b-picks" style="margin:14px 0 18px;padding-top:26px;border-top:1px solid #e9e1da">'
+			. '<p style="margin:0 0 6px;font-family:' . self::SERIF . ';font-size:26px;font-weight:500;line-height:1.2;text-align:center;color:#3a2b26">' . esc_html( self::merge( $p['title'], $ctx ) ) . '</p>'
+			. ( '' !== trim( $p['text'] ) ? '<p style="margin:0 0 4px;font-family:' . self::SANS . ';font-size:14px;line-height:1.6;text-align:center;color:#7d7470">' . esc_html( self::merge( $p['text'], $ctx ) ) . '</p>' : '' )
+			. '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:16px;table-layout:fixed">' . $rows . '</table>'
+			. $more
+			. '</div>';
 	}
 
 	private static function render_summary( $ctx, $addresses ) {

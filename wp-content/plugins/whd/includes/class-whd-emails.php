@@ -121,6 +121,148 @@ final class WHD_Emails {
 		return count( $ids );
 	}
 
+	/**
+	 * The emails that carry "You might want to check these", and what each shows there. Not the
+	 * ones about money gone wrong, passwords or a single awaited piece, where a sales grid would
+	 * be in the way; not the stylist's edit, which is all pieces already.
+	 */
+	public static function picks_plan(): array {
+		$goes = __( 'Pieces that go with what you chose.', 'whd' );
+		$new  = __( 'The newest pieces in the shop.', 'whd' );
+		return [
+			'customer_processing_order' => [ __( 'You might want to check these', 'whd' ), $goes, 'auto' ],
+			'customer_completed_order'  => [ __( 'You might want to check these', 'whd' ), $goes, 'auto' ],
+			'customer_new_account'      => [ __( 'You might want to check these', 'whd' ), $new, 'new' ],
+			'abandoned_cart'            => [ __( 'You might want to check these too', 'whd' ), $goes, 'auto' ],
+			'abandoned_cart_2'          => [ __( 'You might want to check these too', 'whd' ), $goes, 'auto' ],
+			'abandoned_cart_3'          => [ __( 'You might want to check these too', 'whd' ), $goes, 'auto' ],
+			'welcome_subscriber'        => [ __( 'You might want to check these', 'whd' ), $new, 'new' ],
+			'wheel_prize'               => [ __( 'Somewhere to use it', 'whd' ), $new, 'new' ],
+			'drop_open'                 => [ __( 'You might want to check these', 'whd' ), $new, 'new' ],
+		];
+	}
+
+	/** The picks block for one email, as the plan has it. */
+	private static function picks_block( $id ) {
+		$plan = self::picks_plan()[ $id ] ?? null;
+		return $plan ? [ 'type' => 'products', 'props' => [ 'title' => $plan[0], 'text' => $plan[1], 'from' => $plan[2], 'count' => 4, 'columns' => '2', 'price' => 1, 'button' => __( 'Shop it', 'whd' ), 'more' => __( 'See what’s new', 'whd' ) ] ] : null;
+	}
+
+	/**
+	 * Put the picks into designs saved before the block existed — once, after the button (or
+	 * before the sign-off), never twice. A design saved since keeps whatever its owner made of it:
+	 * deleting the block in the editor sticks.
+	 */
+	public static function add_picks() {
+		if ( get_option( 'whd_emails_picks' ) ) {
+			return;
+		}
+		$stored = get_option( self::OPTION, [] );
+		foreach ( array_keys( self::picks_plan() ) as $id ) {
+			$blocks = $stored[ $id ]['blocks'] ?? null;
+			if ( ! is_array( $blocks ) || ! $blocks || in_array( 'products', array_column( $blocks, 'type' ), true ) ) {
+				continue;
+			}
+			$stored[ $id ]['blocks'] = self::with_picks( $id, $blocks );
+			$stored[ $id ]           = WHD_Blocks::sanitize_design( $stored[ $id ], 'email' );
+		}
+		update_option( self::OPTION, $stored, false );
+		update_option( 'whd_emails_picks', 1, false );
+	}
+
+	/** The blocks with the picks after the email's main business — its last button, code, items or photo. */
+	private static function with_picks( $id, array $blocks ): array {
+		$pick = self::picks_block( $id );
+		if ( ! $pick ) {
+			return $blocks;
+		}
+		$at = count( $blocks );
+		foreach ( $blocks as $i => $block ) {
+			if ( in_array( $block['type'] ?? '', [ 'button', 'coupon', 'cart_items', 'order_summary', 'image' ], true ) ) {
+				$at = $i + 1;
+			}
+		}
+		array_splice( $blocks, $at, 0, [ $pick ] );
+		return $blocks;
+	}
+
+	/**
+	 * Pieces for a "Product picks" block, chosen as the email is sent.
+	 *
+	 * "auto": what goes with the order or bag — the stylist's pairing for each piece in it, then
+	 * WooCommerce's related pieces — topped up with the newest. Only pieces somebody could buy
+	 * today: published, shown in the catalogue, in stock, photographed, and not already in this
+	 * order or bag.
+	 *
+	 * @param array  $ctx   The email's context (its items, its bag).
+	 * @param string $from  auto | new | best | sale
+	 * @param int    $count How many.
+	 * @param string $size  Image size for the photographs.
+	 * @return array[] [ name, url, image, price (HTML, inline-styled) ]
+	 */
+	public static function picks( array $ctx, string $from = 'auto', int $count = 4, string $size = 'woocommerce_single' ): array {
+		if ( ! function_exists( 'wc_get_products' ) ) {
+			return [];
+		}
+		$own = [];
+		foreach ( array_merge( (array) ( $ctx['items'] ?? [] ), (array) ( $ctx['cart_items'] ?? [] ) ) as $it ) {
+			if ( ! empty( $it['product_id'] ) ) {
+				$own[] = (int) $it['product_id'];
+			}
+		}
+		$own    = array_values( array_unique( $own ) );
+		$newest = [ 'status' => 'publish', 'limit' => 30, 'stock_status' => 'instock', 'return' => 'ids', 'orderby' => 'date', 'order' => 'DESC' ];
+		$ids    = [];
+		if ( 'auto' === $from ) {
+			foreach ( $own as $id ) {
+				$ids = array_merge( $ids, class_exists( 'WHD_Stylist' ) ? WHD_Stylist::goes_with( $id, 4 ) : [] );
+			}
+			foreach ( $own as $id ) {
+				$ids = array_merge( $ids, wc_get_related_products( $id, 6, $own ) );
+			}
+		} elseif ( 'best' === $from ) {
+			$ids = wc_get_products( array_merge( $newest, [ 'orderby' => 'meta_value_num', 'meta_key' => 'total_sales' ] ) ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+		} elseif ( 'sale' === $from ) {
+			$ids = array_slice( array_reverse( wc_get_product_ids_on_sale() ), 0, 60 );
+		}
+		// Always topped up with the newest, so the grid is never half empty.
+		$ids = array_merge( $ids, wc_get_products( $newest ) );
+
+		$out  = [];
+		$seen = array_fill_keys( $own, true );
+		foreach ( $ids as $id ) {
+			$product = wc_get_product( (int) $id );
+			if ( $product && $product->get_parent_id() ) {
+				$product = wc_get_product( $product->get_parent_id() ); // a variation on sale: its piece
+			}
+			if ( ! $product || isset( $seen[ $product->get_id() ] ) ) {
+				continue;
+			}
+			$seen[ $product->get_id() ] = true;
+			if ( 'publish' !== $product->get_status() || ! $product->is_visible() || ! $product->is_in_stock() || ! $product->get_image_id() ) {
+				continue;
+			}
+			$image = wp_get_attachment_image_url( $product->get_image_id(), $size );
+			if ( ! $image ) {
+				continue;
+			}
+			// The price as the shop shows it, without the screen-reader words WooCommerce tucks in.
+			$price = preg_replace( '#<span class="screen-reader-text">.*?</span>#s', '', (string) $product->get_price_html() );
+			$price = wp_kses( $price, [ 'del' => [], 'ins' => [], 'span' => [], 'bdi' => [] ] );
+			$price = str_replace( [ '<del>', '<ins>' ], [ '<del style="color:#9c8f88;font-weight:400">', '<ins style="text-decoration:none">' ], $price );
+			$out[] = [
+				'name'  => html_entity_decode( $product->get_name(), ENT_QUOTES, 'UTF-8' ),
+				'url'   => $product->get_permalink(),
+				'image' => $image,
+				'price' => trim( $price ),
+			];
+			if ( count( $out ) >= $count ) {
+				break;
+			}
+		}
+		return $out;
+	}
+
 	/** Brand-voice starter design per trigger. */
 	public static function default_design( $id ) {
 		$b = function ( $type, $props ) { return [ 'type' => $type, 'props' => $props ]; };
@@ -161,7 +303,7 @@ final class WHD_Emails {
 		$settings = WHD_Blocks::email_settings_defaults();
 		$settings['subject']   = $entry[0];
 		$settings['preheader'] = '';
-		return [ 'settings' => $settings, 'blocks' => $entry[1] ];
+		return [ 'settings' => $settings, 'blocks' => self::with_picks( $id, $entry[1] ) ];
 	}
 
 	/* ─────────────────────────── WooCommerce take-over ─────────────────────────── */
@@ -248,8 +390,10 @@ final class WHD_Emails {
 			$data['customer_name'] = (string) ( $vars['user_display_name'] ?? '' );
 			$data['first_name']    = (string) strtok( (string) ( $vars['user_display_name'] ?? '' ), ' ' ) ?: __( 'there', 'whd' );
 		}
-		$args['data'] = $data;
-		return WHD_Blocks::render( $design, 'email', self::context( $args ) );
+		$args['data']   = $data;
+		$ctx            = self::context( $args );
+		$ctx['trigger'] = $id;
+		return WHD_Blocks::render( $design, 'email', $ctx );
 	}
 
 	/* ─────────────────────────── the sign-up coupon ─────────────────────────── */
@@ -365,6 +509,7 @@ final class WHD_Emails {
 			foreach ( $o->get_items() as $item ) {
 				$product = $item->get_product();
 				$ctx['items'][] = [
+					'product_id' => $item->get_product_id(), // the parent for a variation: product picks leave it out
 					'name'  => $item->get_name(),
 					'qty'   => $item->get_quantity(),
 					'total' => $o->get_formatted_line_subtotal( $item ),
@@ -449,7 +594,8 @@ final class WHD_Emails {
 				'cancel_url'   => home_url( '/?whd_stock_cancel=sample' ),
 			];
 		}
-		$ctx = self::context( $args );
+		$ctx            = self::context( $args );
+		$ctx['trigger'] = $id;
 		if ( empty( $ctx['items'] ) ) { // no orders yet: fake a couple of lines so item blocks preview
 			$ctx['items']  = self::sample_cart()['items'];
 			$ctx['totals'] = [ __( 'Subtotal', 'whd' ) => '$118.00', __( 'Shipping', 'whd' ) => __( 'Free', 'whd' ), __( 'Total', 'whd' ) => '$118.00' ];
@@ -479,6 +625,7 @@ final class WHD_Emails {
 		if ( ! $design || ( ! $force && empty( $design['settings']['enabled'] ) ) ) {
 			return false;
 		}
+		$ctx['trigger'] = $id;
 		$subject = wp_strip_all_tags( WHD_Blocks::merge( $design['settings']['subject'] ?: get_bloginfo( 'name' ), $ctx ) );
 		$html    = WHD_Blocks::render( $design, 'email', $ctx );
 		$headers = self::headers();
