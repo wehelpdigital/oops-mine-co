@@ -67,6 +67,7 @@
 		download: '<path d="M12 4v11"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M5 19.5h14"/>',
 		redo: '<path d="M20 11.5A8 8 0 1 1 17.7 6"/><path d="M20.5 4v4.5H16"/>',
 		library: '<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m20.5 16-4.5-4.5L7 19.5"/>',
+		tweak: '<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',
 		trash: '<path d="M4.5 7h15"/><path d="M9.5 7V4.8h5V7"/><path d="M6.5 7l.9 12.2a1.5 1.5 0 0 0 1.5 1.3h6.2a1.5 1.5 0 0 0 1.5-1.3L17.5 7"/>',
 		ok: '<path d="m5 12.5 4.2 4.2L19 7"/>',
 		warn: '<path d="M12 8v5"/><path d="M12 16.5v.5"/>',
@@ -768,6 +769,7 @@
 					'<button type="button" class="whd-ib__act" data-view title="' + esc( T.view ) + '">' + svg( 'view' ) + '<span class="screen-reader-text">' + esc( T.view ) + '</span></button>' +
 					'<a class="whd-ib__act" href="' + esc( item.pic.full || item.pic.large ) + '" download title="' + esc( T.download ) + '">' + svg( 'download' ) + '<span class="screen-reader-text">' + esc( T.download ) + '</span></a>' +
 					( item.pic.edit ? '<a class="whd-ib__act" href="' + esc( item.pic.edit ) + '" target="_blank" rel="noopener" title="' + esc( T.openLibrary ) + '">' + svg( 'library' ) + '<span class="screen-reader-text">' + esc( T.openLibrary ) + '</span></a>' : '' ) +
+					( item.pic.tweak ? '<a class="whd-ib__act" href="' + esc( item.pic.tweak ) + '" target="_blank" rel="noopener" title="' + esc( T.tweak ) + '">' + svg( 'tweak' ) + '<span class="screen-reader-text">' + esc( T.tweak ) + '</span></a>' : '' ) +
 					( item.facts ? '<button type="button" class="whd-ib__act" data-redo title="' + esc( T.redo ) + '">' + svg( 'redo' ) + '<span class="screen-reader-text">' + esc( T.redo ) + '</span></button>' : '' ) +
 					( false !== item.pic.mine ? '<button type="button" class="whd-ib__act is-danger" data-delete title="' + esc( T.delete ) + '">' + svg( 'trash' ) + '<span class="screen-reader-text">' + esc( T.delete ) + '</span></button>' : '' ) +
 				'</div>' +

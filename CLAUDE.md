@@ -288,8 +288,9 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   an open, empty level that offers the value (skipping `whdv-locked` rows, so the colour still comes first, and swatches
   marked unavailable), once — a shopper who clears it is left alone. Client-side on purpose, so a cached page never
   carries one visitor’s size to another.
-- **AI Writer** is one top-level menu with four screens: AI Posts (`whd-ai-posts`, also the parent slug), AI Pages
-  (`whd-ai-pages`), **Bulk products** (`whd-ai-products`, `WHD_AI_Products`) and **Image Builder** (both WooCommerce only). Admin assets key off
+- **AI Writer** is one top-level menu with five screens: AI Posts (`whd-ai-posts`, also the parent slug), AI Pages
+  (`whd-ai-pages`), **Bulk products** (`whd-ai-products`, `WHD_AI_Products`), **Image Builder** (both WooCommerce only) and
+  **Image Editor**. Admin assets key off
   `$_GET['page']`, never the hook name — the hook carries where an item sits in the menu, so matching on it breaks the
   moment a screen moves under a parent.
 - Bulk products: **one card per piece, each one the product screen’s Write with AI panel** — photographs, the eight
@@ -394,9 +395,17 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   `blankGhost`, so a set never repeats). It runs the studio's own `look` → `inspect` → `draw` → `check` (→ one
   redraw, loser discarded) with **post 0** — routes `whd/v1/ai/builder/*`, background jobs polled at `studio/job` —
   so pictures land unattached in the media library, marked `_whd_ib` (+ `_whd_ib_ask`); the last 12 are shown again
-  under the form after a reload. `WHD_AI_Studio::discard( 0, … )` only deletes a drawing the same user made. A
-  Canva-style post-production editor (Fabric.js) was built once and parked, unshipped, on the branch
-  `wip/image-builder-editor`.
+  under the form after a reload. `WHD_AI_Studio::discard( 0, … )` only deletes a drawing the same user made. Each
+  tile links to the Image Editor.
+- **Image Editor** (`WHD_Image_Editor`, `admin/image-editor.js` + `image-presets.js` + `image-editor-screen.js` (boot)
+  + `image-editor.css`; AI Writer → Image Editor, page `whd-image-editor`, `upload_files`): a Canva-style editor on
+  Fabric.js 5.5.2 (vendored, MIT, `admin/vendor/`). Choose images from the library (several at once — they sit in a
+  strip along the bottom, unsaved ones dotted) or start blank; templates, text presets in the fonts of `fonts()`
+  (Google Fonts, filter `whd_image_editor_fonts`), badges/stickers/emoji, shapes, filters + adjustments, sizes, layers,
+  undo. Saving (`whd/v1/image-editor/save`, a data URL checked with `getimagesizefromstring`) writes a **new**
+  attachment and keeps the layers on it (`_whd_design` JSON, `_whd_design_source`), so reopening restores them.
+  `?ids=1,2` (or `?edit=1`) opens images directly — the media library's row action / attachment details and Image
+  Builder's tiles link there.
 - **Who appears in drawn pictures** is one list, `WHD_AI_Images::people()` (filter `whd_ai_image_people`): young
   women with a stated age (23–30) and background — Korean, Thai, Japanese, Chinese, Filipina, alternating with
   white — plus `age_rule()` (22–32) in every brief. Product sets offset the list by product id; journal, page and
