@@ -817,7 +817,7 @@
 		}
 		ask( replacing ).then( function ( choice ) {
 			if ( 'overwrite' === choice ) {
-				start( chosen, notes );
+				start( chosen, notes, true );
 			} else if ( 'copy' === choice ) {
 				intoCopy( chosen, notes );
 			}
@@ -941,7 +941,8 @@
 		run( true );
 	}
 
-	function start( chosen, notes ) {
+	/* `overwrite`: the product had content and somebody chose to replace it, so it is kept for Undo first. */
+	function start( chosen, notes, overwrite ) {
 		busy = true;
 		el.go.disabled = true;
 		say( '' );
@@ -1020,6 +1021,21 @@
 			} );
 		} ).then( function ( draft ) {
 			ctx.draft = draft;
+			if ( ! overwrite ) {
+				return null;
+			}
+			// The product as it is saved now, kept on the server before a single field changes.
+			return api( 'keep', {} ).then( function ( kept ) {
+				ctx.undo = kept;
+				// An older Undo on the panel would now go back to this run's starting point, not its own.
+				Array.prototype.forEach.call( root.querySelectorAll( '.whd-studio__undo' ), function ( bar ) {
+					bar.remove();
+				} );
+			}, function ( e ) {
+				throw new Error( fmt( T.keepFailed, e.message ) );
+			} );
+		} ).then( function () {
+			var draft = ctx.draft;
 			ctx.placed = place( draft.screen || {} );
 			// The photographs this was all written from are the product's own now, if they were not already.
 			intoGallery( photos );
@@ -1126,7 +1142,96 @@
 				} ).join( '' ) + '</ul>';
 		}
 		el.result.innerHTML = html;
+		if ( ctx.undo ) {
+			el.result.insertBefore( undoBar( T.undoNow, ctx.undo.when ), el.result.firstChild );
+		}
 		el.result.hidden = false;
+	}
+
+	/* ─────────────────────────── undo ─────────────────────────── */
+
+	/* The line that offers Undo, and its button. */
+	function undoBar( text, when ) {
+		var bar = document.createElement( 'div' );
+		bar.className = 'whd-studio__undo';
+		bar.innerHTML = '<p class="whd-studio__undo-t">' + esc( text ) + '</p>' +
+			'<button type="button" class="button whd-studio__undo-go">' + esc( T.undoButton ) + '</button>';
+		var button = bar.querySelector( 'button' );
+		button.addEventListener( 'click', function () {
+			confirmUndo( when ).then( function ( yes ) {
+				if ( yes ) {
+					undo( button );
+				}
+			} );
+		} );
+		return bar;
+	}
+
+	/** Say what goes back before it does: a modal on the body, like the overwrite question. */
+	function confirmUndo( when ) {
+		return new Promise( function ( resolve ) {
+			var dialog = document.createElement( 'dialog' );
+			dialog.className = 'whd-studio-modal';
+			dialog.setAttribute( 'aria-labelledby', 'whd-studio-undo-h' );
+			dialog.setAttribute( 'aria-describedby', 'whd-studio-undo-lead' );
+			dialog.innerHTML = '<h2 class="whd-studio-modal__h" id="whd-studio-undo-h">' + esc( T.undoTitle ) + '</h2>' +
+				'<p class="whd-studio-modal__lead" id="whd-studio-undo-lead">' + esc( fmt( T.undoLead, when ) ) + '</p>' +
+				'<ul class="whd-studio-modal__list">' + ( T.undoList || [] ).map( function ( r ) {
+					return '<li>' + esc( r ) + '</li>';
+				} ).join( '' ) + '</ul>' +
+				'<p class="whd-studio-modal__lead">' + esc( T.undoFoot ) + '</p>' +
+				'<p class="whd-studio-modal__foot">' +
+					'<button type="button" class="button" data-choice="">' + esc( T.cancel ) + '</button> ' +
+					'<button type="button" class="button button-primary" data-choice="undo">' + esc( T.undoGo ) + '</button>' +
+				'</p>';
+
+			Array.prototype.forEach.call( dialog.querySelectorAll( '[data-choice]' ), function ( button ) {
+				button.addEventListener( 'click', function () {
+					dialog.close( button.getAttribute( 'data-choice' ) );
+				} );
+			} );
+			dialog.addEventListener( 'click', function ( e ) {
+				if ( e.target === dialog ) {
+					dialog.close( '' );
+				}
+			} );
+			dialog.addEventListener( 'close', function () {
+				var yes = 'undo' === dialog.returnValue;
+				dialog.remove();
+				resolve( yes );
+			} );
+
+			document.body.appendChild( dialog );
+			dialog.showModal();
+		} );
+	}
+
+	/*
+	 * The server puts the product back; the page reloads to show it. Before that, nothing may save the
+	 * run's words over it again — no autosave, and no "leave this page?" question about edits that
+	 * are being thrown away on purpose.
+	 */
+	function undo( button ) {
+		var autosave = window.wp && wp.autosave && wp.autosave.server;
+		button.disabled = true;
+		el.go.disabled = true;
+		say( T.undoing );
+		if ( autosave ) {
+			autosave.suspend();
+		}
+		api( 'undo', {} ).then( function ( r ) {
+			if ( window.jQuery ) {
+				window.jQuery( window ).off( 'beforeunload.edit-post' );
+			}
+			window.location.replace( r.edit );
+		} ).catch( function ( e ) {
+			button.disabled = false;
+			el.go.disabled = false;
+			say( e.message, true );
+			if ( autosave ) {
+				autosave.resume();
+			}
+		} );
 	}
 
 	/* ─────────────────────────── start ─────────────────────────── */
@@ -1160,6 +1265,21 @@
 	}
 
 	changedPhotos();
+
+	// Back from an Undo: say so, once, and take the flag off the address bar so a reload says nothing.
+	if ( D.undone ) {
+		var back = document.createElement( 'div' );
+		back.className = 'whd-studio__copied';
+		back.setAttribute( 'role', 'status' );
+		back.textContent = T.undone;
+		root.insertBefore( back, root.firstChild );
+		if ( window.history && window.history.replaceState ) {
+			window.history.replaceState( null, '', window.location.href.replace( /([?&])whd_studio=undone(&|$)/, '$1' ).replace( /[?&]$/, '' ) );
+		}
+	} else if ( D.undo && D.undo.when ) {
+		// An overwrite from earlier — this visit or another — that can still be undone.
+		root.insertBefore( undoBar( fmt( T.undoSince, D.undo.when ), D.undo.when ), root.firstChild );
+	}
 
 	// A copy made to write into: start once the editors on this screen are up, since the run reads them.
 	if ( D.autorun ) {

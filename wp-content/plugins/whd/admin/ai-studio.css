@@ -748,6 +748,30 @@
 	color: #3c3431;
 }
 
+/* undo an overwrite */
+
+.whd-studio__undo {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 14px;
+	margin: 4px 0 12px;
+	padding: 10px 14px;
+	border-left: 3px solid var(--whd-rose);
+	border-radius: 0 6px 6px 0;
+	background: var(--whd-sand);
+	color: #3c3431;
+}
+
+.whd-studio__undo-t {
+	flex: 1 1 260px;
+	margin: 0;
+}
+
+.whd-studio__undo-go {
+	flex: none;
+}
+
 /* overwrite, or write into a copy */
 
 .whd-studio-modal {

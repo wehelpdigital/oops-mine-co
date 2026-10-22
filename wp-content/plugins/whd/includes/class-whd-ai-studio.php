@@ -34,6 +34,9 @@
  * like any other edit. Written from here instead, the next Update would post the old values the
  * screen was loaded with straight back over them.
  *
+ * A run that overwrites a product first keeps the product as it was saved (keep), and Undo puts
+ * all of it back — before or after Update — and deletes the pictures the run drew (undo).
+ *
  * @package whd
  */
 
@@ -71,6 +74,23 @@ final class WHD_AI_Studio {
 	 */
 	const MODEL_WAIT = 240;
 
+	/** Where an overwrite keeps the product as it was (post meta), and how many days Undo is offered. */
+	const UNDO      = '_whd_studio_undo';
+	const UNDO_DAYS = 7;
+
+	/** What Undo puts back on the product itself — through WooCommerce, so its caches and lookup tables follow. */
+	const UNDO_PROPS = [ 'name', 'slug', 'description', 'short_description', 'category_ids', 'regular_price', 'sale_price', 'sku', 'manage_stock', 'stock_quantity', 'stock_status', 'backorders', 'image_id', 'gallery_image_ids' ];
+
+	/** …on each variation. */
+	const UNDO_VARIATION = [ 'attributes', 'regular_price', 'sale_price', 'sku', 'manage_stock', 'stock_quantity', 'stock_status', 'backorders', 'image_id', 'status', 'menu_order', 'description' ];
+
+	/**
+	 * …and the plugins' own fields a run fills: the size chart (WHD_Size_Charts::META), the search
+	 * snippet and its score (WHD_SEO), the story and its switch (WHD_Product_Story::META), and the
+	 * Variation tiers' levels (WHDV_Model::META).
+	 */
+	const UNDO_META = [ '_whd_size_chart', '_omc_seo_title', '_omc_meta_description', '_whd_focus_keyphrase', '_whd_seo_score', '_whd_story', '_whd_story_off', '_whdv_tiers' ];
+
 	/** The aspect ratios the image model accepts, as width / height. */
 	const RATIOS = [
 		'1:1'  => 1.0,
@@ -91,6 +111,8 @@ final class WHD_AI_Studio {
 		add_action( 'rest_api_init', [ __CLASS__, 'rest' ] );
 		// After WooCommerce saves the attributes (10) and the Variation tiers grid builds its own (20).
 		add_action( 'woocommerce_process_product_meta', [ __CLASS__, 'save_attributes' ], 30 );
+		// A copy starts with nothing to undo: the original's Undo would put the original's words on it.
+		add_filter( 'woocommerce_duplicate_product_exclude_meta', static fn( $keys ) => array_merge( (array) $keys, [ self::UNDO ] ) );
 	}
 
 	/** On wherever the AI panel is switched on for products, in WHD → AI content → Settings. */
@@ -266,6 +288,10 @@ final class WHD_AI_Studio {
 			// Offered, never pre-picked: a picked keyword must appear word for word, and the matcher
 			// behind these is loose enough to offer "petite fashion over 50" for an overshirt.
 			'suggested' => $post ? self::suggested( $post ) : [],
+			// An overwrite that can still be undone, and whether this page is the one Undo came back to.
+			'undo'      => $post_id ? self::undo_offer( $post_id ) : null,
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- only picks which note to show
+			'undone'    => isset( $_GET['whd_studio'] ) && 'undone' === sanitize_key( wp_unslash( $_GET['whd_studio'] ) ),
 			'i18n'      => self::strings(),
 		] );
 	}
@@ -343,7 +369,26 @@ final class WHD_AI_Studio {
 			'copyNote'    => __( 'A draft copy of this product, as it was last saved, gets the new content. This one stays exactly as it is — delete the copy if you do not like it.', 'whd' ),
 			'copyOff'     => __( 'Save the product once to be able to write into a copy instead.', 'whd' ),
 			'overTitle'   => __( 'Overwrite this product', 'whd' ),
-			'overNote'    => __( 'The fields listed are replaced on this screen. Nothing is saved until you press Update.', 'whd' ),
+			'overNote'    => __( 'The fields listed are replaced on this screen. Nothing is saved until you press Update — and Undo puts it all back, even after.', 'whd' ),
+			/* translators: %s: the error */
+			'keepFailed'  => __( 'Nothing was changed — what is on the product now could not be kept for Undo (%s).', 'whd' ),
+			'undoNow'     => __( 'Not what you wanted? Undo puts back everything that was here before — also after you press Update.', 'whd' ),
+			/* translators: %s: date and time, e.g. October 23, 2026 at 3:42 pm */
+			'undoSince'   => __( 'Write with AI replaced this product’s content on %s.', 'whd' ),
+			'undoButton'  => __( 'Undo — put back what was here', 'whd' ),
+			'undoTitle'   => __( 'Put back what was here before?', 'whd' ),
+			/* translators: %s: date and time, e.g. October 23, 2026 at 3:42 pm */
+			'undoLead'    => __( 'The product goes back to how it was saved before Write with AI ran on %s:', 'whd' ),
+			'undoList'    => [
+				__( 'the name, both descriptions, categories, size chart and search snippet', 'whd' ),
+				__( 'price, stock, attributes and variations', 'whd' ),
+				__( 'the main image, the gallery, the pictures’ alt text and the product story', 'whd' ),
+				__( 'the new pictures it drew are deleted from the media library', 'whd' ),
+			],
+			'undoFoot'    => __( 'Anything else changed on this product since then goes back too, and anything typed on this screen but not saved is dropped. The page reloads to show it.', 'whd' ),
+			'undoGo'      => __( 'Undo', 'whd' ),
+			'undoing'     => __( 'Putting it back…', 'whd' ),
+			'undone'      => __( 'Put back as it was before Write with AI ran.', 'whd' ),
 			'cancel'      => __( 'Cancel', 'whd' ),
 			'hintLook'       => __( 'Every photograph, edge to edge — what it is, its colours, and everything that can be counted.', 'whd' ),
 			'hintZoom'       => __( 'Close-ups of the buttons, seams and trims, cut from your photographs and counted again.', 'whd' ),
@@ -1862,6 +1907,7 @@ final class WHD_AI_Studio {
 		$rewrite = in_array( 'seo', $parts, true );
 		$dressed = 0;
 		$first   = true;
+		self::remember_pictures( $post_id, array_keys( $finals ) );
 		foreach ( $finals as $id => $slot ) {
 			$dressed += (int) self::dress( $id, is_array( $words[ $slot ] ?? null ) ? $words[ $slot ] : [], $name, $first, $rewrite, $post_id );
 			$first    = false;
@@ -2009,6 +2055,261 @@ final class WHD_AI_Studio {
 		}
 
 		return true;
+	}
+
+	/* ─────────────────────────── undo ─────────────────────────── */
+
+	/**
+	 * Keep the product as it is saved now, just before an overwrite puts anything in its fields.
+	 *
+	 * What is kept is what is saved, not what the screen shows: the run fills the screen and Update
+	 * saves it, and by the time somebody wants the old words back they have often pressed Update.
+	 * One run's worth is kept — a second overwrite keeps the product as the first one left it.
+	 *
+	 * @return array|WP_Error { when }
+	 */
+	public static function keep( int $post_id ) {
+		$product = wc_get_product( $post_id );
+		if ( ! $product ) {
+			return new WP_Error( 'whd_studio_keep', __( 'The product could not be read.', 'whd' ) );
+		}
+		$props = [];
+		foreach ( self::UNDO_PROPS as $prop ) {
+			$props[ $prop ] = $product->{'get_' . $prop}( 'edit' );
+		}
+		// As plain arrays: an object stored in post meta needs its class to be read back.
+		$props['attributes'] = array_map( static fn( WC_Product_Attribute $a ) => [
+			'id'        => $a->get_id(),
+			'name'      => $a->get_name(),
+			'options'   => $a->get_options(),
+			'position'  => $a->get_position(),
+			'visible'   => $a->get_visible(),
+			'variation' => $a->get_variation(),
+		], $product->get_attributes( 'edit' ) );
+
+		$variations = [];
+		foreach ( self::variation_ids( $post_id ) as $id ) {
+			$variation = wc_get_product( $id );
+			if ( $variation instanceof WC_Product_Variation ) {
+				$variations[ $id ] = self::variation_props( $variation );
+			}
+		}
+
+		$meta = [];
+		foreach ( self::UNDO_META as $key ) {
+			$meta[ $key ] = metadata_exists( 'post', $post_id, $key ) ? get_post_meta( $post_id, $key, true ) : null;
+		}
+
+		$record = [
+			'at'         => time(),
+			'by'         => get_current_user_id(),
+			'type'       => $product->get_type(),
+			'props'      => $props,
+			'variations' => $variations,
+			'meta'       => $meta,
+			'pictures'   => [], // filled in by finish(), before it rewrites their words
+		];
+		update_post_meta( $post_id, self::UNDO, wp_slash( $record ) );
+
+		return [ 'when' => self::when( $record['at'] ) ];
+	}
+
+	/**
+	 * Put the product back as keep() found it, and delete the pictures drawn for it since.
+	 *
+	 * Called before Update, this mostly puts back what the run saved at once — the story, the
+	 * pictures' words, a main image it set — and the reload that follows drops the rest from the
+	 * screen. Called after Update, it puts back everything Update saved too.
+	 *
+	 * @return array|WP_Error { edit, deleted }
+	 */
+	public static function undo( int $post_id ) {
+		$record = get_post_meta( $post_id, self::UNDO, true );
+		if ( ! is_array( $record ) || empty( $record['props'] ) || ! self::fresh( $record ) ) {
+			delete_post_meta( $post_id, self::UNDO );
+			return new WP_Error( 'whd_studio_no_undo', __( 'There is nothing to undo on this product any more.', 'whd' ) );
+		}
+		$class = WC_Product_Factory::get_classname_from_product_type( (string) $record['type'] );
+		if ( ! $class || ! class_exists( $class ) ) {
+			return new WP_Error( 'whd_studio_no_undo', __( 'The kind of product this was is not available any more, so it cannot be put back.', 'whd' ) );
+		}
+		self::mark( 'putting the product back as it was' );
+
+		/* Variations it did not have then go first, which frees their SKUs; a product going back to
+		   simple takes none with it. */
+		$keep = 'variable' === $record['type'] ? (array) $record['variations'] : [];
+		foreach ( self::variation_ids( $post_id ) as $id ) {
+			if ( ! isset( $keep[ $id ] ) ) {
+				$variation = wc_get_product( $id );
+				if ( $variation ) {
+					$variation->delete( true );
+				}
+			}
+		}
+
+		// Read as the kind it was: saving it as that kind is how WooCommerce changes a product's type back.
+		$product    = new $class( $post_id );
+		$props      = (array) $record['props'];
+		$attributes = [];
+		foreach ( (array) ( $props['attributes'] ?? [] ) as $key => $a ) {
+			$attribute = new WC_Product_Attribute();
+			$attribute->set_id( (int) $a['id'] );
+			$attribute->set_name( (string) $a['name'] );
+			$attribute->set_options( (array) $a['options'] );
+			$attribute->set_position( (int) $a['position'] );
+			$attribute->set_visible( (bool) $a['visible'] );
+			$attribute->set_variation( (bool) $a['variation'] );
+			$attributes[ $key ] = $attribute;
+		}
+		unset( $props['attributes'] );
+		$product->set_props( $props ); // a prop that will not take (an SKU somebody else has since) is skipped, not fatal
+		$product->set_attributes( $attributes );
+		$product->save();
+
+		foreach ( $keep as $id => $was ) {
+			$id     = (int) $id;
+			$exists = 'product_variation' === get_post_type( $id ) && (int) wp_get_post_parent_id( $id ) === $post_id;
+			$variation = $exists ? new WC_Product_Variation( $id ) : new WC_Product_Variation();
+			if ( $exists && self::variation_props( $variation ) == $was ) { // phpcs:ignore Universal.Operators.StrictComparisons -- '12' and 12 are the same price
+				continue;
+			}
+			if ( ! $exists ) {
+				$variation->set_parent_id( $post_id );
+			}
+			$variation->set_props( (array) $was );
+			$variation->save();
+		}
+		if ( 'variable' === $record['type'] ) {
+			WC_Product_Variable::sync( $post_id );
+		}
+
+		foreach ( (array) $record['meta'] as $key => $value ) {
+			if ( ! in_array( $key, self::UNDO_META, true ) ) {
+				continue;
+			}
+			if ( null === $value ) {
+				delete_post_meta( $post_id, $key );
+			} else {
+				update_post_meta( $post_id, $key, wp_slash( $value ) );
+			}
+		}
+
+		// The pictures it drew: out of the gallery above, out of the media library here.
+		$deleted = 0;
+		foreach ( self::drawn_since( $post_id, (int) $record['at'] ) as $id ) {
+			if ( ! self::shared( $id, $post_id ) && self::discard( $post_id, $id ) ) {
+				$deleted++;
+			}
+		}
+
+		foreach ( (array) ( $record['pictures'] ?? [] ) as $id => $was ) {
+			$id = (int) $id;
+			if ( 'attachment' !== get_post_type( $id ) || ! current_user_can( 'edit_post', $id ) ) {
+				continue;
+			}
+			if ( '' === (string) $was['alt'] ) {
+				delete_post_meta( $id, '_wp_attachment_image_alt' );
+			} else {
+				update_post_meta( $id, '_wp_attachment_image_alt', wp_slash( (string) $was['alt'] ) );
+			}
+			wp_update_post( wp_slash( [
+				'ID'           => $id,
+				'post_title'   => (string) $was['post_title'],
+				'post_excerpt' => (string) $was['post_excerpt'],
+				'post_content' => (string) $was['post_content'],
+			] ) );
+		}
+
+		// An autosave of the run's words would be offered back ("there is an autosave more recent…").
+		$autosave = wp_get_post_autosave( $post_id, get_current_user_id() );
+		if ( $autosave ) {
+			wp_delete_post_revision( $autosave->ID );
+		}
+
+		delete_post_meta( $post_id, self::UNDO );
+		wc_delete_product_transients( $post_id );
+		clean_post_cache( $post_id );
+
+		return [
+			'edit'    => add_query_arg( 'whd_studio', 'undone', get_edit_post_link( $post_id, 'raw' ) ),
+			'deleted' => $deleted,
+		];
+	}
+
+	/** What finish() is about to rewrite on each picture, kept the first time only: Undo goes back to before the first run. */
+	private static function remember_pictures( int $post_id, array $ids ) {
+		$record = get_post_meta( $post_id, self::UNDO, true );
+		if ( ! is_array( $record ) || ! self::fresh( $record ) ) {
+			return;
+		}
+		$record['pictures'] = (array) ( $record['pictures'] ?? [] );
+		foreach ( $ids as $id ) {
+			$post = get_post( (int) $id );
+			if ( $post && ! isset( $record['pictures'][ $post->ID ] ) ) {
+				$record['pictures'][ $post->ID ] = [
+					'alt'          => (string) get_post_meta( $post->ID, '_wp_attachment_image_alt', true ),
+					'post_title'   => $post->post_title,
+					'post_excerpt' => $post->post_excerpt,
+					'post_content' => $post->post_content,
+				];
+			}
+		}
+		update_post_meta( $post_id, self::UNDO, wp_slash( $record ) );
+	}
+
+	/** For the panel: { when } while the product has an overwrite that can still be undone, else null. */
+	private static function undo_offer( int $post_id ) {
+		$record = get_post_meta( $post_id, self::UNDO, true );
+		return is_array( $record ) && self::fresh( $record ) ? [ 'when' => self::when( (int) $record['at'] ) ] : null;
+	}
+
+	private static function fresh( array $record ): bool {
+		return time() - (int) ( $record['at'] ?? 0 ) < self::UNDO_DAYS * DAY_IN_SECONDS;
+	}
+
+	/** "October 23, 2026 at 3:42 pm", in the site's own formats and time zone. */
+	private static function when( int $at ): string {
+		/* translators: 1: date, 2: time */
+		return sprintf( __( '%1$s at %2$s', 'whd' ), wp_date( get_option( 'date_format' ), $at ), wp_date( get_option( 'time_format' ), $at ) );
+	}
+
+	/** Every variation of a product, enabled (publish) or not (private). */
+	private static function variation_ids( int $post_id ): array {
+		return array_map( 'intval', get_posts( [
+			'post_parent'      => $post_id,
+			'post_type'        => 'product_variation',
+			'post_status'      => [ 'publish', 'private' ],
+			'fields'           => 'ids',
+			'numberposts'      => -1,
+			'orderby'          => 'menu_order ID',
+			'order'            => 'ASC',
+			'suppress_filters' => true,
+		] ) );
+	}
+
+	private static function variation_props( WC_Product_Variation $variation ): array {
+		$props = [];
+		foreach ( self::UNDO_VARIATION as $prop ) {
+			$props[ $prop ] = $variation->{'get_' . $prop}( 'edit' );
+		}
+		return $props;
+	}
+
+	/** Pictures this panel drew for the product at or after a time (attached to it, marked as drawn). */
+	private static function drawn_since( int $post_id, int $at ): array {
+		if ( ! class_exists( 'WHD_AI_Images' ) ) {
+			return [];
+		}
+		return array_map( 'intval', get_posts( [
+			'post_type'        => 'attachment',
+			'post_status'      => 'inherit',
+			'post_parent'      => $post_id,
+			'fields'           => 'ids',
+			'numberposts'      => -1,
+			'meta_key'         => WHD_AI_Images::META, // phpcs:ignore WordPress.DB.SlowDBQuery -- a handful of attachments, on a button press
+			'date_query'       => [ [ 'column' => 'post_date_gmt', 'after' => gmdate( 'Y-m-d H:i:s', $at ), 'inclusive' => true ] ],
+			'suppress_filters' => true,
+		] ) );
 	}
 
 	/**
@@ -2968,7 +3269,7 @@ final class WHD_AI_Studio {
 			$id = (int) $r->get_param( 'post_id' );
 			return $id && 'product' === get_post_type( $id ) && current_user_can( 'edit_post', $id );
 		};
-		foreach ( [ 'copy', 'look', 'inspect', 'write', 'repair', 'draw', 'check', 'discard', 'finish' ] as $step ) {
+		foreach ( [ 'copy', 'look', 'inspect', 'write', 'repair', 'draw', 'check', 'discard', 'finish', 'keep', 'undo' ] as $step ) {
 			register_rest_route( 'whd/v1', '/ai/studio/' . $step, [
 				'methods'             => 'POST',
 				'callback'            => static function ( WP_REST_Request $r ) use ( $step ) {
@@ -3125,6 +3426,14 @@ final class WHD_AI_Studio {
 
 	public static function rest_finish( WP_REST_Request $r ) {
 		return self::answer( self::finish( (int) $r->get_param( 'post_id' ), $r->get_json_params() ?: [] ) );
+	}
+
+	public static function rest_keep( WP_REST_Request $r ) {
+		return self::answer( self::keep( (int) $r->get_param( 'post_id' ) ) );
+	}
+
+	public static function rest_undo( WP_REST_Request $r ) {
+		return self::answer( self::undo( (int) $r->get_param( 'post_id' ) ) );
 	}
 
 	private static function answer( $result ) {

@@ -380,6 +380,15 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   parked in a per-user transient keyed to the copy, picked up once by `?whd_studio=run` on the copy's screen and
   started on `load`), **Overwrite**, or Cancel. A duplicate **shares the original's attachments**, so `dress()`
   never rewrites alt/title on a photo another product also uses (`shared()`) — it only fills empty fields there.
+  **Undo** (overwrites only): before `place()` the `keep` step stores the product *as saved* in post meta
+  `_whd_studio_undo` — WooCommerce props (`UNDO_PROPS`), attributes as arrays, every variation (`UNDO_VARIATION`),
+  the plugins' own meta (`UNDO_META`: size chart, SEO, story, `_whdv_tiers`); `finish()` adds each picture's
+  alt/title/caption/description before `dress()` (first run wins). The `undo` step puts all of it back through
+  WooCommerce CRUD (the old type's class + save changes the type back; variations not in the record are deleted,
+  missing ones recreated), deletes pictures drawn for the product since (`WHD_AI_Images::META`, parent, date), drops
+  the user's autosave and the record, and the page reloads at `?whd_studio=undone` (autosave suspended,
+  `beforeunload.edit-post` unbound first). So it works before *and* after Update; unsaved typing is dropped. Offered
+  in the result and, for `UNDO_DAYS` (7), as a bar at the top of the panel; excluded from WooCommerce Duplicate.
   **On live the zoom step first died with a bare HTTP 500 and nothing in `debug.log`** — a PHP fatal there comes
   back as JSON *and* is logged, so the process itself was killed (the photos are ~1,000px, so not memory; Imagick
   under LiteSpeed is the likely culprit, and WordPress 7.1 does not cap Imagick's threads). Every studio request
