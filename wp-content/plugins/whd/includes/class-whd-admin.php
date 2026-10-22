@@ -18,7 +18,21 @@ final class WHD_Admin {
 		} );
 		add_action( 'admin_init', [ __CLASS__, 'register_settings' ] );
 		add_action( 'admin_enqueue_scripts', [ __CLASS__, 'assets' ] );
+		add_action( 'admin_head', [ __CLASS__, 'centre_dropdowns' ] );
 		add_action( 'rest_api_init', [ __CLASS__, 'rest' ] );
+	}
+
+	/**
+	 * WooCommerce's enhanced dropdowns (select2: the country, currency, page and unit pickers in its
+	 * settings, "Add existing" under a product's attributes…) draw their text on a 26px line at the
+	 * top of WordPress 7's 40px box, so the chosen value sat 6px high. Centred in whatever height the
+	 * box has. Printed in the head, after every stylesheet, so select2's own rules cannot win.
+	 */
+	public static function centre_dropdowns() {
+		echo '<style id="whd-centre-dropdowns">'
+			. 'body.wp-admin .select2-container .select2-selection--single{display:flex;align-items:center}'
+			. 'body.wp-admin .select2-container .select2-selection--single .select2-selection__rendered{flex:1 1 auto;min-width:0;padding-top:0;padding-bottom:0;line-height:1.4}'
+			. '</style>' . "\n";
 	}
 
 	/* ─────────────────────────── menu ─────────────────────────── */
