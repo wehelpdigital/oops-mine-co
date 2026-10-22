@@ -273,7 +273,7 @@
 		var on = keys.filter(function (p) { return state.combos[p.join('|')].on; }).length;
 
 		var head = el('div', { class: 'whdv-grid__head' });
-		head.appendChild(el('h4', { text: I.combos + ' — ' + fmt(I.summary, keys.length, on) }));
+		head.appendChild(el('h4', { text: I.combos + ' — ' + fmt(1 === keys.length && I.summaryOne ? I.summaryOne : I.summary, keys.length, on) }));
 		var bulk = el('div', { class: 'whdv-bulk' });
 		bulk.appendChild(el('span', { class: 'whdv-muted', text: I.bulk + ':' }));
 		[['regular_price', I.regular], ['sale_price', I.sale], ['stock', I.stock]].forEach(function (f) {

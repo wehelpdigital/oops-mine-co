@@ -156,6 +156,7 @@ final class WHDV_Admin {
 				'applyAll'      => __( 'Apply to all', 'whd-variations' ),
 				'bulk'          => __( 'Fill every row', 'whd-variations' ),
 				'summary'       => __( '%1$d combinations · %2$d enabled', 'whd-variations' ),
+				'summaryOne'    => __( '%1$d combination · %2$d enabled', 'whd-variations' ),
 				'loaded'        => __( '%d existing variations loaded from this product.', 'whd-variations' ),
 				'colour'        => __( 'Swatch colour', 'whd-variations' ),
 				'swatchImage'   => __( 'Swatch image', 'whd-variations' ),
