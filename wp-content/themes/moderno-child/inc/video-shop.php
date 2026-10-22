@@ -113,7 +113,7 @@ function omc_video_shop_screen() {
 		<header class="omc-vsa__head">
 			<p class="omc-vsa__eyebrow"><?php esc_html_e( 'Site', 'moderno-child' ); ?></p>
 			<h1 class="omc-vsa__title"><?php esc_html_e( 'Shoppable videos', 'moderno-child' ); ?></h1>
-			<p class="omc-vsa__lead"><?php esc_html_e( 'Which piece is on screen when, for each style video. Play the video, pause where the look is, then “Add a piece here” and choose it. On the video page the piece pops up as a small window over the video at that time — with its size and Add to bag — for the seconds set beside it, and each one also gets a card: “Shop this look at 1:23”.', 'moderno-child' ); ?></p>
+			<p class="omc-vsa__lead"><?php esc_html_e( 'Every style video and its page. “Add a video” makes a new video page from a video in the media library. Under “Pieces in the video”, pause where the look is, then “Add a piece here” and choose it: on the page the piece pops up as a window over the video at that time, with its size and Add to bag. Under “Page words” are the words beside the video — write them yourself, or have AI write them from what is in the video and what you tell it.', 'moderno-child' ); ?></p>
 		</header>
 		<hr class="wp-header-end">
 		<noscript><div class="notice notice-error"><p><?php esc_html_e( 'This screen needs JavaScript.', 'moderno-child' ); ?></p></div></noscript>
@@ -130,30 +130,42 @@ add_action( 'admin_enqueue_scripts', static function () {
 	$ver = static fn( $rel ) => file_exists( OMC_DIR . $rel ) ? (string) filemtime( OMC_DIR . $rel ) : OMC_VERSION;
 	wp_enqueue_style( 'omc-pe-fonts', 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap', [], null ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
 	omc_piece_picker_assets();
+	wp_enqueue_media(); // "Add a video" picks from the media library
 	wp_enqueue_style( 'omc-video-shop-admin', OMC_URI . '/assets/css/video-shop-admin.css', [ 'omc-piece-picker' ], $ver( '/assets/css/video-shop-admin.css' ) );
 	wp_enqueue_script( 'omc-video-shop-admin', OMC_URI . '/assets/js/video-shop-admin.js', [ 'omc-piece-picker' ], $ver( '/assets/js/video-shop-admin.js' ), true );
 
 	$videos   = [];
 	$products = [];
-	foreach ( omc_video_pages() as $pid => $v ) {
+	foreach ( omc_video_pages( true ) as $pid => $v ) {
 		$moments = omc_video_moments( $v['slug'] );
 		foreach ( $moments as $m ) {
 			$products[] = $m['product'];
 		}
+		$status   = (string) get_post_status( $pid );
 		$videos[] = [
+			'page'     => (int) $pid,
 			'slug'     => $v['slug'],
 			'title'    => html_entity_decode( (string) $v['title'], ENT_QUOTES, 'UTF-8' ),
+			'status'   => $status,
+			'added'    => 'dashboard' === get_post_meta( $pid, OMC_VIDEO_SOURCE, true ),
 			'src'      => omc_video_src( $v ),
 			'poster'   => omc_video_poster( $v, 'medium_large' ),
 			'duration' => (int) $v['duration'],
-			'view'     => (string) get_permalink( $pid ),
-			'chapters' => array_values( array_filter( array_map( static fn( $c ) => isset( $c['at'], $c['label'] ) ? [ 'at' => (int) $c['at'], 'label' => (string) $c['label'] ] : null, (array) $v['chapters'] ) ) ),
+			'view'     => (string) ( 'publish' === $status ? get_permalink( $pid ) : get_preview_post_link( $pid ) ),
 			'moments'  => $moments,
+			'content'  => omc_video_copy_of( $pid, $v ),
 		];
 	}
 	wp_localize_script( 'omc-video-shop-admin', 'OMC_VSA', [
 		'rest'     => esc_url_raw( rest_url( 'omc/v1/video-shop' ) ),
+		'create'   => esc_url_raw( rest_url( 'omc/v1/video-shop/create' ) ),
+		'status'   => esc_url_raw( rest_url( 'omc/v1/video-shop/status' ) ),
+		'write'    => esc_url_raw( rest_url( 'omc/v1/video-shop/write' ) ),
+		'job'      => esc_url_raw( rest_url( 'whd/v1/ai/studio/job' ) ),
 		'nonce'    => wp_create_nonce( 'wp_rest' ),
+		'ai'       => omc_video_ai_ready(),
+		'aiSetup'  => class_exists( 'WHD_AI_Admin' ) ? esc_url_raw( admin_url( 'admin.php?page=' . WHD_AI_Admin::PAGE ) ) : '',
+		'canAdd'   => current_user_can( 'upload_files' ) && current_user_can( 'publish_pages' ),
 		'videos'   => $videos,
 		'products' => (object) omc_piece_brief( $products ),
 		'i18n'     => [
@@ -174,10 +186,83 @@ add_action( 'admin_enqueue_scripts', static function () {
 			'forDefault' => OMC_VIDEO_SHOP_FOR,
 			'empty'    => __( 'No pieces in this video yet.', 'moderno-child' ),
 			'chapters' => __( 'Chapters — click one to add a piece at its start:', 'moderno-child' ),
+			'chaptersPlay' => __( 'Chapters — click one to play from it:', 'moderno-child' ),
 			'view'     => __( 'View the page', 'moderno-child' ),
-			'noVideos' => __( 'There are no style videos yet. They are imported by .ftp-sync/import-videos.php.', 'moderno-child' ),
+			'preview'  => __( 'Preview the page', 'moderno-child' ),
+			'noVideos' => __( 'No style videos yet — add the first one above.', 'moderno-child' ),
 			'leave'    => __( 'You have changes that are not saved. Leave anyway?', 'moderno-child' ),
 			'noPiece'  => __( 'No piece chosen', 'moderno-child' ),
+			// Add a video
+			'addVideo'   => __( 'Add a video', 'moderno-child' ),
+			'addLead'    => __( 'A video from the media library becomes a new video page. Upload it there, or choose one that is already in the library.', 'moderno-child' ),
+			'pickVideo'  => __( 'Choose a video', 'moderno-child' ),
+			'otherVideo' => __( 'Choose another', 'moderno-child' ),
+			'title'      => __( 'Title', 'moderno-child' ),
+			'titleHint'  => __( 'The heading on the page. It can be changed later, or written by AI under “Page words”.', 'moderno-child' ),
+			'poster'     => __( 'Cover picture', 'moderno-child' ),
+			'posterHint' => __( 'Shown before the video plays and wherever the video is listed. Play or scrub the video to the frame you want, then “Use this frame”.', 'moderno-child' ),
+			'useFrame'   => __( 'Use this frame', 'moderno-child' ),
+			'publishNow' => __( 'Publish it now', 'moderno-child' ),
+			'asDraft'    => __( 'Keep it as a draft', 'moderno-child' ),
+			'create'     => __( 'Add the video', 'moderno-child' ),
+			'creating'   => __( 'Adding…', 'moderno-child' ),
+			'cancel'     => __( 'Cancel', 'moderno-child' ),
+			'notVideo'   => __( 'That is not a video file.', 'moderno-child' ),
+			'noFrame'    => __( 'The cover could not be taken from this video. Play it for a moment, then “Use this frame”.', 'moderno-child' ),
+			'leaveAdd'   => __( 'You have changes that are not saved, and adding a video reloads this screen. Add it anyway?', 'moderno-child' ),
+			// A video's card
+			'published'  => __( 'Published', 'moderno-child' ),
+			'draft'      => __( 'Draft', 'moderno-child' ),
+			'publish'    => __( 'Publish', 'moderno-child' ),
+			'unpublish'  => __( 'Make it a draft', 'moderno-child' ),
+			'statusFail' => __( 'Could not change it', 'moderno-child' ),
+			'tabPieces'  => __( 'Pieces in the video', 'moderno-child' ),
+			'tabWords'   => __( 'Page words', 'moderno-child' ),
+			// Page words
+			'imported'   => __( 'These words came with the video’s import. Change any of them here; a field you empty goes back to the imported words.', 'moderno-child' ),
+			'fTitle'     => __( 'Heading', 'moderno-child' ),
+			'fIntro'     => __( 'Intro', 'moderno-child' ),
+			'fIntroHint' => __( 'One or two sentences under the heading.', 'moderno-child' ),
+			'fSeoTitle'  => __( 'Search title', 'moderno-child' ),
+			'fSeoHint'   => __( 'The title in search results, up to 60 characters. Empty: the heading.', 'moderno-child' ),
+			'fMeta'      => __( 'Search snippet', 'moderno-child' ),
+			'fMetaHint'  => __( 'The line under it in search results, 140–155 characters.', 'moderno-child' ),
+			'fKey'       => __( 'Focus keyphrase', 'moderno-child' ),
+			'fKeyHint'   => __( 'The search phrase this page aims at.', 'moderno-child' ),
+			'fAlt'       => __( 'What the video shows', 'moderno-child' ),
+			'fAltHint'   => __( 'For people who cannot see it, and for search engines. Up to 125 characters.', 'moderno-child' ),
+			'fChapters'  => __( 'Chapters', 'moderno-child' ),
+			'fChapHint'  => __( 'The key moments, listed beside the video; search engines can show them as jumps into it.', 'moderno-child' ),
+			'addChapter' => __( 'Add a chapter at the time now', 'moderno-child' ),
+			'chapLabel'  => __( 'What happens', 'moderno-child' ),
+			'fSections'  => __( 'Sections', 'moderno-child' ),
+			'addSection' => __( 'Add a section', 'moderno-child' ),
+			'heading'    => __( 'Heading', 'moderno-child' ),
+			'paragraphs' => __( 'Paragraphs — a blank line between each', 'moderno-child' ),
+			'bullets'    => __( 'Points — one a line (optional)', 'moderno-child' ),
+			'fFaqs'      => __( 'Questions', 'moderno-child' ),
+			'addFaq'     => __( 'Add a question', 'moderno-child' ),
+			'q'          => __( 'Question', 'moderno-child' ),
+			'a'          => __( 'Answer', 'moderno-child' ),
+			// Write it with AI
+			'aiTitle'    => __( 'Write it with AI', 'moderno-child' ),
+			'aiLead'     => __( 'Stills are taken from the video and read by the AI model, with anything you explain here and the shop’s keyword list. The words land in the form below to read and change — nothing is saved until you press Save.', 'moderno-child' ),
+			'aiNotes'    => __( 'Explain the video (optional)', 'moderno-child' ),
+			'aiNotesPh'  => __( 'What it shows, the fabric, how to style it, who it is for, anything to mention or leave out…', 'moderno-child' ),
+			'aiPieces'   => __( 'Tell it about the pieces tagged in the video', 'moderno-child' ),
+			'aiGo'       => __( 'Write the page from the video', 'moderno-child' ),
+			'aiStills'   => __( 'Taking stills from the video…', 'moderno-child' ),
+			'aiSending'  => __( 'Sending them to the AI model…', 'moderno-child' ),
+			/* translators: %s: time so far, e.g. 0:42 */
+			'aiWriting'  => __( 'Writing the page… %s', 'moderno-child' ),
+			'aiDone'     => __( 'Written. Read it through, change what you like, then Save.', 'moderno-child' ),
+			'aiFail'     => __( 'Could not write it', 'moderno-child' ),
+			'aiNoStills' => __( 'No stills could be taken from this video in this browser.', 'moderno-child' ),
+			'aiTimeout'  => __( 'It is taking too long. Try again in a moment.', 'moderno-child' ),
+			'aiOff'      => __( 'Connect an AI model in WHD → AI content to have these words written from the video.', 'moderno-child' ),
+			'aiSetup'    => __( 'Set it up', 'moderno-child' ),
+			'aiReplace'  => __( 'This replaces the words in the form below. Go on?', 'moderno-child' ),
+			'aiWarn'     => __( 'Worth a look before saving:', 'moderno-child' ),
 		],
 	] );
 } );
@@ -188,8 +273,18 @@ add_action( 'rest_api_init', static function () {
 		'permission_callback' => static fn() => current_user_can( 'edit_theme_options' ),
 		'callback'            => static function ( WP_REST_Request $r ) {
 			$known = [];
-			foreach ( omc_video_pages() as $v ) {
+			$pages = [];
+			foreach ( omc_video_pages( true ) as $pid => $v ) {
 				$known[ $v['slug'] ] = (int) $v['duration'];
+				$pages[ $v['slug'] ] = (int) $pid;
+			}
+			// The page words (inc/video-writer.php), only for the videos whose words changed.
+			$words = [];
+			foreach ( (array) $r->get_param( 'content' ) as $slug => $given ) {
+				$slug = sanitize_key( (string) $slug );
+				if ( isset( $pages[ $slug ] ) && is_array( $given ) && current_user_can( 'edit_post', $pages[ $slug ] ) ) {
+					$words[ $slug ] = omc_video_copy_save( $pages[ $slug ], $given );
+				}
 			}
 			$all = (array) get_option( OMC_VIDEO_SHOP_OPTION, [] );
 			foreach ( (array) $r->get_param( 'videos' ) as $slug => $moments ) {
@@ -218,7 +313,7 @@ add_action( 'rest_api_init', static function () {
 			foreach ( array_keys( $known ) as $slug ) {
 				$out[ $slug ] = omc_video_moments( $slug );
 			}
-			return new WP_REST_Response( [ 'videos' => $out ], 200 );
+			return new WP_REST_Response( [ 'videos' => $out, 'content' => (object) array_filter( $words ) ], 200 );
 		},
 	] );
 } );

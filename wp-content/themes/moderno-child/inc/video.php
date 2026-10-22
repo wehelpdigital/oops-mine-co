@@ -24,7 +24,7 @@ function omc_video_data( $post_id = 0 ) {
 	if ( ! is_array( $data ) || empty( $data['slug'] ) ) {
 		return null;
 	}
-	return wp_parse_args( $data, [
+	$data = wp_parse_args( $data, [
 		'slug'        => '',
 		'title'       => get_the_title( $post_id ),
 		'seo_title'   => '',
@@ -46,6 +46,15 @@ function omc_video_data( $post_id = 0 ) {
 		'shop'        => [],
 		'related'     => [],
 	] );
+
+	/**
+	 * The video's data as the page uses it. inc/video-writer.php lays the words written in
+	 * Page Editor → Shoppable videos over the imported ones here.
+	 *
+	 * @param array $data    Decoded `_omc_video`.
+	 * @param int   $post_id The video page.
+	 */
+	return apply_filters( 'omc_video_data', $data, (int) $post_id );
 }
 
 /** Video file URL: the imported attachment first, then whatever the JSON recorded. */
@@ -80,11 +89,11 @@ function omc_video_clock( $seconds ) {
 	return intdiv( $seconds, 60 ) . ':' . str_pad( (string) ( $seconds % 60 ), 2, '0', STR_PAD_LEFT );
 }
 
-/** Every published video page, newest first: [ post_id => data ]. */
-function omc_video_pages() {
+/** Every published video page (with $all, drafts too — the admin screen), newest first: [ post_id => data ]. */
+function omc_video_pages( $all = false ) {
 	$pages = get_posts( [
 		'post_type'      => 'page',
-		'post_status'    => 'publish',
+		'post_status'    => $all ? [ 'publish', 'draft', 'pending', 'private', 'future' ] : 'publish',
 		'numberposts'    => 50,
 		'meta_key'       => OMC_VIDEO_META,
 		'orderby'        => 'menu_order date',
