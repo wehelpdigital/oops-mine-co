@@ -374,7 +374,7 @@ get_header();
 						<a class="omc-style" href="<?php echo esc_url( $omc_style['url'] ); ?>">
 							<span class="omc-style__title"><?php echo esc_html( $omc_style['title'] ); ?></span>
 							<span class="omc-style__text"><?php echo esc_html( $omc_style['text'] ); ?></span>
-							<span class="omc-style__more"><?php esc_html_e( 'Shop the edit', 'moderno-child' ); ?><?php echo omc_icon( 'arrow' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- inline SVG. ?></span>
+							<span class="omc-style__more"><?php echo esc_html( empty( $omc_style['read'] ) ? __( 'Shop the edit', 'moderno-child' ) : __( 'Read the guide', 'moderno-child' ) ); ?><?php echo omc_icon( 'arrow' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- inline SVG. ?></span>
 						</a>
 					<?php endforeach; ?>
 				</div>

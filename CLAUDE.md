@@ -55,6 +55,9 @@ node .ftp-sync/server.mjs db-pull                    # replace local DB with a f
 php .ftp-sync/publish-site.php                       # (re)apply pages/menu/theme settings/WHD activation to local DB
 OMC_DB=live php .ftp-sync/publish-site.php           # …to the LIVE DB (production write — user runs/approves this)
 php .ftp-sync/import-videos.php [--dry-run]          # style videos: media-library attachments + one page each
+php .ftp-sync/keyword-audit.php [--min=2] [--cached] # which researched keywords sit on fewer than N pages, and
+                                                     # whether the 25 best are on the home/About pages (read-only;
+                                                     # --host=https://oopsmineco.com fetches the same URLs from live)
 OMC_DB=live php .ftp-sync/import-videos.php          # …to the LIVE DB (production write — user runs/approves this)
 ```
 

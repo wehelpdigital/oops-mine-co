@@ -452,16 +452,19 @@ add_filter( 'omc_landing_category_fallback', function ( $slug, $page ) {
 }, 10, 2 );
 
 /**
- * "Shop by style" on the home page: one card per keyword page, under the category tiles.
+ * "Shop by style" on the home page: one card per keyword page or journal post, under the category
+ * tiles.
  *
  * The category grid is by garment; these are the ways people actually search — petite dresses,
  * chic boho, Korean fashion — and the home page is the strongest page on the site, so it is where
  * the highest-volume phrases get a link and a sentence each. Every `text` carries its page's
- * researched phrase verbatim; keep it that way when editing (see .ftp-sync/content/plan.json).
- * Only published pages are listed, so a retired page drops out instead of becoming a 404.
- * Override with the `omc_home_styles` filter.
+ * researched phrase verbatim; keep it that way when editing (see .ftp-sync/content/plan.json, and
+ * `php .ftp-sync/keyword-audit.php` for which phrases still miss the home page). The Korean fashion
+ * brands card also carries "korean fashion brand", the home page's own focus keyphrase.
+ * Only published pages and posts are listed, so a retired one drops out instead of becoming a 404.
+ * Sixteen cards: four rows of four. Override with the `omc_home_styles` filter.
  *
- * @return array List of [ url, title, text ].
+ * @return array List of [ url, title, text, read ].
  */
 function omc_home_styles() {
 	$styles = apply_filters( 'omc_home_styles', [
@@ -471,8 +474,12 @@ function omc_home_styles() {
 		'chic-boho-clothes'                => [ __( 'Chic & boho', 'moderno-child' ), __( 'Chic boho clothes: tiered skirts, soft prints and embroidery that still look pulled together.', 'moderno-child' ) ],
 		'affordable-luxury-clothes'        => [ __( 'Affordable luxury', 'moderno-child' ), __( 'Affordable luxury clothes: the fabric, lining and finish you look for, without the label price.', 'moderno-child' ) ],
 		'korean-fashion'                   => [ __( 'Korean fashion', 'moderno-child' ), __( 'Korean fashion for women: soft knits, pleated skirts and denim, chosen in Seoul one rack at a time.', 'moderno-child' ) ],
+		'traditional-korean-clothes'       => [ __( 'Traditional Korean', 'moderno-child' ), __( 'Traditional Korean fashion, from the hanbok’s high waist to the wrap fronts that turn up in modern knits.', 'moderno-child' ) ],
+		'korean-fashion-brands'            => [ __( 'Korean fashion brands', 'moderno-child' ), __( 'What makes a Korean fashion brand worth a second look: the cut, the fabric and how the sizes run.', 'moderno-child' ) ],
 		'thai-fashion'                     => [ __( 'Thai fashion', 'moderno-child' ), __( 'Modern Thai fashion with roots in traditional Thai clothes: light fabrics, easy shapes, warm-weather ease.', 'moderno-child' ) ],
+		'traditional-thai-clothes'         => [ __( 'Traditional Thai', 'moderno-child' ), __( 'Traditional Thai fashion, from chut thai to the silk and wraps that modern Thai clothes still borrow from.', 'moderno-child' ) ],
 		'cute-fashion'                     => [ __( 'Cute fashion', 'moderno-child' ), __( 'Cute fashion ideas for grown-ups: bows, knits and colour you can still wear to work.', 'moderno-child' ) ],
+		'cute-clothes-for-winter'          => [ __( 'Winter & Christmas', 'moderno-child' ), __( 'Cute clothes for winter, from the first cold week to the cute clothes for Christmas parties and the family photo.', 'moderno-child' ) ],
 		'chic-style'                       => [ __( 'Chic style', 'moderno-child' ), __( 'Chic style from French to casual: the few pieces that make an outfit look like no effort at all.', 'moderno-child' ) ],
 		'statement-pieces'                 => [ __( 'Statement pieces', 'moderno-child' ), __( 'Statement fashion, one piece at a time: the skirt or jacket the whole outfit turns around.', 'moderno-child' ) ],
 		'kpop-fashion'                     => [ __( 'K-pop style', 'moderno-child' ), __( 'K pop fashion for real life: oversized layers, sharp collars and one bold detail.', 'moderno-child' ) ],
@@ -481,9 +488,11 @@ function omc_home_styles() {
 
 	$out = [];
 	foreach ( (array) $styles as $slug => $style ) {
-		$page = get_page_by_path( (string) $slug );
+		// Pages and journal posts alike: get_page_by_path() looks at pages only unless told otherwise.
+		$page = get_page_by_path( (string) $slug, OBJECT, [ 'page', 'post' ] );
 		if ( $page && 'publish' === $page->post_status ) {
-			$out[] = [ 'url' => get_permalink( $page ), 'title' => $style[0], 'text' => $style[1] ];
+			// A journal post is something to read, not a rack to shop: the card says so.
+			$out[] = [ 'url' => get_permalink( $page ), 'title' => $style[0], 'text' => $style[1], 'read' => 'post' === $page->post_type ];
 		}
 	}
 
