@@ -1,13 +1,22 @@
 /* ==========================================================================
    Oops, Mine Co. — "This or that" deck on the home page (inc/swipe.php, assets/js/omc-swipe.js)
    ========================================================================== */
-.omc-swipe { background: linear-gradient(180deg, var(--omc-cream) 0%, #fff 100%); padding: var(--omc-gap) 0; }
+/* A band of its own, like the newsletter: clear of the product cards above (margin), edged top and
+   bottom, and solid to the end — a fade to white ran straight into the videos below. */
+.omc-swipe {
+	margin-top: var(--omc-gap);
+	padding: clamp(44px, 5vw, 72px) 0;
+	background: var(--omc-cream);
+	border-top: 1px solid var(--omc-line);
+	border-bottom: 1px solid var(--omc-line);
+}
 .omc-swipe__inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 420px); align-items: center; gap: clamp(28px, 6vw, 96px); }
 .omc-swipe__copy { max-width: 520px; }
 .omc-swipe__text { margin: 14px 0 22px; font: 400 16px/1.7 var(--omc-sans); color: var(--omc-text); }
 .omc-swipe__tally { display: inline-flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 10px 16px; background: #fff; border: 1px solid var(--omc-line); font: 600 12px/1 var(--omc-sans); letter-spacing: .12em; text-transform: uppercase; color: var(--omc-muted); }
 .omc-swipe__tally .omc-icon { width: 18px; height: 18px; color: var(--omc-rose-dark); fill: rgba(156, 111, 99, .18); }
-.omc-swipe__count { font-family: var(--omc-serif); font-size: 24px; font-weight: 500; letter-spacing: 0; font-variant-numeric: lining-nums tabular-nums; color: var(--omc-ink); }
+/* Sans, not the serif: Cormorant's narrow 0 read as "()". */
+.omc-swipe__count { font-family: var(--omc-sans); font-size: 17px; font-weight: 700; letter-spacing: 0; font-variant-numeric: lining-nums tabular-nums; color: var(--omc-ink); }
 .omc-swipe__links { display: flex; flex-wrap: wrap; gap: 16px; }
 
 .omc-swipe__play { display: flex; flex-direction: column; align-items: center; gap: 18px; }
@@ -72,8 +81,8 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 64px;
-	height: 64px;
+	width: 68px;
+	height: 68px;
 	border: 1px solid var(--omc-line);
 	border-radius: 50%;
 	background: #fff;
@@ -82,9 +91,10 @@
 	cursor: pointer;
 	transition: transform .2s var(--omc-ease), background-color .2s, color .2s, border-color .2s;
 }
-.omc-swipe__btn .omc-icon { width: 26px; height: 26px; }
-.omc-swipe__btn--love { width: 72px; height: 72px; color: var(--omc-rose-dark); }
-.omc-swipe__btn--love .omc-icon { width: 30px; height: 30px; fill: rgba(156, 111, 99, .14); }
+.omc-swipe__btn .omc-icon { width: 28px; height: 28px; }
+/* The same size as ✕: only colour tells the two apart. */
+.omc-swipe__btn--love { color: var(--omc-rose-dark); }
+.omc-swipe__btn--love .omc-icon { fill: rgba(156, 111, 99, .14); }
 .omc-swipe__btn:hover { transform: translateY(-2px); border-color: var(--omc-ink); }
 .omc-swipe__btn--love:hover { background: var(--omc-rose-dark); border-color: var(--omc-rose-dark); color: #fff; }
 .omc-swipe__btn--skip:hover { background: var(--omc-ink); color: #fff; }
