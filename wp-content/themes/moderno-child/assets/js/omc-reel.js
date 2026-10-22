@@ -107,7 +107,15 @@
 
 	/* ─────────────────────────── each slide ─────────────────────────── */
 
-	slides.forEach(function (slide) {
+	slides.forEach(function (slide, index) {
+		// A dimmed slide at the edge is brought forward by a click, rather than played or followed.
+		slide.addEventListener('click', function (e) {
+			if (slide.classList.contains('is-current')) { return; }
+			e.preventDefault();
+			e.stopPropagation();
+			go(index);
+		}, true);
+
 		var video = slide.querySelector('video');
 		var frame = slide.querySelector('.omc-reel__frame');
 		var rows = Array.prototype.slice.call(slide.querySelectorAll('.omc-reel__piece'));

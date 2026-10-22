@@ -5,6 +5,10 @@
    The window that pops over a playing video is the video page's own (.omc-vpop, omc-video.css).
    ========================================================================== */
 .omc-reel {
+	/* How much of the next video shows at the right edge: the stage is never one video in an empty
+	   room, and the next one says "there is more" before anybody looks for the arrows. */
+	--omc-reel-peek: clamp(150px, 22vw, 440px);
+	--omc-reel-gap: clamp(16px, 2vw, 32px);
 	position: relative;
 	margin-top: var(--omc-seam);
 	padding: clamp(48px, 6vw, 92px) 0 clamp(40px, 5vw, 72px);
@@ -51,7 +55,7 @@
 .omc-reel__track {
 	position: relative;
 	display: flex;
-	gap: clamp(16px, 2vw, 32px);
+	gap: var(--omc-reel-gap);
 	overflow-x: auto;
 	overscroll-behavior-x: contain;
 	scroll-snap-type: x mandatory;
@@ -62,23 +66,29 @@
 .omc-reel__track:focus-visible { outline: 2px solid var(--omc-rose-light); outline-offset: 6px; }
 .omc-reel__slide {
 	display: grid;
-	flex: 0 0 100%;
-	grid-template-columns: minmax(260px, 380px) minmax(0, 1fr);
+	flex: 0 0 calc(100% - var(--omc-reel-peek));
+	grid-template-columns: auto minmax(0, 1fr);
 	align-items: center;
-	gap: clamp(28px, 5vw, 84px);
+	gap: clamp(32px, 4.5vw, 72px);
 	scroll-snap-align: start;
 	scroll-snap-stop: always;
 	transition: opacity .45s var(--omc-ease);
 }
+/* The slides either side: dimmed and a step back; a click brings one forward. */
+.omc-reel__slide:not(.is-current) { opacity: .38; cursor: pointer; }
+.omc-reel__slide:not(.is-current) .omc-reel__frame { transform: scale(.94); }
+.omc-reel__slide:not(.is-current) .omc-reel__play::after { animation: none; }
 
-/* ─── The video ─── */
+/* ─── The video: one tall frame, the same for every video, as big as the screen allows (a square
+   video is cropped to it, as a reel would) ─── */
 .omc-reel__frame {
 	position: relative;
-	width: 100%;
-	max-height: min(78vh, 680px);
-	aspect-ratio: var(--omc-video-ratio, 9 / 16);
-	margin-inline: auto;
+	width: clamp(280px, 31vw, 520px);
+	max-height: min(82vh, 880px);
+	aspect-ratio: 9 / 16;
 	overflow: hidden;
+	transform-origin: 50% 50%;
+	transition: transform .45s var(--omc-ease);
 	background: #000;
 	box-shadow: 0 50px 90px -46px rgba(0, 0, 0, .85), 0 0 0 1px rgba(255, 255, 255, .08);
 }
@@ -141,9 +151,9 @@
 .omc-reel__slide.is-started .omc-reel__badge { opacity: 0; }
 
 /* ─── Its written version ─── */
-.omc-reel__info { min-width: 0; max-width: 620px; }
+.omc-reel__info { min-width: 0; max-width: 760px; }
 .omc-reel__kicker { margin: 0 0 12px; font: 500 11px/1.4 var(--omc-sans); letter-spacing: .28em; text-transform: uppercase; color: var(--omc-rose-light); }
-.omc-reel__title { margin: 0; font-family: var(--omc-serif); font-size: clamp(28px, 2.8vw, 42px); font-weight: 500; line-height: 1.1; text-wrap: balance; }
+.omc-reel__title { margin: 0; font-family: var(--omc-serif); font-size: clamp(28px, 2.8vw, 46px); font-weight: 500; line-height: 1.1; text-wrap: balance; }
 .omc-reel__title a { color: #fff; text-decoration: none; transition: color .25s; }
 .omc-reel__title a:hover { color: var(--omc-rose-light); }
 .omc-reel__excerpt { margin: 16px 0 0; font: 400 16px/1.7 var(--omc-sans); color: rgba(255, 255, 255, .78); }
@@ -186,6 +196,29 @@
 .omc-btn--light { background: var(--omc-cream); color: var(--omc-ink); border-color: var(--omc-cream); }
 .omc-btn--light:hover { background: #fff; border-color: #fff; color: var(--omc-ink); }
 
+/* ─── After the last video, where the next one would peek: the way to all of them ─── */
+.omc-reel__end {
+	display: flex;
+	flex: 0 0 calc(var(--omc-reel-peek) - var(--omc-reel-gap));
+	flex-direction: column;
+	justify-content: center;
+	gap: 14px;
+	min-width: 0;
+	padding: clamp(20px, 2.4vw, 36px);
+	border: 1px solid rgba(255, 255, 255, .18);
+	background: rgba(255, 255, 255, .04);
+	color: #fff;
+	text-decoration: none;
+	scroll-snap-align: end;
+	transition: background-color .3s var(--omc-ease), border-color .3s var(--omc-ease);
+}
+.omc-reel__end:hover { background: rgba(255, 255, 255, .1); border-color: var(--omc-rose-light); }
+.omc-reel__end-k { font: 500 11px/1.4 var(--omc-sans); letter-spacing: .28em; text-transform: uppercase; color: var(--omc-rose-light); }
+.omc-reel__end-title { font-family: var(--omc-serif); font-size: clamp(24px, 2.2vw, 34px); font-weight: 500; line-height: 1.12; }
+.omc-reel__end-go { display: inline-flex; align-items: center; justify-content: center; width: 50px; height: 50px; border: 1px solid rgba(255, 255, 255, .5); border-radius: 50%; transition: transform .3s var(--omc-ease), background-color .3s, color .3s; }
+.omc-reel__end-go .omc-icon { width: 18px; height: 18px; }
+.omc-reel__end:hover .omc-reel__end-go { background: #fff; color: var(--omc-ink); transform: translateX(4px); }
+
 /* ─── Dots: one per video ─── */
 .omc-reel__dots { display: flex; justify-content: center; gap: 6px; margin-top: clamp(26px, 3.4vw, 44px); }
 .omc-reel__dot { position: relative; width: 34px; height: 22px; padding: 0; border: 0; background: none; cursor: pointer; transition: width .35s var(--omc-ease); }
@@ -196,7 +229,9 @@
 
 /* ─── Tablets: the video narrower beside the words ─── */
 @media (max-width: 1023px) {
-	.omc-reel__slide { grid-template-columns: minmax(220px, 320px) minmax(0, 1fr); gap: 32px; }
+	.omc-reel { --omc-reel-peek: 150px; }
+	.omc-reel__slide { gap: 32px; }
+	.omc-reel__frame { width: clamp(240px, 34vw, 320px); }
 }
 
 /* ─── Phones: video over words, and the next slide peeking in from the right ─── */
@@ -210,14 +245,18 @@
 	   otherwise share that height out between its rows — a gap under the video. */
 	.omc-reel__slide { flex-basis: 84%; grid-template-columns: 1fr; align-items: start; align-content: start; gap: 20px; }
 	.omc-reel__slide:not(.is-current) { opacity: .45; }
-	.omc-reel__frame { max-height: 68vh; }
+	.omc-reel__slide:not(.is-current) .omc-reel__frame { transform: none; }
+	/* A phone shows each video in its own shape, full width. */
+	.omc-reel__frame { width: 100%; max-height: 68vh; aspect-ratio: var(--omc-video-ratio, 9 / 16); }
 	.omc-reel__title { font-size: 26px; }
 	.omc-reel__excerpt { font-size: 15px; }
 	.omc-reel__piece-name { font-size: 16px; }
 	.omc-reel__actions .omc-btn { flex: 1 1 auto; padding: 0 18px; }
+	.omc-reel__end { flex-basis: 62%; align-self: start; min-height: min(56vh, 420px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.omc-reel__slide, .omc-reel__play, .omc-reel__piece, .omc-reel__dot, .omc-reel__dot::after { transition: none; }
+	.omc-reel__slide, .omc-reel__frame, .omc-reel__play, .omc-reel__piece, .omc-reel__dot, .omc-reel__dot::after { transition: none; }
+	.omc-reel__slide:not(.is-current) .omc-reel__frame { transform: none; }
 	.omc-reel__slide:not(.is-started) .omc-reel__play::after { animation: none; }
 }

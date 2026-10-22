@@ -149,6 +149,13 @@ function omc_reel_section() {
 						</div>
 					</article>
 				<?php endforeach; ?>
+				<?php if ( $hub ) : ?>
+					<a class="omc-reel__end" href="<?php echo esc_url( $hub ); ?>">
+						<span class="omc-reel__end-k"><?php esc_html_e( 'Keep watching', 'moderno-child' ); ?></span>
+						<span class="omc-reel__end-title"><?php esc_html_e( 'Every style video', 'moderno-child' ); ?></span>
+						<span class="omc-reel__end-go" aria-hidden="true"><?php echo omc_icon( 'arrow' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
+					</a>
+				<?php endif; ?>
 			</div>
 
 			<?php if ( $total > 1 ) : ?>
