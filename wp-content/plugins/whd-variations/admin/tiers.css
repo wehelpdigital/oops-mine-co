@@ -35,8 +35,15 @@
 .whdv-grid { border-top: 1px solid #dcdcde; padding-top: 14px; }
 .whdv-grid__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
 .whdv-grid__head h4 { margin: 0; font-size: 14px; }
-.whdv-bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.whdv-bulk__input { width: 110px; }
+/* Fill-all: three equal boxes in one row, each with its Apply, then All on / All off — the full width
+   of the grid under it. WooCommerce floats every text box in this panel at 50% width; not these. */
+.whdv-grid__head .whdv-bulk { flex: 1 1 100%; }
+.whdv-bulk { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; align-items: center; gap: 8px 14px; }
+.whdv-bulk__field { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.woocommerce_options_panel .whdv-bulk .whdv-bulk__input { flex: 1 1 auto; float: none; width: auto; min-width: 0; margin: 0; }
+.whdv-bulk__field .button { flex: 0 0 auto; }
+.whdv-bulk__toggles { display: flex; gap: 12px; white-space: nowrap; }
+@media (max-width: 1100px) { .whdv-bulk { grid-template-columns: 1fr; } }
 
 .whdv-group { border: 1px solid #dcdcde; border-radius: 4px; margin: 0 0 12px; overflow: hidden; }
 .whdv-group__head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 8px 12px; background: #f6f7f7; border-bottom: 1px solid #dcdcde; }

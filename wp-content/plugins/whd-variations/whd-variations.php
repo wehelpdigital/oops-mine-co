@@ -3,7 +3,7 @@
  * Plugin Name: WHD — Variation Tiers
  * Plugin URI:  https://wehelpdigital.com
  * Description: Multi-level variations for WooCommerce products. Define tiers (e.g. Colour → Size → Length), fill one price/stock/SKU grid, and the plugin creates and keeps the real WooCommerce variations in sync. On the product page shoppers pick one level at a time and only see the combinations that exist.
- * Version:     1.2.2
+ * Version:     1.2.4
  * Author:      We Help Digital
  * Text Domain: whd-variations
  * Requires at least: 6.4
@@ -14,7 +14,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'WHDV_VERSION', '1.2.2' );
+define( 'WHDV_VERSION', '1.2.4' );
 define( 'WHDV_FILE', __FILE__ );
 define( 'WHDV_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WHDV_URL', plugin_dir_url( __FILE__ ) );

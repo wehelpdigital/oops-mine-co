@@ -275,17 +275,18 @@
 		var head = el('div', { class: 'whdv-grid__head' });
 		head.appendChild(el('h4', { text: I.combos + ' — ' + fmt(1 === keys.length && I.summaryOne ? I.summaryOne : I.summary, keys.length, on) }));
 		var bulk = el('div', { class: 'whdv-bulk' });
-		bulk.appendChild(el('span', { class: 'whdv-muted', text: I.bulk + ':' }));
+		// One row of three equal boxes, each with its Apply, then All on / All off: level with the grid below.
 		[['regular_price', I.regular], ['sale_price', I.sale], ['stock', I.stock]].forEach(function (f) {
-			var inp = el('input', { type: 'text', class: 'whdv-bulk__input', placeholder: f[1] });
-			bulk.appendChild(inp);
-			bulk.appendChild(el('button', { type: 'button', class: 'button button-small', text: I.applyAll, onclick: function () {
+			var inp = el('input', { type: 'text', class: 'whdv-bulk__input', placeholder: f[1], 'aria-label': I.bulk + ': ' + f[1] });
+			bulk.appendChild(el('div', { class: 'whdv-bulk__field' }, [inp, el('button', { type: 'button', class: 'button', text: I.apply || I.applyAll, 'aria-label': I.applyAll + ': ' + f[1], onclick: function () {
 				keys.forEach(function (p) { state.combos[p.join('|')][f[0]] = inp.value; });
 				touch(); render();
-			} }));
+			} })]));
 		});
-		bulk.appendChild(el('button', { type: 'button', class: 'button-link', text: I.allOn, onclick: function () { setAll(keys, true); } }));
-		bulk.appendChild(el('button', { type: 'button', class: 'button-link', text: I.allOff, onclick: function () { setAll(keys, false); } }));
+		bulk.appendChild(el('div', { class: 'whdv-bulk__toggles' }, [
+			el('button', { type: 'button', class: 'button-link', text: I.allOn, onclick: function () { setAll(keys, true); } }),
+			el('button', { type: 'button', class: 'button-link', text: I.allOff, onclick: function () { setAll(keys, false); } })
+		]));
 		head.appendChild(bulk);
 		wrap.appendChild(head);
 

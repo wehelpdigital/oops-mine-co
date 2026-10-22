@@ -154,6 +154,7 @@ final class WHDV_Admin {
 				'allOn'         => __( 'All on', 'whd-variations' ),
 				'allOff'        => __( 'All off', 'whd-variations' ),
 				'applyAll'      => __( 'Apply to all', 'whd-variations' ),
+				'apply'         => __( 'Apply', 'whd-variations' ),
 				'bulk'          => __( 'Fill every row', 'whd-variations' ),
 				'summary'       => __( '%1$d combinations · %2$d enabled', 'whd-variations' ),
 				'summaryOne'    => __( '%1$d combination · %2$d enabled', 'whd-variations' ),
