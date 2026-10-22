@@ -497,17 +497,126 @@ function omc_home_styles() {
 		'asian-fashion'                    => [ __( 'Asian fashion', 'moderno-child' ), __( 'An Asian fashion store for pieces from Korea, Thailand and beyond, picked in small batches.', 'moderno-child' ) ],
 	] );
 
-	$out = [];
+	$out   = [];
+	$found = [];
 	foreach ( (array) $styles as $slug => $style ) {
 		// Pages and journal posts alike: get_page_by_path() looks at pages only unless told otherwise.
 		$page = get_page_by_path( (string) $slug, OBJECT, [ 'page', 'post' ] );
 		if ( $page && 'publish' === $page->post_status ) {
 			// A journal post is something to read, not a rack to shop: the card says so.
-			$out[] = [ 'url' => get_permalink( $page ), 'title' => $style[0], 'text' => $style[1], 'read' => 'post' === $page->post_type ];
+			$out[ $slug ]   = [ 'url' => get_permalink( $page ), 'title' => $style[0], 'text' => $style[1], 'read' => 'post' === $page->post_type, 'photos' => [] ];
+			$found[ $slug ] = $page;
 		}
 	}
+	foreach ( omc_style_photos( $found ) as $slug => $ids ) {
+		$out[ $slug ]['photos'] = $ids;
+	}
 
+	return array_values( $out );
+}
+
+/**
+ * Three photographs for each "Shop by style" card: pieces from the shop that fit the style, read off
+ * their names, fabric and pattern (the style categories these pages were written for are gone — see
+ * page-landing.php — so there is nothing else to go by). A journal post leads with its own picture.
+ * Each piece appears on one card only; the narrowest styles choose first, so "Asian fashion" cannot
+ * take every piece "Evening" could have used. Kept twelve hours, and dropped when a product is saved.
+ * The words are the `omc_style_photo_words` filter.
+ *
+ * @param WP_Post[] $pages slug => the style's page or post.
+ * @return array slug => attachment ids (up to three).
+ */
+function omc_style_photos( array $pages ) {
+	if ( ! $pages || ! function_exists( 'wc_get_products' ) ) {
+		return [];
+	}
+	$words = (array) apply_filters( 'omc_style_photo_words', [
+		'petite-dresses'                   => [ 'dress', 'mini', 'midi' ],
+		'petite-dresses-for-wedding-guest' => [ 'dress', 'floral', 'lace', 'satin', 'chiffon', 'pleat', 'elegant' ],
+		'petite-evening-dresses'           => [ 'satin', 'velvet', 'sequin', 'slip', 'organza', 'evening', 'black' ],
+		'chic-boho-clothes'                => [ 'boho', 'tier', 'crochet', 'embroider', 'floral', 'ruffle', 'paisley', 'lace' ],
+		'affordable-luxury-clothes'        => [ 'silk', 'wool', 'satin', 'leather', 'cashmere', 'tweed', 'mohair', 'crystal' ],
+		'korean-fashion'                   => [ 'knit', 'pleat', 'cardigan', 'denim', 'collar', 'ribbed' ],
+		'traditional-korean-clothes'       => [ 'wrap', 'tie', 'bow', 'ribbon', 'high-waist', 'a-line' ],
+		'korean-fashion-brands'            => [ 'cardigan', 'knit', 'blazer', 'shirt' ],
+		'thai-fashion'                     => [ 'print', 'floral', 'embroider', 'silk', 'colour', 'color' ],
+		'traditional-thai-clothes'         => [ 'silk', 'wrap', 'embroider', 'sarong', 'print' ],
+		'cute-fashion'                     => [ 'bow', 'heart', 'bear', 'ribbon', 'cute', 'pink', 'frill' ],
+		'cute-clothes-for-winter'          => [ 'coat', 'fur', 'fleece', 'sweater', 'cardigan', 'wool', 'puffer', 'vest' ],
+		'chic-style'                       => [ 'blazer', 'trench', 'coat', 'shirt', 'trouser', 'tailor', 'minimal' ],
+		'statement-pieces'                 => [ 'sequin', 'chain', 'feather', 'organza', 'embellish', 'metallic', 'crystal', 'ruffle' ],
+		'kpop-fashion'                     => [ 'oversize', 'jacket', 'hoodie', 'varsity', 'windbreaker', 'set', 'cargo' ],
+		'asian-fashion'                    => [],
+	] );
+	$key    = 'omc_style_photos_' . md5( wp_json_encode( [ array_keys( $pages ), $words ] ) );
+	$cached = get_transient( $key );
+	if ( is_array( $cached ) ) {
+		return $cached;
+	}
+
+	// The clothes on the rail now, newest first, with what each one can be matched on.
+	$pieces = [];
+	foreach ( wc_get_products( [ 'status' => 'publish', 'limit' => 300, 'category' => [ 'clothing' ], 'stock_status' => 'instock', 'orderby' => 'date', 'order' => 'DESC' ] ) as $p ) {
+		if ( ! $p->get_image_id() || ! $p->is_visible() ) {
+			continue;
+		}
+		$text = $p->get_name() . ' ' . $p->get_attribute( 'pa_material' ) . ' ' . $p->get_attribute( 'pa_pattern' ) . ' ' . implode( ' ', wp_list_pluck( get_the_terms( $p->get_id(), 'product_cat' ) ?: [], 'slug' ) );
+		$pieces[ $p->get_id() ] = [ 'image' => (int) $p->get_image_id(), 'text' => strtolower( $text ) ];
+	}
+	$score = static function ( $text, $list ) {
+		$n = 0;
+		foreach ( $list as $word ) {
+			$n += preg_match( '/\b' . preg_quote( strtolower( $word ), '/' ) . '/', $text ) ? 1 : 0;
+		}
+		return $n;
+	};
+
+	// How many pieces each style could use: the fewest choose first.
+	$ranked = [];
+	foreach ( array_keys( $pages ) as $slug ) {
+		$fits = [];
+		foreach ( $pieces as $id => $piece ) {
+			$s = $score( $piece['text'], $words[ $slug ] ?? [] );
+			if ( $s ) {
+				$fits[ $id ] = $s;
+			}
+		}
+		arsort( $fits ); // best match first; newest first among equals (the array is newest first, and arsort keeps that order)
+		$ranked[ $slug ] = $fits;
+	}
+	uksort( $ranked, static fn( $a, $b ) => count( $ranked[ $a ] ) <=> count( $ranked[ $b ] ) ?: strcmp( $a, $b ) );
+
+	$used = [];
+	$out  = [];
+	foreach ( $ranked as $slug => $fits ) {
+		$ids  = [];
+		$post = $pages[ $slug ];
+		if ( 'post' === $post->post_type && get_post_thumbnail_id( $post ) ) {
+			$ids[] = (int) get_post_thumbnail_id( $post );
+		}
+		// Its own matches, then the newest pieces nobody has used yet.
+		foreach ( array_merge( array_keys( $fits ), array_keys( $pieces ) ) as $id ) {
+			if ( count( $ids ) >= 3 ) {
+				break;
+			}
+			if ( ! isset( $used[ $id ] ) ) {
+				$used[ $id ] = true;
+				$ids[]       = $pieces[ $id ]['image'];
+			}
+		}
+		$out[ $slug ] = $ids;
+	}
+	set_transient( $key, $out, 12 * HOUR_IN_SECONDS );
 	return $out;
+}
+
+/* A product saved, stocked out or deleted can change which photographs fit: work them out again. */
+foreach ( [ 'save_post_product', 'woocommerce_product_set_stock_status', 'before_delete_post' ] as $omc_hook ) {
+	add_action( $omc_hook, static function () {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- clearing this theme's own transients
+		$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '\_transient\_omc\_style\_photos\_%' OR option_name LIKE '\_transient\_timeout\_omc\_style\_photos\_%'" );
+	} );
 }
 
 /** Trust strip under the hero. Edit via the `omc_usp_items` filter. */

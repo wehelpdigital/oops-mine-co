@@ -1,10 +1,11 @@
 /* ==========================================================================
    Oops, Mine Co. — "This or that" deck on the home page (inc/swipe.php, assets/js/omc-swipe.js)
    ========================================================================== */
-/* A band of its own, like the newsletter: clear of the product cards above (margin), edged top and
-   bottom, and solid to the end — a fade to white ran straight into the videos below. */
+/* A band of its own, edged top and bottom and solid to the end (a fade to white ran into whatever
+   came next). It sits in the stack of bands under the hero — stylist above, the Live card below —
+   so it keeps their thin seam of white on either side. */
 .omc-swipe {
-	margin-top: var(--omc-gap);
+	margin-top: var(--omc-seam);
 	padding: clamp(44px, 5vw, 72px) 0;
 	background: var(--omc-cream);
 	border-top: 1px solid var(--omc-line);

@@ -51,6 +51,7 @@
 .omc-live__media::after,
 .omc-cat__media::after,
 .omc-card__media::after,
+.omc-style__pics::after,
 .whd-story__figure::after,
 .omc-modal__figure::after,
 .c-product-grid__thumb-wrap::after {
@@ -77,6 +78,7 @@
 .omc-carousel__media::after { bottom: auto; top: var(--omc-wm-inset, 10px); }
 .omc-live__media { --omc-wm: 64px; --omc-wm-inset: 14px; }
 .omc-card__media { --omc-wm: 56px; --omc-wm-inset: 12px; }
+.omc-style__pics { --omc-wm: 40px; --omc-wm-inset: 10px; }
 .omc-cat__media, .c-product-grid__thumb-wrap { --omc-wm: 40px; --omc-wm-inset: 8px; --omc-wm-opacity: .34; }
 .omc-cat__media::after, .c-product-grid__thumb-wrap::after { background-image: url(../img/oops-logo-rose-400.png); filter: none; }
 /* The story spreads: the same product photography as the cards, so the same rose mark — but these
@@ -484,9 +486,9 @@
 .omc-cat:hover .omc-cat__name::after { right: 0; }
 .omc-cat__count { font: 500 11px/1 var(--omc-sans); letter-spacing: .14em; text-transform: uppercase; color: var(--omc-muted); }
 
-/* ─── Shop by style: text cards for the keyword pages (omc_home_styles()), under the category tiles.
-   No photos on purpose — the tiles above already carry the pictures; this row is the words people
-   search with, and a fifth row of images would bury them. 4 → 3 → 2 → 1 columns. ─── */
+/* ─── Shop by style: a card per keyword page (omc_home_styles()), under the category tiles. Three
+   photographs of pieces that fit the style on top (omc_style_photos(): one large, two stacked), the
+   words people search with under them. 4 → 3 columns, a sideways row on phones. ─── */
 .omc-styles__lede {
 	max-width: 760px;
 	margin: calc(-1 * clamp(10px, 1.6vw, 22px)) 0 clamp(22px, 2.6vw, 34px);
@@ -498,8 +500,7 @@
 .omc-style {
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
-	padding: clamp(18px, 1.8vw, 24px);
+	overflow: hidden;
 	background: var(--omc-cream);
 	border: 1px solid var(--omc-line);
 	color: inherit;
@@ -507,6 +508,15 @@
 	transition: border-color .25s var(--omc-ease), transform .25s var(--omc-ease), box-shadow .25s var(--omc-ease);
 }
 .omc-style:hover { border-color: var(--omc-rose); transform: translateY(-3px); box-shadow: 0 24px 48px -34px rgba(58, 43, 38, .5); }
+.omc-style__body { display: flex; flex: 1 1 auto; flex-direction: column; gap: 8px; padding: clamp(16px, 1.6vw, 22px); }
+/* One large photo and two stacked beside it; all square, like the shop's own photographs. */
+.omc-style__pics { position: relative; display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 3px; aspect-ratio: 3 / 2; background: var(--omc-sand); }
+.omc-style__pics--1 { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+.omc-style__pics--2 { grid-template-rows: 1fr; grid-template-columns: 1fr 1fr; }
+.omc-style__pic { position: relative; display: block; min-width: 0; min-height: 0; overflow: hidden; background: var(--omc-sand); }
+.omc-style__pics--3 .omc-style__pic:first-child { grid-row: 1 / span 2; }
+.omc-style__pic img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .7s var(--omc-ease); }
+.omc-style:hover .omc-style__pic img { transform: scale(1.05); }
 .omc-style__title { font-family: var(--omc-serif); font-weight: 500; font-size: clamp(20px, 1.7vw, 24px); line-height: 1.2; color: var(--omc-ink); }
 .omc-style__text { font: 400 14px/1.6 var(--omc-sans); color: var(--omc-text); }
 .omc-style__more { display: inline-flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 6px; font: 600 11px/1 var(--omc-sans); letter-spacing: .16em; text-transform: uppercase; color: var(--omc-rose-dark); }
@@ -531,7 +541,7 @@
 	.omc-style:hover { transform: none; }
 	.omc-style__text { font-size: 13px; }
 }
-@media (prefers-reduced-motion: reduce) { .omc-style, .omc-style__more .omc-icon { transition: none; } .omc-style:hover { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .omc-style, .omc-style__more .omc-icon, .omc-style__pic img { transition: none; } .omc-style:hover, .omc-style:hover .omc-style__pic img { transform: none; } }
 
 /* ─── Product sections: the theme's product cards restyled to match the category cards
    (sand card inside a hairline border, square white photo frame, serif name). Hover buttons,

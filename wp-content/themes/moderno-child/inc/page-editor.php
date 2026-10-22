@@ -262,6 +262,17 @@ function omc_pe_schema() {
 						'stylist.button'  => $text( __( 'Button text', 'moderno-child' ), __( 'Start the stylist', 'moderno-child' ) ),
 					],
 				],
+				'swipe'      => [
+					'label'  => __( 'This or that', 'moderno-child' ),
+					'note'   => __( 'A deck of the newest pieces to swipe through: right to love — it goes in the wishlist, and the stylist learns from it — left to skip.', 'moderno-child' ),
+					'fields' => [
+						'swipe.enabled' => [ 'type' => 'toggle', 'label' => __( 'Show the deck', 'moderno-child' ), 'default' => true ],
+						'swipe.eyebrow' => $text( __( 'Small heading', 'moderno-child' ), __( 'This or that', 'moderno-child' ) ),
+						'swipe.title'   => $em( __( 'Heading', 'moderno-child' ), __( 'Swipe what you *love*', 'moderno-child' ) ),
+						'swipe.text'    => $area( __( 'Text', 'moderno-child' ), __( 'Right for love, left for not this one. Everything you love is saved to your wishlist, and our digital stylist takes it into account the next time it picks for you.', 'moderno-child' ) ),
+						'swipe.done'    => $text( __( 'When the deck runs out', 'moderno-child' ), __( 'You’ve seen everything new.', 'moderno-child' ) ),
+					],
+				],
 				'live'       => [
 					'label'  => __( 'Facebook Live card', 'moderno-child' ),
 					'note'   => __( 'The countdown card with the email form. The same settings as Customizer → Facebook Live.', 'moderno-child' ),
@@ -362,7 +373,7 @@ function omc_pe_schema() {
 				],
 				'styles'     => [
 					'label'  => __( 'Shop by style', 'moderno-child' ),
-					'note'   => __( 'The cards link to the style pages and carry their search phrases, so they are not edited here.', 'moderno-child' ),
+					'note'   => __( 'The cards link to the style pages and carry their search phrases, so they are not edited here. Their photos are pieces from the shop that fit each style, picked again whenever a product changes.', 'moderno-child' ),
 					'fields' => $prefix( 'styles', $head( __( 'Shop by style', 'moderno-child' ), __( 'Start with the look, *not the label*', 'moderno-child' ), __( 'Style notes', 'moderno-child' ) ) ) + [
 						'styles.lede' => $area( __( 'Intro', 'moderno-child' ), __( 'Oops, Mine Co. is a chic boutique for Korean and Thai fashion, chosen in small batches and added every week. Pick the style you came for, then look twice at the rest.', 'moderno-child' ) ),
 					],
@@ -394,17 +405,6 @@ function omc_pe_schema() {
 				'loved'      => [
 					'label'  => __( 'Most loved', 'moderno-child' ),
 					'fields' => $prefix( 'loved', $head( __( 'Most loved', 'moderno-child' ), __( 'The pieces everyone keeps *reaching for*', 'moderno-child' ), __( 'Shop best sellers', 'moderno-child' ) ) ),
-				],
-				'swipe'      => [
-					'label'  => __( 'This or that', 'moderno-child' ),
-					'note'   => __( 'A deck of the newest pieces to swipe through: right to love — it goes in the wishlist, and the stylist learns from it — left to skip.', 'moderno-child' ),
-					'fields' => [
-						'swipe.enabled' => [ 'type' => 'toggle', 'label' => __( 'Show the deck', 'moderno-child' ), 'default' => true ],
-						'swipe.eyebrow' => $text( __( 'Small heading', 'moderno-child' ), __( 'This or that', 'moderno-child' ) ),
-						'swipe.title'   => $em( __( 'Heading', 'moderno-child' ), __( 'Swipe what you *love*', 'moderno-child' ) ),
-						'swipe.text'    => $area( __( 'Text', 'moderno-child' ), __( 'Right for love, left for not this one. Everything you love is saved to your wishlist, and our digital stylist takes it into account the next time it picks for you.', 'moderno-child' ) ),
-						'swipe.done'    => $text( __( 'When the deck runs out', 'moderno-child' ), __( 'You’ve seen everything new.', 'moderno-child' ) ),
-					],
 				],
 				'videos'     => [
 					'label'  => __( 'Style videos', 'moderno-child' ),

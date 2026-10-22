@@ -4,9 +4,9 @@
  * Template Post Type: page
  *
  * Editorial storefront home page for Oops, Mine Co. Sections, top to bottom:
- * hero → trust strip → stylist band → Facebook Live card → next drop → shop-the-look mosaic → split
+ * hero → trust strip → stylist band → this or that → Facebook Live card → next drop → shop-the-look mosaic → split
  * campaign banner → edit carousel → mirrored campaign banner → shop by category → shop by style →
- * brand story → new arrivals → wide banners → most loved → this or that → style videos → styling
+ * brand story → new arrivals → wide banners → most loved → style videos → styling
  * notes (journal) → reviews → from our feed → newsletter.
  *
  * The hero, mosaic and journal photos can carry hotspots — points that open the piece and add it to
@@ -216,6 +216,13 @@ get_header();
 		</section>
 	<?php endif; ?>
 
+	<!-- ───────────── This or that: swipe to love or skip (Page Editor → This or that; inc/swipe.php) ───────────── -->
+	<?php
+	if ( function_exists( 'omc_swipe_section' ) ) {
+		omc_swipe_section();
+	}
+	?>
+
 	<!-- ───────────── Next Facebook Live (Customizer → Facebook Live) ───────────── -->
 	<?php $omc_live = omc_fb_live(); ?>
 	<?php if ( ! empty( $omc_live['enabled'] ) && ! empty( $omc_live['when'] ) ) : ?>
@@ -414,9 +421,18 @@ get_header();
 				<div class="omc-styles__grid">
 					<?php foreach ( $omc_styles as $omc_style ) : ?>
 						<a class="omc-style" href="<?php echo esc_url( $omc_style['url'] ); ?>">
-							<span class="omc-style__title"><?php echo esc_html( $omc_style['title'] ); ?></span>
-							<span class="omc-style__text"><?php echo esc_html( $omc_style['text'] ); ?></span>
-							<span class="omc-style__more"><?php echo esc_html( empty( $omc_style['read'] ) ? __( 'Shop the edit', 'moderno-child' ) : __( 'Read the guide', 'moderno-child' ) ); ?><?php echo omc_icon( 'arrow' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- inline SVG. ?></span>
+							<?php if ( ! empty( $omc_style['photos'] ) ) : ?>
+								<span class="omc-style__pics omc-style__pics--<?php echo (int) count( $omc_style['photos'] ); ?>" aria-hidden="true">
+									<?php foreach ( $omc_style['photos'] as $omc_pi => $omc_pic ) : ?>
+										<span class="omc-style__pic"><?php echo wp_get_attachment_image( $omc_pic, 0 === $omc_pi ? 'woocommerce_single' : 'woocommerce_thumbnail', false, [ 'loading' => 'lazy', 'decoding' => 'async', 'alt' => '', 'sizes' => 0 === $omc_pi ? '(max-width: 767px) 50vw, 240px' : '(max-width: 767px) 25vw, 120px' ] ); ?></span>
+									<?php endforeach; ?>
+								</span>
+							<?php endif; ?>
+							<span class="omc-style__body">
+								<span class="omc-style__title"><?php echo esc_html( $omc_style['title'] ); ?></span>
+								<span class="omc-style__text"><?php echo esc_html( $omc_style['text'] ); ?></span>
+								<span class="omc-style__more"><?php echo esc_html( empty( $omc_style['read'] ) ? __( 'Shop the edit', 'moderno-child' ) : __( 'Read the guide', 'moderno-child' ) ); ?><?php echo omc_icon( 'arrow' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- inline SVG. ?></span>
+							</span>
 						</a>
 					<?php endforeach; ?>
 				</div>
@@ -511,13 +527,6 @@ get_header();
 			</div>
 		</div>
 	</section>
-
-	<!-- ───────────── This or that: swipe to love or skip (Page Editor → This or that; inc/swipe.php) ───────────── -->
-	<?php
-	if ( function_exists( 'omc_swipe_section' ) ) {
-		omc_swipe_section();
-	}
-	?>
 
 	<!-- ───────────── Style videos ───────────── -->
 	<?php
