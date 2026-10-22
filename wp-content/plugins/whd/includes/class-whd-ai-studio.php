@@ -1601,11 +1601,13 @@ final class WHD_AI_Studio {
 			return new WP_Error( 'whd_studio_refs_unreadable', __( 'None of the chosen photographs could be read from disk.', 'whd' ) );
 		}
 
-		$parts[] = [ 'text' => self::draw_prompt( $facts, $shot, $position, $post_id, $labels, $fixes, $refs[0] ) ];
+		// A format asked for (Image Builder) wins; otherwise the first photograph's, so it sits in the gallery like the rest.
+		$ratio   = isset( self::RATIOS[ (string) ( $args['aspect'] ?? '' ) ] ) ? (string) $args['aspect'] : self::aspect( $refs[0] );
+		$parts[] = [ 'text' => self::draw_prompt( $facts, $shot, $position, $post_id, $labels, $fixes, $ratio ) ];
 
 		self::mark( 'drawing a picture with the image model' );
 		$image = WHD_AI_Images::request( $parts, [
-			'aspectRatio' => self::aspect( $refs[0] ),
+			'aspectRatio' => $ratio,
 			'imageSize'   => WHD_AI_Images::size(),
 		] );
 		if ( is_wp_error( $image ) ) {
@@ -1625,10 +1627,9 @@ final class WHD_AI_Studio {
 		];
 	}
 
-	private static function draw_prompt( array $facts, array $shot, int $position, int $post_id, array $labels, array $fixes, int $first ): string {
+	private static function draw_prompt( array $facts, array $shot, int $position, int $post_id, array $labels, array $fixes, string $ratio ): string {
 		$beauty = 'beauty' === strtolower( (string) ( $facts['kind'] ?? '' ) );
 		$worn   = in_array( strtolower( (string) ( $facts['kind'] ?? 'garment' ) ), [ 'garment', 'footwear', 'jewellery', 'accessory', 'bag', '' ], true );
-		$ratio  = self::aspect( $first );
 		$out    = [];
 
 		$out[] = 'A new photograph of a product we sell, for its page in our online shop, made from the reference images attached above.';
@@ -1647,6 +1648,10 @@ final class WHD_AI_Studio {
 			$out[] = $worn
 				? "HOW IT IS SHOWN\nA ghost-mannequin product photograph: the piece as if worn by an invisible body — natural shape and volume, the inside of the back neckline visible through the neck opening, sleeves filled out, fastenings done up the way the references show them. No person, no mannequin, no stand, no hanger, no props. The whole piece in frame and centred; front view unless THIS PICTURE asks for another angle. A seamless warm off-white background, soft even studio light, a soft shadow beneath."
 				: "HOW IT IS SHOWN\nA clean product photograph: the item on its own, no hands, no person, centred on a seamless warm off-white background, soft even studio light, a soft shadow beneath, the label side turned slightly so it reads as shape and colour.";
+		} elseif ( 'flatlay' === $shot['mode'] ) {
+			$out[] = "HOW IT IS SHOWN\nA flat-lay product photograph, shot from directly above: the piece laid out flat and neatly — smoothed, sleeves and straps arranged, nothing folded over its details — on a clean surface, with soft even daylight and soft natural shadows. No person, no hands, no mannequin. A few quiet props at the edges only if THIS PICTURE asks for them; the piece is the subject and fills most of the frame.";
+		} elseif ( 'still' === $shot['mode'] ) {
+			$out[] = "HOW IT IS SHOWN\nA still-life product photograph: the piece on its own — standing, hanging or resting naturally in a setting — with no person and no hands. Light that shows its texture and colour truthfully; the piece is the subject, sharp and whole in the frame.";
 		} else {
 			$people = WHD_AI_Images::people();
 			$scenes = WHD_AI_Images::scenes();
@@ -1666,7 +1671,7 @@ final class WHD_AI_Studio {
 			'seams, hands and faces intact; nothing warped, melted or doubled',
 			'a real photograph, not a rendering or an illustration',
 		];
-		if ( 'mannequin' !== $shot['mode'] ) {
+		if ( 'model' === $shot['mode'] ) {
 			array_splice( $rules, 1, 0, [
 				'a different person from anyone in the references: a different face, different hair',
 				WHD_AI_Images::age_rule(),
@@ -1721,13 +1726,17 @@ final class WHD_AI_Studio {
 		$user = "A picture was drawn by an image model to show the product in the real photographs. Check it the way you would before it goes on the shop.\n\n"
 			. "ATTACHED, IN ORDER\n" . implode( "\n", $order ) . "\n\n"
 			. "THE PRODUCT, EXACTLY\n" . self::spec( $facts ) . "\n\n"
-			. 'THE PICTURE WAS MEANT TO BE ' . ( 'mannequin' === $shot['mode'] ? 'a ghost-mannequin shot with no person in it' : 'the product worn or used by a model' ) . ': ' . $shot['brief'] . "\n\n"
+			. 'THE PICTURE WAS MEANT TO BE ' . ( [
+				'mannequin' => 'a ghost-mannequin shot with no person in it',
+				'flatlay'   => 'a flat lay seen from directly above, with no person in it',
+				'still'     => 'a still life of the product on its own, with no person in it',
+			][ $shot['mode'] ] ?? 'the product worn or used by a model' ) . ': ' . $shot['brief'] . "\n\n"
 			. sprintf( "Check picture %d against the real product, detail by detail:\n", $drawn )
 			. "- count every countable above that is visible in it, one at a time\n"
 			. "- colour, pattern and its scale, how the fabric looks, length, neckline, collar, sleeves, cuffs, hem, fastenings, trims\n"
 			. "- anything added that the real product does not have: a pocket, a belt, extra buttons, a logo, lettering, a second layer\n"
 			. "- anything the real product has that is missing where it should be visible\n"
-			. "- the picture itself: warped hands or faces, extra fingers or limbs, a head cut off on a model shot, garbled text, a person or a mannequin in a ghost-mannequin shot\n"
+			. "- the picture itself: warped hands or faces, extra fingers or limbs, a head cut off on a model shot, garbled text, a person or a mannequin in a ghost-mannequin, flat-lay or still-life shot\n"
 			. "Something hidden by the pose, the angle or the crop is not a problem. Only what can be seen and is wrong. A detail given as \"at least\" has no exact number to match: it is wrong only when the drawing clearly shows fewer, or a different size or spacing from the real one.\n"
 			. "When the real photographs show more than one colourway, the drawing must match the one its brief names, and be one colourway, not a mix.\n\n"
 			. "Answer with JSON only:\n"
@@ -1762,9 +1771,15 @@ final class WHD_AI_Studio {
 		];
 	}
 
-	/** Throw away a drawing that lost to a better attempt. Only ever one this panel made, on this product. */
+	/**
+	 * Throw away a drawing that lost to a better attempt. Only ever one this panel made, on this
+	 * product — or, for Image Builder (no product, post 0), one this same person drew.
+	 */
 	public static function discard( int $post_id, int $id ): bool {
 		if ( ! $id || ! get_post_meta( $id, WHD_AI_Images::META, true ) || (int) get_post_field( 'post_parent', $id ) !== $post_id ) {
+			return false;
+		}
+		if ( 0 === $post_id && (int) get_post_field( 'post_author', $id ) !== get_current_user_id() ) {
 			return false;
 		}
 		if ( ! current_user_can( 'delete_post', $id ) ) {
@@ -2350,7 +2365,8 @@ final class WHD_AI_Studio {
 		foreach ( array_slice( (array) $given, 0, self::TOTAL_MAX ) as $shot ) {
 			$shot  = is_array( $shot ) ? $shot : [];
 			$out[] = [
-				'mode'  => 'mannequin' === ( $shot['mode'] ?? '' ) ? 'mannequin' : 'model',
+				// The product screen offers the first two; Image Builder all four.
+				'mode'  => in_array( ( $shot['mode'] ?? '' ), [ 'mannequin', 'flatlay', 'still' ], true ) ? $shot['mode'] : 'model',
 				'ask'   => mb_substr( sanitize_textarea_field( (string) ( $shot['ask'] ?? '' ) ), 0, 500 ),
 				'brief' => mb_substr( sanitize_textarea_field( (string) ( $shot['brief'] ?? '' ) ), 0, 1200 ),
 			];
