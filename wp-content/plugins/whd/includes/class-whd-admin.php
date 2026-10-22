@@ -20,6 +20,62 @@ final class WHD_Admin {
 		add_action( 'admin_enqueue_scripts', [ __CLASS__, 'assets' ] );
 		add_action( 'admin_head', [ __CLASS__, 'centre_dropdowns' ] );
 		add_action( 'rest_api_init', [ __CLASS__, 'rest' ] );
+
+		// Pages and products are built by this site's own templates, not Elementor: no way in by accident.
+		add_filter( 'page_row_actions', [ __CLASS__, 'no_builder_link' ], 99, 2 );
+		add_filter( 'post_row_actions', [ __CLASS__, 'no_builder_link' ], 99, 2 );
+		add_action( 'admin_head', [ __CLASS__, 'quiet_edit_screens' ] );
+		add_filter( 'elementor/frontend/admin_bar/settings', [ __CLASS__, 'no_builder_bar' ], 99 );
+	}
+
+	/**
+	 * Is this a page or product the site draws itself? Then "Edit with Elementor" has no business on
+	 * it: one click converts it to an Elementor document that no longer shows the template's content.
+	 * One already built with Elementor (the maintenance page, the theme's demo drafts) keeps its button,
+	 * or it could not be edited at all.
+	 */
+	private static function own_template( $post ) {
+		$post = get_post( $post );
+		return $post && in_array( $post->post_type, [ 'page', 'product' ], true ) && 'builder' !== get_post_meta( $post->ID, '_elementor_edit_mode', true );
+	}
+
+	/** No "Edit with Elementor" under a page or product in the lists. */
+	public static function no_builder_link( $actions, $post ) {
+		if ( self::own_template( $post ) ) {
+			unset( $actions['edit_with_elementor'] );
+		}
+		return $actions;
+	}
+
+	/** Nor on the edit screen itself, nor in the admin bar over the page on the site. */
+	public static function no_builder_bar( $settings ) {
+		if ( is_singular() && self::own_template( get_queried_object_id() ) ) {
+			unset( $settings['elementor_edit_page'] );
+		}
+		return $settings;
+	}
+
+	/**
+	 * On a page's or product's edit screen: Elementor's switch button and panel go, and so do the
+	 * theme's "Tab with HTML-block" and "Section with HTML-block" product tabs — hidden rather than
+	 * removed, because their save handlers delete whatever a product had there when the fields are
+	 * missing from the form.
+	 */
+	public static function quiet_edit_screens() {
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( ! $screen || 'post' !== $screen->base || ! in_array( $screen->post_type, [ 'page', 'product' ], true ) ) {
+			return;
+		}
+		$css = '';
+		if ( self::own_template( $GLOBALS['post'] ?? 0 ) || ! isset( $GLOBALS['post'] ) ) {
+			$css .= '#elementor-switch-mode,#elementor-editor{display:none!important}';
+		}
+		if ( 'product' === $screen->post_type ) {
+			$css .= 'li.ideapark_html_block_tab,li.ideapark_html_block_section{display:none!important}';
+		}
+		if ( $css ) {
+			echo '<style id="whd-quiet-edit">' . $css . '</style>' . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed CSS
+		}
 	}
 
 	/**
