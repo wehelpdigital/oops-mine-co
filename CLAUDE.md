@@ -288,8 +288,8 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   an open, empty level that offers the value (skipping `whdv-locked` rows, so the colour still comes first, and swatches
   marked unavailable), once — a shopper who clears it is left alone. Client-side on purpose, so a cached page never
   carries one visitor’s size to another.
-- **AI Writer** is one top-level menu with three screens: AI Posts (`whd-ai-posts`, also the parent slug), AI Pages
-  (`whd-ai-pages`) and **Bulk products** (`whd-ai-products`, `WHD_AI_Products`, WooCommerce only). Admin assets key off
+- **AI Writer** is one top-level menu with four screens: AI Posts (`whd-ai-posts`, also the parent slug), AI Pages
+  (`whd-ai-pages`), **Bulk products** (`whd-ai-products`, `WHD_AI_Products`) and **Image Builder** (both WooCommerce only). Admin assets key off
   `$_GET['page']`, never the hook name — the hook carries where an item sits in the menu, so matching on it breaks the
   moment a screen moves under a parent.
 - Bulk products: **one card per piece, each one the product screen’s Write with AI panel** — photographs, the eight
@@ -387,6 +387,16 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   shop’s real pieces, as references) and `mode` `mannequin`. `compose` and `write-image` run as background jobs through
   `WHD_AI_Studio::background()` (polled at `studio/job`, now `edit_posts`) when WooCommerce is there; the kit loader and
   lightbox are the same ones (`admin/ai-kit.js`, whose client takes a `jobs` URL).
+- **Image Builder** (`WHD_AI_Image_Builder`, `admin/image-builder.js` + `.css`; AI Writer → Image Builder, page
+  `whd-ai-image-builder`, needs `upload_files`): photos dropped, uploaded (REST `wp/v2/media`) or picked from the
+  library (up to `WHD_AI_Studio::LOOK_MAX`), a count (1–8), and per image *On a model* / *Ghost mannequin* + a prompt
+  (the prompt is both the shot's `brief` and its `ask`; a blank one gets the nth view for its mode from `blankModel` /
+  `blankGhost`, so a set never repeats). It runs the studio's own `look` → `inspect` → `draw` → `check` (→ one
+  redraw, loser discarded) with **post 0** — routes `whd/v1/ai/builder/*`, background jobs polled at `studio/job` —
+  so pictures land unattached in the media library, marked `_whd_ib` (+ `_whd_ib_ask`); the last 12 are shown again
+  under the form after a reload. `WHD_AI_Studio::discard( 0, … )` only deletes a drawing the same user made. A
+  Canva-style post-production editor (Fabric.js) was built once and parked, unshipped, on the branch
+  `wip/image-builder-editor`.
 - **Who appears in drawn pictures** is one list, `WHD_AI_Images::people()` (filter `whd_ai_image_people`): young
   women with a stated age (23–30) and background — Korean, Thai, Japanese, Chinese, Filipina, alternating with
   white — plus `age_rule()` (22–32) in every brief. Product sets offset the list by product id; journal, page and

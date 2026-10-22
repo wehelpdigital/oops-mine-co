@@ -39,6 +39,7 @@ require_once WHD_DIR . 'includes/class-whd-ai-admin.php';
 require_once WHD_DIR . 'includes/class-whd-ai-writer.php';
 require_once WHD_DIR . 'includes/class-whd-ai-products.php';
 require_once WHD_DIR . 'includes/class-whd-ai-studio.php';
+require_once WHD_DIR . 'includes/class-whd-ai-image-builder.php';
 require_once WHD_DIR . 'includes/class-whd-seo.php';
 require_once WHD_DIR . 'includes/class-whd-product-admin.php';
 require_once WHD_DIR . 'includes/class-whd-admin.php';
@@ -93,6 +94,7 @@ final class WHD_Plugin {
 		if ( class_exists( 'WooCommerce' ) ) {
 			WHD_AI_Products::init();
 			WHD_AI_Studio::init();
+			WHD_AI_Image_Builder::init();
 		}
 		WHD_SEO::init();
 		if ( class_exists( 'WooCommerce' ) ) {

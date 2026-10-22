@@ -1762,9 +1762,15 @@ final class WHD_AI_Studio {
 		];
 	}
 
-	/** Throw away a drawing that lost to a better attempt. Only ever one this panel made, on this product. */
+	/**
+	 * Throw away a drawing that lost to a better attempt. Only ever one this panel made, on this
+	 * product — or, for Image Builder (no product, post 0), one this same person drew.
+	 */
 	public static function discard( int $post_id, int $id ): bool {
 		if ( ! $id || ! get_post_meta( $id, WHD_AI_Images::META, true ) || (int) get_post_field( 'post_parent', $id ) !== $post_id ) {
+			return false;
+		}
+		if ( 0 === $post_id && (int) get_post_field( 'post_author', $id ) !== get_current_user_id() ) {
 			return false;
 		}
 		if ( ! current_user_can( 'delete_post', $id ) ) {
