@@ -240,6 +240,7 @@ final class WHD_AI_Products {
 					<?php esc_html_e( 'Photos of a piece in, a finished product out: the name, both descriptions, the story, categories, size chart, product data, search snippet and new pictures — written and drawn by AI from your photos, then saved as a new product. The same steps as Write with AI on the product screen.', 'whd' ); ?>
 				</p>
 			</header>
+			<hr class="wp-header-end">
 
 			<?php if ( ! WHD_AI::ready() ) : ?>
 				<div class="whd-note whd-note--warn">

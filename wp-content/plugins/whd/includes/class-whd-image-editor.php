@@ -316,6 +316,7 @@ final class WHD_Image_Editor {
 				<h1 class="whd-title"><?php esc_html_e( 'Image Editor', 'whd' ); ?></h1>
 				<p class="whd-ied__lead"><?php esc_html_e( 'Choose the images you want to edit and dress them up — text, stickers, badges, templates, filters and sizes for every place a picture goes. Saving adds a new image to your media library; the original is never changed.', 'whd' ); ?></p>
 			</header>
+			<hr class="wp-header-end">
 			<div class="whd-ie" id="whd-ie"></div>
 		</div>
 		<?php

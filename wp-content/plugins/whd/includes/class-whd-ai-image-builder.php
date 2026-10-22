@@ -234,6 +234,7 @@ final class WHD_AI_Image_Builder {
 				<h1 class="whd-title"><?php esc_html_e( 'Image Builder', 'whd' ); ?></h1>
 				<p class="whd-ib__lead"><?php esc_html_e( 'New pictures of a product from the photos you already have — worn by a model or on a ghost mannequin. Every picture is drawn from your photos, checked against them, and saved to your media library.', 'whd' ); ?></p>
 			</header>
+			<hr class="wp-header-end">
 
 			<?php if ( ! $ready ) : ?>
 				<div class="whd-note whd-note--warn">
