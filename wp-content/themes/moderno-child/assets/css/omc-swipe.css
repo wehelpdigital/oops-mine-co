@@ -11,7 +11,9 @@
 .omc-swipe__links { display: flex; flex-wrap: wrap; gap: 16px; }
 
 .omc-swipe__play { display: flex; flex-direction: column; align-items: center; gap: 18px; }
-.omc-swipe__deck { position: relative; width: 100%; max-width: 420px; aspect-ratio: 3 / 4.25; touch-action: pan-y; user-select: none; -webkit-user-select: none; outline: none; }
+/* isolation: the cards stack with z-index up to 100 (omc-swipe.js), which is above the sticky header's 99;
+   a stacking context of its own keeps that order inside the deck, so the header scrolls over it. */
+.omc-swipe__deck { position: relative; isolation: isolate; width: 100%; max-width: 420px; aspect-ratio: 3 / 4.25; touch-action: pan-y; user-select: none; -webkit-user-select: none; outline: none; }
 .omc-swipe__deck:focus-visible { outline: 2px solid var(--omc-rose); outline-offset: 8px; }
 .omc-swipe__card {
 	position: absolute;
@@ -63,7 +65,8 @@
 .omc-swipe__end-title { margin: 0 0 6px; font-family: var(--omc-serif); font-size: 26px; line-height: 1.15; color: var(--omc-rose-dark); }
 .omc-swipe__again { margin-top: 4px; border: 0; background: none; font: 600 11px/1.4 var(--omc-sans); letter-spacing: .14em; text-transform: uppercase; color: var(--omc-muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 
-.omc-swipe__actions { display: flex; justify-content: center; gap: 22px; }
+/* Clear of the cards waiting underneath, which sit up to 28px lower than the deck (.is-third), and their shadow. */
+.omc-swipe__actions { display: flex; justify-content: center; gap: 22px; margin-top: 34px; }
 .omc-swipe.is-done .omc-swipe__actions { visibility: hidden; }
 .omc-swipe__btn {
 	display: inline-flex;
