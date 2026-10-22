@@ -8,9 +8,10 @@
  * page id: .ftp-sync/import-videos.php rewrites the video's own data (`_omc_video`) every time it
  * runs, and the slug is what stays the same on every copy of the site.
  *
- * On the video page each moment becomes a card ("Shop this look at 1:23") with its size picker,
- * and the piece on screen right now sits under the player with its own Add to bag
- * (assets/js/omc-video.js follows the video's time).
+ * On the video page each moment does three things (assets/js/omc-video.js follows the video's time):
+ * at its time the piece slides in as a small window over the video — photo, name, price, size and
+ * Add to bag — and stays for that moment's seconds (8 unless set) or until the next piece; it sits
+ * under the player as the piece on screen; and it has a card in the list, "Shop this look at 1:23".
  *
  * @package moderno-child
  */
@@ -19,15 +20,22 @@ defined( 'ABSPATH' ) || exit;
 
 const OMC_VIDEO_SHOP_OPTION = 'omc_video_shop';
 const OMC_VIDEO_SHOP_PAGE   = 'omc-video-shop';
+const OMC_VIDEO_SHOP_FOR    = 8;   // seconds the small window stays over the video, unless set per moment
 
-/** The moments of one video, in time order: [ [ at, product ] ]. */
+/** How long a moment's window stays: 3 to 60 seconds. */
+function omc_video_moment_for( $value ) {
+	$value = (int) $value;
+	return $value ? max( 3, min( 60, $value ) ) : OMC_VIDEO_SHOP_FOR;
+}
+
+/** The moments of one video, in time order: [ [ at, product, for ] ]. */
 function omc_video_moments( $slug ) {
 	$all = (array) get_option( OMC_VIDEO_SHOP_OPTION, [] );
 	$out = [];
 	foreach ( (array) ( $all[ sanitize_key( (string) $slug ) ] ?? [] ) as $m ) {
 		$product = absint( $m['product'] ?? 0 );
 		if ( $product ) {
-			$out[] = [ 'at' => max( 0, (int) ( $m['at'] ?? 0 ) ), 'product' => $product ];
+			$out[] = [ 'at' => max( 0, (int) ( $m['at'] ?? 0 ) ), 'product' => $product, 'for' => omc_video_moment_for( $m['for'] ?? 0 ) ];
 		}
 	}
 	usort( $out, static fn( $a, $b ) => $a['at'] <=> $b['at'] );
@@ -67,7 +75,7 @@ function omc_video_shop( array $v ) {
 		<ol class="omc-vshop__list">
 			<?php foreach ( $moments as $m ) : ?>
 				<?php $piece = $pieces[ $m['product'] ]; ?>
-				<li class="omc-vshop__item" data-at="<?php echo (int) $m['at']; ?>" data-piece="<?php echo (int) $m['product']; ?>">
+				<li class="omc-vshop__item" data-at="<?php echo (int) $m['at']; ?>" data-for="<?php echo (int) $m['for']; ?>" data-piece="<?php echo (int) $m['product']; ?>">
 					<button type="button" class="omc-vshop__seek js-omc-moment" data-at="<?php echo (int) $m['at']; ?>">
 						<img src="<?php echo esc_url( $piece['image'] ); ?>" alt="" loading="lazy" decoding="async">
 						<span class="omc-vshop__time"><?php echo esc_html( omc_video_clock( $m['at'] ) ); ?></span>
@@ -113,7 +121,7 @@ function omc_video_shop_screen() {
 		<header class="omc-vsa__head">
 			<p class="omc-vsa__eyebrow"><?php esc_html_e( 'Site', 'moderno-child' ); ?></p>
 			<h1 class="omc-vsa__title"><?php esc_html_e( 'Shoppable videos', 'moderno-child' ); ?></h1>
-			<p class="omc-vsa__lead"><?php esc_html_e( 'Which piece is on screen when, for each style video. Play the video, pause where the look is, then “Add a piece here” and choose it. On the video page each one becomes a card — “Shop this look at 1:23” — and the piece on screen sits under the player with its own Add to bag.', 'moderno-child' ); ?></p>
+			<p class="omc-vsa__lead"><?php esc_html_e( 'Which piece is on screen when, for each style video. Play the video, pause where the look is, then “Add a piece here” and choose it. On the video page the piece pops up as a small window over the video at that time — with its size and Add to bag — for the seconds set beside it, and each one also gets a card: “Shop this look at 1:23”.', 'moderno-child' ); ?></p>
 		</header>
 		<hr class="wp-header-end">
 		<noscript><div class="notice notice-error"><p><?php esc_html_e( 'This screen needs JavaScript.', 'moderno-child' ); ?></p></div></noscript>
@@ -170,6 +178,8 @@ add_action( 'admin_enqueue_scripts', static function () {
 			'jump'     => __( 'Play from here', 'moderno-child' ),
 			'now'      => __( 'Use the time now', 'moderno-child' ),
 			'time'     => __( 'Time (m:ss)', 'moderno-child' ),
+			'showFor'  => __( 'Shown over the video for this many seconds', 'moderno-child' ),
+			'forDefault' => OMC_VIDEO_SHOP_FOR,
 			'empty'    => __( 'No pieces in this video yet.', 'moderno-child' ),
 			'chapters' => __( 'Chapters — click one to add a piece at its start:', 'moderno-child' ),
 			'view'     => __( 'View the page', 'moderno-child' ),
@@ -202,7 +212,7 @@ add_action( 'rest_api_init', static function () {
 						continue;
 					}
 					$at      = max( 0, (int) ( $m['at'] ?? 0 ) );
-					$clean[] = [ 'at' => $known[ $slug ] ? min( $at, $known[ $slug ] ) : $at, 'product' => $product ];
+					$clean[] = [ 'at' => $known[ $slug ] ? min( $at, $known[ $slug ] ) : $at, 'product' => $product, 'for' => omc_video_moment_for( $m['for'] ?? 0 ) ];
 				}
 				usort( $clean, static fn( $a, $b ) => $a['at'] <=> $b['at'] );
 				if ( $clean ) {

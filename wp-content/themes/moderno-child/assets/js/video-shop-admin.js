@@ -22,7 +22,7 @@
 
 	( D.videos || [] ).forEach( function ( v ) {
 		state[ v.slug ] = ( v.moments || [] ).map( function ( m ) {
-			return { at: m.at, product: m.product };
+			return { at: m.at, product: m.product, for: m.for || D.i18n.forDefault };
 		} );
 	} );
 	saved = JSON.stringify( state );
@@ -88,7 +88,7 @@
 		} );
 
 		var add = function ( at ) {
-			var row = { at: Math.round( at ), product: 0 };
+			var row = { at: Math.round( at ), product: 0, for: T.forDefault };
 			state[ v.slug ].push( row );
 			state[ v.slug ].sort( function ( a, b ) {
 				return a.at - b.at;
@@ -135,12 +135,19 @@
 				li.innerHTML =
 					'<label class="omc-vsa__time"><span class="screen-reader-text">' + esc( T.time ) + '</span><input type="text" inputmode="numeric" value="' + esc( clock( row.at ) ) + '" aria-label="' + esc( T.time ) + '"></label>' +
 					'<button type="button" class="omc-vsa__ib" data-a="now" title="' + esc( T.now ) + '" aria-label="' + esc( T.now ) + '">⟲</button>' +
+					'<label class="omc-vsa__for" title="' + esc( T.showFor ) + '"><input type="number" min="3" max="60" step="1" value="' + esc( row.for || T.forDefault ) + '" aria-label="' + esc( T.showFor ) + '"><span>s</span></label>' +
 					'<button type="button" class="omc-vsa__pick">' +
 						( p ? ( p.thumb ? '<img src="' + esc( p.thumb ) + '" alt="">' : '' ) + '<span>' + esc( p.name ) + '<small>' + esc( p.price || '' ) + '</small></span>' : '<span class="omc-vsa__choose">' + esc( row.product ? '#' + row.product : T.choose ) + '</span>' ) +
 					'</button>' +
 					'<button type="button" class="omc-vsa__ib" data-a="play" title="' + esc( T.jump ) + '" aria-label="' + esc( T.jump ) + '">▶</button>' +
 					'<button type="button" class="omc-vsa__ib is-danger" data-a="x" title="' + esc( T.remove ) + '" aria-label="' + esc( T.remove ) + '">×</button>';
-				var input = li.querySelector( 'input' );
+				var input = li.querySelector( '.omc-vsa__time input' );
+				var len = li.querySelector( '.omc-vsa__for input' );
+				len.addEventListener( 'change', function () {
+					row.for = Math.max( 3, Math.min( 60, parseInt( len.value, 10 ) || T.forDefault ) );
+					len.value = row.for;
+					changed();
+				} );
 				input.addEventListener( 'change', function () {
 					var s = seconds( input.value );
 					if ( null === s ) {
@@ -237,7 +244,7 @@
 		} ).then( function ( j ) {
 			Object.keys( j.videos || {} ).forEach( function ( slug ) {
 				state[ slug ] = j.videos[ slug ].map( function ( m ) {
-					return { at: m.at, product: m.product };
+					return { at: m.at, product: m.product, for: m.for };
 				} );
 			} );
 			saved = JSON.stringify( state );
