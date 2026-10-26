@@ -45,6 +45,7 @@
 		photos: document.getElementById( 'whd-writer-photos' ),
 		photosNote: document.getElementById( 'whd-writer-photos-note' ),
 		counts: document.getElementById( 'whd-writer-counts' ),
+		frame: document.getElementById( 'whd-writer-frame' ),
 		shots: document.getElementById( 'whd-writer-shots' ),
 		go: document.getElementById( 'whd-writer-go' ),
 		status: document.getElementById( 'whd-writer-status' ),
@@ -72,6 +73,7 @@
 	var photos = [];          // [ { id, thumb, view, large } ] — the pieces the pictures are drawn from
 	var count = 0;            // pictures asked for
 	var countPicked = false;  // until somebody picks, the count follows the length
+	var frame = '';           // the size drawn pictures are made at; '' = 3:2
 	var shots = [];           // [ { mode, ask, own } ] — kept when the count changes, so nothing typed is lost
 	var doc = null;
 	var slots = [];
@@ -215,6 +217,21 @@
 
 	/* ─────────────────────────── how many pictures ─────────────────────────── */
 
+	/* The size the drawn ones are made at, under the count (ai-kit.js). */
+	if ( el.frame && D.canDraw && ( D.frames || [] ).length ) {
+		el.frame.appendChild( Kit.framePicker( {
+			frames: D.frames,
+			value: frame,
+			none: T.frameSame,
+			noneNote: T.frameSameNote,
+			after: T.frameLibrary,
+			strings: T,
+			onChange: function ( key ) {
+				frame = key;
+			}
+		} ).el );
+	}
+
 	function paintCounts() {
 		if ( ! el.counts ) {
 			return;
@@ -258,6 +275,9 @@
 			el.shots.appendChild( hint );
 		}
 		el.shots.hidden = ! count;
+		if ( el.frame ) {
+			el.frame.hidden = ! count || ! D.canDraw;
+		}
 	}
 
 	/* One card per picture: where it goes, how it is made, and anything to say about it. */
@@ -403,7 +423,8 @@
 			ask: shot ? shot.ask.trim() : '',
 			refs: photos.map( function ( p ) {
 				return p.id;
-			} )
+			} ),
+			frame: frame
 		};
 	}
 
@@ -444,7 +465,8 @@
 					draw: !! D.canDraw,
 					ask: how.ask,
 					mode: how.mode,
-					refs: how.refs
+					refs: how.refs,
+					frame: how.frame
 				} ).then( function ( r ) {
 					slot.image = r;
 					if ( r && r.url ) {

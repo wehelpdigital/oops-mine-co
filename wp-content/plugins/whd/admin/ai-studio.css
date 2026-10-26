@@ -1470,3 +1470,52 @@
 		grid-template-columns: 1fr;
 	}
 }
+
+/* the size new pictures are drawn at (WHDAIKit.framePicker, admin/ai-kit.js) — every AI screen */
+
+.whd-frame {
+	margin: 14px 0 6px;
+}
+
+.whd-frame[hidden] {
+	display: none;
+}
+
+.whd-frame__row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.whd-frame__shape {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	border-radius: 6px;
+	background: var(--whd-sand, #f7f2ed);
+}
+
+.whd-frame__shape i {
+	display: block;
+	box-sizing: border-box;
+	border: 2px solid var(--whd-rose, #b98b7e);
+	border-radius: 2px;
+	transition: width .2s, height .2s;
+}
+
+.whd-frame__shape.is-none i {
+	border-style: dashed;
+	border-color: #a7aaad;
+}
+
+.whd-frame__select {
+	width: min(100%, 380px);
+	min-width: 0;
+}
+
+.whd-frame__note {
+	margin: 6px 0 0;
+}

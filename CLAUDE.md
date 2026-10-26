@@ -468,6 +468,17 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   white — plus `age_rule()` (22–32) in every brief. Product sets offset the list by product id; journal, page and
   Bulk-products pictures (`make()`) take the next person from a random start. The old casting ran "twenties"
   to "fifties" with a rule demanding a different age per picture, so every set had an older woman in it.
+- **Sizes for drawn pictures** (`WHD_AI_Images::frames()`, filter `whd_ai_image_frames`): the Image Editor's size list
+  (`image-presets.js` `sizes`, minus "Original" — change both together), offered as a **Size** select
+  (`WHDAIKit.framePicker()` in `admin/ai-kit.js`, strings `frame_strings()`) on the product screen's Write with AI,
+  Bulk products / Product Builder (per card; "copy to all" carries it), Image Builder (shown in the summary, and as a
+  `W × H` chip on each tile) and AI Posts / Pages (drawn pictures only — a library find keeps its size). The browser
+  sends a key as `frame`; `frame( $key )` turns it into the nearest ratio the model accepts (`RATIOS`, 21:9 included)
+  and the smallest of 1K/2K/4K that covers the size once trimmed (≤6% short is allowed and scaled up; never below the
+  settings' `image_size`); the brief says the exact size; `settle( …, $frame )` centre-crops and scales to exactly
+  W × H (up as well as down) in one encode. No size chosen = the old behaviour (studio: first photo's shape; writer:
+  3:2 — the writer's "Find or draw" now asks for 3:2 too, it used to send no shape). Tested on all 19 sizes with GD
+  and on real drawings (4:5, 21:9, 9:16 came back exact).
 - **Spin to win** (`WHD_Wheel`, WHD → Spin to win, table `{prefix}whd_spins`, option `whd_wheel`): a `wheel` block in the
   popup editor (drawn as SVG in PHP so the editor preview is the real thing; spin animation in `assets/popups.js`) and
   a ready-made, disabled `spin_wheel` popup. Prizes are real coupons — saving a code that does not exist creates it

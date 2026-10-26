@@ -565,6 +565,61 @@
 	color: var(--ib-quiet);
 }
 
+/* the size the images are drawn at (WHDAIKit.framePicker, admin/ai-kit.js) */
+
+.whd-ib__frame .whd-frame {
+	margin: 18px 0 0;
+	padding: 14px 0 0;
+	border-top: 1px solid #f1ebe6;
+}
+
+.whd-ib__frame .whd-studio__label {
+	margin: 0 0 8px;
+	font-size: 12px;
+	color: var(--ib-quiet);
+}
+
+.whd-ib__frame .whd-frame__shape {
+	background: var(--ib-sand);
+}
+
+.whd-ib__frame .whd-frame__shape i {
+	border-color: var(--ib-rose);
+}
+
+.whd-ib__frame .whd-frame__select {
+	min-height: 38px;
+	border-color: var(--ib-line);
+	border-radius: 10px;
+	color: var(--ib-ink);
+}
+
+.whd-ib__frame .whd-frame__select:focus {
+	border-color: var(--ib-rose);
+	box-shadow: var(--ib-ring);
+	outline: none;
+}
+
+.whd-ib__frame .whd-frame__note {
+	color: var(--ib-quiet);
+	font-size: 12px;
+}
+
+.whd-ib__tile-dims {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+	padding: 4px 8px;
+	border-radius: 999px;
+	background: rgba(36, 26, 23, .72);
+	color: #fff;
+	font-size: 11px;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	line-height: 1;
+	pointer-events: none;
+}
+
 /* ─────────────────────────── 3. each image ─────────────────────────── */
 
 .whd-ib__shots {

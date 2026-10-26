@@ -62,6 +62,7 @@
 			want: 0,          // the number of new pictures somebody picked
 			picked: false,    // until somebody picks, the count follows the photographs
 			count: 0,         // what that comes to with these photographs
+			frame: '',        // the size they are drawn at; '' = the first photograph's shape
 			postId: 0,        // the draft, once one is made; generating again carries on with it
 			editUrl: '',
 			done: false,
@@ -90,6 +91,7 @@
 			photos: q( '[data-photos]' ),
 			photosNote: q( '[data-photos-note]' ),
 			counts: q( '[data-counts]' ),
+			frame: q( '[data-frame]' ),
 			shots: q( '[data-shots]' ),
 			keywords: q( '[data-keywords]' ),
 			notes: q( '[data-notes]' ),
@@ -105,6 +107,21 @@
 
 		if ( window.WHDKeywords && p.el.keywords ) {
 			window.WHDKeywords.mount( p.el.keywords );
+		}
+
+		// The size the new pictures are drawn at, under the count (ai-kit.js).
+		if ( p.el.frame && ( D.frames || [] ).length ) {
+			p.framer = Kit.framePicker( {
+				frames: D.frames,
+				value: p.frame,
+				none: T.frameSame,
+				noneNote: T.frameSameNote,
+				strings: T,
+				onChange: function ( key ) {
+					p.frame = key;
+				}
+			} );
+			p.el.frame.appendChild( p.framer.el );
 		}
 
 		q( '[data-remove]' ).addEventListener( 'click', function () {
@@ -175,6 +192,7 @@
 			? '<p class="whd-studio__label" id="whd-aip-count-label-' + n + '">' + esc( T.countLabel ) + '</p>' +
 				'<div class="whd-studio__counts" data-counts role="radiogroup" aria-labelledby="whd-aip-count-label-' + n + '"></div>' +
 				'<p class="description">' + esc( T.countNote ) + '</p>' +
+				'<div data-frame hidden></div>' +
 				'<div class="whd-studio__shots" data-shots hidden></div>'
 			: '<p class="description">' + esc( T.noDraw ) + '</p>';
 
@@ -471,6 +489,9 @@
 			p.el.shots.appendChild( hint );
 		}
 		p.el.shots.hidden = ! p.count;
+		if ( p.el.frame ) {
+			p.el.frame.hidden = ! p.count;
+		}
 	}
 
 	function shotCard( p, i ) {
@@ -543,6 +564,10 @@
 			} );
 			o.want = p.count;
 			o.picked = true;
+			o.frame = p.frame;
+			if ( o.framer ) {
+				o.framer.set( p.frame );
+			}
 			o.shots = p.shots.map( function ( s ) {
 				return { mode: s.mode, ask: s.ask };
 			} );
@@ -706,7 +731,7 @@
 		var position = ctx.ids.length + j + 1;
 		var line = step( p, fmt( T.stepDraw, j + 1, total ), 'mannequin' === shot.mode ? T.hintGhost : T.hintModel );
 		var spot = tile( p, position );
-		var body = { post_id: p.postId, images: ctx.ids, facts: ctx.facts, shot: shot, position: position, name: ctx.draft.name };
+		var body = { post_id: p.postId, images: ctx.ids, facts: ctx.facts, shot: shot, position: position, name: ctx.draft.name, frame: p.frame };
 		var best = null;
 
 		function check( pic ) {

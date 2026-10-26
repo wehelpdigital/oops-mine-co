@@ -101,6 +101,8 @@ final class WHD_AI_Products {
 			'product'    => esc_url_raw( rest_url( 'whd/v1/ai/product/' ) ),
 			'ready'      => WHD_AI::ready(),
 			'draw'       => class_exists( 'WHD_AI_Images' ) && WHD_AI_Images::ready(),
+			// The sizes a new picture can be drawn at — the Image Editor's.
+			'frames'     => class_exists( 'WHD_AI_Images' ) ? WHD_AI_Images::frame_list() : [],
 			'parts'      => $parts,
 			'totalMax'   => WHD_AI_Studio::TOTAL_MAX,
 			'lookMax'    => WHD_AI_Studio::LOOK_MAX,

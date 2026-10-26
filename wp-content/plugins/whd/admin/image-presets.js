@@ -47,7 +47,9 @@
 
 	var HEART = 'M50 88 C 20 65, 5 45, 18 25 C 30 8, 48 14, 50 30 C 52 14, 70 8, 82 25 C 95 45, 80 65, 50 88 Z';
 
-	/* ─────────────────────────── sizes ─────────────────────────── */
+	/* ─────────────────────────── sizes ───────────────────────────
+	   The AI screens draw pictures at these same sizes (WHD_AI_Images::frames()): change one list
+	   and change the other. */
 
 	var sizes = [
 		{ name: 'Original', w: 0, h: 0, note: 'the photo’s own size' },

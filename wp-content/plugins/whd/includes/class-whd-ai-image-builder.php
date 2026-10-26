@@ -82,6 +82,8 @@ final class WHD_AI_Image_Builder {
 			'ready'   => self::ready(),
 			'max'     => self::MAX,
 			'photos'  => WHD_AI_Studio::LOOK_MAX,
+			// The sizes an image can be drawn at — the Image Editor's.
+			'frames'  => WHD_AI_Images::frame_list(),
 			'recent'  => self::recent(),
 			'i18n'    => array_merge( WHD_AI_Studio::strings(), self::strings() ),
 		] );
@@ -97,7 +99,9 @@ final class WHD_AI_Image_Builder {
 		if ( ! $id || ! wp_attachment_is_image( $id ) ) {
 			return null;
 		}
+		$meta = wp_get_attachment_metadata( $id );
 		return [
+			'dims'  => ! empty( $meta['width'] ) ? sprintf( '%d × %d', $meta['width'], $meta['height'] ) : '',
 			'id'    => $id,
 			'thumb' => (string) wp_get_attachment_image_url( $id, 'thumbnail' ),
 			'url'   => (string) wp_get_attachment_image_url( $id, 'medium_large' ),
@@ -206,6 +210,8 @@ final class WHD_AI_Image_Builder {
 			/* translators: 1: fewest minutes, 2: most minutes */
 			'sumTime'      => __( 'About %1$d–%2$d minutes', 'whd' ),
 			'sumNone'      => __( 'No photos yet', 'whd' ),
+			'frameSame'     => __( 'Same shape as your first photo', 'whd' ),
+			'frameSameNote' => __( 'The nearest shape the model draws to your first photo, at the size set in WHD → AI content. Pick a size to get images made exactly to it — for a post, a story, a banner or the shop.', 'whd' ),
 			/* translators: 1: image number, 2: how many */
 			'stepImage'    => __( 'Image %1$d of %2$d', 'whd' ),
 			'genDone'      => __( 'Your images are ready — they are in your media library.', 'whd' ),
@@ -292,6 +298,7 @@ final class WHD_AI_Image_Builder {
 							</div>
 						</header>
 						<div class="whd-ib__count" id="whd-ib-count" role="radiogroup" aria-labelledby="whd-ib-h-count"></div>
+						<div class="whd-ib__frame" id="whd-ib-frame"></div>
 						<div class="whd-ib__setall">
 							<span class="whd-ib__setall-label"><?php esc_html_e( 'Set every image to', 'whd' ); ?></span>
 							<button type="button" class="whd-ib__chip whd-ib__chip--mode" data-all="model"><?php esc_html_e( 'On a model', 'whd' ); ?></button>

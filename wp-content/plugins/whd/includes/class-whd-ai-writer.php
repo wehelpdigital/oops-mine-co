@@ -195,6 +195,8 @@ final class WHD_AI_Writer {
 			'type'    => $type,
 			'ready'   => WHD_AI::ready(),
 			'canDraw' => class_exists( 'WHD_AI_Images' ) && WHD_AI_Images::ready(),
+			// The sizes a drawn picture can be made at — the Image Editor's.
+			'frames'  => class_exists( 'WHD_AI_Images' ) ? WHD_AI_Images::frame_list() : [],
 			'lengths' => [
 				[ 'key' => 'short', 'name' => __( 'Short', 'whd' ), 'note' => __( 'about 400 words', 'whd' ), 'pictures' => 2 ],
 				[ 'key' => 'medium', 'name' => __( 'Medium', 'whd' ), 'note' => __( 'about 700 words', 'whd' ), 'pictures' => 3 ],
@@ -204,6 +206,9 @@ final class WHD_AI_Writer {
 			'i18n'    => array_merge(
 				class_exists( 'WHD_AI_Studio' ) ? WHD_AI_Studio::strings() : [],
 				[
+					'frameSame'     => __( 'Landscape 3:2 — the journal’s own shape', 'whd' ),
+					'frameSameNote' => __( 'Drawn pictures come out in 3:2, at the size set in WHD → AI content. A picture found in your library keeps its own size.', 'whd' ),
+					'frameLibrary'  => __( 'A picture found in your library keeps its own size.', 'whd' ),
 					'writing'   => __( 'Writing — this takes a few seconds…', 'whd' ),
 					'saving'    => __( 'Saving…', 'whd' ),
 					'error'     => __( 'Something went wrong', 'whd' ),
@@ -388,6 +393,7 @@ final class WHD_AI_Writer {
 					<p class="whd-studio__label" id="whd-writer-count-label"><?php esc_html_e( 'How many pictures?', 'whd' ); ?></p>
 					<div class="whd-studio__counts" id="whd-writer-counts" role="radiogroup" aria-labelledby="whd-writer-count-label"></div>
 					<p class="description"><?php esc_html_e( 'The first sits at the top of the page as its featured image; the rest go in between the sections.', 'whd' ); ?></p>
+					<div id="whd-writer-frame" hidden></div>
 					<div class="whd-studio__shots" id="whd-writer-shots" hidden></div>
 				</div>
 			</section>
@@ -1006,11 +1012,12 @@ JSON;
 	 * a picture on a model or a ghost mannequin, drawn straight away, from the photographs of the
 	 * shop's own pieces when there are some.
 	 *
-	 * @param string $mode auto | model | mannequin.
-	 * @param int[]  $refs Photographs of the pieces the piece is about.
+	 * @param string $mode  auto | model | mannequin.
+	 * @param int[]  $refs  Photographs of the pieces the piece is about.
+	 * @param string $frame A size from WHD_AI_Images::frames() for a picture that is drawn; '' = 3:2.
 	 * @return array|WP_Error
 	 */
-	public static function fill_slot( array $slot, array $doc, array $taken = [], bool $may_draw = true, string $ask = '', string $mode = 'auto', array $refs = [] ) {
+	public static function fill_slot( array $slot, array $doc, array $taken = [], bool $may_draw = true, string $ask = '', string $mode = 'auto', array $refs = [], string $frame = '' ) {
 		$ask      = trim( $ask );
 		$can_draw = $may_draw && class_exists( 'WHD_AI_Images' ) && WHD_AI_Images::ready();
 		$refs     = array_values( array_filter( array_map( 'absint', $refs ), static fn( $id ) => $id && wp_attachment_is_image( $id ) ) );
@@ -1032,7 +1039,7 @@ JSON;
 				sanitize_title( $slot['subject'] ?: 'journal' ),
 				$slot['subject'],
 				$ask,
-				[ 'aspect' => '3:2', 'refs' => $refs, 'mode' => $mode ]
+				[ 'aspect' => '3:2', 'refs' => $refs, 'mode' => $mode, 'frame' => $frame ]
 			);
 			if ( is_wp_error( $id ) ) {
 				return $id;
@@ -1078,7 +1085,8 @@ JSON;
 			sanitize_title( $slot['subject'] ?: 'journal' ),
 			$slot['subject'],
 			$ask,
-			[ 'refs' => $refs ]
+			// 3:2 like the other drawn pictures: without a shape the model picked its own, usually square.
+			[ 'aspect' => '3:2', 'refs' => $refs, 'frame' => $frame ]
 		);
 		if ( is_wp_error( $id ) ) {
 			return $id;
@@ -1560,7 +1568,8 @@ JSON;
 				(bool) $r->get_param( 'draw' ),
 				mb_substr( sanitize_textarea_field( (string) $r->get_param( 'ask' ) ), 0, 500 ),
 				sanitize_key( (string) ( $r->get_param( 'mode' ) ?: 'auto' ) ),
-				array_slice( array_map( 'absint', (array) $r->get_param( 'refs' ) ), 0, 6 )
+				array_slice( array_map( 'absint', (array) $r->get_param( 'refs' ) ), 0, 6 ),
+				sanitize_key( (string) $r->get_param( 'frame' ) )
 			);
 			if ( is_wp_error( $filled ) ) {
 				return new WP_REST_Response( [ 'message' => $filled->get_error_message() ], 400 );

@@ -107,6 +107,179 @@ final class WHD_AI_Images {
 	const MAX_EDGE = 1600;
 	const QUALITY  = 82;
 
+	/* ─────────────────────────── sizes ─────────────────────────── */
+
+	/** The aspect ratios the image model accepts, as width / height. */
+	const RATIOS = [
+		'1:1'  => 1.0,
+		'2:3'  => 2 / 3,
+		'3:2'  => 1.5,
+		'3:4'  => 0.75,
+		'4:3'  => 4 / 3,
+		'4:5'  => 0.8,
+		'5:4'  => 1.25,
+		'9:16' => 9 / 16,
+		'16:9' => 16 / 9,
+		'21:9' => 21 / 9,
+	];
+
+	/**
+	 * The sizes a drawn picture can be made at — the Image Editor's list (admin/image-presets.js,
+	 * `sizes`) without its "Original", so a picture drawn for a place comes out the size that place
+	 * wants. Change one list and change the other.
+	 *
+	 * @return array key => { name, group, w, h }
+	 */
+	public static function frames(): array {
+		$shop   = __( 'Shop', 'whd' );
+		$social = __( 'Social', 'whd' );
+		$web    = __( 'Web and email', 'whd' );
+		$print  = __( 'Print', 'whd' );
+		$any    = __( 'Any use', 'whd' );
+		$frames = [
+			'product-square'     => [ __( 'Product, square', 'whd' ), $shop, 2000, 2000 ],
+			'product-3-4'        => [ __( 'Product, 3:4', 'whd' ), $shop, 1500, 2000 ],
+			'instagram-post'     => [ __( 'Instagram post', 'whd' ), $social, 1080, 1080 ],
+			'instagram-portrait' => [ __( 'Instagram portrait', 'whd' ), $social, 1080, 1350 ],
+			'story'              => [ __( 'Story / Reel', 'whd' ), $social, 1080, 1920 ],
+			'facebook-post'      => [ __( 'Facebook post', 'whd' ), $social, 1200, 630 ],
+			'facebook-cover'     => [ __( 'Facebook cover', 'whd' ), $social, 1640, 624 ],
+			'facebook-story'     => [ __( 'Facebook story', 'whd' ), $social, 1080, 1920 ],
+			'pinterest-pin'      => [ __( 'Pinterest pin', 'whd' ), $social, 1000, 1500 ],
+			'pinterest-square'   => [ __( 'Pinterest square', 'whd' ), $social, 1000, 1000 ],
+			'tiktok-cover'       => [ __( 'TikTok cover', 'whd' ), $social, 1080, 1920 ],
+			'youtube-thumbnail'  => [ __( 'YouTube thumbnail', 'whd' ), $social, 1280, 720 ],
+			'x-post'             => [ __( 'X / Twitter post', 'whd' ), $social, 1600, 900 ],
+			'web-banner'         => [ __( 'Web banner', 'whd' ), $web, 1920, 800 ],
+			'email-header'       => [ __( 'Email header', 'whd' ), $web, 1200, 600 ],
+			'lookbook-a4'        => [ __( 'Lookbook page A4', 'whd' ), $print, 1240, 1754 ],
+			'gift-card'          => [ __( 'Gift card', 'whd' ), $print, 1050, 600 ],
+			'landscape-3-2'      => [ __( 'Landscape 3:2', 'whd' ), $any, 1800, 1200 ],
+			'portrait-2-3'       => [ __( 'Portrait 2:3', 'whd' ), $any, 1200, 1800 ],
+		];
+
+		$out = [];
+		foreach ( (array) apply_filters( 'whd_ai_image_frames', $frames ) as $key => $f ) {
+			$w = (int) ( $f[2] ?? 0 );
+			$h = (int) ( $f[3] ?? 0 );
+			// Past 4K the model has nothing larger to give; scaling up that far is not a picture any more.
+			if ( '' !== sanitize_key( (string) $key ) && $w >= 64 && $h >= 64 && $w <= 4096 && $h <= 4096 ) {
+				$out[ sanitize_key( (string) $key ) ] = [ 'name' => (string) $f[0], 'group' => (string) ( $f[1] ?? '' ), 'w' => $w, 'h' => $h ];
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * One size, with what to ask the model for: the accepted shape nearest it, and the smallest of
+	 * 1K / 2K / 4K that still covers it once trimmed — never smaller than the size chosen in the
+	 * settings. Null when no size was chosen (or one that is not on the list).
+	 *
+	 * @param string $key A key of frames().
+	 * @return array|null { key, name, group, w, h, aspect, size }
+	 */
+	public static function frame( $key ) {
+		$key    = sanitize_key( (string) $key );
+		$frames = self::frames();
+		if ( '' === $key || ! isset( $frames[ $key ] ) ) {
+			return null;
+		}
+		$f      = $frames[ $key ];
+		$aspect = self::nearest_ratio( $f['w'] / $f['h'] );
+
+		return $f + [ 'key' => $key, 'aspect' => $aspect, 'size' => self::size_for( $f['w'], $f['h'], $aspect ) ];
+	}
+
+	/** The size picker's words (WHDAIKit.framePicker in admin/ai-kit.js), for every screen that has one. */
+	public static function frame_strings(): array {
+		return [
+			'frameLabel'  => __( 'Size', 'whd' ),
+			/* translators: 1: size name, 2: width, 3: height */
+			'frameOption' => __( '%1$s — %2$d × %3$d', 'whd' ),
+			/* translators: 1: aspect ratio, e.g. 4:5, 2: width, 3: height */
+			'frameNote'   => __( 'Drawn in %1$s, then cut and scaled to exactly %2$d × %3$d pixels.', 'whd' ),
+		];
+	}
+
+	/** Every size, for a picker in the browser: [ { key, name, group, w, h, aspect, size } ]. */
+	public static function frame_list(): array {
+		return array_values( array_filter( array_map( [ __CLASS__, 'frame' ], array_keys( self::frames() ) ) ) );
+	}
+
+	/** The accepted ratio nearest a width / height, by how far apart they look rather than how far apart the numbers are. */
+	public static function nearest_ratio( float $want ): string {
+		$best = '1:1';
+		$gap  = INF;
+		foreach ( self::RATIOS as $ratio => $value ) {
+			$d = abs( log( $value ) - log( max( 0.01, $want ) ) );
+			if ( $d < $gap ) {
+				$gap  = $d;
+				$best = $ratio;
+			}
+		}
+		return $best;
+	}
+
+	/**
+	 * The model's sizes run at about a megapixel for 1K, four for 2K and sixteen for 4K, in the shape
+	 * asked for (1:1 at 1K is 1024 × 1024, 16:9 is 1376 × 768). A few per cent short is let through
+	 * and made up when the picture is scaled to size — 1024 for a 1080 post is not worth four times
+	 * the pixels.
+	 */
+	private static function size_for( int $w, int $h, string $aspect ): string {
+		$r    = self::RATIOS[ $aspect ] ?? 1.0;
+		$want = $w / $h;
+		$need = '4K';
+		foreach ( [ '1K' => 1, '2K' => 2, '4K' => 4 ] as $size => $scale ) {
+			$mw = 1024 * sqrt( $r ) * $scale;
+			$mh = 1024 / sqrt( $r ) * $scale;
+			// What is left once the picture is trimmed to the size's own shape.
+			$cw = $want > $r ? $mw : $mh * $want;
+			$ch = $want > $r ? $mw / $want : $mh;
+			if ( $cw >= $w * 0.94 && $ch >= $h * 0.94 ) {
+				$need = $size;
+				break;
+			}
+		}
+		$rank = [ '1K' => 1, '2K' => 2, '4K' => 3 ];
+
+		return $rank[ self::size() ] > $rank[ $need ] ? self::size() : $need;
+	}
+
+	/** The size in the brief's own words, so the model frames for the cut that is coming. */
+	public static function framing( array $frame ): string {
+		return sprintf(
+			'aspect ratio %1$s; it is trimmed afterwards to exactly %2$d × %3$d pixels (%4$s), so keep heads, hands and the whole piece clear of the edges',
+			$frame['aspect'],
+			$frame['w'],
+			$frame['h'],
+			$frame['name']
+		);
+	}
+
+	/**
+	 * Cut a picture to a size's shape, from the middle, and scale it to that size exactly — up as well
+	 * as down. The model only draws in its own ratios, and a picture for a 1200 × 630 post has to be
+	 * 1200 × 630, not "about 16:9".
+	 */
+	private static function trim( WP_Image_Editor $editor, int $w, int $h ) {
+		$size = $editor->get_size();
+		$sw   = (int) $size['width'];
+		$sh   = (int) $size['height'];
+		if ( ! $sw || ! $sh ) {
+			return;
+		}
+		$want = $w / $h;
+		if ( $sw / $sh > $want ) {
+			$ch = $sh;
+			$cw = (int) round( $sh * $want );
+		} else {
+			$cw = $sw;
+			$ch = (int) round( $sw / $want );
+		}
+		$editor->crop( (int) floor( ( $sw - $cw ) / 2 ), (int) floor( ( $sh - $ch ) / 2 ), $cw, $ch, $w, $h );
+	}
+
 	/* ─────────────────────────── the brief ─────────────────────────── */
 
 	/**
@@ -442,7 +615,8 @@ final class WHD_AI_Images {
 	 * @param string $ask     What the shop asked for this picture, which wins over the rest.
 	 * @param array  $options aspect ("16:9"), size ("1K"|"2K"|"4K"), max_edge (how wide to keep the
 	 *                        stored file), quality, refs (attachment ids of the pieces to show),
-	 *                        mode ("model" | "mannequin").
+	 *                        mode ("model" | "mannequin"), frame (a key of frames(): drawn for that
+	 *                        size and cut to it exactly, in place of aspect, size and max_edge).
 	 * @return int|WP_Error Attachment id.
 	 */
 	public static function make( string $prompt, string $name = 'illustration', string $alt = '', string $ask = '', array $options = [] ) {
@@ -450,8 +624,9 @@ final class WHD_AI_Images {
 			return new WP_Error( 'whd_ai_images_off', __( 'Drawing pictures needs a Google AI key. Add one in WHD → AI content.', 'whd' ) );
 		}
 
-		$ratio = (string) ( $options['aspect'] ?? '' );
-		$shape = '' === $ratio || '3:2' === $ratio ? 'landscape 3:2' : 'aspect ratio ' . $ratio;
+		$frame = self::frame( $options['frame'] ?? '' );
+		$ratio = $frame ? $frame['aspect'] : (string) ( $options['aspect'] ?? '' );
+		$shape = $frame ? self::framing( $frame ) : ( '' === $ratio || '3:2' === $ratio ? 'landscape 3:2' : 'aspect ratio ' . $ratio );
 
 		/* The pieces to show, as the model's first images: a picture of the real thing beats any description of it. */
 		$parts  = [];
@@ -498,7 +673,7 @@ final class WHD_AI_Images {
 			$parts,
 			array_filter( [
 				'aspectRatio' => $ratio,
-				'imageSize'   => $options['size'] ?? self::size(),
+				'imageSize'   => $frame ? $frame['size'] : ( $options['size'] ?? self::size() ),
 			] )
 		);
 		if ( is_wp_error( $image ) ) {
@@ -527,7 +702,8 @@ final class WHD_AI_Images {
 			$alt ?: $name,
 			'',
 			(int) ( $options['max_edge'] ?? self::MAX_EDGE ),
-			(int) ( $options['quality'] ?? self::QUALITY )
+			(int) ( $options['quality'] ?? self::QUALITY ),
+			$frame ?: []
 		);
 		update_post_meta( $id, self::META, 1 );
 
@@ -680,12 +856,13 @@ final class WHD_AI_Images {
 	 * The description is the field the media library leaves blank and nothing else fills. It is
 	 * written from what the picture is of, because that is the only thing we actually know.
 	 *
-	 * @param int    $id   Attachment just inserted.
-	 * @param string $file Path on disk.
-	 * @param string $alt  What the picture shows.
-	 * @param string $desc Longer sentence, or empty to derive one from the alt.
+	 * @param int    $id    Attachment just inserted.
+	 * @param string $file  Path on disk.
+	 * @param string $alt   What the picture shows.
+	 * @param string $desc  Longer sentence, or empty to derive one from the alt.
+	 * @param array  $frame A size from frame(): the picture is cut and scaled to exactly that instead.
 	 */
-	public static function settle( int $id, string $file, string $alt, string $desc = '', int $max_edge = 0, int $quality = 0 ) {
+	public static function settle( int $id, string $file, string $alt, string $desc = '', int $max_edge = 0, int $quality = 0, array $frame = [] ) {
 		$max_edge = $max_edge ?: self::MAX_EDGE;
 		$quality  = $quality ?: self::QUALITY;
 		require_once ABSPATH . 'wp-admin/includes/image.php';
@@ -693,7 +870,9 @@ final class WHD_AI_Images {
 		$editor = wp_get_image_editor( $file );
 		if ( ! is_wp_error( $editor ) ) {
 			$size = $editor->get_size();
-			if ( max( (int) $size['width'], (int) $size['height'] ) > $max_edge ) {
+			if ( ! empty( $frame['w'] ) && ! empty( $frame['h'] ) ) {
+				self::trim( $editor, (int) $frame['w'], (int) $frame['h'] );
+			} elseif ( max( (int) $size['width'], (int) $size['height'] ) > $max_edge ) {
 				$editor->resize(
 					$size['width'] >= $size['height'] ? $max_edge : null,
 					$size['height'] > $size['width'] ? $max_edge : null,

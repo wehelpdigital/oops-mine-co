@@ -9,6 +9,7 @@
  *   WHDAIKit.client( { root, nonce, last, strings, prepare } )  → { api, send, lastWords }
  *   WHDAIKit.lightbox( strings )                               → { open }
  *   WHDAIKit.loader( strings )                                 → { open, step, note, kicker, photo, tick, more, picture, finish }
+ *   WHDAIKit.framePicker( { frames, value, none, … } )         → { el, value, set } — the size new pictures are drawn at
  */
 ( function () {
 	'use strict';
@@ -469,11 +470,98 @@
 		};
 	}
 
+	/* ─────────────────────────── the size picker ─────────────────────────── */
+
+	var pickers = 0;
+
+	/*
+	 * The size new pictures are drawn at: the Image Editor's sizes (WHD_AI_Images::frames()) in one
+	 * select, grouped, with an outline of the shape beside it and a line saying what will be made.
+	 *
+	 * opts.frames    [ { key, name, group, w, h, aspect } ]
+	 * opts.value     the key chosen, '' for none
+	 * opts.none      the words for '' — what this screen draws when no size is chosen
+	 * opts.noneNote  the line under it for ''
+	 * opts.after     optional: a sentence added to the line under a chosen size
+	 * opts.strings   frameLabel, frameNote, frameOption
+	 * opts.onChange  called with the key
+	 *
+	 * @return { el, value(), set( key ) }
+	 */
+	function framePicker( opts ) {
+		var T = opts.strings || {};
+		var frames = opts.frames || [];
+		var id = 'whd-frame-' + ( ++pickers );
+		var wrap = document.createElement( 'div' );
+		wrap.className = 'whd-frame';
+
+		var groups = [];
+		var html = '<option value="">' + esc( opts.none ) + '</option>';
+		frames.forEach( function ( f ) {
+			if ( groups.indexOf( f.group ) === -1 ) {
+				groups.push( f.group );
+			}
+		} );
+		groups.forEach( function ( g ) {
+			html += '<optgroup label="' + esc( g ) + '">' + frames.filter( function ( f ) {
+				return f.group === g;
+			} ).map( function ( f ) {
+				return '<option value="' + esc( f.key ) + '">' + esc( fmt( T.frameOption, f.name, f.w, f.h ) ) + '</option>';
+			} ).join( '' ) + '</optgroup>';
+		} );
+
+		wrap.innerHTML = '<label class="whd-studio__label" for="' + id + '">' + esc( T.frameLabel ) + '</label>' +
+			'<div class="whd-frame__row">' +
+				'<span class="whd-frame__shape" aria-hidden="true"><i></i></span>' +
+				'<select class="whd-frame__select" id="' + id + '">' + html + '</select>' +
+			'</div>' +
+			'<p class="description whd-frame__note"></p>';
+		var select = wrap.querySelector( 'select' );
+		var box = wrap.querySelector( '.whd-frame__shape i' );
+		var note = wrap.querySelector( '.whd-frame__note' );
+
+		function find( key ) {
+			return frames.filter( function ( f ) {
+				return f.key === key;
+			} )[ 0 ] || null;
+		}
+
+		function paint() {
+			var f = find( select.value );
+			// The outline fits a 26-pixel square, long side to the edge; no size is a dashed square.
+			box.style.width = ( f ? Math.round( 26 * Math.min( 1, f.w / f.h ) ) : 26 ) + 'px';
+			box.style.height = ( f ? Math.round( 26 * Math.min( 1, f.h / f.w ) ) : 26 ) + 'px';
+			box.parentNode.classList.toggle( 'is-none', ! f );
+			note.textContent = f ? fmt( T.frameNote, f.aspect, f.w, f.h ) + ( opts.after ? ' ' + opts.after : '' ) : ( opts.noneNote || '' );
+		}
+
+		select.value = find( opts.value || '' ) ? opts.value : '';
+		select.addEventListener( 'change', function () {
+			paint();
+			if ( opts.onChange ) {
+				opts.onChange( select.value );
+			}
+		} );
+		paint();
+
+		return {
+			el: wrap,
+			value: function () {
+				return select.value;
+			},
+			set: function ( key ) {
+				select.value = find( key || '' ) ? key : '';
+				paint();
+			}
+		};
+	}
+
 	window.WHDAIKit = {
 		esc: esc,
 		fmt: fmt,
 		client: client,
 		lightbox: lightbox,
-		loader: loader
+		loader: loader,
+		framePicker: framePicker
 	};
 }() );

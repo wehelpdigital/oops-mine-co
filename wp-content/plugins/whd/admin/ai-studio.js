@@ -29,6 +29,7 @@
 	var shots = [];                          // [ { mode, ask } ] — kept when the count changes, so nothing typed is lost
 	var count = 0;                           // new pictures asked for
 	var countPicked = false;                 // until somebody picks, the count follows the photographs
+	var frame = '';                          // the size they are drawn at; '' = the first photograph's shape
 	var busy = false;
 	var active = null;                       // the progress line being worked on
 
@@ -45,7 +46,8 @@
 		saw: document.getElementById( 'whd-studio-saw' ),
 		drawn: document.getElementById( 'whd-studio-drawn' ),
 		result: document.getElementById( 'whd-studio-result' ),
-		attrs: document.getElementById( 'whd-studio-attrs' )
+		attrs: document.getElementById( 'whd-studio-attrs' ),
+		frame: document.getElementById( 'whd-studio-frame' )
 	};
 
 	/* ─────────────────────────── small things ─────────────────────────── */
@@ -85,6 +87,21 @@
 
 	/* A picture clicked in the panel opens large, over the screen (ai-kit.js). */
 	var lightbox = Kit.lightbox( T );
+
+	/* The size the new pictures are drawn at, under the count (ai-kit.js). */
+	var framer = el.frame && ( D.frames || [] ).length ? Kit.framePicker( {
+		frames: D.frames,
+		value: frame,
+		none: T.frameSame,
+		noneNote: T.frameSameNote,
+		strings: T,
+		onChange: function ( key ) {
+			frame = key;
+		}
+	} ) : null;
+	if ( framer ) {
+		el.frame.appendChild( framer.el );
+	}
 
 	/* ─────────────────────────── 1. the photographs ─────────────────────────── */
 
@@ -227,6 +244,9 @@
 			el.shots.appendChild( hint );
 		}
 		el.shots.hidden = ! count;
+		if ( el.frame ) {
+			el.frame.hidden = ! count;
+		}
 	}
 
 	function shotCard( i ) {
@@ -735,7 +755,7 @@
 		var position = ctx.ids.length + j + 1;
 		var line = step( fmt( T.stepDraw, j + 1, total ), 'mannequin' === shot.mode ? T.hintGhost : T.hintModel );
 		var spot = tile( position );
-		var body = { images: ctx.ids, facts: ctx.facts, shot: shot, position: position, name: ctx.draft.name };
+		var body = { images: ctx.ids, facts: ctx.facts, shot: shot, position: position, name: ctx.draft.name, frame: ctx.frame };
 		var best = null;
 
 		function check( pic ) {
@@ -893,7 +913,8 @@
 			keywords: keywords(),
 			notes: notes,
 			count: count,
-			shots: shots.slice( 0, count )
+			shots: shots.slice( 0, count ),
+			frame: frame
 		} ).then( function ( made ) {
 			say( T.copied );
 			loader.tick();
@@ -923,6 +944,10 @@
 		} );
 		count = D.draw ? parseInt( a.count, 10 ) || 0 : 0;
 		countPicked = true;
+		frame = a.frame || '';
+		if ( framer ) {
+			framer.set( frame );
+		}
 		changedPhotos();
 
 		var note = document.createElement( 'div' );
@@ -961,7 +986,8 @@
 			} ),
 			parts: chosen,
 			finals: [],
-			placed: []
+			placed: [],
+			frame: frame
 		};
 		ctx.finals = ctx.ids.map( function ( id, i ) {
 			return { id: id, slot: i };

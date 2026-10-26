@@ -220,6 +220,7 @@ final class WHD_AI_Studio {
 					<p class="whd-studio__label" id="whd-studio-count-label"><?php esc_html_e( 'How many new pictures?', 'whd' ); ?></p>
 					<div class="whd-studio__counts" id="whd-studio-counts" role="radiogroup" aria-labelledby="whd-studio-count-label"></div>
 					<p class="description" id="whd-studio-count-note"><?php esc_html_e( 'Always an even number in all, so the story’s picture-and-copy rows come out in pairs. New pictures go on the end of the gallery; nothing already there is touched.', 'whd' ); ?></p>
+					<div id="whd-studio-frame"></div>
 					<div class="whd-studio__shots" id="whd-studio-shots"></div>
 				<?php endif; ?>
 			</section>
@@ -277,6 +278,8 @@ final class WHD_AI_Studio {
 			'postId'    => $post_id,
 			'images'    => self::current_images( $post_id ),
 			'draw'      => class_exists( 'WHD_AI_Images' ) && WHD_AI_Images::ready(),
+			// The sizes a new picture can be drawn at — the Image Editor's.
+			'frames'    => class_exists( 'WHD_AI_Images' ) ? WHD_AI_Images::frame_list() : [],
 			'totalMax'  => self::TOTAL_MAX,
 			'lookMax'   => self::LOOK_MAX,
 			// WooCommerce ticks this on every product it saves; replacing it is not replacing a choice.
@@ -326,7 +329,9 @@ final class WHD_AI_Studio {
 	}
 
 	public static function strings(): array {
-		return [
+		return ( class_exists( 'WHD_AI_Images' ) ? WHD_AI_Images::frame_strings() : [] ) + [
+			'frameSame'     => __( 'Same shape as the first photograph', 'whd' ),
+			'frameSameNote' => __( 'The nearest shape the model draws to the first photograph, at the size set in WHD → AI content. Pick a size to get pictures made exactly to it.', 'whd' ),
 			'choose'      => __( 'Choose photographs', 'whd' ),
 			'change'      => __( 'Add or change', 'whd' ),
 			'use'         => __( 'Use these', 'whd' ),
@@ -528,6 +533,7 @@ final class WHD_AI_Studio {
 			'notes'    => self::commands( $run['notes'] ?? '' ),
 			'count'    => max( 0, min( self::TOTAL_MAX, (int) ( $run['count'] ?? 0 ) ) ),
 			'shots'    => array_map( static fn( $s ) => [ 'mode' => $s['mode'], 'ask' => $s['ask'] ], self::shots( $run['shots'] ?? [] ) ),
+			'frame'    => class_exists( 'WHD_AI_Images' ) && WHD_AI_Images::frame( $run['frame'] ?? '' ) ? sanitize_key( (string) $run['frame'] ) : '',
 		], HOUR_IN_SECONDS );
 
 		return [
@@ -1571,7 +1577,8 @@ final class WHD_AI_Studio {
 	 * The checked facts go in the brief as well, line by line, with the things the piece does not
 	 * have spelled out: an image model's commonest mistake on clothes is adding a pocket.
 	 *
-	 * @param array $args images, facts, shot { mode, ask, brief }, position (1-based in the set), name, fixes[].
+	 * @param array $args images, facts, shot { mode, ask, brief }, position (1-based in the set), name, fixes[],
+	 *                    frame (a key of WHD_AI_Images::frames(); none = the first photograph's shape).
 	 * @return array|WP_Error { id, url, thumb, large }
 	 */
 	public static function draw( int $post_id, array $args ) {
@@ -1588,6 +1595,7 @@ final class WHD_AI_Studio {
 		$position = max( 1, (int) ( $args['position'] ?? 1 ) );
 		$name     = self::tidy_name( (string) ( $args['name'] ?? '' ) );
 		$fixes    = array_slice( self::strings_of( $args['fixes'] ?? [] ), 0, 12 );
+		$frame    = WHD_AI_Images::frame( $args['frame'] ?? '' );
 		if ( '' === $name ) {
 			$product = wc_get_product( $post_id );
 			$name    = $product ? self::tidy_name( $product->get_name() ) : '';
@@ -1646,18 +1654,18 @@ final class WHD_AI_Studio {
 			return new WP_Error( 'whd_studio_refs_unreadable', __( 'None of the chosen photographs could be read from disk.', 'whd' ) );
 		}
 
-		$parts[] = [ 'text' => self::draw_prompt( $facts, $shot, $position, $post_id, $labels, $fixes, $refs[0] ) ];
+		$parts[] = [ 'text' => self::draw_prompt( $facts, $shot, $position, $post_id, $labels, $fixes, $refs[0], $frame ) ];
 
 		self::mark( 'drawing a picture with the image model' );
 		$image = WHD_AI_Images::request( $parts, [
-			'aspectRatio' => self::aspect( $refs[0] ),
-			'imageSize'   => WHD_AI_Images::size(),
+			'aspectRatio' => $frame ? $frame['aspect'] : self::aspect( $refs[0] ),
+			'imageSize'   => $frame ? $frame['size'] : WHD_AI_Images::size(),
 		] );
 		if ( is_wp_error( $image ) ) {
 			return $image;
 		}
 
-		$id = self::store( $image, $post_id, $name, $shot, $position );
+		$id = self::store( $image, $post_id, $name, $shot, $position, $frame );
 		if ( is_wp_error( $id ) ) {
 			return $id;
 		}
@@ -1670,10 +1678,10 @@ final class WHD_AI_Studio {
 		];
 	}
 
-	private static function draw_prompt( array $facts, array $shot, int $position, int $post_id, array $labels, array $fixes, int $first ): string {
+	private static function draw_prompt( array $facts, array $shot, int $position, int $post_id, array $labels, array $fixes, int $first, ?array $frame = null ): string {
 		$beauty = 'beauty' === strtolower( (string) ( $facts['kind'] ?? '' ) );
 		$worn   = in_array( strtolower( (string) ( $facts['kind'] ?? 'garment' ) ), [ 'garment', 'footwear', 'jewellery', 'accessory', 'bag', '' ], true );
-		$ratio  = self::aspect( $first );
+		$ratio  = $frame ? WHD_AI_Images::framing( $frame ) : 'aspect ratio ' . self::aspect( $first );
 		$out    = [];
 
 		$out[] = 'A new photograph of a product we sell, for its page in our online shop, made from the reference images attached above.';
@@ -1705,7 +1713,7 @@ final class WHD_AI_Studio {
 		}
 
 		$rules = [
-			sprintf( 'one single photograph, aspect ratio %s, nothing split or collaged', $ratio ),
+			sprintf( 'one single photograph, %s, nothing split or collaged', $ratio ),
 			'nothing added to the product that the references do not show, and nothing left off that they do',
 			'no added text, lettering, logo, watermark or border — but any print or lettering that is part of the product itself stays exactly as the references show it',
 			'seams, hands and faces intact; nothing warped, melted or doubled',
@@ -1824,8 +1832,8 @@ final class WHD_AI_Studio {
 		return (bool) wp_delete_attachment( $id, true );
 	}
 
-	/** Into the media library, attached to the product, marked as drawn. */
-	private static function store( array $image, int $post_id, string $name, array $shot, int $position ) {
+	/** Into the media library, attached to the product, marked as drawn — cut to the size asked for, if there was one. */
+	private static function store( array $image, int $post_id, string $name, array $shot, int $position, ?array $frame = null ) {
 		require_once ABSPATH . 'wp-admin/includes/image.php';
 
 		$ext  = 'image/png' === $image['mime'] ? 'png' : 'jpg';
@@ -1848,7 +1856,7 @@ final class WHD_AI_Studio {
 		}
 
 		self::mark( 'saving the drawn picture to the media library' );
-		WHD_AI_Images::settle( (int) $id, $file['file'], $alt );
+		WHD_AI_Images::settle( (int) $id, $file['file'], $alt, '', 0, 0, $frame ?: [] );
 		update_post_meta( $id, WHD_AI_Images::META, 1 );
 		update_post_meta( $id, '_whd_ai_shot', $shot['mode'] );
 

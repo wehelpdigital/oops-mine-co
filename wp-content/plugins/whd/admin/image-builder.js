@@ -35,6 +35,7 @@
 
 	var photos = [];        // [ { id, thumb, view, large, busy } ] — busy while it uploads
 	var count = 4;
+	var frame = '';         // the size they are drawn at; '' = the first photo's shape
 	var shots = [];         // [ { mode, ask } ] — kept when the count changes, so nothing typed is lost
 	var facts = null;       // the reading of the current photographs, kept for the next run and "Draw again"
 	var factsFor = '';
@@ -48,6 +49,7 @@
 		photos: document.getElementById( 'whd-ib-photos' ),
 		photosMsg: document.getElementById( 'whd-ib-photos-msg' ),
 		count: document.getElementById( 'whd-ib-count' ),
+		frame: document.getElementById( 'whd-ib-frame' ),
 		shots: document.getElementById( 'whd-ib-shots' ),
 		sumPhotos: document.getElementById( 'whd-ib-sum-photos' ),
 		sumP: document.getElementById( 'whd-ib-sum-p' ),
@@ -335,6 +337,26 @@
 		}
 	}
 
+	/* The size the images are drawn at, under the count (ai-kit.js). */
+	function frameOf( key ) {
+		return ( D.frames || [] ).filter( function ( f ) {
+			return f.key === key;
+		} )[ 0 ] || null;
+	}
+	if ( el.frame && ( D.frames || [] ).length ) {
+		el.frame.appendChild( Kit.framePicker( {
+			frames: D.frames,
+			value: frame,
+			none: T.frameSame,
+			noneNote: T.frameSameNote,
+			strings: T,
+			onChange: function ( key ) {
+				frame = key;
+				paintSummary();
+			}
+		} ).el );
+	}
+
 	root.querySelectorAll( '[data-all]' ).forEach( function ( b ) {
 		b.addEventListener( 'click', function () {
 			var m = b.getAttribute( 'data-all' );
@@ -524,6 +546,10 @@
 		if ( count - models ) {
 			parts.push( esc( fmt( T.sumGhost, count - models ) ) );
 		}
+		var size = frameOf( frame );
+		if ( size ) {
+			parts.push( esc( fmt( T.frameOption, size.name, size.w, size.h ) ) );
+		}
 		el.sumI.innerHTML = parts.join( '<br>' );
 		var s = seconds( count );
 		el.sumT.textContent = fmt( T.sumTime, Math.max( 1, Math.floor( s / 60 ) ), Math.ceil( s / 60 ) + 1 );
@@ -581,7 +607,7 @@
 
 	/* Draw, check, and draw once more with the mistakes named; the better kept, the other deleted. */
 	function drawOne( item ) {
-		var body = { images: item.ids, facts: item.facts, shot: item.shot, position: item.position, name: item.facts && item.facts.garment ? item.facts.garment : '' };
+		var body = { images: item.ids, facts: item.facts, shot: item.shot, position: item.position, name: item.facts && item.facts.garment ? item.facts.garment : '', frame: item.frame || '' };
 		var check = function ( pic ) {
 			return api( 'check', { image: pic.id, images: item.ids, facts: item.facts, shot: item.shot } ).catch( function ( e ) {
 				return { ok: false, score: 0, problems: [], unchecked: e.message };
@@ -641,7 +667,7 @@
 		var seed = Math.floor( Math.random() * 997 ); // who models, and where, differs run to run
 		var batch = [];
 		for ( var i = 0; i < count; i++ ) {
-			batch.push( { shot: shotFor( i ), n: i + 1, position: seed + i + 1, ids: ids(), state: 'waiting', fresh: true } );
+			batch.push( { shot: shotFor( i ), n: i + 1, position: seed + i + 1, ids: ids(), frame: frame, state: 'waiting', fresh: true } );
 		}
 		// Newest first: the run's images go in at the top, in order.
 		items = batch.concat( items );
@@ -762,6 +788,8 @@
 		t.innerHTML = '<div class="whd-ib__tile-img">' +
 				'<button type="button" class="whd-ib__tile-view" data-view aria-label="' + esc( T.view ) + '"><img src="' + esc( item.pic.url || item.pic.large || item.pic.thumb ) + '" alt="" loading="lazy"></button>' +
 				badge +
+				// The size it came out at, so a size picked before Generate can be seen to have been kept.
+				( item.pic.dims ? '<span class="whd-ib__tile-dims">' + esc( item.pic.dims ) + '</span>' : '' ) +
 			'</div>' +
 			'<figcaption>' + meta +
 				( notes.length ? '<p class="whd-ib__tile-note">' + esc( notes.join( ' · ' ) ) + '</p>' : '' ) +
