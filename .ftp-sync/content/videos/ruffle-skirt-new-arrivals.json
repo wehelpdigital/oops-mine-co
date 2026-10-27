@@ -63,7 +63,7 @@
     { "q": "Will these come back in stock?", "a": "Probably not in the same colours. We order in small batches, so sizes sell through and the next shipment brings something different. The email list hears first when a new rack goes up." }
   ],
   "shop": [
-    { "text": "Shop skirts", "url": "/product-category/skirts/" },
+    { "text": "Shop skirts", "url": "/product-category/clothing/skirts/" },
     { "text": "See new arrivals", "url": "/shop/?orderby=date" }
   ],
   "related": ["feather-print-ruffle-midi-skirt", "black-embroidered-organza-skirt"]

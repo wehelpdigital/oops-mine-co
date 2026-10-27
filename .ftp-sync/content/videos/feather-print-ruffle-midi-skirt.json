@@ -62,7 +62,7 @@
     { "q": "Do you restock this skirt?", "a": "Rarely. We buy prints like this in small runs, so when a size sells through it is usually gone. Join the list and you will hear before the next drop goes up." }
   ],
   "shop": [
-    { "text": "Shop skirts", "url": "/product-category/skirts/" },
+    { "text": "Shop skirts", "url": "/product-category/clothing/skirts/" },
     { "text": "See new arrivals", "url": "/shop/?orderby=date" }
   ],
   "related": ["black-embroidered-organza-skirt", "ruffle-skirt-new-arrivals"]

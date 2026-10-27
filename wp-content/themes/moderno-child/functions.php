@@ -753,7 +753,8 @@ function omc_fb_live() {
 		'when'    => $when,
 		'title'   => (string) get_theme_mod( 'omc_live_title', '' ) ?: __( 'Be first in the room', 'moderno-child' ),
 		'text'    => (string) get_theme_mod( 'omc_live_text', '' ) ?: __( 'Leave your email and we’ll send you the link before we go live — plus live-only discounts for everyone who joins from it.', 'moderno-child' ),
-		'url'     => (string) get_theme_mod( 'omc_live_url', '' ) ?: 'https://www.facebook.com/',
+		// The live's own link, else the shop's Facebook page; facebook.com itself only when neither is known.
+		'url'     => (string) get_theme_mod( 'omc_live_url', '' ) ?: ( omc_social_links()['facebook']['url'] ?? '' ) ?: 'https://www.facebook.com/',
 		'button'  => (string) get_theme_mod( 'omc_live_button', '' ) ?: __( 'Send me the link', 'moderno-child' ),
 	] );
 }
@@ -861,32 +862,38 @@ function omc_customize_register( WP_Customize_Manager $wp_customize ) {
 add_action( 'customize_register', 'omc_customize_register' );
 
 /**
- * Social links for the announcement bar (and, once real URLs exist, the footer + JSON-LD sameAs).
+ * Social links for the announcement bar, the logo row, the footer and JSON-LD sameAs.
  * URLs come from the parent's Customizer: Appearance → Customize → Social Media Links (facebook, instagram,
- * pinterest) and the header email. Empty or "#" values fall back to the network's home page so the icons are
- * always present — replace them there. Override everything with the `omc_social_links` filter.
+ * tiktok, pinterest) and the header email. A network with no address there has no icon: an icon that opens
+ * instagram.com's own home page is a dead end for a shopper and a link to nowhere for a search engine.
+ * Facebook alone falls back to the Facebook Live card's link (Customizer → "Facebook Live"), which is the
+ * shop's page. Override everything with the `omc_social_links` filter.
  */
 function omc_social_links() {
 	$mod = function ( $key ) {
 		$v = function_exists( 'ideapark_mod' ) ? trim( (string) ideapark_mod( $key ) ) : '';
-		return ( '' === $v || '#' === $v ) ? '' : $v;
+		return ( '' === $v || '#' === $v || preg_match( '#^https?://(www\.)?[a-z]+\.com/?$#i', $v ) ) ? '' : $v;
 	};
 	$email = $mod( 'header_email' );
 	if ( ! $email || false !== stripos( $email, 'moderno-demo' ) ) { // the demo's placeholder address
 		$email = get_option( 'admin_email' );
 	}
-	$links = [
-		'facebook'  => [ 'label' => 'Facebook',  'url' => $mod( 'facebook' ) ?: 'https://www.facebook.com/' ],
-		'instagram' => [ 'label' => 'Instagram', 'url' => $mod( 'instagram' ) ?: 'https://www.instagram.com/' ],
-	];
-
-	// Customizer → Social Media Links → TikTok. No placeholder: the icon appears once a real URL is saved.
-	if ( $mod( 'tiktok' ) ) {
-		$links['tiktok'] = [ 'label' => 'TikTok', 'url' => $mod( 'tiktok' ) ];
+	$facebook = $mod( 'facebook' );
+	if ( ! $facebook ) {
+		$live     = trim( (string) get_theme_mod( 'omc_live_url', '' ) );
+		$facebook = preg_match( '#^https://(www\.)?facebook\.com/.+#i', $live ) ? $live : '';
 	}
 
-	$links['email']     = [ 'label' => __( 'Email us', 'moderno-child' ), 'url' => 'mailto:' . $email ];
-	$links['pinterest'] = [ 'label' => 'Pinterest', 'url' => $mod( 'pinterest' ) ?: 'https://www.pinterest.com/' ];
+	$links = [];
+	foreach ( [ 'facebook' => [ 'Facebook', $facebook ], 'instagram' => [ 'Instagram', $mod( 'instagram' ) ], 'tiktok' => [ 'TikTok', $mod( 'tiktok' ) ] ] as $key => $l ) {
+		if ( $l[1] ) {
+			$links[ $key ] = [ 'label' => $l[0], 'url' => $l[1] ];
+		}
+	}
+	$links['email'] = [ 'label' => __( 'Email us', 'moderno-child' ), 'url' => 'mailto:' . $email ];
+	if ( $mod( 'pinterest' ) ) {
+		$links['pinterest'] = [ 'label' => 'Pinterest', 'url' => $mod( 'pinterest' ) ];
+	}
 
 	return apply_filters( 'omc_social_links', $links );
 }

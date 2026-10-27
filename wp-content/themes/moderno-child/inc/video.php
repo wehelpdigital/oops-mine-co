@@ -365,10 +365,17 @@ function omc_video_shop_links( array $links ) {
 	echo '<div class="omc-video__shop">';
 	$first = true;
 	foreach ( $links as $l ) {
+		$url = home_url( $l['url'] );
+		// A shop category by its slug goes to the category's real address, wherever it now sits in the tree.
+		if ( preg_match( '#^/?product-category/(?:[^/]+/)*([^/]+)/?$#', (string) $l['url'], $m ) ) {
+			$term = get_term_by( 'slug', $m[1], 'product_cat' );
+			$link = $term ? get_term_link( $term ) : '';
+			$url  = $link && ! is_wp_error( $link ) ? $link : $url;
+		}
 		printf(
 			'<a class="omc-btn %1$s" href="%2$s">%3$s</a>',
 			$first ? 'omc-btn--solid' : 'omc-btn--outline',
-			esc_url( home_url( $l['url'] ) ),
+			esc_url( $url ),
 			esc_html( $l['text'] )
 		);
 		$first = false;

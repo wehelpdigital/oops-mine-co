@@ -61,8 +61,8 @@
     { "q": "Can I wear it to a wedding?", "a": "It works well as a guest, paired with a soft-coloured top so the look is not head-to-toe black. Check the invitation for the dress code first." }
   ],
   "shop": [
-    { "text": "Shop skirts", "url": "/product-category/skirts/" },
-    { "text": "Shop dresses", "url": "/product-category/dresses/" }
+    { "text": "Shop skirts", "url": "/product-category/clothing/skirts/" },
+    { "text": "Shop dresses", "url": "/product-category/clothing/dresses/" }
   ],
   "related": ["feather-print-ruffle-midi-skirt", "ruffle-skirt-new-arrivals"]
 }
