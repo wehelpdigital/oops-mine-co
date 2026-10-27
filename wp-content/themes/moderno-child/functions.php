@@ -677,6 +677,12 @@ function omc_testimonials( $limit = 8 ) {
 			if ( $rating < 4 || mb_strlen( $text ) < 60 ) {
 				continue;
 			}
+			/* Only a piece somebody can buy: a draft's review links to a page visitors get a 404 for —
+			   and every review on a draft here is the theme's demo, not a customer of this shop. */
+			$piece = wc_get_product( $r->comment_post_ID );
+			if ( ! $piece || 'publish' !== $piece->get_status() || ! $piece->is_visible() ) {
+				continue;
+			}
 			$items[] = [
 				'text'    => $text,
 				'author'  => $r->comment_author,
@@ -1963,8 +1969,34 @@ function omc_seo_head() {
 	} elseif ( is_tax() || is_category() || is_tag() ) {
 		$term = get_queried_object();
 		$desc = $term && $term->description ? wp_strip_all_tags( $term->description ) : '';
+		// A shop category shares its own picture, or its newest piece's.
+		if ( $term && 'product_cat' === $term->taxonomy ) {
+			$thumb = (int) get_term_meta( $term->term_id, 'thumbnail_id', true ) ?: omc_category_image( $term->slug );
+			$image = $thumb ? wp_get_attachment_image_url( $thumb, 'large' ) : '';
+		}
 	} elseif ( function_exists( 'is_shop' ) && is_shop() ) {
 		$desc = __( 'Shop new arrivals from Oops, Mine Co. — curated Korean and Thai fashion, chosen with intention.', 'moderno-child' );
+	}
+
+	/* Everything else shares the home page's first picture rather than no picture: a link pasted
+	   into Messenger or Facebook without one shows as a bare line of text. */
+	if ( ! $image ) {
+		$image = (string) apply_filters( 'omc_default_og_image', wp_get_attachment_image_url( omc_attachment_id( omc_images()['hero'] ), 'large' ) );
+	}
+
+	// The address the share is of: the canonical one, never one with tracking on it.
+	$url = '';
+	if ( is_front_page() ) {
+		$url = home_url( '/' );
+	} elseif ( is_singular() ) {
+		$url = (string) wp_get_canonical_url();
+	} elseif ( is_tax() || is_category() || is_tag() ) {
+		$link = get_term_link( get_queried_object() );
+		$url  = is_wp_error( $link ) ? '' : $link;
+	} elseif ( function_exists( 'is_shop' ) && is_shop() ) {
+		$url = (string) get_permalink( wc_get_page_id( 'shop' ) );
+	} elseif ( is_home() ) {
+		$url = (string) get_permalink( (int) get_option( 'page_for_posts' ) );
 	}
 
 	/**
@@ -1980,6 +2012,9 @@ function omc_seo_head() {
 	echo '<meta property="og:site_name" content="' . esc_attr( get_bloginfo( 'name' ) ) . '">' . "\n";
 	echo '<meta property="og:type" content="' . esc_attr( $type ) . '">' . "\n";
 	echo '<meta property="og:title" content="' . esc_attr( wp_get_document_title() ) . '">' . "\n";
+	if ( $url && ! is_paged() && ! is_singular( 'product' ) ) { // a product's own head (inc/social.php) prints its og:url
+		echo '<meta property="og:url" content="' . esc_url( $url ) . '">' . "\n";
+	}
 	if ( $desc ) {
 		echo '<meta property="og:description" content="' . esc_attr( wp_html_excerpt( $desc, 200, '…' ) ) . '">' . "\n";
 	}

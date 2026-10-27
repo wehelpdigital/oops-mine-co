@@ -1330,14 +1330,22 @@ JSON;
 			$html .= self::read_next( (array) ( $doc['keywords'] ?? [] ) );
 		}
 
-		$id = wp_insert_post( [
-			'post_type'    => $type,
-			'post_status'  => $status,
-			'post_title'   => $title,
-			'post_name'    => sanitize_title( $doc['slug'] ?? $title ),
-			'post_content' => wp_kses_post( $html ),
-			'post_excerpt' => in_array( 'excerpt', $parts, true ) ? sanitize_textarea_field( (string) ( $doc['excerpt'] ?? '' ) ) : '',
-		], true );
+		/*
+		 * A journal post is filed under the journal's own category. Unfiled, WordPress puts it in
+		 * "Uncategorized" — an archive page with nothing to say, linked from every post's sidebar.
+		 * Filter `whd_ai_post_category` (a category slug; '' to leave filing to WordPress).
+		 */
+		$filed = 'post' === $type ? get_term_by( 'slug', (string) apply_filters( 'whd_ai_post_category', 'style-notes' ), 'category' ) : null;
+
+		$id = wp_insert_post( array_filter( [
+			'post_type'     => $type,
+			'post_status'   => $status,
+			'post_title'    => $title,
+			'post_name'     => sanitize_title( $doc['slug'] ?? $title ),
+			'post_content'  => wp_kses_post( $html ),
+			'post_excerpt'  => in_array( 'excerpt', $parts, true ) ? sanitize_textarea_field( (string) ( $doc['excerpt'] ?? '' ) ) : '',
+			'post_category' => $filed ? [ (int) $filed->term_id ] : null,
+		], static fn( $v ) => null !== $v ), true );
 
 		if ( is_wp_error( $id ) ) {
 			return $id;

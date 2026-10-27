@@ -227,8 +227,9 @@
 		var title = ( seoTitle && seoTitle.value.trim() ) || state.title || '';
 		var desc = seoDesc ? seoDesc.value.trim() : '';
 
-		// The page's title with the shop's name after it, unless it already says it — as the theme writes <title>.
-		var full = title && S.suffix && flat( title ).indexOf( flat( S.site ) ) === -1 ? title + S.suffix : title;
+		// The page's title with the shop's name after it, unless it already says it or the two would run past
+		// 60 characters (the theme then drops the name — Google prints it above the result anyway).
+		var full = title && S.suffix && flat( title ).indexOf( flat( S.site ) ) === -1 && ( title + S.suffix ).length <= 60 ? title + S.suffix : title;
 		desc = tidy( desc, state.title );
 
 		pvUrl.textContent = address( state.slug || S.slug || '' );

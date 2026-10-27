@@ -201,6 +201,157 @@ add_filter( 'omc_meta_description', static function ( $desc ) {
 	return $desc;
 }, 50 );
 
+/* A paged archive's snippet says which page it is, so page 2 and page 5 of a category are not one snippet five times. */
+add_filter( 'omc_meta_description', static function ( $desc ) {
+	$paged = max( (int) get_query_var( 'paged' ), (int) get_query_var( 'page' ) );
+	if ( '' === trim( (string) $desc ) || $paged < 2 || is_singular() ) {
+		return $desc;
+	}
+	/* translators: %d: page number */
+	return rtrim( (string) $desc ) . ' ' . sprintf( __( 'Page %d.', 'moderno-child' ), $paged );
+}, 60 );
+
+/*
+ * A title too long for a result loses the shop's name to "…" anyway, and Google prints the site's
+ * name above every result on its own (WebSite schema). Past 60 characters the suffix goes, so the
+ * words that describe the page are the ones that show.
+ */
+add_filter( 'document_title_parts', static function ( $parts ) {
+	if ( empty( $parts['site'] ) || empty( $parts['title'] ) ) {
+		return $parts;
+	}
+	$sep  = ' ' . apply_filters( 'document_title_separator', '-' ) . ' ';
+	$full = omc_serp_plain( implode( $sep, array_filter( [ $parts['title'], $parts['page'] ?? '', $parts['site'] ] ) ) );
+	if ( mb_strlen( $full ) > (int) apply_filters( 'omc_title_room', 60 ) ) {
+		unset( $parts['site'], $parts['tagline'] );
+	}
+	return $parts;
+}, 99 );
+
+/*
+ * One address per category. WooCommerce also answers a sub-category at its short address
+ * (/product-category/dresses/ for /product-category/clothing/dresses/) with the same page, which
+ * is a duplicate however good its canonical tag is — and old links in posts use the short one.
+ */
+add_action( 'template_redirect', static function () {
+	if ( ! function_exists( 'is_product_category' ) || ! is_product_category() || is_paged() ) {
+		return;
+	}
+	$want = get_term_link( get_queried_object() );
+	$path = (string) wp_parse_url( (string) ( $_SERVER['REQUEST_URI'] ?? '' ), PHP_URL_PATH ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- only compared
+	if ( is_wp_error( $want ) || '' === $path ) {
+		return;
+	}
+	if ( untrailingslashit( $path ) !== untrailingslashit( (string) wp_parse_url( $want, PHP_URL_PATH ) ) ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- the filters and sort carried over as they were
+		wp_safe_redirect( $_GET ? add_query_arg( map_deep( wp_unslash( $_GET ), 'sanitize_text_field' ), $want ) : $want, 301 );
+		exit;
+	}
+} );
+
+/*
+ * Pages with nothing for a search result: the wishlist, order tracking, a product attribute's
+ * archive (/size/m-8-10/ — a list of pieces with that size, no words of its own) and the default
+ * "Uncategorized" category. Followed, not indexed. WooCommerce already does the bag, the checkout
+ * and the account pages.
+ */
+/** Pages that are published but are not for search: the theme demo's own leftovers. Filter `omc_serp_hidden_slugs`. */
+function omc_serp_hidden_slugs(): array {
+	return (array) apply_filters( 'omc_serp_hidden_slugs', [ 'maintenance-mode' ] );
+}
+
+function omc_serp_noindex(): bool {
+	if ( is_singular( 'page' ) ) {
+		$id      = get_queried_object_id();
+		$content = (string) get_post_field( 'post_content', $id );
+		$wish    = function_exists( 'ideapark_mod' ) ? (int) ideapark_mod( 'wishlist_page' ) : 0;
+		return ( $wish && $wish === $id ) || has_shortcode( $content, 'woocommerce_order_tracking' )
+			|| in_array( get_post_field( 'post_name', $id ), omc_serp_hidden_slugs(), true );
+	}
+	if ( is_tax() && function_exists( 'taxonomy_is_product_attribute' ) && taxonomy_is_product_attribute( (string) get_queried_object()->taxonomy ) ) {
+		return true;
+	}
+	return is_category( (int) get_option( 'default_category' ) );
+}
+
+add_filter( 'wp_robots', static function ( $robots ) {
+	if ( omc_serp_noindex() ) {
+		$robots['noindex'] = true;
+		if ( empty( $robots['nofollow'] ) ) {
+			$robots['follow'] = true;
+		}
+	}
+	return $robots;
+}, 20 );
+
+/* A product's sizes and colours as words, not links to those thin archive pages. */
+add_filter( 'woocommerce_attribute', static function ( $text, $attribute ) {
+	if ( $attribute instanceof WC_Product_Attribute && $attribute->is_taxonomy() ) {
+		$text = preg_replace( '#</?a\b[^>]*>#i', '', (string) $text );
+	}
+	return $text;
+}, 20, 2 );
+
+/* The sidebar's category list without "Uncategorized": it is where a post lands that nobody filed. */
+add_filter( 'widget_categories_args', static function ( $args ) {
+	$args['exclude'] = trim( ( $args['exclude'] ?? '' ) . ',' . (int) get_option( 'default_category' ), ',' );
+	return $args;
+} );
+
+/* "Page 1" is the first page's own address, not /page/1/ redirecting to it. */
+add_filter( 'paginate_links', static function ( $link ) {
+	return preg_replace( '#/page/1/?(?=$|\?|\#)#', '/', (string) $link );
+} );
+
+/*
+ * The sitemap WordPress makes once the site is open to search engines lists only what should be
+ * found: no author pages, no attribute archives, no "Uncategorized", none of the pages above.
+ */
+add_filter( 'wp_sitemaps_add_provider', static function ( $provider, $name ) {
+	return 'users' === $name ? false : $provider;
+}, 10, 2 );
+/* The theme's HTML blocks (header bar, footer, mega menu…) are parts of pages: their own addresses are 404s. */
+add_filter( 'wp_sitemaps_post_types', static function ( $types ) {
+	foreach ( array_keys( $types ) as $type ) {
+		$object = get_post_type_object( $type );
+		if ( 'html_block' === $type || ! $object || ! $object->publicly_queryable && 'page' !== $type ) {
+			unset( $types[ $type ] );
+		}
+	}
+	return $types;
+} );
+add_filter( 'wp_sitemaps_taxonomies', static function ( $taxonomies ) {
+	foreach ( array_keys( $taxonomies ) as $tax ) {
+		if ( function_exists( 'taxonomy_is_product_attribute' ) && taxonomy_is_product_attribute( $tax ) ) {
+			unset( $taxonomies[ $tax ] );
+		}
+	}
+	return $taxonomies;
+} );
+add_filter( 'wp_sitemaps_taxonomies_query_args', static function ( $args, $taxonomy ) {
+	if ( 'category' === $taxonomy ) {
+		$args['exclude'] = array_merge( (array) ( $args['exclude'] ?? [] ), [ (int) get_option( 'default_category' ) ] );
+	}
+	return $args;
+}, 10, 2 );
+add_filter( 'wp_sitemaps_posts_query_args', static function ( $args, $post_type ) {
+	if ( 'page' !== $post_type || ! function_exists( 'wc_get_page_id' ) ) {
+		return $args;
+	}
+	$skip = [ wc_get_page_id( 'cart' ), wc_get_page_id( 'checkout' ), wc_get_page_id( 'myaccount' ) ];
+	if ( function_exists( 'ideapark_mod' ) ) {
+		$skip[] = (int) ideapark_mod( 'wishlist_page' );
+	}
+	foreach ( array_merge( [ 'order-tracking' ], omc_serp_hidden_slugs() ) as $slug ) {
+		$page = get_page_by_path( $slug );
+		if ( $page ) {
+			$skip[] = $page->ID;
+		}
+	}
+	$args['post__not_in'] = array_values( array_filter( array_merge( (array) ( $args['post__not_in'] ?? [] ), $skip ), static fn( $id ) => $id > 0 ) );
+	return $args;
+}, 10, 2 );
+
 /* The editor's preview of a product's result (WHD → the SEO box) names the same returns. */
 add_filter( 'whd_seo_preview_returns', static function ( $text, $product ) {
 	if ( ! $product instanceof WC_Product ) {

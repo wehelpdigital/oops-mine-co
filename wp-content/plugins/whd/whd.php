@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WHD — Popups, Emails & Tracking
  * Description: Marketing toolkit for Oops, Mine Co.: exit-intent, welcome and spin-to-win popups with a drag-and-drop editor and cookie-based countdowns, drop reminders, a "just got mine" story card after checkout, a drag-and-drop email builder for every WooCommerce trigger (including abandoned-cart recovery), a newsletter list with phone capture, integrations that push subscribers to Mailchimp, Klaviyo or a webhook and send SMS through Twilio, a tracking-scripts module (GA4, Search Console, Meta Pixel and Conversions API), size charts, product stories, and an AI copywriter that writes against your own brief, rules and keyword list.
- * Version:     1.19.0
+ * Version:     1.19.1
  * Author:      WeHelpDigital - John Tugare and Team
  * Text Domain: whd
  * Requires at least: 6.4
@@ -11,7 +11,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'WHD_VERSION', '1.19.0' );
+define( 'WHD_VERSION', '1.19.1' );
 define( 'WHD_FILE', __FILE__ );
 define( 'WHD_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WHD_URL', plugin_dir_url( __FILE__ ) );
