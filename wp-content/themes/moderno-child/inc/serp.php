@@ -284,6 +284,27 @@ add_filter( 'wp_robots', static function ( $robots ) {
 	return $robots;
 }, 20 );
 
+/*
+ * No author pages. One shop, one voice: an author archive is the journal again under another
+ * address, and /?author=1 → /author/<login>/ hands anybody the administrator's user name (here,
+ * derived from an email address). Both go to the journal. The REST user list goes for visitors
+ * for the same reason; the block editor, signed in, keeps it.
+ */
+add_action( 'template_redirect', static function () {
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- only checked for presence
+	if ( is_author() || ( isset( $_GET['author'] ) && ! is_admin() ) ) {
+		$blog = (int) get_option( 'page_for_posts' );
+		wp_safe_redirect( $blog ? get_permalink( $blog ) : home_url( '/' ), 301 );
+		exit;
+	}
+}, 1 );
+add_filter( 'rest_endpoints', static function ( $endpoints ) {
+	if ( ! is_user_logged_in() ) {
+		unset( $endpoints['/wp/v2/users'], $endpoints['/wp/v2/users/(?P<id>[\d]+)'] );
+	}
+	return $endpoints;
+} );
+
 /* A product's sizes and colours as words, not links to those thin archive pages. */
 add_filter( 'woocommerce_attribute', static function ( $text, $attribute ) {
 	if ( $attribute instanceof WC_Product_Attribute && $attribute->is_taxonomy() ) {
