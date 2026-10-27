@@ -151,3 +151,34 @@ function omc_perf_strip_cf7( $handles ) {
 }
 add_filter( 'print_styles_array', 'omc_perf_strip_cf7' );
 add_filter( 'print_scripts_array', 'omc_perf_strip_cf7' );
+
+/* ─────────────────────────── requests per page view ───────────────────────────
+   The live database allows 15 connections at once, and every request that runs PHP holds one for
+   as long as it runs. A page view should cost one request, not three. */
+
+/*
+ * WooCommerce's cart script asks the server for the bag on every page unless the copy it kept in
+ * the tab matches the bag's hash cookie. An empty bag has no cookie (''), but on live something
+ * gives an empty bag a hash of its own, so the two never matched and every page view by every
+ * visitor made a second request to learn the bag was still empty. An empty bag's hash is '' again:
+ * the bag is asked for once per visit, on the first page, and again whenever it changes.
+ */
+add_filter( 'woocommerce_cart_hash', static function ( $hash ) {
+	return function_exists( 'WC' ) && WC()->cart && WC()->cart->is_empty() ? '' : $hash;
+}, 999 );
+
+/*
+ * SEO-tool and scraper crawlers that fetch as fast as the server answers, and send no shoppers:
+ * one page every ten seconds (they honour Crawl-delay; Google and Bing are not on the list). A bot
+ * in a group of its own ignores the "*" group, so the shop's own rules are repeated for them.
+ * Filter `omc_slow_bots`.
+ */
+add_filter( 'robots_txt', static function ( $output ) {
+	$bots = (array) apply_filters( 'omc_slow_bots', [ 'AhrefsBot', 'SemrushBot', 'MJ12bot', 'DotBot', 'BLEXBot', 'PetalBot', 'Bytespider', 'DataForSeoBot', 'serpstatbot', 'Barkrowler' ] );
+	if ( ! $bots ) {
+		return $output;
+	}
+	preg_match_all( '/^(?:Disallow|Allow):.*$/mi', (string) $output, $rules );
+	$group = implode( "\n", array_map( static fn( $bot ) => 'User-agent: ' . $bot, $bots ) ) . "\nCrawl-delay: 10\n" . implode( "\n", array_unique( $rules[0] ) );
+	return rtrim( (string) $output ) . "\n\n# Fast crawlers that send no shoppers: one page every ten seconds.\n" . $group . "\n";
+}, 99 );
