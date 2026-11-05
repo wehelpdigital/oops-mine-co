@@ -26,6 +26,12 @@
 .whdla-row__main h2 { margin: 5px 0 7px; padding: 0; font: 500 22px/1.15 "Cormorant Garamond", Georgia, serif; }
 .whdla-row__main h2 a { color: var(--ink); text-decoration: none; }
 .whdla-row__main h2 a:hover { color: var(--rose-deep); }
+.whdla-link { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 12.5px; }
+.whdla-link a { color: var(--rose-deep); font-weight: 600; text-decoration: none; overflow-wrap: anywhere; }
+.whdla-link a:hover { text-decoration: underline; }
+.whdla-copy { flex: none; padding: 2px 9px; border: 1px solid #d9c9c0; border-radius: 10px; background: #fff; color: #6f5348; font-size: 11px; font-weight: 600; cursor: pointer; }
+.whdla-copy:hover { background: var(--sand); }
+.whdla-pick__key.is-taken { border-color: #c8413b !important; color: #a2483f; }
 .whdla-pill { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 4px; font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; background: #efe9e4; color: #6f6058; }
 .whdla-pill--live { background: #c8413b; color: #fff; }
 .whdla-pill--ended { background: #f1eeeb; color: #94877f; }

@@ -78,7 +78,6 @@
 		net: '',
 		polling: false,
 		ticks: 0,
-		recorder: null,
 		cameras: {},
 		devices: []
 	};
@@ -158,6 +157,7 @@
 		height: portrait ? 1280 : 720,
 		placeholder: T.placeholder,
 		coverLogo: D.coverLogo,
+		coverLink: D.pagePretty,
 		brand: D.brand
 	} );
 	var mixer = Sound.supported ? new Sound.Mixer() : null;
@@ -653,6 +653,7 @@
 		renderSources();
 		renderLayers();
 		updatePeek();
+		refreshCard();
 		syncShowing();
 		saveSoon();
 	}
@@ -1024,6 +1025,26 @@
 		}, 80 );
 	}
 
+	/* What to comment for this piece: the host's code, or its place in the list. */
+	function sayFor( piece ) {
+		return String( piece.code || '' ).trim() || String( S.pieces.indexOf( piece ) + 1 );
+	}
+
+	function ctaFor( piece ) {
+		return D.cta ? D.cta.replace( /\{code\}/g, sayFor( piece ) ) : '';
+	}
+
+	/* The card in the video follows the code as it is typed, and the numbers when the list changes. */
+	function refreshCard() {
+		var layer = productLayer();
+		var piece = layer ? S.pieces.filter( function ( p ) {
+			return p.id === layer.productId;
+		} )[ 0 ] : null;
+		if ( piece && layer.cta !== ctaFor( piece ) ) {
+			stage.update( layer.id, { cta: ctaFor( piece ) } );
+		}
+	}
+
 	function showPiece( piece ) {
 		var old = productLayer();
 		var props = {
@@ -1034,7 +1055,7 @@
 			regular: piece.regular,
 			image: piece.image,
 			link: piece.shortUrl,
-			cta: D.cta,
+			cta: ctaFor( piece ),
 			kicker: T.nowShowing,
 			x: old ? old.x : ( portrait ? 0.5 : 0.25 ),
 			// Portrait: above the bottom third, where TikTok lays its own comments over the video.
@@ -1071,30 +1092,25 @@
 		return n;
 	}
 
-	var keywordTimer = null;
+	var piecesTimer = null;
 	function savePieces() {
-		clearTimeout( keywordTimer );
-		keywordTimer = setTimeout( function () {
+		clearTimeout( piecesTimer );
+		piecesTimer = setTimeout( function () {
 			api( 'POST', D.id + '/pieces', {
 				pieces: S.pieces.map( function ( p ) {
-					return { id: p.id, keyword: p.keyword || '' };
+					return { id: p.id, code: p.code || '' };
 				} )
-			} ).then( function ( res ) {
-				if ( res.pieces ) {
-					// Keep the numbers the server gave; keep typing in the keyword box undisturbed.
-					res.pieces.forEach( function ( fresh ) {
-						var mine = S.pieces.filter( function ( p ) {
-							return p.id === fresh.id;
-						} )[ 0 ];
-						if ( mine ) {
-							mine.code = fresh.code;
-						}
-					} );
-				}
 			} ).catch( function ( err ) {
 				banner( 'pieces', err.message );
 			} );
 		}, 500 );
+	}
+
+	function codeTaken( piece ) {
+		var code = String( piece.code || '' ).trim().toLowerCase();
+		return !! code && S.pieces.some( function ( p ) {
+			return p !== piece && String( p.code || '' ).trim().toLowerCase() === code;
+		} );
 	}
 
 	function renderPieces() {
@@ -1130,11 +1146,19 @@
 			mid.appendChild( line );
 			var key = el( 'input', 'whdls-piece__key' );
 			key.type = 'text';
-			key.placeholder = T.keyword;
-			key.value = piece.keyword || '';
-			key.setAttribute( 'aria-label', T.keyword );
+			key.placeholder = fmt( T.codeOr, i + 1 );
+			key.value = piece.code || '';
+			key.setAttribute( 'aria-label', T.code );
+			var markTaken = function () {
+				var taken = codeTaken( piece );
+				key.classList.toggle( 'is-taken', taken );
+				key.title = taken ? T.codeDup : '';
+			};
+			markTaken();
 			key.addEventListener( 'input', function () {
-				piece.keyword = key.value;
+				piece.code = key.value;
+				markTaken();
+				refreshCard();
 				savePieces();
 			} );
 			mid.appendChild( key );
@@ -1165,6 +1189,7 @@
 				}
 				S.pieces.splice( i, 1 );
 				renderPieces();
+				refreshCard(); // the ones after it have new numbers
 				savePieces();
 			} );
 			acts.appendChild( drop );
@@ -1407,7 +1432,7 @@
 		{ text: 'Last few left', style: 'dark' },
 		{ text: 'New in', style: 'tag' },
 		{ text: 'SALE', style: 'burst' },
-		{ text: 'Comment MINE', style: 'neon' },
+		{ text: T.commentCode, style: 'neon', code: true },
 		{ text: 'Link in comments', style: 'ribbon' },
 		{ text: 'Back in stock', style: 'tag' }
 	];
@@ -1431,7 +1456,11 @@
 			var btn = el( 'button', 'whdls-preset whdls-preset--' + preset.style, preset.text );
 			btn.type = 'button';
 			btn.addEventListener( 'click', function () {
-				addText( preset.text, preset.style );
+				// With a piece on screen, "Comment the code" can say which code.
+				var on = preset.code && S.pieces.filter( function ( p ) {
+					return p.id === S.showing;
+				} )[ 0 ];
+				addText( on ? ctaFor( on ) || preset.text : preset.text, preset.style );
 			} );
 			presets.appendChild( btn );
 		} );
@@ -1684,6 +1713,19 @@
 
 	/* ─────────────────────────── recording ─────────────────────────── */
 
+	/*
+	 * Recording goes straight to the media library, slice by slice as it is made, so stopping has only
+	 * the last few seconds left to send. A video in the library is the goal; the slices are also kept
+	 * here until it is safely there, because if the server cannot take it (a full hosting quota, say)
+	 * the whole recording can still be saved to this computer.
+	 *
+	 * While on air with a struggling connection the sending waits. The audience comes first, and the
+	 * slices are not going anywhere.
+	 */
+	var REC_SLICE_MS = 4000;
+	var REC_GIVE_UP = 8;
+	var rec = null;
+
 	function pickRecorderType() {
 		var types = [ 'video/mp4;codecs=avc1,mp4a.40.2', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm' ];
 		for ( var i = 0; i < types.length; i++ ) {
@@ -1694,10 +1736,225 @@
 		return '';
 	}
 
-	/* A copy on this computer, made from the same canvas and mix the audience gets. */
-	function toggleRecord() {
-		if ( S.recorder ) {
-			S.recorder.stop();
+	function recSeconds( r ) {
+		return Math.round( ( r.ran + ( r.mark ? Date.now() - r.mark : 0 ) ) / 1000 );
+	}
+
+	function recClock( seconds ) {
+		var h = Math.floor( seconds / 3600 );
+		return ( h ? h + ':' : '' ) + pad2( Math.floor( seconds / 60 ) % 60 ) + ':' + pad2( seconds % 60 );
+	}
+
+	function renderRecord() {
+		var btn = $( 'record' );
+		var label = $( 'record-label' );
+		var pause = $( 'record-pause' );
+		var recording = rec && ! rec.stopped;
+		btn.classList.toggle( 'is-on', !! recording );
+		btn.classList.toggle( 'is-paused', !! ( recording && rec.paused ) );
+		btn.setAttribute( 'aria-pressed', recording ? 'true' : 'false' );
+		btn.disabled = !! ( rec && rec.stopped );
+		pause.hidden = ! recording;
+		if ( recording ) {
+			label.textContent = T.recordStop + ' ' + recClock( recSeconds( rec ) );
+			$( 'record-pause-label' ).textContent = rec.paused ? T.recordResume : T.recordPause;
+		} else if ( rec ) {
+			var total = rec.chunks.length || 1;
+			label.textContent = fmt( T.recordSaving, Math.min( 99, Math.round( rec.next / total * 100 ) ) );
+		} else {
+			label.textContent = T.record;
+		}
+	}
+
+	function announceSaved( saved ) {
+		banner( 'rec-' + saved.id, fmt( T.recordSaved, saved.title ), 'info', { label: T.recordOpen, href: saved.edit } );
+		var line = $( 'wrap-rec' );
+		if ( $( 'wrap' ).open ) {
+			line.hidden = false;
+			line.textContent = fmt( T.recordSaved, saved.title );
+		}
+	}
+
+	function recDone( r ) {
+		r.chunks = [];
+		if ( rec === r ) {
+			rec = null;
+		}
+		renderRecord();
+	}
+
+	/* The whole recording, from what this browser kept: only when the library could not have it. */
+	function saveToComputer( r ) {
+		var url = URL.createObjectURL( new Blob( r.chunks, { type: r.mime } ) );
+		var a = el( 'a' );
+		a.href = url;
+		a.download = 'live-' + D.id + '-' + new Date().toISOString().slice( 0, 16 ).replace( /[:T]/g, '-' ) + '.' + r.ext;
+		document.body.appendChild( a );
+		a.click();
+		a.remove();
+		setTimeout( function () {
+			URL.revokeObjectURL( url );
+		}, 120000 );
+		clearBanner( 'rec-retry' );
+		banner( 'rec-local', T.recordLocal, 'warn' );
+		if ( $( 'wrap' ).open ) {
+			$( 'wrap-rec' ).hidden = false;
+			$( 'wrap-rec' ).textContent = T.recordLocal;
+		}
+		recDone( r );
+	}
+
+	function finishRecording( r ) {
+		if ( r.finishing ) {
+			return;
+		}
+		r.finishing = true;
+		api( 'POST', D.id + '/recording/' + r.id + '/finish', { seconds: recSeconds( r ) } ).then( function ( saved ) {
+			clearBanner( 'rec-retry' );
+			announceSaved( saved );
+			recDone( r );
+		} ).catch( function () {
+			saveToComputer( r );
+		} );
+	}
+
+	function sendSlice( r, seq ) {
+		var abort = new AbortController();
+		var timer = setTimeout( function () {
+			abort.abort();
+		}, 90000 );
+		var query = '?seq=' + seq + '&t=' + recSeconds( r );
+		return window.fetch( D.rest.root + D.id + '/recording/' + r.id + '/slice' + query, {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: { 'X-WP-Nonce': D.rest.nonce, 'Content-Type': 'application/octet-stream' },
+			body: r.chunks[ seq ],
+			signal: abort.signal
+		} ).then( function ( res ) {
+			clearTimeout( timer );
+			return res.json().catch( function () {
+				return {};
+			} ).then( function ( data ) {
+				if ( ! res.ok ) {
+					var error = new Error( data.message || ( 'HTTP ' + res.status ) );
+					error.status = res.status;
+					error.next = data.data && undefined !== data.data.next ? data.data.next : null;
+					throw error;
+				}
+				return data;
+			} );
+		} );
+	}
+
+	/* One slice at a time, in order, never holding anything else up. */
+	function pump( r ) {
+		if ( r.busy || r.waiting || r.finishing ) {
+			return;
+		}
+		if ( ! r.id ) {
+			if ( r.stopped ) {
+				saveToComputer( r );
+			}
+			return;
+		}
+		if ( r.next >= r.chunks.length ) {
+			if ( r.stopped ) {
+				finishRecording( r );
+			}
+			return;
+		}
+		var later = function ( ms ) {
+			r.waiting = setTimeout( function () {
+				r.waiting = null;
+				pump( r );
+			}, ms );
+		};
+		if ( S.onAir && ( 'bad' === S.net || 'warning' === S.net ) ) {
+			later( 3000 );
+			return;
+		}
+		r.busy = true;
+		sendSlice( r, r.next ).then( function ( res ) {
+			r.busy = false;
+			r.failed = 0;
+			clearBanner( 'rec-retry' );
+			r.next = res.next;
+			if ( r.stopped ) {
+				renderRecord();
+			}
+			pump( r );
+		} ).catch( function ( err ) {
+			r.busy = false;
+			if ( 409 === err.status && null !== err.next ) {
+				r.next = err.next; // told exactly where the server is up to
+				pump( r );
+				return;
+			}
+			r.failed = 507 === err.status ? REC_GIVE_UP : r.failed + 1;
+			if ( r.failed >= REC_GIVE_UP && r.stopped ) {
+				saveToComputer( r );
+				return;
+			}
+			banner( 'rec-retry', 507 === err.status ? err.message : T.recordRetry, 'warn' );
+			later( Math.min( 30000, 2000 * r.failed ) );
+		} );
+	}
+
+	function beginRecording( type, id ) {
+		var tracks = [ stage.captureTrack().clone() ];
+		if ( mixer ) {
+			tracks.push( mixer.track.clone() );
+		}
+		var recorder = new MediaRecorder( new MediaStream( tracks ), { mimeType: type, videoBitsPerSecond: 2500000, audioBitsPerSecond: 128000 } );
+		var r = rec = {
+			recorder: recorder,
+			id: id,
+			mime: type.split( ';' )[ 0 ],
+			ext: 0 === type.indexOf( 'video/mp4' ) ? 'mp4' : 'webm',
+			chunks: [],
+			next: 0,
+			failed: 0,
+			busy: false,
+			waiting: null,
+			stopped: false,
+			paused: false,
+			finishing: false,
+			ran: 0,
+			mark: Date.now()
+		};
+		recorder.ondataavailable = function ( e ) {
+			if ( e.data && e.data.size ) {
+				r.chunks.push( e.data );
+				pump( r );
+			}
+		};
+		recorder.onstop = function () {
+			tracks.forEach( function ( t ) {
+				t.stop();
+			} );
+			r.stopped = true;
+			renderRecord();
+			// A wait for a weak connection is over: nothing is left to protect but the last slices.
+			pump( r );
+		};
+		recorder.start( REC_SLICE_MS );
+		renderRecord();
+	}
+
+	function stopRecording() {
+		if ( ! rec || rec.stopped || 'inactive' === rec.recorder.state ) {
+			return;
+		}
+		if ( rec.mark ) {
+			rec.ran += Date.now() - rec.mark;
+			rec.mark = 0;
+		}
+		rec.recorder.stop();
+	}
+
+	$( 'record' ).addEventListener( 'click', function () {
+		if ( rec ) {
+			stopRecording();
 			return;
 		}
 		var type = pickRecorderType();
@@ -1705,44 +1962,36 @@
 			banner( 'record', T.recordFailed, 'error' );
 			return;
 		}
-		var tracks = [ stage.captureTrack().clone() ];
-		if ( mixer ) {
-			tracks.push( mixer.track.clone() );
+		var btn = this;
+		btn.disabled = true;
+		api( 'POST', D.id + '/recording', { type: 0 === type.indexOf( 'video/mp4' ) ? 'mp4' : 'webm', width: stage.W, height: stage.H } ).then( function ( res ) {
+			( res.recovered || [] ).forEach( announceSaved );
+			beginRecording( type, res.rec );
+		} ).catch( function ( err ) {
+			// Recording matters more than where it ends up: it can still be saved to this computer.
+			banner( 'rec-retry', err.message, 'warn' );
+			beginRecording( type, null );
+		} ).then( function () {
+			btn.disabled = false;
+		} );
+	} );
+
+	$( 'record-pause' ).addEventListener( 'click', function () {
+		if ( ! rec || rec.stopped ) {
+			return;
 		}
-		var chunks = [];
-		var recorder = new MediaRecorder( new MediaStream( tracks ), { mimeType: type, videoBitsPerSecond: 4000000 } );
-		recorder.ondataavailable = function ( e ) {
-			if ( e.data && e.data.size ) {
-				chunks.push( e.data );
-			}
-		};
-		recorder.onstop = function () {
-			tracks.forEach( function ( t ) {
-				t.stop();
-			} );
-			var ext = 0 === type.indexOf( 'video/mp4' ) ? 'mp4' : 'webm';
-			var url = URL.createObjectURL( new Blob( chunks, { type: type.split( ';' )[ 0 ] } ) );
-			var a = el( 'a' );
-			a.href = url;
-			a.download = 'live-' + D.id + '-' + new Date().toISOString().slice( 0, 16 ).replace( /[:T]/g, '-' ) + '.' + ext;
-			document.body.appendChild( a );
-			a.click();
-			a.remove();
-			setTimeout( function () {
-				URL.revokeObjectURL( url );
-			}, 60000 );
-			S.recorder = null;
-			$( 'record' ).classList.remove( 'is-on' );
-			$( 'record' ).setAttribute( 'aria-pressed', 'false' );
-			$( 'record-label' ).textContent = T.record;
-		};
-		recorder.start( 4000 );
-		S.recorder = recorder;
-		$( 'record' ).classList.add( 'is-on' );
-		$( 'record' ).setAttribute( 'aria-pressed', 'true' );
-		$( 'record-label' ).textContent = T.recording;
-	}
-	$( 'record' ).addEventListener( 'click', toggleRecord );
+		if ( rec.paused ) {
+			rec.recorder.resume();
+			rec.paused = false;
+			rec.mark = Date.now();
+		} else {
+			rec.recorder.pause();
+			rec.paused = true;
+			rec.ran += Date.now() - rec.mark;
+			rec.mark = 0;
+		}
+		renderRecord();
+	} );
 
 	/* ─────────────────────────── destinations ─────────────────────────── */
 
@@ -1998,8 +2247,10 @@
 			if ( mixer ) {
 				mixer.stop();
 			}
-			if ( S.recorder ) {
-				S.recorder.stop();
+			if ( rec ) {
+				$( 'wrap-rec' ).hidden = false;
+				$( 'wrap-rec' ).textContent = T.wrapSaving;
+				stopRecording();
 			}
 			releaseScreen();
 			$( 'end' ).close();
@@ -2052,9 +2303,9 @@
 		}
 	} );
 	window.addEventListener( 'beforeunload', function ( e ) {
-		if ( S.onAir || S.recorder ) {
+		if ( S.onAir || rec ) {
 			e.preventDefault();
-			e.returnValue = S.recorder ? T.recordLeave : T.confirmLeave;
+			e.returnValue = rec ? T.recordLeave : T.confirmLeave;
 			return e.returnValue;
 		}
 	} );
@@ -2079,6 +2330,8 @@
 			row.appendChild( el( 'strong', '', dest.label ) );
 			if ( dest.note ) {
 				row.appendChild( el( 'span', '', dest.note ) );
+			} else if ( 'site' === key && D.pagePretty ) {
+				row.appendChild( el( 'span', 'whdls-checklist__link', D.pagePretty ) );
 			}
 			list.appendChild( row );
 		} );
@@ -2269,7 +2522,8 @@
 				S.after = Math.max( S.after, c.id );
 			} );
 			( res.moved || [] ).forEach( absorb );
-			if ( ( res.new || [] ).length || ( res.moved || [] ).length ) {
+			// Not while somebody is typing a code: this redraws the list, and the box with it.
+			if ( ( ( res.new || [] ).length || ( res.moved || [] ).length ) && ! ( document.activeElement && document.activeElement.classList.contains( 'whdls-piece__key' ) ) ) {
 				renderPieces();
 			}
 			var stats = res.stats || {};
@@ -2340,6 +2594,9 @@
 		if ( 0 === S.ticks % 30 ) {
 			updateClock();
 			updateOut();
+			if ( rec && ! rec.stopped ) {
+				renderRecord();
+			}
 		}
 		if ( S.onAir && 0 === S.ticks % 75 ) {
 			poll();
@@ -2412,7 +2669,47 @@
 		}
 	} );
 
+	/* Copy, with a way round for a page without the clipboard API or permission to use it. */
+	function copyText( text ) {
+		var oldWay = function () {
+			var box = el( 'textarea' );
+			box.value = text;
+			box.style.position = 'fixed';
+			box.style.opacity = '0';
+			document.body.appendChild( box );
+			box.select();
+			var worked = document.execCommand( 'copy' );
+			box.remove();
+			if ( ! worked ) {
+				throw new Error( 'refused' );
+			}
+		};
+		if ( navigator.clipboard && window.isSecureContext ) {
+			return navigator.clipboard.writeText( text ).catch( oldWay ); // a browser can refuse it even on https
+		}
+		return new Promise( function ( resolve ) {
+			oldWay();
+			resolve();
+		} );
+	}
+
+	document.querySelectorAll( '[data-copy]' ).forEach( function ( btn ) {
+		btn.addEventListener( 'click', function () {
+			copyText( btn.getAttribute( 'data-copy' ) ).then( function () {
+				btn.textContent = T.copied;
+				setTimeout( function () {
+					btn.textContent = T.copy;
+				}, 1600 );
+			} ).catch( function () {} );
+		} );
+	} );
+
 	/* ─────────────────────────── start ─────────────────────────── */
+
+	/* A recording a closed tab left on the server becomes a video now. */
+	api( 'POST', D.id + '/recording/recover', {} ).then( function ( res ) {
+		( res.recovered || [] ).forEach( announceSaved );
+	} ).catch( function () {} );
 
 	renderDests();
 	renderPieces();
@@ -2444,6 +2741,7 @@
 
 	var productNow = productLayer();
 	S.showing = productNow ? productNow.productId : 0;
+	refreshCard();
 	renderPieces();
 
 	setState( S.stage );

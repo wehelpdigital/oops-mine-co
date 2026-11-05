@@ -35,7 +35,7 @@ final class WHD_Live {
 	const OPTION_YT = 'whd_live_yt';
 	const META    = '_whd_live';        // the stream: stage, format, destinations, room, platform ids
 	const RT      = '_whd_live_rt';     // the heartbeat: last seen, viewers, peak (written constantly)
-	const PIECES  = '_whd_live_pieces'; // [ [ id, keyword ] ] in the host's order
+	const PIECES  = '_whd_live_pieces'; // [ [ id, code ] ] in the host's order
 	const SCENE   = '_whd_live_scene';  // the stage's layers, JSON, so a reload brings them back
 	const SHOWING = '_whd_live_showing';
 	const COVER   = '_whd_live_cover';  // 1 while the host has covered the picture
@@ -74,9 +74,9 @@ final class WHD_Live {
 			'daily_api_key' => '',
 
 			'site_on'       => 1,
-			'trigger_words' => 'mine, link, price, how much, i want, interested, buy, size, sizes, available',
+			'trigger_words' => 'link, price, how much, i want, interested, buy, size, sizes, available',
 			'reply_mode'    => 'any',
-			'card_cta'      => __( 'Comment MINE for the link', 'whd' ),
+			'card_cta'      => __( 'Comment {code} for the link', 'whd' ),
 			'site_text'     => __( 'Here it is, {name}.', 'whd' ),
 
 			'fb_on'         => 0,
@@ -109,7 +109,11 @@ final class WHD_Live {
 		 * from what was posted, and the connection is not something a form posts.
 		 */
 		$youtube = (array) get_option( self::OPTION_YT, [] );
-		return array_merge( wp_parse_args( (array) get_option( self::OPTION, [] ), self::defaults() ), array_intersect_key( $youtube, [ 'yt_refresh' => 1, 'yt_channel' => 1 ] ) );
+		$out     = array_merge( wp_parse_args( (array) get_option( self::OPTION, [] ), self::defaults() ), array_intersect_key( $youtube, [ 'yt_refresh' => 1, 'yt_channel' => 1 ] ) );
+		if ( 'Comment MINE for the link' === $out['card_cta'] ) {
+			$out['card_cta'] = self::defaults()['card_cta']; // the old default, saved along with a settings form
+		}
+		return $out;
 	}
 
 	public static function daily_ready(): bool {
@@ -225,6 +229,23 @@ final class WHD_Live {
 		return (string) get_permalink( (int) $id );
 	}
 
+	/** An address as a person says it: no https://, no www, no trailing slash. */
+	public static function pretty_url( string $url ): string {
+		return untrailingslashit( preg_replace( '#^https?://(www\.)?#', '', $url ) );
+	}
+
+	/**
+	 * The address a new stream will have, made once and kept.
+	 *
+	 * The random end means no two streams ever share a link, including a stream with the title of an
+	 * old one that has since been deleted, which WordPress would otherwise hand the same address to.
+	 */
+	public static function new_slug( string $title ): string {
+		$base = trim( substr( sanitize_title( $title ), 0, 60 ), '-' );
+		$end  = strtolower( wp_generate_password( 6, false ) );
+		return ( '' !== $base ? $base : 'live' ) . '-' . $end;
+	}
+
 	/** The key that names this stream's public files; made once. */
 	private static function file_key( $id ): string {
 		$stream = self::get( $id );
@@ -256,14 +277,14 @@ final class WHD_Live {
 
 	/* ─────────────────────────── pieces ─────────────────────────── */
 
-	/** @return array[] [ id, keyword ] in order, products that still exist. */
+	/** @return array[] [ id, code ] in order, products that still exist. */
 	public static function piece_rows( $id ): array {
 		$rows = get_post_meta( (int) $id, self::PIECES, true );
 		$out  = [];
 		foreach ( is_array( $rows ) ? $rows : [] as $row ) {
 			$pid = absint( $row['id'] ?? 0 );
 			if ( $pid && 'product' === get_post_type( $pid ) ) {
-				$out[] = [ 'id' => $pid, 'keyword' => (string) ( $row['keyword'] ?? '' ) ];
+				$out[] = [ 'id' => $pid, 'code' => (string) ( $row['code'] ?? $row['keyword'] ?? '' ) ];
 			}
 		}
 		return $out;
@@ -272,14 +293,21 @@ final class WHD_Live {
 	public static function set_pieces( $id, $rows ) {
 		$clean = [];
 		$seen  = [];
+		$codes = [];
 		foreach ( (array) $rows as $row ) {
 			$pid = absint( is_array( $row ) ? ( $row['id'] ?? 0 ) : $row );
 			if ( ! $pid || isset( $seen[ $pid ] ) || 'product' !== get_post_type( $pid ) ) {
 				continue;
 			}
 			$seen[ $pid ] = 1;
-			$keyword      = is_array( $row ) ? sanitize_text_field( (string) ( $row['keyword'] ?? '' ) ) : '';
-			$clean[]      = [ 'id' => $pid, 'keyword' => mb_substr( $keyword, 0, 40 ) ];
+			$code         = is_array( $row ) ? mb_substr( trim( sanitize_text_field( (string) ( $row['code'] ?? '' ) ) ), 0, 30 ) : '';
+			// One code, one piece: a second piece with the same code would never be the one asked for.
+			$folded = strtolower( $code );
+			if ( '' !== $folded && isset( $codes[ $folded ] ) ) {
+				$code = '';
+			}
+			$codes[ $folded ] = 1;
+			$clean[]          = [ 'id' => $pid, 'code' => $code ];
 		}
 		update_post_meta( (int) $id, self::PIECES, array_slice( $clean, 0, 60 ) );
 		$stream = self::get( $id );
@@ -302,7 +330,7 @@ final class WHD_Live {
 	 * @return array|null id, name, url, link, price, regular, image, thumb, short, stock, type, add,
 	 *                    choose, options[ id, label, attrs, stock ], or null when it cannot be sold.
 	 */
-	public static function piece( $product_id, $code = 0, $keyword = '' ) {
+	public static function piece( $product_id, $number = 0, $code = '' ) {
 		$product = function_exists( 'wc_get_product' ) ? wc_get_product( (int) $product_id ) : null;
 		if ( ! $product || 'publish' !== $product->get_status() ) {
 			return null;
@@ -327,8 +355,9 @@ final class WHD_Live {
 
 		$piece = [
 			'id'      => $product->get_id(),
-			'code'    => (int) $code,
-			'keyword' => (string) $keyword,
+			'n'       => (int) $number,
+			'code'    => (string) $code,
+			'say'     => '' !== (string) $code ? (string) $code : ( $number ? (string) $number : '' ), // what to comment for it
 			'name'    => html_entity_decode( $product->get_name(), ENT_QUOTES, 'UTF-8' ),
 			'url'     => $product->get_permalink(),
 			'link'    => self::short_link( $product->get_id() ),
@@ -387,7 +416,7 @@ final class WHD_Live {
 	public static function pieces( $id ): array {
 		$out = [];
 		foreach ( self::piece_rows( $id ) as $i => $row ) {
-			$piece = self::piece( $row['id'], $i + 1, $row['keyword'] );
+			$piece = self::piece( $row['id'], $i + 1, $row['code'] );
 			if ( $piece ) {
 				$out[] = $piece;
 			}
@@ -573,6 +602,9 @@ final class WHD_Live {
 				'failed'     => __( 'The video could not connect. Check your connection and reload.', 'whd' ),
 				'tapPlay'    => __( 'Tap to watch', 'whd' ),
 				'closed'     => __( 'Comments open when we go live.', 'whd' ),
+				'say'        => __( 'Say something…', 'whd' ),
+				'copy'       => __( 'Copy link', 'whd' ),
+				'copied'     => __( 'Copied', 'whd' ),
 				'sendFailed' => __( 'That didn’t send. Try again.', 'whd' ),
 				'needName'   => __( 'Your name and a valid email first.', 'whd' ),
 				'as'         => __( 'Commenting as %s', 'whd' ),
@@ -732,6 +764,7 @@ final class WHD_Live {
 		}
 		self::remove_files( $post_id );
 		WHD_Live_Comments::forget_stream( $post_id );
+		WHD_Live_Recordings::forget( $post_id );
 	}
 
 	/* ─────────────────────────── install ─────────────────────────── */

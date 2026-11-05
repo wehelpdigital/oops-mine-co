@@ -439,8 +439,8 @@ final class WHD_Live_Rest {
 		$piece = null;
 		if ( 'sent' === $row['reply_status'] && $row['product_id'] ) {
 			$rows = WHD_Live::piece_rows( $id );
-			$code = array_search( (int) $row['product_id'], array_column( $rows, 'id' ), true );
-			$piece = WHD_Live::piece( (int) $row['product_id'], false === $code ? 0 : $code + 1 );
+			$at    = array_search( (int) $row['product_id'], array_column( $rows, 'id' ), true );
+			$piece = WHD_Live::piece( (int) $row['product_id'], false === $at ? 0 : $at + 1, false === $at ? '' : $rows[ $at ]['code'] );
 		}
 
 		return [

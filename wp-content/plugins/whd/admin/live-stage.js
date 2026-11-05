@@ -190,6 +190,7 @@
 		this.cover = false;
 		this.coverLine = '';
 		this.coverLogo = options.coverLogo || '';
+		this.coverLink = options.coverLink || '';
 		this.brand = options.brand || '';
 		this._coverOff = 0;
 		this._coverBase = null;
@@ -1413,6 +1414,15 @@
 			var line = this._coverLineSprite();
 			ctx.globalAlpha = alpha * ( 0.82 + 0.18 * Math.sin( t * 1.2 ) );
 			ctx.drawImage( line, cx - line.width / 2, cy + ring * 1.28 );
+			if ( this.coverLink ) {
+				// Where to watch and shop, for anybody arriving on another platform before it starts.
+				ctx.globalAlpha = alpha * 0.85;
+				ctx.fillStyle = '#e9c8bc';
+				ctx.font = '600 ' + Math.round( U * 0.026 ) + 'px ' + SANS;
+				ctx.textAlign = 'center';
+				ctx.textBaseline = 'top';
+				ctx.fillText( this.coverLink, cx, cy + ring * 1.28 + line.height + U * 0.01, W * 0.9 );
+			}
 		}
 		ctx.restore();
 	};

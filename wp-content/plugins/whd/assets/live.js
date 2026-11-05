@@ -499,6 +499,7 @@
 		var spinner = byId( 'spinner' );
 		var stage = state.stage;
 		byId( 'tap' ).hidden = true;
+		byId( 'share' ).hidden = 'scheduled' !== stage;
 
 		if ( 'live' === stage && hasPicture ) {
 			screen.hidden = true;
@@ -527,7 +528,8 @@
 		byId( 'count' ).hidden = ! live;
 		var input = byId( 'message' );
 		input.disabled = ! live;
-		input.placeholder = live ? D.cta : T.closed;
+		var showing = showingPiece();
+		input.placeholder = ! live ? T.closed : ( showing && showing.say && D.cta ? D.cta.replace( /\{code\}/g, showing.say ) : T.say );
 		byId( 'form' ).querySelector( '.whdl-send' ).disabled = ! live;
 		renderScreen();
 		renderShowing();
@@ -752,6 +754,34 @@
 
 	/* ─────────────────────────── start ─────────────────────────── */
 
+	byId( 'copy' ).addEventListener( 'click', function () {
+		var btn = this;
+		var url = btn.getAttribute( 'data-url' );
+		var done = function () {
+			btn.textContent = T.copied;
+			setTimeout( function () {
+				btn.textContent = T.copy;
+			}, 1600 );
+		};
+		var oldWay = function () {
+			var box = el( 'textarea' );
+			box.value = url;
+			box.style.position = 'fixed';
+			box.style.opacity = '0';
+			document.body.appendChild( box );
+			box.select();
+			var worked = document.execCommand( 'copy' );
+			box.remove();
+			if ( worked ) {
+				done();
+			}
+		};
+		if ( navigator.clipboard && window.isSecureContext ) {
+			navigator.clipboard.writeText( url ).then( done, oldWay ); // a browser can refuse it even on https
+			return;
+		}
+		oldWay();
+	} );
 	byId( 'form' ).addEventListener( 'submit', send );
 	byId( 'sheet-x' ).addEventListener( 'click', closeSheet );
 	document.addEventListener( 'keydown', function ( e ) {

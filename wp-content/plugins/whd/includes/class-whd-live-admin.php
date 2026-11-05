@@ -74,7 +74,10 @@ final class WHD_Live_Admin {
 					'none'        => __( 'Nothing matches that.', 'whd' ),
 					'remove'      => __( 'Remove', 'whd' ),
 					'up'          => __( 'Move up', 'whd' ),
-					'keyword'     => __( 'Keyword (optional)', 'whd' ),
+					'code'        => __( 'Code', 'whd' ),
+					'codeOr'      => __( 'Code (or %d)', 'whd' ),
+					'codeDup'     => __( 'Another piece already uses this code.', 'whd' ),
+					'copy'        => __( 'Copy', 'whd' ),
 					'poster'      => __( 'Choose a cover picture', 'whd' ),
 					'use'         => __( 'Use this picture', 'whd' ),
 					'confirmDrop' => __( 'Delete this stream and its comments? This can’t be undone.', 'whd' ),
@@ -126,6 +129,7 @@ final class WHD_Live_Admin {
 			'id'        => $id,
 			'title'     => html_entity_decode( get_the_title( $id ), ENT_QUOTES, 'UTF-8' ),
 			'pageUrl'   => WHD_Live::has_site( $stream ) ? WHD_Live::page_url( $id ) : '',
+			'pagePretty' => WHD_Live::has_site( $stream ) ? WHD_Live::pretty_url( WHD_Live::page_url( $id ) ) : '',
 			'format'    => $stream['format'],
 			'stage'     => $stream['stage'],
 			'startedAt' => (int) $stream['started_at'],
@@ -184,7 +188,12 @@ final class WHD_Live_Admin {
 			'remove'       => __( 'Remove', 'whd' ),
 			'soldOut'      => __( 'Sold out', 'whd' ),
 			'requests'     => __( 'asked', 'whd' ),
-			'keyword'      => __( 'Keyword', 'whd' ),
+			'code'         => __( 'Code', 'whd' ),
+			'codeOr'       => __( 'Code (or %d)', 'whd' ),
+			'codeDup'      => __( 'Another piece already uses this code.', 'whd' ),
+			'commentCode'  => __( 'Comment the code', 'whd' ),
+			'copy'         => __( 'Copy', 'whd' ),
+			'copied'       => __( 'Copied', 'whd' ),
 			'pickImage'    => __( 'Choose a picture', 'whd' ),
 			'useImage'     => __( 'Put it on stage', 'whd' ),
 			'nothingOn'    => __( 'Nothing on stage yet. Add a picture, text or a piece.', 'whd' ),
@@ -215,9 +224,17 @@ final class WHD_Live_Admin {
 			'mute'         => __( 'Mute', 'whd' ),
 			'unmute'       => __( 'Unmute', 'whd' ),
 			'record'       => __( 'Record', 'whd' ),
-			'recording'    => __( 'Stop recording', 'whd' ),
+			'recordStop'   => __( 'Stop', 'whd' ),
+			'recordPause'  => __( 'Pause', 'whd' ),
+			'recordResume' => __( 'Resume', 'whd' ),
+			'recordSaving' => __( 'Saving %d%', 'whd' ),
+			'recordSaved'  => __( 'In your media library: %s', 'whd' ),
+			'recordOpen'   => __( 'Open it', 'whd' ),
+			'recordRetry'  => __( 'The recording is not reaching the server. Still recording, and still trying.', 'whd' ),
+			'recordLocal'  => __( 'The recording could not reach the media library, so it has been saved to this computer instead.', 'whd' ),
 			'recordFailed' => __( 'This browser can’t record the stream.', 'whd' ),
 			'recordLeave'  => __( 'A recording is still running and has not been saved.', 'whd' ),
+			'wrapSaving'   => __( 'Saving your recording to the media library. Keep this tab open.', 'whd' ),
 			'main'         => __( 'On screen', 'whd' ),
 			'makeMain'     => __( 'Put on screen', 'whd' ),
 			'corner'       => __( 'In a corner', 'whd' ),
@@ -373,16 +390,16 @@ final class WHD_Live_Admin {
 		$mode = (string) $s['reply_mode'];
 		echo '<tr><th>' . esc_html__( 'Who gets the link', 'whd' ) . '</th><td>'
 			. '<label><input type="radio" name="' . esc_attr( WHD_Live::OPTION ) . '[reply_mode]" value="any" ' . checked( $mode, 'any', false ) . '> ' . esc_html__( 'Anyone who comments while a piece is on screen', 'whd' ) . '</label><br>'
-			. '<label><input type="radio" name="' . esc_attr( WHD_Live::OPTION ) . '[reply_mode]" value="keyword" ' . checked( $mode, 'keyword', false ) . '> ' . esc_html__( 'Only comments with a trigger word', 'whd' ) . '</label>'
+			. '<label><input type="radio" name="' . esc_attr( WHD_Live::OPTION ) . '[reply_mode]" value="keyword" ' . checked( $mode, 'keyword', false ) . '> ' . esc_html__( 'Only comments with the piece’s code or a trigger word', 'whd' ) . '</label>'
 			. '<p class="description">' . esc_html__( 'The default for new streams; each stream can choose. Nobody gets the same piece twice in one stream.', 'whd' ) . '</p></td></tr>';
 
 		echo '<tr><th><label for="whdla-words">' . esc_html__( 'Trigger words', 'whd' ) . '</label></th><td>';
 		self::text_box( 'trigger_words', 'whdla-words', 'large-text' );
-		echo '<p class="description">' . esc_html__( 'Separated by commas. A comment with one of these gets the piece on screen. A comment with a piece’s number or its own keyword always gets that piece.', 'whd' ) . '</p></td></tr>';
+		echo '<p class="description">' . esc_html__( 'Separated by commas. A comment with one of these gets the piece on screen. A comment with a piece’s code or number always gets that piece.', 'whd' ) . '</p></td></tr>';
 
 		echo '<tr><th><label for="whdla-cta">' . esc_html__( 'Line on the product card', 'whd' ) . '</label></th><td>';
 		self::text_box( 'card_cta', 'whdla-cta' );
-		echo '<p class="description">' . esc_html__( 'Drawn into the video under the price, above the piece’s short link.', 'whd' ) . '</p></td></tr>';
+		echo '<p class="description">' . esc_html__( 'Drawn into the video under the price, above the piece’s short link. {code} becomes the code you set for the piece, or its number if you set none.', 'whd' ) . '</p></td></tr>';
 
 		echo '<tr><th><label for="whdla-sitetext">' . esc_html__( 'Side panel greeting', 'whd' ) . '</label></th><td>';
 		self::text_box( 'site_text', 'whdla-sitetext' );
@@ -647,6 +664,9 @@ final class WHD_Live_Admin {
 			echo '<div class="whdla-row__main">';
 			echo '<div class="whdla-row__line">' . self::stage_pill( $stream ) . '<span class="whd-muted">' . esc_html( self::when( $stream ) ) . '</span></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in stage_pill
 			echo '<h2><a href="' . esc_url( self::studio_url( $id ) ) . '">' . esc_html( get_the_title( $id ) ) . '</a></h2>';
+			if ( WHD_Live::has_site( $stream ) ) {
+				self::link_line( $id );
+			}
 			echo '<div class="whdla-chips">';
 			foreach ( (array) $stream['destinations'] as $key ) {
 				if ( isset( $channels[ $key ] ) ) {
@@ -668,14 +688,17 @@ final class WHD_Live_Admin {
 			if ( 'ended' !== $stream['stage'] ) {
 				echo '<a class="button button-primary" href="' . esc_url( self::studio_url( $id ) ) . '">' . esc_html( 'live' === $stream['stage'] ? __( 'Back to the studio', 'whd' ) : __( 'Open the studio', 'whd' ) ) . '</a>';
 			}
-			if ( WHD_Live::has_site( $stream ) ) {
-				echo '<a class="button" target="_blank" rel="noopener" href="' . esc_url( WHD_Live::page_url( $id ) ) . '">' . esc_html__( 'View page', 'whd' ) . '</a>';
-			}
 			if ( 'scheduled' === $stream['stage'] ) {
 				echo '<a class="button" href="' . esc_url( self::url( [ 'view' => 'edit', 'id' => $id ] ) ) . '">' . esc_html__( 'Edit', 'whd' ) . '</a>';
 			}
 			if ( $stats['leads'] ) {
 				echo '<a class="button" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=whd_live_leads&id=' . $id ), 'whd_live_leads_' . $id ) ) . '">' . esc_html__( 'Leads CSV', 'whd' ) . '</a>';
+			}
+			$recordings = WHD_Live_Recordings::of_stream( $id );
+			if ( $recordings ) {
+				$to = 1 === count( $recordings ) ? get_edit_post_link( $recordings[0], 'raw' ) : add_query_arg( [ 'mode' => 'list', 's' => rawurlencode( (string) get_the_title( $id ) ) ], admin_url( 'upload.php' ) );
+				/* translators: %d: number of recordings */
+				echo '<a class="button" href="' . esc_url( $to ) . '">' . esc_html( sprintf( _n( '%d recording', '%d recordings', count( $recordings ), 'whd' ), count( $recordings ) ) ) . '</a>';
 			}
 			if ( 'live' !== $stream['stage'] ) {
 				echo '<a class="whdla-delete" data-whdla-confirm href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=whd_live_delete&id=' . $id ), 'whd_live_delete_' . $id ) ) . '">' . esc_html__( 'Delete', 'whd' ) . '</a>';
@@ -683,6 +706,13 @@ final class WHD_Live_Admin {
 			echo '</div></article>';
 		}
 		echo '</div></div>';
+	}
+
+	/** The stream's own address, to open or to copy. Works from the moment the stream is saved. */
+	private static function link_line( $id ) {
+		$url = WHD_Live::page_url( $id );
+		echo '<p class="whdla-link"><a href="' . esc_url( $url ) . '" target="_blank" rel="noopener">' . esc_html( WHD_Live::pretty_url( $url ) ) . '</a>'
+			. ' <button type="button" class="whdla-copy" data-copy="' . esc_url( $url ) . '">' . esc_html__( 'Copy', 'whd' ) . '</button></p>';
 	}
 
 	/* ─────────────────────────── the form ─────────────────────────── */
@@ -695,7 +725,7 @@ final class WHD_Live_Admin {
 		$rows   = [];
 		if ( $exists ) {
 			foreach ( WHD_Live::pieces( $id ) as $piece ) {
-				$rows[] = [ 'id' => $piece['id'], 'name' => $piece['name'], 'price' => $piece['price'], 'thumb' => $piece['thumb'], 'keyword' => $piece['keyword'] ];
+				$rows[] = [ 'id' => $piece['id'], 'name' => $piece['name'], 'price' => $piece['price'], 'thumb' => $piece['thumb'], 'code' => $piece['code'] ];
 			}
 		}
 
@@ -709,6 +739,13 @@ final class WHD_Live_Admin {
 		echo '<div class="whdla-cols"><div class="whdla-col">';
 
 		echo '<section class="whdla-card"><h2>' . esc_html__( 'What it is', 'whd' ) . '</h2>';
+		if ( $exists && WHD_Live::has_site( $stream ) ) {
+			echo '<div class="whdla-field"><span>' . esc_html__( 'Its link', 'whd' ) . '</span>';
+			self::link_line( $id );
+			echo '<small>' . esc_html__( 'Yours to share now: until you go live it shows a waiting page.', 'whd' ) . '</small></div>';
+		} elseif ( ! $exists ) {
+			echo '<p class="whdla-sub">' . esc_html__( 'Saving gives this live its own link, to share before you start.', 'whd' ) . '</p>';
+		}
 		echo '<label class="whdla-field"><span>' . esc_html__( 'Title', 'whd' ) . '</span><input type="text" name="title" required maxlength="120" value="' . esc_attr( $exists ? get_the_title( $id ) : '' ) . '" placeholder="' . esc_attr__( 'Friday night new arrivals', 'whd' ) . '"></label>';
 		echo '<label class="whdla-field"><span>' . esc_html__( 'What viewers should expect', 'whd' ) . '</span><textarea name="description" rows="3" placeholder="' . esc_attr__( 'Shown on the page, and sent to Facebook and YouTube as the description.', 'whd' ) . '">' . esc_textarea( $exists ? (string) get_post_field( 'post_excerpt', $id ) : '' ) . '</textarea></label>';
 		echo '<label class="whdla-field whdla-field--short"><span>' . esc_html__( 'When (optional)', 'whd' ) . '</span><input type="datetime-local" name="starts_at" value="' . esc_attr( $when ) . '"><small>' . esc_html__( 'The page counts down to this. You still go live by hand.', 'whd' ) . '</small></label>';
@@ -718,7 +755,7 @@ final class WHD_Live_Admin {
 		echo '<button type="button" class="whdla-poster__btn" ' . ( $url ? 'style="background-image:url(' . esc_url( $url ) . ')"' : '' ) . '><span>' . esc_html__( 'Choose', 'whd' ) . '</span></button></div><small>' . esc_html__( 'Shown on the page before you go live.', 'whd' ) . '</small></div>';
 		echo '</section>';
 
-		echo '<section class="whdla-card"><h2>' . esc_html__( 'Pieces you’ll show', 'whd' ) . '</h2><p class="whdla-sub">' . esc_html__( 'You can add more from the studio while you’re live. Each gets a number viewers can comment. A keyword is another word that asks for it, like “pink dress”.', 'whd' ) . '</p>';
+		echo '<section class="whdla-card"><h2>' . esc_html__( 'Pieces you’ll show', 'whd' ) . '</h2><p class="whdla-sub">' . esc_html__( 'You can add more from the studio while you’re live. Give each one a code, like DRESS1. The card in the video tells viewers to comment it, and that gets them the link. With no code, its number is the code.', 'whd' ) . '</p>';
 		if ( ! function_exists( 'wc_get_product' ) ) {
 			echo '<p class="whd-muted">' . esc_html__( 'WooCommerce is not active.', 'whd' ) . '</p>';
 		}
@@ -752,7 +789,7 @@ final class WHD_Live_Admin {
 		echo '</div></section>';
 
 		echo '<section class="whdla-card"><h2>' . esc_html__( 'Who gets the link', 'whd' ) . '</h2><div class="whdla-radios">';
-		foreach ( [ 'any' => [ __( 'Anyone who comments', 'whd' ), __( 'While a piece is on screen, any comment gets its link. Once per person, per piece.', 'whd' ) ], 'keyword' => [ __( 'Only when they ask', 'whd' ), __( 'A comment with a trigger word like “mine” or “link”, a piece’s number or its keyword.', 'whd' ) ] ] as $value => $words ) {
+		foreach ( [ 'any' => [ __( 'Anyone who comments', 'whd' ), __( 'While a piece is on screen, any comment gets its link. Once per person, per piece.', 'whd' ) ], 'keyword' => [ __( 'Only when they ask', 'whd' ), __( 'A comment with the piece’s code, or a trigger word like “link” or “how much”.', 'whd' ) ] ] as $value => $words ) {
 			echo '<label><input type="radio" name="reply_mode" value="' . esc_attr( $value ) . '" ' . checked( $stream['reply_mode'], $value, false ) . '><span><strong>' . esc_html( $words[0] ) . '</strong><small>' . esc_html( $words[1] ) . '</small></span></label>';
 		}
 		echo '</div></section>';
@@ -790,7 +827,8 @@ final class WHD_Live_Admin {
 			$post['ID'] = $id;
 			wp_update_post( $post );
 		} else {
-			$id = (int) wp_insert_post( $post );
+			$post['post_name'] = WHD_Live::new_slug( $post['post_title'] );
+			$id                = (int) wp_insert_post( $post );
 		}
 		if ( ! $id ) {
 			wp_die( esc_html__( 'The stream could not be saved.', 'whd' ) );

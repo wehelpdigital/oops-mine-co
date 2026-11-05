@@ -32,6 +32,39 @@
 		} );
 	} );
 
+	/* ─────────────────────────── the stream's link ─────────────────────────── */
+
+	document.querySelectorAll( '[data-copy]' ).forEach( function ( btn ) {
+		var word = btn.textContent;
+		btn.addEventListener( 'click', function () {
+			var done = function () {
+				btn.textContent = T.copied;
+				setTimeout( function () {
+					btn.textContent = word;
+				}, 1600 );
+			};
+			var text = btn.getAttribute( 'data-copy' );
+			var oldWay = function () {
+				var box = el( 'textarea' );
+				box.value = text;
+				box.style.position = 'fixed';
+				box.style.opacity = '0';
+				document.body.appendChild( box );
+				box.select();
+				var worked = document.execCommand( 'copy' );
+				box.remove();
+				if ( worked ) {
+					done();
+				}
+			};
+			if ( navigator.clipboard && window.isSecureContext ) {
+				navigator.clipboard.writeText( text ).then( done, oldWay ); // a browser can refuse it even on https
+				return;
+			}
+			oldWay();
+		} );
+	} );
+
 	/* ─────────────────────────── cover picture ─────────────────────────── */
 
 	document.querySelectorAll( '[data-whdla-poster]' ).forEach( function ( box ) {
@@ -67,7 +100,7 @@
 
 		function write() {
 			hidden.value = JSON.stringify( rows.map( function ( r ) {
-				return { id: r.id, keyword: r.keyword || '' };
+				return { id: r.id, code: r.code || '' };
 			} ) );
 		}
 
@@ -86,10 +119,21 @@
 				li.appendChild( words );
 				var key = el( 'input', 'whdla-pick__key' );
 				key.type = 'text';
-				key.placeholder = T.keyword;
-				key.value = row.keyword || '';
+				key.placeholder = T.codeOr.replace( '%d', i + 1 );
+				key.value = row.code || '';
+				key.setAttribute( 'aria-label', T.code );
+				var markTaken = function () {
+					var code = String( row.code || '' ).trim().toLowerCase();
+					var taken = !! code && rows.some( function ( r ) {
+						return r !== row && String( r.code || '' ).trim().toLowerCase() === code;
+					} );
+					key.classList.toggle( 'is-taken', taken );
+					key.title = taken ? T.codeDup : '';
+				};
+				markTaken();
 				key.addEventListener( 'input', function () {
-					row.keyword = key.value;
+					row.code = key.value;
+					markTaken();
 					write();
 				} );
 				li.appendChild( key );
@@ -144,7 +188,7 @@
 						if ( ! rows.some( function ( r ) {
 							return r.id === item.id;
 						} ) ) {
-							rows.push( { id: item.id, name: item.name, price: item.price, thumb: item.thumb, keyword: '' } );
+							rows.push( { id: item.id, name: item.name, price: item.price, thumb: item.thumb, code: '' } );
 							render();
 							write();
 						}

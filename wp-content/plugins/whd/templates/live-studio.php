@@ -49,7 +49,10 @@ $whd_tabs = [
 			<span class="whdls-gauge" title="<?php esc_attr_e( 'Watching on this site', 'whd' ); ?>"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.800" aria-hidden="true"><path d="M2.500 12S6 5.500 12 5.500 21.500 12 21.500 12 18 18.500 12 18.500 2.500 12 2.500 12Z"/><circle cx="12" cy="12" r="2.800"/></svg><b id="whdls-viewers">0</b></span>
 		</div>
 		<?php if ( WHD_Live::has_site( $whd_stream ) ) : ?>
-			<a class="whdls-ghost" href="<?php echo esc_url( WHD_Live::page_url( $whd_id ) ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'View page', 'whd' ); ?></a>
+			<div class="whdls-link" title="<?php esc_attr_e( 'This live’s own link. It works now, showing a waiting page until you go live.', 'whd' ); ?>">
+				<a href="<?php echo esc_url( WHD_Live::page_url( $whd_id ) ); ?>" target="_blank" rel="noopener"><?php echo esc_html( WHD_Live::pretty_url( WHD_Live::page_url( $whd_id ) ) ); ?></a>
+				<button type="button" class="whdls-mini" data-copy="<?php echo esc_url( WHD_Live::page_url( $whd_id ) ); ?>"><?php esc_html_e( 'Copy', 'whd' ); ?></button>
+			</div>
 		<?php endif; ?>
 		<button type="button" class="whdls-golive" id="whdls-golive"><?php esc_html_e( 'Go live', 'whd' ); ?></button>
 	</header>
@@ -242,7 +245,8 @@ $whd_tabs = [
 
 				<span class="whdls-bar__gap"></span>
 				<label class="whdls-switch"><input type="checkbox" id="whdls-hide"><span></span><?php esc_html_e( 'Hide graphics', 'whd' ); ?></label>
-				<button type="button" class="whdls-record" id="whdls-record" aria-pressed="false" title="<?php esc_attr_e( 'Save a copy of the stream to this computer', 'whd' ); ?>"><i></i><span id="whdls-record-label"><?php esc_html_e( 'Record', 'whd' ); ?></span></button>
+				<button type="button" class="whdls-record" id="whdls-record" aria-pressed="false" title="<?php esc_attr_e( 'Record the stream into your media library', 'whd' ); ?>"><i></i><span id="whdls-record-label"><?php esc_html_e( 'Record', 'whd' ); ?></span></button>
+				<button type="button" class="whdls-record whdls-record--pause" id="whdls-record-pause" hidden><span id="whdls-record-pause-label"><?php esc_html_e( 'Pause', 'whd' ); ?></span></button>
 			</div>
 		</main>
 
@@ -299,6 +303,7 @@ $whd_tabs = [
 		<p class="whdls-kicker"><?php esc_html_e( 'That’s a wrap', 'whd' ); ?></p>
 		<h2 id="whdls-wrap-title"></h2>
 		<dl class="whdls-wrapstats" id="whdls-wrapstats"></dl>
+		<p class="whdls-hint" id="whdls-wrap-rec" hidden></p>
 		<div class="whdls-dialog__actions">
 			<a class="whdls-btn whdls-btn--quiet" id="whdls-wrap-csv" href="#"><?php esc_html_e( 'Leads CSV', 'whd' ); ?></a>
 			<a class="whdls-golive" href="<?php echo esc_url( WHD_Live_Admin::url() ); ?>"><?php esc_html_e( 'All streams', 'whd' ); ?></a>

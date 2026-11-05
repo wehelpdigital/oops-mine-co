@@ -527,14 +527,30 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   link is not in it: a site comment's REST answer carries the piece and that opens the side panel. Falls back to REST
   when uploads can't be written. `.ftp-sync` excludes that folder.
   Comments: table `whd_live_comments`, unique on (stream, source, platform id), so `INSERT IGNORE` is what makes each
-  polled comment act once; a reply is claimed by a conditional UPDATE before sending. `match()`: a piece's keyword or
-  number first ("mine 3", not "size 8"), then a trigger word, then in `any` mode any comment while a piece shows; one
+  polled comment act once; a reply is claimed by a conditional UPDATE before sending. `match()`: the code the host set
+  for a piece first (across all pieces, so a code beats another piece's number), then a number ("3", "want 3", not
+  "size 8"), then a trigger word, then in `any` mode any comment while a piece shows; one
   piece per person per stream. No cron or webhook: the studio's heartbeat (`feed`, on the worker's clock) pulls Facebook
   (4 s) and YouTube (10 s, for the 10,000-a-day quota) and sends after its response, because a stream only exists while
   the studio is open. Facebook: Messenger private reply + a public line, falling back to the link as a comment reply
   (the normal case until `pages_messaging` has Advanced Access). YouTube: live chat, 200 characters, link never cut.
   TikTok: stream key only, it has no API for comments, so the card always carries the short link. Name + email on the
   site: the tick goes through `WHD_Subscribers` (source `live`), else `whd_live_lead` → `WHD_Contacts` as a profile.
+  Each piece has a code (`_whd_live_pieces`: `[ id, code ]`; one code, one piece; none = its number, `piece['say']`). The
+  card and the comment box say it: `card_cta` is "Comment {code} for the link", and the card follows the code as it is typed.
+  Every stream's link is unique for good: `WHD_Live::new_slug()` puts a random end on the title's slug at creation and an
+  edit never changes it, so a deleted stream's address is never reissued. It is shown from the moment of saving (list,
+  form, studio's top bar, preflight), on the waiting page with Copy, on the cover under the words, and is sent in the
+  Facebook and YouTube descriptions (`Channels::description()`).
+  **Recording** (`WHD_Live_Recordings`, routes `live/<id>/recording…`): straight to the media library. MediaRecorder's
+  slices go up one at a time as they are made (2.5 Mbps, about 1.2 GB an hour; `timeslice` 4 s, though the MP4 muxer only
+  cuts at a keyframe) and are appended to `uploads/whd-live/rec/<uuid>.part`, a folder closed by `.htaccess`. Numbered, so a
+  retry is not written twice. Stop finishes it with a rename and `wp_insert_attachment`; metadata comes from the studio's
+  own clock and size, not getID3, which walks the whole file and would hit the host's time limit. Pause/resume are
+  `MediaRecorder.pause()/resume()`; the running time leaves paused time out. On air with `networkState` warning or bad the
+  sending waits: the audience comes first. The browser keeps every slice until the attachment exists, and if the server
+  refuses (507 = quota full) saves the whole file to the computer instead. A tab that closes mid-recording: `recover`
+  (called when the studio opens) turns what arrived into a video, and part files nobody returns to go after 7 days.
   **Not run against real Daily, Meta or YouTube yet** (no keys): tests stub them. The request shapes come from their docs,
   and the real daily-js accepted the options and events. Testing: a temporary mu-plugin answering `pre_http_request` for
   those hosts and logging calls; Chromium with `--use-fake-device-for-media-stream --use-file-for-fake-video-capture=<y4m>`

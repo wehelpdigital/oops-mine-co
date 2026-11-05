@@ -77,6 +77,10 @@ $whd_cart   = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : '';
 							<p class="whdl-screen__title" id="whdl-screen-title"><?php echo esc_html( get_the_title( $whd_id ) ); ?></p>
 							<div class="whdl-clock" id="whdl-clock" hidden></div>
 							<p class="whdl-screen__text" id="whdl-screen-text"><?php echo esc_html( $whd_blurb ); ?></p>
+							<div class="whdl-share" id="whdl-share" hidden>
+								<span><?php echo esc_html( WHD_Live::pretty_url( WHD_Live::page_url( $whd_id ) ) ); ?></span>
+								<button type="button" id="whdl-copy" data-url="<?php echo esc_url( WHD_Live::page_url( $whd_id ) ); ?>"><?php esc_html_e( 'Copy link', 'whd' ); ?></button>
+							</div>
 							<span class="whdl-spinner" id="whdl-spinner" hidden></span>
 							<button type="button" class="whdl-cta" id="whdl-tap" hidden></button>
 						</div>

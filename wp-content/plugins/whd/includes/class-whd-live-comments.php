@@ -8,9 +8,9 @@
  *
  * The rules for who gets a link:
  *
- *   A comment naming a piece (its number, or the keyword the host gave it) gets that piece.
+ *   A comment naming a piece (the code the host gave it, or its number) gets that piece.
  *   Otherwise, while a piece is on screen: in "anyone" mode any comment gets it, in "keyword" mode
- *   only a comment with a trigger word ("mine", "link", "how much").
+ *   only a comment with a trigger word ("link", "how much").
  *   Nobody is sent the same piece twice in one stream. On Facebook that is also a matter of being
  *   allowed to stay on the platform.
  *
@@ -103,8 +103,9 @@ final class WHD_Live_Comments {
 
 	/** Does this comment contain the phrase as whole words? */
 	private static function says( string $plain, string $phrase ): bool {
-		$phrase = trim( self::plain( $phrase ) );
-		return '' !== $phrase && false !== strpos( $plain, ' ' . $phrase . ' ' );
+		$phrase = trim( str_replace( '#', '', self::plain( $phrase ) ) );
+		// "#DRESS1" asks for the same thing as "DRESS1".
+		return '' !== $phrase && false !== strpos( str_replace( '#', '', $plain ), ' ' . $phrase . ' ' );
 	}
 
 	/**
@@ -115,11 +116,14 @@ final class WHD_Live_Comments {
 		$stream = WHD_Live::get( $stream_id );
 		$rows   = WHD_Live::piece_rows( $stream_id );
 
-		// A piece by its keyword, or its number: "3", "#3", "mine 3", "mine #3".
-		foreach ( $rows as $i => $row ) {
-			if ( '' !== $row['keyword'] && self::says( $plain, $row['keyword'] ) ) {
+		// A code first, across all of them: a code that happens to be another piece's number still wins.
+		foreach ( $rows as $row ) {
+			if ( '' !== $row['code'] && self::says( $plain, $row['code'] ) ) {
 				return [ (int) $row['id'], true ];
 			}
+		}
+		// Then its number: "3", "#3", "want 3".
+		foreach ( $rows as $i => $row ) {
 			// Only after words that mean "that one": "size 8" is a question about a size, not piece 8.
 			if ( preg_match( '/^ (?:(?:mine|want|i|buy|get|link|piece|item|no|number|num|for) )*#?' . ( $i + 1 ) . ' $/', $plain ) ) {
 				return [ (int) $row['id'], true ];

@@ -291,6 +291,16 @@ final class WHD_Live_Channels {
 		return '' === $key ? $server : rtrim( $server, '/' ) . '/' . ltrim( $key, '/' );
 	}
 
+	/** What a platform shows under the video: the stream's words, and where to shop along. */
+	private static function description( $id ): string {
+		$text = trim( (string) get_post_field( 'post_excerpt', $id ) );
+		if ( WHD_Live::has_site( WHD_Live::get( $id ) ) ) {
+			/* translators: %s: this stream's page */
+			$text = trim( $text . "\n\n" . sprintf( __( 'Shop along: %s', 'whd' ), WHD_Live::page_url( $id ) ) );
+		}
+		return $text;
+	}
+
 	/* ─────────────────────────── Facebook ─────────────────────────── */
 
 	private static function graph( string $method, string $path, array $params = [] ) {
@@ -325,7 +335,7 @@ final class WHD_Live_Channels {
 			$live = self::graph( 'POST', '/' . rawurlencode( $s['fb_page_id'] ) . '/live_videos', [
 				'status'      => 'LIVE_NOW',
 				'title'       => mb_substr( $title, 0, 254 ),
-				'description' => (string) get_post_field( 'post_excerpt', $id ),
+				'description' => self::description( $id ),
 			] );
 			if ( ! is_wp_error( $live ) && ! empty( $live['secure_stream_url'] ) ) {
 				$facts = self::graph( 'GET', '/' . rawurlencode( (string) $live['id'] ), [ 'fields' => 'permalink_url,video' ] );
@@ -381,7 +391,7 @@ final class WHD_Live_Channels {
 	 * New comments on the live video, oldest first.
 	 *
 	 * `live_filter=no_filter` because Facebook's default drops what it scores as low quality, and
-	 * "mine" is exactly the kind of one-word comment it scores low. `from` only arrives with the
+	 * a one-word code is exactly the kind of comment it scores low. `from` only arrives with the
 	 * right permission, so its absence is not treated as a failure.
 	 *
 	 * @return array|WP_Error
@@ -578,7 +588,7 @@ final class WHD_Live_Channels {
 		$broadcast = self::yt( 'POST', '/liveBroadcasts?part=id,snippet,contentDetails,status', [
 			'snippet'        => [
 				'title'              => $title,
-				'description'        => (string) get_post_field( 'post_excerpt', $id ),
+				'description'        => self::description( $id ),
 				'scheduledStartTime' => gmdate( 'c' ),
 			],
 			'status'         => [ 'privacyStatus' => $privacy, 'selfDeclaredMadeForKids' => false ],
