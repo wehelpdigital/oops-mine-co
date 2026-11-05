@@ -1265,7 +1265,7 @@
 		// Where the photos will open: the host's own marker, in the page. Nothing of it goes in the picture.
 		if ( 'spot' === layer.type ) {
 			var spotW = ( +layer.w || 0.34 ) * this.W;
-			layer._box = { cx: layer.x * this.W, cy: layer.y * this.H, w: spotW, h: spotW * GALLERY.H / GALLERY.W };
+			layer._box = { cx: layer.x * this.W, cy: layer.y * this.H, w: spotW, h: spotW * ( +layer.ratio || GALLERY.H / GALLERY.W ) };
 			return;
 		}
 

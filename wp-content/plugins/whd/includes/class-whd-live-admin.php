@@ -276,6 +276,12 @@ final class WHD_Live_Admin {
 			'photoNext'    => __( 'Next photo', 'whd' ),
 			'photoHold'    => __( 'Hold this one', 'whd' ),
 			'photoPlay'    => __( 'Keep going', 'whd' ),
+			'spotNames'    => [
+				'photos'  => __( 'Where photos open', 'whd' ),
+				'card'    => __( 'Where the card appears', 'whd' ),
+				'picture' => __( 'Where pictures appear', 'whd' ),
+				'gif'     => __( 'Where GIFs pop up', 'whd' ),
+			],
 			'spotPlaces'   => [
 				'left'   => __( 'Left', 'whd' ),
 				'centre' => __( 'Centre', 'whd' ),
@@ -385,7 +391,6 @@ final class WHD_Live_Admin {
 				'lower'     => __( 'Name strip', 'whd' ),
 				'countdown' => __( 'Countdown', 'whd' ),
 				'gallery'   => __( 'Photos', 'whd' ),
-				'spot'      => __( 'Photo spot', 'whd' ),
 			],
 		];
 	}

@@ -84,10 +84,11 @@ $whd_tabs = [
 				<ol class="whdls-pieces" id="whdls-pieces"></ol>
 				<p class="whdls-hint"><?php esc_html_e( 'Press Show and the card goes into the video. Drag it where you want it. Viewers who comment its code get the link.', 'whd' ); ?></p>
 
-				<h3><?php esc_html_e( 'Where the photos open', 'whd' ); ?></h3>
-				<div class="whdls-seg" role="group" id="whdls-spot-places"></div>
-				<label class="whdls-switch whdls-switch--block"><input type="checkbox" id="whdls-spot-on" checked><span></span><?php esc_html_e( 'Show me the spot', 'whd' ); ?></label>
-				<p class="whdls-hint"><?php esc_html_e( 'Drag the dashed box in the picture to where you’ll point, and pull a corner to size it. Only you can see it. Press Photos on a piece and its pictures open right there, in place of its card, with its code under them.', 'whd' ); ?></p>
+				<h3><?php esc_html_e( 'Where they appear', 'whd' ); ?></h3>
+				<div class="whdls-placerow"><span><?php esc_html_e( 'Now showing', 'whd' ); ?></span><div class="whdls-seg" role="group" id="whdls-places-card"></div></div>
+				<div class="whdls-placerow"><span><?php esc_html_e( 'Photos', 'whd' ); ?></span><div class="whdls-seg" role="group" id="whdls-places-photos"></div></div>
+				<label class="whdls-switch whdls-switch--block"><input type="checkbox" class="whdls-spots-on" checked><span></span><?php esc_html_e( 'Show me the dashed boxes', 'whd' ); ?></label>
+				<p class="whdls-hint"><?php esc_html_e( 'Drag a dashed box in the picture to where you want it, and pull a corner to size it. Only you can see them. Show puts the card in its box; Photos opens its pictures in theirs, in place of the card.', 'whd' ); ?></p>
 			</div>
 
 			<div class="whdls-pane" data-pane="cameras">
@@ -157,6 +158,10 @@ $whd_tabs = [
 			<div class="whdls-pane" data-pane="gifs">
 				<h2><?php esc_html_e( 'GIFs', 'whd' ); ?></h2>
 				<p class="whdls-hint"><?php esc_html_e( 'Press one and it pops up over the video. Drag it anywhere while it’s up.', 'whd' ); ?></p>
+				<h3><?php esc_html_e( 'Where they pop up', 'whd' ); ?></h3>
+				<div class="whdls-seg" role="group" id="whdls-places-gif"></div>
+				<label class="whdls-switch whdls-switch--block"><input type="checkbox" class="whdls-spots-on" checked><span></span><?php esc_html_e( 'Show me the dashed box', 'whd' ); ?></label>
+				<p class="whdls-hint"><?php esc_html_e( 'Drag the box in the picture to where you want them, and pull a corner to size them. Only you can see it.', 'whd' ); ?></p>
 				<label class="whdls-field whdls-field--row"><span><?php esc_html_e( 'Stays on screen', 'whd' ); ?></span>
 					<select id="whdls-gif-stay">
 						<option value="4"><?php esc_html_e( '4 seconds', 'whd' ); ?></option>
@@ -193,6 +198,10 @@ $whd_tabs = [
 			<div class="whdls-pane" data-pane="images">
 				<h2><?php esc_html_e( 'Pictures', 'whd' ); ?></h2>
 				<p class="whdls-hint"><?php esc_html_e( 'Put a picture on top of the video. Drag it, pull a corner to size it, and give it a movement in the bar under the stage.', 'whd' ); ?></p>
+				<h3><?php esc_html_e( 'Where pictures appear', 'whd' ); ?></h3>
+				<div class="whdls-seg" role="group" id="whdls-places-picture"></div>
+				<label class="whdls-switch whdls-switch--block"><input type="checkbox" class="whdls-spots-on" checked><span></span><?php esc_html_e( 'Show me the dashed box', 'whd' ); ?></label>
+				<p class="whdls-hint"><?php esc_html_e( 'Drag the box to where the next picture should land. Only you can see it.', 'whd' ); ?></p>
 				<button type="button" class="whdls-btn" id="whdls-image-pick"><?php esc_html_e( 'Choose a picture', 'whd' ); ?></button>
 				<button type="button" class="whdls-btn whdls-btn--quiet" id="whdls-logo-add" hidden><?php esc_html_e( 'Add your logo', 'whd' ); ?></button>
 				<h3><?php esc_html_e( 'Used in this stream', 'whd' ); ?></h3>
@@ -255,10 +264,20 @@ $whd_tabs = [
 			<div class="whdls-stagebox" id="whdls-stagebox">
 				<div class="whdls-frame" id="whdls-frame">
 					<canvas id="whdls-canvas"></canvas>
-					<div class="whdls-spot" id="whdls-spot" hidden>
-						<strong><?php esc_html_e( 'Product photos open here', 'whd' ); ?></strong>
-						<small><?php esc_html_e( 'Only you see this box. Drag it where you’ll point.', 'whd' ); ?></small>
-					</div>
+					<?php
+					$whd_spots = [
+						'photos'  => __( 'Product photos open here', 'whd' ),
+						'card'    => __( 'Now showing appears here', 'whd' ),
+						'picture' => __( 'Pictures appear here', 'whd' ),
+						'gif'     => __( 'GIFs pop up here', 'whd' ),
+					];
+					foreach ( $whd_spots as $whd_spot => $whd_spot_words ) :
+						?>
+						<div class="whdls-spot" id="whdls-spot-<?php echo esc_attr( $whd_spot ); ?>" hidden>
+							<strong><?php echo esc_html( $whd_spot_words ); ?></strong>
+							<small><?php esc_html_e( 'Only you see this box. Drag it where you want it.', 'whd' ); ?></small>
+						</div>
+					<?php endforeach; ?>
 					<div class="whdls-handles" id="whdls-handles"></div>
 					<span class="whdls-onair" id="whdls-onair" hidden><i></i><?php esc_html_e( 'On air', 'whd' ); ?></span>
 					<div class="whdls-peek" id="whdls-peek" hidden>

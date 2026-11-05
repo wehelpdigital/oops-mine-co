@@ -167,6 +167,8 @@ body.whdls-page #wpbody-content { padding-bottom: 0 !important; }
 .whdls-tile__icon img { display: block; width: 36px; height: 36px; object-fit: contain; }
 .whdls-tile--sticker:hover .whdls-tile__icon img { animation: whdls-wiggle .55s ease-in-out; }
 @keyframes whdls-wiggle { 25% { transform: rotate(-11deg) scale(1.08); } 75% { transform: rotate(11deg) scale(1.08); } }
+.whdls-placerow { display: flex; flex-direction: column; gap: 4px; }
+.whdls-placerow > span { color: var(--soft); font-size: 12px; font-weight: 600; }
 .whdls-occ { display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 11px; background: var(--panel-2); }
 .whdls-occ[hidden] { display: none; }
 .whdls-occ h3 { margin: 0; }
@@ -322,7 +324,7 @@ body.whdls-page #wpbody-content { padding-bottom: 0 !important; }
 
 .whdls-handles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 /* The host's marker for where the photos open. In the page, so it never reaches the video. */
-.whdls-spot { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 10px; border: 2px dashed rgba(255, 255, 255, .9); border-radius: 12px; background: rgba(185, 139, 126, .2); box-shadow: 0 0 0 1px rgba(0, 0, 0, .35), inset 0 0 0 1px rgba(0, 0, 0, .3); color: #fff; text-align: center; text-shadow: 0 1px 3px rgba(0, 0, 0, .8); pointer-events: none; }
+.whdls-spot { position: absolute; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 10px; border: 2px dashed rgba(255, 255, 255, .9); border-radius: 12px; background: rgba(185, 139, 126, .2); box-shadow: 0 0 0 1px rgba(0, 0, 0, .35), inset 0 0 0 1px rgba(0, 0, 0, .3); color: #fff; text-align: center; text-shadow: 0 1px 3px rgba(0, 0, 0, .8); pointer-events: none; }
 .whdls-spot[hidden] { display: none; }
 .whdls-spot strong { font-size: 14px; font-weight: 700; line-height: 1.25; }
 .whdls-spot small { font-size: 11px; line-height: 1.3; opacity: .92; }

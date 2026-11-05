@@ -563,9 +563,12 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   host's list, so the public files never hold more than the piece on air. **The card or the photos, never both** (the owner's
   call: they said the same thing and covered the screen). The photos replace the card and come with the same `/showing` post,
   so the piece is public, its number answers and the page's clickable area sits over them; closing brings back that piece's card
-  (`S.cardBack`), where it was. It opens at the **spot**, a `spot` layer that
-  draws nothing and exists so it can be dragged and sized like the rest; the dashed box is HTML (`drawSpot`), so it cannot
-  reach the video. `S.spot` is saved at the scene's root, because `stage.load()` replaces layers.
+  (`S.cardBack`), where it was. **Spots:** the card, the photos, pictures and GIFs each open at a
+  dashed box the host drags and sizes ahead of time (`SPOTS` in live-studio.js: presets and box shape per kind). Each is a
+  `spot` layer that draws nothing and exists so it drags like the rest; the box itself is HTML (`drawSpots`), so it cannot reach
+  the video. Only the boxes for the tab you are on show, and not one for something already up. `S.spots` is saved at the
+  scene's root, because `stage.load()` replaces layers. Dragging the card or the open photos moves their box; dragging a placed
+  picture or GIF does not, since several can be up.
   **GIFs tab:** tap and it pops up for 4, 6 or 10 s (`_brief`: not saved with the scene) or until taken off. Moving stickers
   are Noto Emoji 3D art (`assets/live-stickers/`) with the stage's own moves (`wobble`, `jelly`, `shake`, `hop`). Its README
   says Apache 2.0 and links a LICENSE that holds the OFL; both allow this and both texts are kept. Google's *animated* Noto emoji

@@ -47,17 +47,43 @@
 	var portrait = 'portrait' === D.format;
 	var saved = D.scene || {};
 
-	/* Where the product photos can open: to the host's side, so they can turn and point at them. */
-	var SPOT_PLACES = portrait ? {
-		top: { x: 0.5, y: 0.265, w: 0.6 },
-		middle: { x: 0.5, y: 0.42, w: 0.6 },
-		lower: { x: 0.5, y: 0.6, w: 0.6 }
-	} : {
-		left: { x: 0.2, y: 0.5, w: 0.34 },
-		centre: { x: 0.5, y: 0.5, w: 0.4 },
-		right: { x: 0.8, y: 0.5, w: 0.34 }
+	/*
+	 * Where each kind of thing appears, set ahead of time with a dashed box only the host can see, so they can stand
+	 * beside it and point. Places are [ x, y, width ]; ratio is the box's height as a share of its width.
+	 */
+	var SPOTS = {
+		photos: {
+			ratio: 1.22,
+			first: portrait ? 'top' : 'right',
+			places: portrait ? { top: [ 0.5, 0.265, 0.6 ], middle: [ 0.5, 0.42, 0.6 ], lower: [ 0.5, 0.6, 0.6 ] } : { left: [ 0.2, 0.5, 0.34 ], centre: [ 0.5, 0.5, 0.4 ], right: [ 0.8, 0.5, 0.34 ] }
+		},
+		card: {
+			ratio: 384 / 860,
+			first: portrait ? 'middle' : 'left',
+			// Portrait stays above the bottom third, where TikTok lays its own comments over the video.
+			places: portrait ? { top: [ 0.5, 0.2, 0.86 ], middle: [ 0.5, 0.58, 0.86 ], lower: [ 0.5, 0.68, 0.86 ] } : { left: [ 0.25, 0.8, 0.44 ], centre: [ 0.5, 0.8, 0.44 ], right: [ 0.75, 0.8, 0.44 ] }
+		},
+		picture: {
+			ratio: 1,
+			first: portrait ? 'middle' : 'centre',
+			places: portrait ? { top: [ 0.5, 0.2, 0.45 ], middle: [ 0.5, 0.5, 0.45 ], lower: [ 0.5, 0.7, 0.45 ] } : { left: [ 0.2, 0.45, 0.24 ], centre: [ 0.5, 0.5, 0.24 ], right: [ 0.8, 0.45, 0.24 ] }
+		},
+		gif: {
+			ratio: 1,
+			first: portrait ? 'top' : 'centre',
+			places: portrait ? { top: [ 0.5, 0.17, 0.36 ], middle: [ 0.5, 0.4, 0.36 ], lower: [ 0.5, 0.64, 0.36 ] } : { left: [ 0.18, 0.42, 0.2 ], centre: [ 0.46, 0.28, 0.2 ], right: [ 0.82, 0.32, 0.2 ] }
+		}
 	};
-	var SPOT_FIRST = portrait ? 'top' : 'right';
+
+	function startingSpots() {
+		var out = {};
+		Object.keys( SPOTS ).forEach( function ( kind ) {
+			var first = SPOTS[ kind ].places[ SPOTS[ kind ].first ];
+			var kept = ( saved.spots || {} )[ kind ] || ( 'photos' === kind ? saved.spot : null ); // `spot` was the photos' alone
+			out[ kind ] = kept ? { x: kept.x, y: kept.y, w: kept.w } : { x: first[ 0 ], y: first[ 1 ], w: first[ 2 ] };
+		} );
+		return out;
+	}
 
 	var S = {
 		stage: D.stage,
@@ -92,7 +118,9 @@
 		occRain: false !== saved.occRain,
 		musicBefore: saved.musicBefore || null,
 		photos: 0,
-		spot: saved.spot || { x: SPOT_PLACES[ SPOT_FIRST ].x, y: SPOT_PLACES[ SPOT_FIRST ].y, w: SPOT_PLACES[ SPOT_FIRST ].w, on: true },
+		spots: startingSpots(),
+		spotsOn: false !== saved.spotsOn && ! ( saved.spot && false === saved.spot.on ),
+		tab: 'pieces',
 		scenes: saved.scenes || [],
 		activeScene: saved.activeScene || '',
 		net: '',
@@ -196,7 +224,7 @@
 		S.photos = galleryLayer().productId;
 		S.showing = productLayer() ? productLayer().productId : 0; // the server's "showing" is the piece, not its card
 	}
-	ensureSpot();
+	ensureSpots();
 
 	document.fonts && document.fonts.ready.then( function () {
 		[ '500 40px "Cormorant Garamond"', 'italic 500 40px "Cormorant Garamond"', '800 40px Manrope', '600 40px Manrope' ].forEach( function ( font ) {
@@ -239,7 +267,8 @@
 			occMusic: S.occMusic,
 			occRain: S.occRain,
 			musicBefore: S.musicBefore,
-			spot: S.spot,
+			spots: S.spots,
+			spotsOn: S.spotsOn,
 			scenes: S.scenes,
 			activeScene: S.activeScene,
 			mic: S.micId || '',
@@ -699,7 +728,7 @@
 		S.showing = layer ? layer.productId : 0;
 		S.photos = photos ? photos.productId : 0;
 		S.cardBack = null;
-		ensureSpot();
+		ensureSpots();
 		renderPieces();
 		postShowing();
 	}
@@ -784,7 +813,7 @@
 			renderLayers();
 			return;
 		}
-		$( 'sel-name' ).textContent = T.typeLayer[ layer.type ] || T.camera;
+		$( 'sel-name' ).textContent = 'spot' === layer.type ? T.spotNames[ layer.spotKind ] : ( T.typeLayer[ layer.type ] || T.camera );
 		$( 'sel-size' ).value = layer.w;
 		$( 'sel-size' ).disabled = 'ticker' === layer.type;
 		$( 'sel-opacity' ).value = layer.opacity;
@@ -830,21 +859,23 @@
 		sel.classList.toggle( 'is-band', 'ticker' === layer.type );
 	}
 
-	/* The dashed box. It lives in the page, so it cannot reach the video. */
-	function drawSpot() {
-		var layer = spotLayer();
-		var box = $( 'spot' );
-		var on = layer && layer._box && false !== layer.visible && ! stage.cover && ! stage.hideGraphics;
-		if ( box.hidden === !! on ) {
-			box.hidden = ! on;
-		}
-		if ( on ) {
-			var b = layer._box;
-			box.style.left = ( ( b.cx - b.w / 2 ) / stage.W * 100 ) + '%';
-			box.style.top = ( ( b.cy - b.h / 2 ) / stage.H * 100 ) + '%';
-			box.style.width = ( b.w / stage.W * 100 ) + '%';
-			box.style.height = ( b.h / stage.H * 100 ) + '%';
-		}
+	/* The dashed boxes. They live in the page, so they cannot reach the video. */
+	function drawSpots() {
+		Object.keys( SPOTS ).forEach( function ( kind ) {
+			var layer = spotLayer( kind );
+			var box = $( 'spot-' + kind );
+			var on = layer && layer._box && false !== layer.visible && ! stage.cover && ! stage.hideGraphics;
+			if ( box.hidden === !! on ) {
+				box.hidden = ! on;
+			}
+			if ( on ) {
+				var b = layer._box;
+				box.style.left = ( ( b.cx - b.w / 2 ) / stage.W * 100 ) + '%';
+				box.style.top = ( ( b.cy - b.h / 2 ) / stage.H * 100 ) + '%';
+				box.style.width = ( b.w / stage.W * 100 ) + '%';
+				box.style.height = ( b.h / stage.H * 100 ) + '%';
+			}
+		} );
 	}
 
 	function pointAt( e ) {
@@ -906,7 +937,7 @@
 		if ( layer && ( 'product' === layer.type || 'gallery' === layer.type ) ) {
 			postShowing();
 		}
-		if ( layer && ( 'spot' === layer.type || 'gallery' === layer.type ) ) {
+		if ( layer && ( 'spot' === layer.type || 'gallery' === layer.type || 'product' === layer.type ) ) {
 			rememberSpot( layer );
 		}
 	};
@@ -928,7 +959,7 @@
 				if ( layer && ( 'product' === layer.type || 'gallery' === layer.type ) ) {
 					postShowingSoon();
 				}
-				if ( layer && ( 'spot' === layer.type || 'gallery' === layer.type ) ) {
+				if ( layer && ( 'spot' === layer.type || 'gallery' === layer.type || 'product' === layer.type ) ) {
 					rememberSpot( layer );
 				}
 			}
@@ -974,7 +1005,7 @@
 			return;
 		}
 		if ( 'spot' === layer.type ) {
-			setSpotOn( false );
+			setSpotsOn( false );
 			select( null );
 			return;
 		}
@@ -985,6 +1016,7 @@
 		}
 		if ( wasProduct ) {
 			S.showing = 0;
+			ensureSpots();
 			renderPieces();
 			postShowing();
 		}
@@ -1069,7 +1101,7 @@
 		var hadPhotos = !! S.photos;
 		S.photos = 0;
 		S.cardBack = null;
-		ensureSpot();
+		ensureSpots();
 		if ( hadProduct || hadPhotos ) {
 			S.showing = 0;
 			postShowing();
@@ -1134,7 +1166,7 @@
 			closePhotos( true ); // the card or the photos, never both: the photos already say what the card says
 		}
 		preloadPhotos( piece ); // so that Photos, when it is pressed, is instant
-		var old = productLayer() || at;
+		var old = productLayer() || at || S.spots.card;
 		var props = {
 			type: 'product',
 			productId: piece.id,
@@ -1145,15 +1177,15 @@
 			link: piece.shortUrl,
 			cta: ctaFor( piece ),
 			kicker: T.nowShowing,
-			x: old ? old.x : ( portrait ? 0.5 : 0.25 ),
-			// Portrait: above the bottom third, where TikTok lays its own comments over the video.
-			y: old ? old.y : ( portrait ? 0.58 : 0.8 ),
-			w: old ? old.w : ( portrait ? 0.86 : 0.44 )
+			x: old.x,
+			y: old.y,
+			w: old.w
 		};
 		if ( old ) {
 			stage.remove( old.id );
 		}
 		var layer = stage.add( props );
+		ensureSpots();
 		S.showing = piece.id;
 		S.activeScene = '';
 		renderScenes();
@@ -1177,74 +1209,105 @@
 		} )[ 0 ] || null;
 	}
 
-	function spotLayer() {
+	function spotLayer( kind ) {
 		return stage.layers.filter( function ( l ) {
-			return 'spot' === l.type && ! l._gone;
+			return 'spot' === l.type && kind === l.spotKind && ! l._gone;
 		} )[ 0 ] || null;
 	}
 
-	/* The marker is a layer so it drags and sizes like everything else. At the bottom, so it never gets in the way. */
-	function ensureSpot() {
-		var layer = spotLayer();
-		if ( ! layer ) {
-			layer = stage.add( { type: 'spot', x: S.spot.x, y: S.spot.y, w: S.spot.w, _brief: true }, true );
-			stage.layers.splice( stage.layers.indexOf( layer ), 1 );
-			stage.layers.unshift( layer );
+	/* Only the boxes for what this tab puts on stage, and not for something already up there. */
+	function spotWanted( kind ) {
+		if ( ! S.spotsOn ) {
+			return false;
 		}
-		layer.visible = !! S.spot.on && ! galleryLayer();
-		return layer;
+		switch ( kind ) {
+			case 'photos':
+				return 'pieces' === S.tab && ! galleryLayer();
+			case 'card':
+				return 'pieces' === S.tab && ! productLayer() && ! galleryLayer();
+			case 'picture':
+				return 'images' === S.tab;
+			default:
+				return 'gifs' === S.tab;
+		}
 	}
 
+	/* The markers are layers so they drag and size like everything else. At the bottom, so they never get in the way. */
+	function ensureSpots() {
+		Object.keys( SPOTS ).forEach( function ( kind ) {
+			var layer = spotLayer( kind );
+			if ( ! layer ) {
+				var spot = S.spots[ kind ];
+				layer = stage.add( { type: 'spot', spotKind: kind, ratio: SPOTS[ kind ].ratio, x: spot.x, y: spot.y, w: spot.w, _brief: true }, true );
+				stage.layers.splice( stage.layers.indexOf( layer ), 1 );
+				stage.layers.unshift( layer );
+			}
+			layer.visible = spotWanted( kind );
+			if ( ! layer.visible && S.selected === layer.id ) {
+				select( null );
+			}
+		} );
+	}
+
+	/* A card or the photos dragged where they stand is the same as moving their box. */
 	function rememberSpot( layer ) {
-		S.spot.x = layer.x;
-		S.spot.y = layer.y;
-		S.spot.w = layer.w;
-		var spot = spotLayer();
-		if ( spot ) {
-			spot.x = layer.x;
-			spot.y = layer.y;
-			spot.w = layer.w;
+		var kind = 'spot' === layer.type ? layer.spotKind : ( 'gallery' === layer.type ? 'photos' : 'card' );
+		var spot = S.spots[ kind ];
+		spot.x = layer.x;
+		spot.y = layer.y;
+		spot.w = layer.w;
+		var marker = spotLayer( kind );
+		if ( marker ) {
+			marker.x = layer.x;
+			marker.y = layer.y;
+			marker.w = layer.w;
 		}
-		renderSpotPlaces();
+		renderSpotPlaces( kind );
 		saveSoon();
 	}
 
-	function placeSpot( key ) {
-		var place = SPOT_PLACES[ key ];
-		S.spot.x = place.x;
-		S.spot.y = place.y;
-		S.spot.w = place.w;
-		[ spotLayer(), galleryLayer() ].forEach( function ( layer ) {
+	function placeSpot( kind, key ) {
+		var place = SPOTS[ kind ].places[ key ];
+		var spot = S.spots[ kind ];
+		spot.x = place[ 0 ];
+		spot.y = place[ 1 ];
+		spot.w = place[ 2 ];
+		// Something already up there moves with its box.
+		var up = 'photos' === kind ? galleryLayer() : ( 'card' === kind ? productLayer() : null );
+		[ spotLayer( kind ), up ].forEach( function ( layer ) {
 			if ( layer ) {
-				layer.x = place.x;
-				layer.y = place.y;
-				layer.w = place.w;
+				layer.x = spot.x;
+				layer.y = spot.y;
+				layer.w = spot.w;
 			}
 		} );
-		renderSpotPlaces();
-		if ( galleryLayer() ) {
+		renderSpotPlaces( kind );
+		if ( up ) {
 			postShowingSoon();
 		}
 		saveSoon();
 	}
 
-	function setSpotOn( on ) {
-		S.spot.on = !! on;
-		$( 'spot-on' ).checked = !! on;
-		ensureSpot();
+	function setSpotsOn( on ) {
+		S.spotsOn = !! on;
+		document.querySelectorAll( '.whdls-spots-on' ).forEach( function ( box ) {
+			box.checked = !! on;
+		} );
+		ensureSpots();
 		saveSoon();
 	}
 
-	function renderSpotPlaces() {
-		var box = $( 'spot-places' );
+	function renderSpotPlaces( kind ) {
+		var box = $( 'places-' + kind );
+		var spot = S.spots[ kind ];
 		box.textContent = '';
-		Object.keys( SPOT_PLACES ).forEach( function ( key ) {
-			var place = SPOT_PLACES[ key ];
-			var here = Math.abs( place.x - S.spot.x ) < 0.005 && Math.abs( place.y - S.spot.y ) < 0.005;
+		Object.keys( SPOTS[ kind ].places ).forEach( function ( key ) {
+			var place = SPOTS[ kind ].places[ key ];
+			var here = Math.abs( place[ 0 ] - spot.x ) < 0.005 && Math.abs( place[ 1 ] - spot.y ) < 0.005;
 			var btn = el( 'button', here ? 'is-on' : '', T.spotPlaces[ key ] );
 			btn.type = 'button';
 			btn.addEventListener( 'click', function () {
-				placeSpot( key );
+				placeSpot( kind, key );
 			} );
 			box.appendChild( btn );
 		} );
@@ -1295,11 +1358,11 @@
 				caption: piece.name,
 				price: piece.price,
 				cta: ctaFor( piece ),
-				x: S.spot.x,
-				y: S.spot.y,
-				w: S.spot.w
+				x: S.spots.photos.x,
+				y: S.spots.photos.y,
+				w: S.spots.photos.w
 			} );
-			ensureSpot();
+			ensureSpots();
 			select( null );
 			// This is what makes the piece public: the photos say what to comment, and a number only works once it has been on air.
 			postShowing();
@@ -1321,7 +1384,7 @@
 		var back = noCard ? null : S.cardBack;
 		S.cardBack = null;
 		S.photos = 0;
-		ensureSpot();
+		ensureSpots();
 		if ( back ) {
 			showPiece( back.piece, back );
 		} else {
@@ -1675,7 +1738,8 @@
 	/* ─────────────────────────── pictures ─────────────────────────── */
 
 	function addImage( url ) {
-		var layer = stage.add( { type: 'image', src: url, x: 0.5, y: 0.5, w: portrait ? 0.45 : 0.24, anim: 'none' } );
+		var spot = S.spots.picture;
+		var layer = stage.add( { type: 'image', src: url, x: spot.x, y: spot.y, w: spot.w, anim: 'none' } );
 		select( layer.id );
 	}
 
@@ -1888,16 +1952,21 @@
 
 	/* ─────────────────────────── GIFs and moving stickers ─────────────────────────── */
 
-	/* Round the edges, away from the logo, the card's corner and the photos' usual side. */
-	var GIF_PLACES = portrait
-		? [ [ 0.24, 0.16 ], [ 0.76, 0.16 ], [ 0.5, 0.08 ], [ 0.14, 0.34 ], [ 0.86, 0.34 ] ]
-		: [ [ 0.46, 0.2 ], [ 0.26, 0.3 ], [ 0.58, 0.48 ], [ 0.38, 0.52 ], [ 0.86, 0.18 ] ];
-	var gifPlace = 0;
+	/* At their box, and fanned out around it when several are up at once, so a quick run of taps does not pile up. */
+	var GIF_FAN = [ [ 0, 0 ], [ 0.13, 0.1 ], [ -0.13, 0.1 ], [ 0.13, -0.1 ], [ -0.13, -0.1 ] ];
 
-	function popGif( src, w, anim ) {
-		var at = GIF_PLACES[ gifPlace++ % GIF_PLACES.length ];
+	function popGif( src, anim ) {
+		var spot = S.spots.gif;
+		var up = stage.layers.filter( function ( l ) {
+			return l._gif && ! l._gone;
+		} ).length;
+		var fan = GIF_FAN[ up % GIF_FAN.length ];
+		var at = [
+			Math.max( 0.06, Math.min( 0.94, spot.x + fan[ 0 ] * ( portrait ? 2.2 : 1 ) ) ),
+			Math.max( 0.06, Math.min( 0.94, spot.y + fan[ 1 ] * ( portrait ? 0.7 : 1.4 ) ) )
+		];
 		var stay = +$( 'gif-stay' ).value;
-		var def = { type: 'image', src: src, x: at[ 0 ], y: at[ 1 ], w: w, anim: anim || 'none', enter: 'pop', rot: Math.round( Math.random() * 16 - 8 ) };
+		var def = { type: 'image', src: src, x: at[ 0 ], y: at[ 1 ], w: spot.w, anim: anim || 'none', enter: 'pop', rot: Math.round( Math.random() * 16 - 8 ), _gif: true };
 		if ( stay ) {
 			def._brief = true; // gone in a moment, so not part of what a reload brings back
 		}
@@ -1947,7 +2016,7 @@
 			tile.appendChild( icon );
 			tile.appendChild( el( 'span', 'whdls-tile__label', item.label ) );
 			tile.addEventListener( 'click', function () {
-				popGif( item.url, portrait ? 0.3 : 0.16, item.anim );
+				popGif( item.url, item.anim );
 				tile.classList.add( 'is-hit' );
 				setTimeout( function () {
 					tile.classList.remove( 'is-hit' );
@@ -1977,7 +2046,7 @@
 			} );
 			tile.appendChild( x );
 			tile.addEventListener( 'click', function () {
-				popGif( url, portrait ? 0.5 : 0.26, 'none' );
+				popGif( url, 'none' );
 			} );
 			box.appendChild( tile );
 		} );
@@ -1993,7 +2062,7 @@
 			renderGifs();
 			saveSoon();
 			if ( files[ 0 ] ) {
-				popGif( files[ 0 ].url, portrait ? 0.5 : 0.26, 'none' );
+				popGif( files[ 0 ].url, 'none' );
 			}
 		} );
 	} );
@@ -2008,11 +2077,13 @@
 		occasionRain( occasionNow() ); // a reload keeps the snow falling
 	}
 
-	$( 'spot-on' ).checked = !! S.spot.on;
-	$( 'spot-on' ).addEventListener( 'change', function () {
-		setSpotOn( this.checked );
+	document.querySelectorAll( '.whdls-spots-on' ).forEach( function ( box ) {
+		box.checked = S.spotsOn;
+		box.addEventListener( 'change', function () {
+			setSpotsOn( this.checked );
+		} );
 	} );
-	renderSpotPlaces();
+	Object.keys( SPOTS ).forEach( renderSpotPlaces );
 
 	/* ─────────────────────────── text ─────────────────────────── */
 
@@ -3308,7 +3379,7 @@
 		if ( 0 === S.ticks % 3 ) {
 			updateMeters();
 			drawHandles();
-			drawSpot();
+			drawSpots();
 		}
 		if ( 0 === S.ticks % 30 ) {
 			updateClock();
@@ -3326,6 +3397,8 @@
 	document.querySelectorAll( '.whdls-tabs button' ).forEach( function ( btn ) {
 		btn.addEventListener( 'click', function () {
 			var key = btn.getAttribute( 'data-tab' );
+			S.tab = key;
+			ensureSpots();
 			document.querySelectorAll( '.whdls-tabs button' ).forEach( function ( b ) {
 				b.classList.toggle( 'is-on', b === btn );
 			} );
