@@ -167,6 +167,12 @@ body.whdls-page #wpbody-content { padding-bottom: 0 !important; }
 .whdls-tile__icon img { display: block; width: 36px; height: 36px; object-fit: contain; }
 .whdls-tile--sticker:hover .whdls-tile__icon img { animation: whdls-wiggle .55s ease-in-out; }
 @keyframes whdls-wiggle { 25% { transform: rotate(-11deg) scale(1.08); } 75% { transform: rotate(11deg) scale(1.08); } }
+.whdls-klipy { display: flex; flex-direction: column; gap: 8px; }
+.whdls-klipy[hidden] { display: none; }
+.whdls-klipy .whdls-inline input { flex: 1 1 auto; min-width: 0; }
+.whdls-klipy__grid { max-height: 290px; padding-right: 3px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #4b3b35 transparent; }
+.whdls-klipy__by { margin: 0; color: var(--dim); font-size: 11px; font-weight: 600; text-align: right; }
+.whdls-note a { color: var(--rose-2); text-decoration: underline; }
 .whdls-placerow { display: flex; flex-direction: column; gap: 4px; }
 .whdls-placerow > span { color: var(--soft); font-size: 12px; font-weight: 600; }
 .whdls-occ { display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 11px; background: var(--panel-2); }

@@ -99,6 +99,8 @@ final class WHD_Live {
 			'tt_on'         => 0,
 			'tt_server'     => '',
 			'tt_key'        => '',
+
+			'klipy_key'     => '',
 		];
 	}
 

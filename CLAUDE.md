@@ -576,6 +576,15 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   decodes GIF/animated WebP with `ImageDecoder` (read through fetch, so a file that refuses cannot taint the canvas, which
   would stop the stream), max 150 frames at 420 px, released when nothing shows it. WordPress's resized copies of a GIF are
   stills, so `sizedUrl` keeps the original.
+  **KLIPY search** (GIFs tab; key `klipy_key` in WHD → Settings → Live Stream, off until set). KLIPY's rules (docs.klipy.com/
+  integration-requirements.md; every page there has a `.md`) shape it: calls and media go straight from the browser, so this
+  key, unlike the stream keys, is in the host's studio page (never a public one); URLs used as given; results in their order
+  and number; nothing stored, so its GIFs are `_brief` even on "until I take it off"; a separate grid; the box must say "Search
+  KLIPY". Searches on Enter, because a test key has 100 calls an hour; trending only when the tab is opened. Tiles are still
+  JPGs until pointed at. Media sends `access-control-allow-origin: *`, so it cannot taint the canvas. GIPHY was looked at first:
+  it has the same rules and its terms are "personal and non-commercial". **KLIPY's general terms say the same**
+  (klipy.com/support/terms-services §5, and its API terms include them): the owner chose it knowing, and is to ask
+  developers@klipy.com before using it on air.
   **Occasions tab:** 13 seasons and celebrations (`occasion_library()` in the admin class: words, colours, six corner pictures
   from `assets/live-stickers/frames/`, what falls; tracks from `sounds.json` → `occasions`, files in `assets/live-sounds/
   occasions/`, cut to 170 s). One tap: `Stage.setOccasion()` draws the frame once into the video (`_buildOccasion`, saved in

@@ -170,6 +170,25 @@ $whd_tabs = [
 						<option value="0"><?php esc_html_e( 'Until I take it off', 'whd' ); ?></option>
 					</select>
 				</label>
+				<h3><?php esc_html_e( 'Search for GIFs', 'whd' ); ?></h3>
+				<p class="whdls-note" id="whdls-klipy-off" hidden>
+					<?php esc_html_e( 'Add a free KLIPY key to search for GIFs here.', 'whd' ); ?>
+					<a href="<?php echo esc_url( WHD_Live_Admin::settings_url() ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Open Settings', 'whd' ); ?></a>
+				</p>
+				<div class="whdls-klipy" id="whdls-klipy" hidden>
+					<form class="whdls-inline" id="whdls-klipy-form">
+						<input type="search" id="whdls-klipy-q" placeholder="Search KLIPY" aria-label="Search KLIPY" autocomplete="off" maxlength="60">
+						<button type="submit" class="whdls-btn whdls-btn--small"><?php esc_html_e( 'Search', 'whd' ); ?></button>
+					</form>
+					<div class="whdls-seg" role="group" id="whdls-klipy-kind">
+						<button type="button" class="is-on" data-kind="gifs"><?php esc_html_e( 'GIFs', 'whd' ); ?></button>
+						<button type="button" data-kind="stickers"><?php esc_html_e( 'Stickers', 'whd' ); ?></button>
+					</div>
+					<p class="whdls-hint" id="whdls-klipy-note" hidden></p>
+					<div class="whdls-thumbs whdls-klipy__grid" id="whdls-klipy-grid"></div>
+					<button type="button" class="whdls-btn whdls-btn--quiet" id="whdls-klipy-more" hidden><?php esc_html_e( 'Show more', 'whd' ); ?></button>
+					<p class="whdls-klipy__by">Powered by KLIPY</p>
+				</div>
 				<h3><?php esc_html_e( 'Moving stickers', 'whd' ); ?></h3>
 				<div class="whdls-filter whdls-filter--moods" id="whdls-gif-groups"></div>
 				<div class="whdls-tiles" id="whdls-stickers"></div>

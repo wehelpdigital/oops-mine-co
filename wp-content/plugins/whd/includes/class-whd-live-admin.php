@@ -15,7 +15,7 @@ final class WHD_Live_Admin {
 	const GROUP  = 'whd_live_group';
 
 	/** A blank box keeps these; they are never printed back. */
-	const SECRETS = [ 'daily_api_key', 'fb_token', 'fb_key', 'yt_client_secret', 'yt_key', 'tt_key' ];
+	const SECRETS = [ 'daily_api_key', 'fb_token', 'fb_key', 'yt_client_secret', 'yt_key', 'tt_key', 'klipy_key' ];
 
 	public static function init() {
 		add_action( 'admin_init', [ __CLASS__, 'register_setting' ] );
@@ -146,6 +146,8 @@ final class WHD_Live_Admin {
 			'pieces'    => WHD_Live::pieces( $id ),
 			'sounds'    => self::sound_library(),
 			'stickers'  => self::sticker_library(),
+			// KLIPY requires calls to come straight from the browser, so unlike the stream keys this one does reach it: the host's, on this page only.
+			'klipy'     => (string) $settings['klipy_key'],
 			'occasions' => (object) self::occasion_library(),
 			'scene'     => is_array( $scene ) ? $scene : null,
 			'showing'   => is_array( $showing ) ? (int) ( $showing['id'] ?? 0 ) : 0,
@@ -290,6 +292,10 @@ final class WHD_Live_Admin {
 				'middle' => __( 'Middle', 'whd' ),
 				'lower'  => __( 'Lower', 'whd' ),
 			],
+			'klipyNone'    => __( 'Nothing found. Try another word.', 'whd' ),
+			'klipyKey'     => __( 'KLIPY didn’t accept the key. Check it in Settings → Live Stream.', 'whd' ),
+			'klipyLimit'   => __( 'That’s all the searches this key allows for now (a test key has 100 calls an hour). Your stickers below still work.', 'whd' ),
+			'klipyFail'    => __( 'KLIPY didn’t answer. Check your connection and try again.', 'whd' ),
 			'pickGif'      => __( 'Choose GIFs', 'whd' ),
 			'useGif'       => __( 'Use these', 'whd' ),
 			'pressPlay'    => __( 'Press play to start', 'whd' ),
@@ -590,6 +596,24 @@ final class WHD_Live_Admin {
 		echo '<tr><th><label for="whdla-ttkey">' . esc_html__( 'Stream key', 'whd' ) . '</label></th><td>';
 		self::secret_box( 'tt_key', 'whdla-ttkey', __( 'Or paste it each time in the studio', 'whd' ) );
 		echo '<p class="description">' . esc_html__( 'TikTok usually issues a new key each session. Leave this empty and the studio asks for it when you go live.', 'whd' ) . '</p></td></tr>';
+		echo '</tbody></table>';
+
+		/* KLIPY */
+		echo '<h2 class="whd-h2">' . esc_html__( 'KLIPY: search for GIFs in the studio', 'whd' ) . '</h2>';
+		echo '<p class="whd-intro">' . wp_kses_post( sprintf(
+			/* translators: %s: link to KLIPY's partner panel */
+			__( 'Adds a search to the studio’s GIFs tab. Create a key in the <a href="%s" target="_blank" rel="noopener">KLIPY Partner Panel</a> and leave ads off for it. A test key allows 100 calls an hour; for more, request a production key there.', 'whd' ),
+			'https://partner.klipy.com/api-keys'
+		) ) . '</p>';
+		echo '<table class="form-table"><tbody>';
+		echo '<tr><th><label for="whdla-klipy">' . esc_html__( 'KLIPY API key', 'whd' ) . '</label></th><td>';
+		self::secret_box( 'klipy_key', 'whdla-klipy', __( 'Paste the key', 'whd' ) );
+		echo '<p class="description">' . esc_html__( 'KLIPY requires searches to come directly from your browser, so this key is in your studio page. It is never on a public page.', 'whd' ) . '</p>';
+		echo '<p class="description">' . wp_kses_post( sprintf(
+			/* translators: %s: link to KLIPY's terms */
+			__( '<strong>Before using it on air:</strong> <a href="%s" target="_blank" rel="noopener">KLIPY’s terms</a> limit its content to personal, non-commercial use unless the owner allows otherwise. Ask developers@klipy.com whether a selling stream is allowed.', 'whd' ),
+			'https://klipy.com/support/terms-services'
+		) ) . '</p></td></tr>';
 		echo '</tbody></table>';
 
 		submit_button();

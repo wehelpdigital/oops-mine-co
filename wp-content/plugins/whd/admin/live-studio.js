@@ -287,6 +287,7 @@
 		}, 900 );
 	}
 	stage.onChange = function () {
+		ensureSpots(); // something arriving or leaving can put a box in or out of the way
 		renderLayers();
 		saveSoon();
 	};
@@ -940,6 +941,7 @@
 		if ( layer && ( 'spot' === layer.type || 'gallery' === layer.type || 'product' === layer.type ) ) {
 			rememberSpot( layer );
 		}
+		ensureSpots(); // a picture dragged off its box lets the box show again
 	};
 	frame.addEventListener( 'pointerup', endDrag );
 	frame.addEventListener( 'pointercancel', endDrag );
@@ -1215,6 +1217,20 @@
 		} )[ 0 ] || null;
 	}
 
+	/* Is a picture standing in its box? Its label over the top would look as if it were part of the picture. */
+	function pictureInBox() {
+		var spot = S.spots.picture;
+		return stage.layers.some( function ( l ) {
+			return 'image' === l.type && ! l._gone && ! l._gif && Math.abs( l.x - spot.x ) < 0.01 && Math.abs( l.y - spot.y ) < 0.01;
+		} );
+	}
+
+	function gifIsUp() {
+		return stage.layers.some( function ( l ) {
+			return l._gif && ! l._gone;
+		} );
+	}
+
 	/* Only the boxes for what this tab puts on stage, and not for something already up there. */
 	function spotWanted( kind ) {
 		if ( ! S.spotsOn ) {
@@ -1226,9 +1242,9 @@
 			case 'card':
 				return 'pieces' === S.tab && ! productLayer() && ! galleryLayer();
 			case 'picture':
-				return 'images' === S.tab;
+				return 'images' === S.tab && ! pictureInBox();
 			default:
-				return 'gifs' === S.tab;
+				return 'gifs' === S.tab && ! gifIsUp();
 		}
 	}
 
@@ -1955,7 +1971,7 @@
 	/* At their box, and fanned out around it when several are up at once, so a quick run of taps does not pile up. */
 	var GIF_FAN = [ [ 0, 0 ], [ 0.13, 0.1 ], [ -0.13, 0.1 ], [ 0.13, -0.1 ], [ -0.13, -0.1 ] ];
 
-	function popGif( src, anim ) {
+	function popGif( src, anim, notOurs ) {
 		var spot = S.spots.gif;
 		var up = stage.layers.filter( function ( l ) {
 			return l._gif && ! l._gone;
@@ -1967,8 +1983,8 @@
 		];
 		var stay = +$( 'gif-stay' ).value;
 		var def = { type: 'image', src: src, x: at[ 0 ], y: at[ 1 ], w: spot.w, anim: anim || 'none', enter: 'pop', rot: Math.round( Math.random() * 16 - 8 ), _gif: true };
-		if ( stay ) {
-			def._brief = true; // gone in a moment, so not part of what a reload brings back
+		if ( stay || notOurs ) {
+			def._brief = true; // gone in a moment, or KLIPY's, which may not be stored: not part of what a reload brings back
 		}
 		var layer = stage.add( def );
 		if ( stay ) {
@@ -1982,6 +1998,168 @@
 			select( layer.id );
 		}
 	}
+
+	/*
+	 * Searching KLIPY. Its rules shape this: calls and media go straight from this browser with no proxy, URLs are used as
+	 * given, results keep the order and number they arrive in, nothing of theirs is stored, and the box says "Search KLIPY".
+	 * A key has few calls an hour, so it searches on Enter rather than on every letter.
+	 */
+	var klipy = { kind: 'gifs', q: '', page: 1, run: 0, busy: false, started: false };
+
+	function klipyCustomer() {
+		var id = '';
+		try {
+			id = window.localStorage.getItem( 'whd_klipy_id' ) || '';
+		} catch ( e ) {}
+		if ( ! id ) {
+			id = window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : 'h' + Date.now().toString( 36 ) + Math.random().toString( 36 ).slice( 2 );
+			try {
+				window.localStorage.setItem( 'whd_klipy_id', id );
+			} catch ( e ) {}
+		}
+		return id;
+	}
+
+	function klipyAddress( path ) {
+		return 'https://api.klipy.com/api/v1/' + encodeURIComponent( D.klipy ) + '/' + path;
+	}
+
+	function klipyNote( text ) {
+		var note = $( 'klipy-note' );
+		note.textContent = text;
+		note.hidden = ! text;
+	}
+
+	/* What was picked, which KLIPY uses for its ranking and asks to be told. */
+	function klipyShared( item ) {
+		window.fetch( klipyAddress( klipy.kind + '/share/' + encodeURIComponent( item.slug ) ), {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify( { customer_id: klipyCustomer(), q: klipy.q } )
+		} ).catch( function () {} );
+	}
+
+	function klipyTile( item ) {
+		var file = item.file || {};
+		var pick = function ( size, kind ) {
+			return file[ size ] && file[ size ][ kind ] ? file[ size ][ kind ].url : '';
+		};
+		var moving = pick( 'sm', 'webp' ) || pick( 'sm', 'gif' );
+		var still = pick( 'sm', 'jpg' ) || moving;
+		var full = pick( 'md', 'webp' ) || pick( 'md', 'gif' ) || pick( 'hd', 'webp' ) || pick( 'hd', 'gif' ) || moving;
+		if ( ! full ) {
+			return null; // an ad, if somebody turns those on for the key: nothing here can show one, and it must not reach the video
+		}
+		var tile = el( 'button', 'whdls-thumb' );
+		tile.type = 'button';
+		tile.title = item.title || '';
+		var img = el( 'img' );
+		img.src = still;
+		img.alt = item.title || '';
+		img.loading = 'lazy';
+		tile.appendChild( img );
+		// Still until pointed at: two dozen playing at once is work taken from the video.
+		tile.addEventListener( 'pointerenter', function () {
+			img.src = moving;
+		} );
+		tile.addEventListener( 'pointerleave', function () {
+			img.src = still;
+		} );
+		tile.addEventListener( 'click', function () {
+			popGif( full, 'none', true );
+			klipyShared( item );
+		} );
+		return tile;
+	}
+
+	function klipySearch( more ) {
+		if ( ! D.klipy || ( more && klipy.busy ) ) {
+			return;
+		}
+		var run = ++klipy.run;
+		var page = more ? klipy.page + 1 : 1;
+		var address = new URL( klipyAddress( klipy.kind + ( klipy.q ? '/search' : '/trending' ) ) );
+		address.searchParams.set( 'page', page );
+		address.searchParams.set( 'per_page', 24 );
+		address.searchParams.set( 'customer_id', klipyCustomer() );
+		address.searchParams.set( 'content_filter', 'high' ); // customers are watching
+		if ( klipy.q ) {
+			address.searchParams.set( 'q', klipy.q );
+		}
+		klipy.busy = true;
+		klipyNote( '' );
+		window.fetch( address.toString() ).then( function ( r ) {
+			return r.json().catch( function () {
+				return {};
+			} ).then( function ( res ) {
+				if ( ! r.ok || false === res.result ) {
+					var error = new Error( 'klipy' );
+					error.status = r.status;
+					throw error;
+				}
+				return res.data || {};
+			} );
+		} ).then( function ( data ) {
+			if ( run !== klipy.run ) {
+				return;
+			}
+			klipy.busy = false;
+			klipy.page = page;
+			var grid = $( 'klipy-grid' );
+			if ( ! more ) {
+				grid.textContent = '';
+				grid.scrollTop = 0;
+			}
+			( data.data || [] ).forEach( function ( item ) {
+				var tile = klipyTile( item );
+				if ( tile ) {
+					grid.appendChild( tile );
+				}
+			} );
+			$( 'klipy-more' ).hidden = ! data.has_next;
+			if ( ! grid.children.length ) {
+				klipyNote( T.klipyNone );
+			}
+		} ).catch( function ( err ) {
+			if ( run !== klipy.run ) {
+				return;
+			}
+			klipy.busy = false;
+			$( 'klipy-more' ).hidden = true;
+			// A wrong key comes back as "not found", since the key is part of the address.
+			klipyNote( 429 === err.status ? T.klipyLimit : ( 401 === err.status || 403 === err.status || 404 === err.status ? T.klipyKey : T.klipyFail ) );
+		} );
+	}
+
+	/* Spends a call, so only when somebody actually opens the tab. */
+	function klipyFirstLook() {
+		if ( D.klipy && ! klipy.started ) {
+			klipy.started = true;
+			klipySearch( false );
+		}
+	}
+
+	$( 'klipy-off' ).hidden = !! D.klipy;
+	$( 'klipy' ).hidden = ! D.klipy;
+	$( 'klipy-form' ).addEventListener( 'submit', function ( e ) {
+		e.preventDefault();
+		klipy.q = $( 'klipy-q' ).value.trim();
+		klipySearch( false );
+	} );
+	$( 'klipy-more' ).addEventListener( 'click', function () {
+		klipySearch( true );
+	} );
+	$( 'klipy-kind' ).addEventListener( 'click', function ( e ) {
+		var btn = e.target.closest( 'button' );
+		if ( ! btn || btn.getAttribute( 'data-kind' ) === klipy.kind ) {
+			return;
+		}
+		klipy.kind = btn.getAttribute( 'data-kind' );
+		this.querySelectorAll( 'button' ).forEach( function ( b ) {
+			b.classList.toggle( 'is-on', b === btn );
+		} );
+		klipySearch( false );
+	} );
 
 	function renderStickers() {
 		var all = D.stickers || [];
@@ -3399,6 +3577,9 @@
 			var key = btn.getAttribute( 'data-tab' );
 			S.tab = key;
 			ensureSpots();
+			if ( 'gifs' === key ) {
+				klipyFirstLook();
+			}
 			document.querySelectorAll( '.whdls-tabs button' ).forEach( function ( b ) {
 				b.classList.toggle( 'is-on', b === btn );
 			} );
