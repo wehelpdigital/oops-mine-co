@@ -57,7 +57,7 @@ final class WHD_Live_Rest {
 			'permission_callback' => [ __CLASS__, 'can_host' ],
 		] );
 
-		/* Public. The page reads the static files; these two are its way back when uploads cannot be written. */
+		/* Public. The page reads the static file; this is its way back when uploads cannot be written. */
 		register_rest_route( self::NS, '/live/(?P<id>\d+)/comment', [
 			'methods'             => 'POST',
 			'callback'            => [ __CLASS__, 'comment' ],
@@ -66,11 +66,6 @@ final class WHD_Live_Rest {
 		register_rest_route( self::NS, '/live/(?P<id>\d+)/state', [
 			'methods'             => 'GET',
 			'callback'            => [ __CLASS__, 'public_state' ],
-			'permission_callback' => '__return_true',
-		] );
-		register_rest_route( self::NS, '/live/(?P<id>\d+)/pieces', [
-			'methods'             => 'GET',
-			'callback'            => [ __CLASS__, 'public_pieces' ],
 			'permission_callback' => '__return_true',
 		] );
 	}
@@ -169,7 +164,11 @@ final class WHD_Live_Rest {
 			$stream = WHD_Live::patch( $id, [ 'stage' => 'live', 'started_at' => (int) $stream['started_at'] ?: time() ] );
 			update_post_meta( $id, WHD_Live::RT, [ 'last_seen' => time(), 'viewers' => 0, 'peak' => 0 ] );
 		}
-		WHD_Live::write_pieces( $id );
+		// A piece put on stage in the preview goes public now, and not before.
+		$show = get_post_meta( $id, WHD_Live::SHOWING, true );
+		if ( is_array( $show ) && ! empty( $show['id'] ) ) {
+			WHD_Live::set_showing( $id, (int) $show['id'], $show['rect'] ?? null );
+		}
 		WHD_Live::write_state( $id );
 
 		return [
@@ -259,12 +258,8 @@ final class WHD_Live_Rest {
 			return $id;
 		}
 		$pid = absint( $r['product'] );
-		if ( $pid ) {
-			$rect = array_map( static fn( $n ) => round( max( 0, min( 1, (float) $n ) ), 4 ), array_slice( (array) $r['rect'], 0, 4 ) );
-			update_post_meta( $id, WHD_Live::SHOWING, [ 'id' => $pid, 'rect' => 4 === count( $rect ) ? $rect : null ] );
-		} else {
-			delete_post_meta( $id, WHD_Live::SHOWING );
-		}
+		$rect = array_map( static fn( $n ) => round( max( 0, min( 1, (float) $n ) ), 4 ), array_slice( (array) $r['rect'], 0, 4 ) );
+		WHD_Live::set_showing( $id, $pid, 4 === count( $rect ) ? $rect : null );
 		WHD_Live::write_state( $id );
 		return [ 'ok' => true ];
 	}
@@ -314,31 +309,60 @@ final class WHD_Live_Rest {
 		return [ 'pieces' => WHD_Live::pieces( $id ) ];
 	}
 
-	/** Product search for the form and the studio. No words: the newest pieces. */
+	/**
+	 * Product search for the form and the studio: by name, or an exact SKU, within a category if one
+	 * is chosen, a page at a time. No words: the newest pieces.
+	 */
 	public static function products( WP_REST_Request $r ) {
 		if ( ! function_exists( 'wc_get_product' ) ) {
-			return [ 'items' => [] ];
+			return [ 'items' => [], 'total' => 0, 'more' => false ];
 		}
-		$q   = sanitize_text_field( (string) $r['q'] );
-		$ids = get_posts( [
-			'post_type'        => 'product',
-			'post_status'      => 'publish',
-			'posts_per_page'   => 12,
-			'fields'           => 'ids',
-			's'                => $q,
-			'orderby'          => '' === $q ? 'date' : 'relevance',
-			'order'            => 'DESC',
-			'suppress_filters' => false,
-		] );
+		$q    = trim( sanitize_text_field( (string) $r['q'] ) );
+		$cat  = absint( $r['cat'] );
+		$page = max( 1, absint( $r['page'] ) );
+		$per  = min( 30, max( 1, absint( $r['per_page'] ) ?: 12 ) );
+		$args = [
+			'post_type'      => 'product',
+			'post_status'    => 'publish',
+			'posts_per_page' => $per,
+			'paged'          => $page,
+			'fields'         => 'ids',
+			'orderby'        => '' === $q ? 'date' : 'relevance',
+			'order'          => 'DESC',
+		];
+		if ( '' !== $q ) {
+			$args['s'] = $q;
+		}
+		if ( $cat ) {
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+			$args['tax_query'] = [ [ 'taxonomy' => 'product_cat', 'field' => 'term_id', 'terms' => $cat ] ];
+		}
+		$found = new WP_Query( $args );
+		$ids   = array_map( 'intval', $found->posts );
+		$total = (int) $found->found_posts;
+
+		// A SKU typed in full goes first. A size's own SKU finds the piece it belongs to.
+		if ( '' !== $q && ! $cat && 1 === $page ) {
+			$by_sku = (int) wc_get_product_id_by_sku( $q );
+			$hit    = $by_sku ? wc_get_product( $by_sku ) : null;
+			$parent = $hit ? ( $hit->get_parent_id() ?: $by_sku ) : 0;
+			if ( $parent && 'publish' === get_post_status( $parent ) ) {
+				if ( ! in_array( $parent, $ids, true ) ) {
+					++$total;
+				}
+				$ids = array_values( array_unique( array_merge( [ $parent ], $ids ) ) );
+			}
+		}
+
 		$out = [];
 		foreach ( $ids as $pid ) {
-			$piece = WHD_Live::piece( $pid );
+			$piece = WHD_Live::piece( $pid, 0, '', false );
 			if ( $piece ) {
 				unset( $piece['options'], $piece['short'] );
 				$out[] = $piece;
 			}
 		}
-		return [ 'items' => $out ];
+		return [ 'items' => $out, 'total' => $total, 'more' => $page < (int) $found->max_num_pages ];
 	}
 
 	public static function moderate( WP_REST_Request $r ) {
@@ -457,8 +481,4 @@ final class WHD_Live_Rest {
 		return is_wp_error( $id ) ? $id : WHD_Live::state_data( $id );
 	}
 
-	public static function public_pieces( WP_REST_Request $r ) {
-		$id = self::stream_id( $r );
-		return is_wp_error( $id ) ? $id : WHD_Live::pieces( $id );
-	}
 }

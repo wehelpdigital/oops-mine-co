@@ -70,7 +70,12 @@ final class WHD_Live_Admin {
 			wp_localize_script( 'whd-live-form', 'WHD_LIVE_FORM', [
 				'rest' => [ 'root' => esc_url_raw( rest_url( 'whd/v1/live/' ) ), 'nonce' => wp_create_nonce( 'wp_rest' ) ],
 				'i18n' => [
-					'search'      => __( 'Search your pieces…', 'whd' ),
+					'found'       => __( 'Showing %1$d of %2$d', 'whd' ),
+					'failed'      => __( 'Your pieces could not be loaded: %s', 'whd' ),
+					'retry'       => __( 'Try again', 'whd' ),
+					'soldOut'     => __( 'Sold out', 'whd' ),
+					'chosen'      => __( 'Selected: %d', 'whd' ),
+					'chosenNone'  => __( 'Nothing selected yet. Tick pieces in the list above.', 'whd' ),
 					'none'        => __( 'Nothing matches that.', 'whd' ),
 					'remove'      => __( 'Remove', 'whd' ),
 					'up'          => __( 'Move up', 'whd' ),
@@ -139,6 +144,7 @@ final class WHD_Live_Admin {
 			'dailyReady' => WHD_Live::daily_ready(),
 			'dailyJs'   => WHD_Live::DAILY_JS,
 			'pieces'    => WHD_Live::pieces( $id ),
+			'sounds'    => self::sound_library(),
 			'scene'     => is_array( $scene ) ? $scene : null,
 			'showing'   => is_array( $showing ) ? (int) ( $showing['id'] ?? 0 ) : 0,
 			// With nowhere that can answer a comment, the card asks for nothing and shows the link.
@@ -152,6 +158,21 @@ final class WHD_Live_Admin {
 			'rest'      => [ 'root' => esc_url_raw( rest_url( 'whd/v1/live/' ) ), 'nonce' => wp_create_nonce( 'wp_rest' ) ],
 			'i18n'      => self::studio_words(),
 		] );
+	}
+
+	/** The ready-made music and effects: public-domain files in the plugin, listed in sounds.json. */
+	private static function sound_library(): array {
+		$file = WHD_DIR . 'assets/live-sounds/sounds.json';
+		$data = file_exists( $file ) ? json_decode( (string) file_get_contents( $file ), true ) : null; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- the plugin's own file
+		$out  = [ 'music' => [], 'fx' => [] ];
+		foreach ( array_keys( $out ) as $kind ) {
+			foreach ( (array) ( $data[ $kind ] ?? [] ) as $item ) {
+				$item['url'] = WHD_URL . 'assets/live-sounds/' . $item['file'];
+				unset( $item['file'], $item['source'], $item['license'] );
+				$out[ $kind ][] = $item;
+			}
+		}
+		return $out;
 	}
 
 	private static function studio_words(): array {
@@ -250,7 +271,12 @@ final class WHD_Live_Admin {
 			'sceneName'    => __( 'Scene %d', 'whd' ),
 			'sceneRename'  => __( 'Name this scene', 'whd' ),
 			'sceneRemove'  => __( 'Remove this scene?', 'whd' ),
-			'noTracks'     => __( 'No music added yet.', 'whd' ),
+			'noTracks'     => __( 'Your list is empty. Add from below.', 'whd' ),
+			'allMoods'     => __( 'All', 'whd' ),
+			'hear'         => __( 'Preview', 'whd' ),
+			'hearStop'     => __( 'Stop preview', 'whd' ),
+			'addTrack'     => __( 'Add', 'whd' ),
+			'trackAdded'   => __( 'Added', 'whd' ),
 			'pickAudio'    => __( 'Choose music', 'whd' ),
 			'useAudio'     => __( 'Add it', 'whd' ),
 			'pickPad'      => __( 'Choose a sound', 'whd' ),
@@ -744,13 +770,31 @@ final class WHD_Live_Admin {
 		echo '<button type="button" class="whdla-poster__btn" ' . ( $url ? 'style="background-image:url(' . esc_url( $url ) . ')"' : '' ) . '><span>' . esc_html__( 'Choose', 'whd' ) . '</span></button></div><small>' . esc_html__( 'Shown on the page before you go live.', 'whd' ) . '</small></div>';
 		echo '</section>';
 
-		echo '<section class="whdla-card"><h2>' . esc_html__( 'Pieces you’ll show', 'whd' ) . '</h2><p class="whdla-sub">' . esc_html__( 'You can add more from the studio while you’re live. Give each one a code, like DRESS1. The card in the video tells viewers to comment it. Only a comment with the code gets the link; anything else is just a comment. With no code, its number is the code.', 'whd' ) . '</p>';
+		echo '<section class="whdla-card"><h2>' . esc_html__( 'Pieces you’ll show', 'whd' ) . '</h2><p class="whdla-sub">' . esc_html__( 'Viewers see none of these until you show them. You can add more from the studio while you’re live. Give each one a code, like DRESS1. The card in the video tells viewers to comment it. Only a comment with the code gets the link; anything else is just a comment. With no code, its number is the code.', 'whd' ) . '</p>';
 		if ( ! function_exists( 'wc_get_product' ) ) {
 			echo '<p class="whd-muted">' . esc_html__( 'WooCommerce is not active.', 'whd' ) . '</p>';
 		}
 		echo '<div class="whdla-picker" data-whdla-picker><input type="hidden" name="pieces_json" value="' . esc_attr( (string) wp_json_encode( $rows ) ) . '">';
-		echo '<div class="whdla-picker__search"><input type="search" placeholder="' . esc_attr__( 'Search your pieces…', 'whd' ) . '" autocomplete="off"><div class="whdla-picker__results" hidden></div></div>';
-		echo '<ol class="whdla-picker__list"></ol></div>';
+		echo '<div class="whdla-finder"><div class="whdla-finder__bar">';
+		echo '<input type="search" class="whdla-finder__search" placeholder="' . esc_attr__( 'Search by name or SKU…', 'whd' ) . '" aria-label="' . esc_attr__( 'Search your pieces', 'whd' ) . '" autocomplete="off">';
+		if ( taxonomy_exists( 'product_cat' ) ) {
+			echo '<span class="whdla-finder__cat">';
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- core's own escaped markup
+			echo wp_dropdown_categories( [
+				'taxonomy'        => 'product_cat',
+				'hide_empty'      => 1,
+				'hierarchical'    => 1,
+				'orderby'         => 'name',
+				'show_option_all' => __( 'All categories', 'whd' ),
+				'name'            => 'whdla_cat', // read by the script, ignored on save
+				'id'              => 'whdla-cat',
+				'echo'            => 0,
+			] );
+			echo '</span>';
+		}
+		echo '</div><div class="whdla-finder__results" aria-live="polite"></div>';
+		echo '<div class="whdla-finder__foot"><span class="whdla-finder__count"></span><button type="button" class="button whdla-finder__more" hidden>' . esc_html__( 'Show more', 'whd' ) . '</button></div></div>';
+		echo '<h3 class="whdla-picker__chosen"></h3><ol class="whdla-picker__list"></ol></div>';
 		echo '</section>';
 
 		echo '</div><div class="whdla-col">';

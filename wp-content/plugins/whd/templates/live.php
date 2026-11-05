@@ -57,11 +57,6 @@ $whd_cart   = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : '';
 	</header>
 
 	<main class="whdl-grid">
-		<aside class="whdl-rail" aria-label="<?php esc_attr_e( 'Pieces in this live', 'whd' ); ?>">
-			<h2><?php esc_html_e( 'In this live', 'whd' ); ?></h2>
-			<ol class="whdl-pieces" id="whdl-pieces"></ol>
-		</aside>
-
 		<section class="whdl-stage">
 			<div class="whdl-stagebox">
 				<div class="whdl-player" id="whdl-player">

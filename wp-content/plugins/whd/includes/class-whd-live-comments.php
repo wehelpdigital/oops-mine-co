@@ -134,9 +134,11 @@ final class WHD_Live_Comments {
 				return (int) $row['id'];
 			}
 		}
-		// A piece with no code answers to its number, which is what its card tells people to type.
+		// A piece with no code answers to its number, which is what its card tells people to type. Only
+		// once it has been on air: numbers can be guessed, and typing "3" must not spoil a surprise.
+		$seen = WHD_Live::revealed( $stream_id );
 		foreach ( $rows as $i => $row ) {
-			if ( '' === $row['code'] && self::says_code( $plain, (string) ( $i + 1 ) ) ) {
+			if ( '' === $row['code'] && in_array( (int) $row['id'], $seen, true ) && self::says_code( $plain, (string) ( $i + 1 ) ) ) {
 				return (int) $row['id'];
 			}
 		}

@@ -245,6 +245,17 @@ body.whdls-page #wpbody-content { padding-bottom: 0 !important; }
 .whdls-roundbtn.is-on { background: var(--green); }
 .whdls-roundbtn--small { width: 32px; height: 32px; background: var(--panel-3); }
 .whdls-nowplaying { min-width: 0; color: var(--soft); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.whdls-filter--moods { padding: 0; }
+.whdls-library { display: flex; flex-direction: column; gap: 3px; max-height: 250px; padding-right: 3px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #4b3b35 transparent; }
+.whdls-libtrack { display: flex; align-items: center; gap: 8px; padding: 4px 5px 4px 4px; border-radius: 8px; background: var(--panel-2); }
+.whdls-libtrack__hear { position: relative; flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--panel-3); transition: background .12s; }
+.whdls-libtrack__hear:hover { background: #443530; }
+.whdls-libtrack__hear::before { content: ""; position: absolute; top: 8px; left: 10px; border-style: solid; border-width: 6px 0 6px 10px; border-color: transparent transparent transparent var(--text); }
+.whdls-libtrack__hear.is-on { background: var(--rose); }
+.whdls-libtrack__hear.is-on::before { top: 9px; left: 9px; width: 10px; height: 10px; border: 0; border-radius: 2px; background: #fff; }
+.whdls-libtrack__words { flex: 1 1 auto; min-width: 0; }
+.whdls-libtrack__words strong { display: block; overflow: hidden; font-size: 12.5px; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; }
+.whdls-libtrack__words small { display: block; color: var(--dim); font-size: 11px; }
 .whdls-tracks { display: flex; flex-direction: column; gap: 3px; }
 .whdls-track { display: flex; align-items: center; gap: 5px; padding: 3px 3px 3px 9px; border-radius: 7px; background: var(--panel-2); }
 .whdls-track.is-on { box-shadow: inset 0 0 0 1px var(--green); }

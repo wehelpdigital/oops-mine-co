@@ -39,6 +39,7 @@ final class WHD_Live {
 	const SCENE   = '_whd_live_scene';  // the stage's layers, JSON, so a reload brings them back
 	const SHOWING = '_whd_live_showing';
 	const COVER   = '_whd_live_cover';  // 1 while the host has covered the picture
+	const REVEALED = '_whd_live_revealed'; // pieces that have been on air: a number only asks for these
 	const DIR     = 'whd-live';
 
 	/** A stream whose studio has been gone this long is over, whatever the record says. */
@@ -188,7 +189,6 @@ final class WHD_Live {
 			'fb'           => [],          // live_id, video_id, permalink
 			'yt'           => [],          // broadcast_id, stream_id, chat_id
 			'tt_key'       => '',          // TikTok's key changes by session: this stream's, if typed in the studio
-			'pv'           => 1,           // version of the pieces file
 			'blocked'      => [],          // author keys hidden from the page
 		];
 	}
@@ -307,10 +307,50 @@ final class WHD_Live {
 			$clean[]          = [ 'id' => $pid, 'code' => $code ];
 		}
 		update_post_meta( (int) $id, self::PIECES, array_slice( $clean, 0, 60 ) );
-		$stream = self::get( $id );
-		self::patch( $id, [ 'pv' => (int) $stream['pv'] + 1 ] );
-		self::write_pieces( $id );
+		// The piece on screen may just have been given a new code, and the comment box says it.
+		$show = get_post_meta( (int) $id, self::SHOWING, true );
+		if ( is_array( $show ) && ! empty( $show['id'] ) ) {
+			self::set_showing( $id, (int) $show['id'], $show['rect'] ?? null );
+		}
 		self::write_state( $id );
+	}
+
+	/**
+	 * The piece on screen, and everything the page needs to sell it.
+	 *
+	 * This is the only way a piece reaches a viewer, because the shop wants what is coming to be a
+	 * surprise. So nothing lists the stream's pieces in public: the page's source and its state file
+	 * only ever hold the one on air, stored here at the moment it is shown.
+	 */
+	public static function set_showing( $id, int $product_id, $rect = null ) {
+		if ( ! $product_id ) {
+			delete_post_meta( (int) $id, self::SHOWING );
+			return;
+		}
+		$rows = self::piece_rows( $id );
+		$at   = array_search( $product_id, array_column( $rows, 'id' ), true );
+		update_post_meta( (int) $id, self::SHOWING, [
+			'id'    => $product_id,
+			'rect'  => $rect,
+			'piece' => self::piece( $product_id, false === $at ? 0 : $at + 1, false === $at ? '' : $rows[ $at ]['code'] ),
+		] );
+		if ( 'live' === self::get( $id )['stage'] ) {
+			self::reveal( $id, $product_id );
+		}
+	}
+
+	private static function reveal( $id, int $product_id ) {
+		$seen = self::revealed( $id );
+		if ( ! in_array( $product_id, $seen, true ) ) {
+			$seen[] = $product_id;
+			update_post_meta( (int) $id, self::REVEALED, $seen );
+		}
+	}
+
+	/** @return int[] The pieces that have been on air in this stream. */
+	public static function revealed( $id ): array {
+		$seen = get_post_meta( (int) $id, self::REVEALED, true );
+		return is_array( $seen ) ? array_map( 'intval', $seen ) : [];
 	}
 
 	/** A money amount as words the browser can print: no entities, no markup. */
@@ -327,7 +367,7 @@ final class WHD_Live {
 	 * @return array|null id, name, url, link, price, regular, image, thumb, short, stock, type, add,
 	 *                    choose, options[ id, label, attrs, stock ], or null when it cannot be sold.
 	 */
-	public static function piece( $product_id, $number = 0, $code = '' ) {
+	public static function piece( $product_id, $number = 0, $code = '', bool $with_options = true ) {
 		$product = function_exists( 'wc_get_product' ) ? wc_get_product( (int) $product_id ) : null;
 		if ( ! $product || 'publish' !== $product->get_status() ) {
 			return null;
@@ -370,6 +410,10 @@ final class WHD_Live {
 			'choose'  => false,
 			'options' => [],
 		];
+
+		if ( ! $with_options ) {
+			return $piece; // a search result: walking every size of 20 pieces is a slow way to show a name
+		}
 
 		if ( 'simple' === $type ) {
 			$piece['add'] = $product->is_purchasable() && $product->is_in_stock() && ! $product->is_sold_individually();
@@ -581,10 +625,8 @@ final class WHD_Live {
 			'id'       => $id,
 			'format'   => $stream['format'],
 			'stateUrl' => self::state_url( $id ),
-			'piecesUrl' => self::pieces_url( $id ),
 			'comment'  => esc_url_raw( rest_url( 'whd/v1/live/' . $id . '/comment' ) ),
 			'state'    => self::state_data( $id ),
-			'pieces'   => self::pieces( $id ),
 			'daily'    => self::DAILY_JS,
 			'addUrl'   => class_exists( 'WC_AJAX' ) ? WC_AJAX::get_endpoint( 'add_to_cart' ) : '',
 			'cta'      => self::settings()['card_cta'],
@@ -622,7 +664,6 @@ final class WHD_Live {
 				'fromLive'   => __( 'From this live', 'whd' ),
 				'wrap'       => __( 'That’s a wrap', 'whd' ),
 				'wrapText'   => __( 'Thanks for coming.', 'whd' ),
-				'wrapPieces' => __( 'Thanks for coming. The pieces from this live are still here.', 'whd' ),
 			],
 		] );
 	}
@@ -671,7 +712,6 @@ final class WHD_Live {
 			'room'      => 'live' === $stream['stage'] ? (string) ( $stream['room']['url'] ?? '' ) : '',
 			'startsAt'  => (int) $stream['starts_at'],
 			'startedAt' => (int) $stream['started_at'],
-			'pv'        => (int) $stream['pv'],
 			'viewers'   => (int) $rt['viewers'],
 			// What the host tries out in the preview stays in the studio until the stream is on air.
 			'showing'   => 'live' === $stream['stage'] && is_array( $show ) && ! empty( $show['id'] ) ? $show : null,
@@ -716,29 +756,13 @@ final class WHD_Live {
 		return self::write_file( (int) $id . '-' . self::file_key( $id ) . '.json', self::state_data( $id ) );
 	}
 
-	public static function write_pieces( $id ): bool {
-		return self::write_file( (int) $id . '-' . self::file_key( $id ) . '-pieces.json', self::pieces( $id ) );
-	}
-
-	private static function file_url( $id, string $suffix, string $rest ): string {
-		list( $dir, $url ) = self::dir();
-		$name = (int) $id . '-' . self::file_key( $id ) . $suffix . '.json';
-		if ( ! file_exists( $dir . $name ) ) {
-			if ( '' === $suffix ) {
-				self::write_state( $id );
-			} else {
-				self::write_pieces( $id );
-			}
-		}
-		return file_exists( $dir . $name ) ? $url . $name : esc_url_raw( rest_url( 'whd/v1/live/' . (int) $id . '/' . $rest ) );
-	}
-
 	public static function state_url( $id ): string {
-		return self::file_url( $id, '', 'state' );
-	}
-
-	public static function pieces_url( $id ): string {
-		return self::file_url( $id, '-pieces', 'pieces' );
+		list( $dir, $url ) = self::dir();
+		$name = (int) $id . '-' . self::file_key( $id ) . '.json';
+		if ( ! file_exists( $dir . $name ) ) {
+			self::write_state( $id );
+		}
+		return file_exists( $dir . $name ) ? $url . $name : esc_url_raw( rest_url( 'whd/v1/live/' . (int) $id . '/state' ) );
 	}
 
 	private static function remove_files( $id ) {
@@ -769,6 +793,13 @@ final class WHD_Live {
 	public static function install() {
 		WHD_Live_Comments::install();
 		update_option( 'whd_live_flush', 1, false ); // new addresses: /live/…, /l/…
+
+		// Streams made before pieces became a surprise left a public list of them. Those go.
+		foreach ( (array) glob( self::dir()[0] . '*-pieces.json' ) as $file ) {
+			if ( $file ) {
+				wp_delete_file( $file );
+			}
+		}
 	}
 
 	/** Rewrite rules can only be rebuilt after the post type exists, which is why this is deferred. */

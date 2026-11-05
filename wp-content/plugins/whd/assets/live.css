@@ -104,14 +104,12 @@ body.whdl-body { overflow: hidden; }
 	flex: 1 1 auto;
 	min-height: 0;
 	display: grid;
-	grid-template-columns: 250px minmax(0, 1fr) 340px;
+	grid-template-columns: minmax(0, 1fr) 340px;
 	gap: 16px;
 	padding: 16px 18px 18px;
 }
-.whdl-grid:not(:has(.whdl-piece)) { grid-template-columns: minmax(0, 1fr) 340px; }
-.whdl-grid:not(:has(.whdl-piece)) .whdl-rail { display: none; }
 
-.whdl-rail h2, .whdl-chat h2 {
+.whdl-chat h2 {
 	flex: none;
 	font: 600 11px/1 var(--sans);
 	letter-spacing: .18em;
@@ -120,17 +118,6 @@ body.whdl-body { overflow: hidden; }
 	padding: 2px 2px 12px;
 }
 
-.whdl-rail { min-height: 0; display: flex; flex-direction: column; }
-.whdl-pieces { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 9px; padding-right: 3px; scrollbar-width: thin; scrollbar-color: #4b3b35 transparent; }
-.whdl-piece button { display: flex; width: 100%; gap: 11px; padding: 8px; border-radius: 12px; background: var(--panel); text-align: left; border: 1px solid transparent; transition: background .15s, border-color .15s, transform .15s; }
-.whdl-piece button:hover { background: var(--panel-2); }
-.whdl-piece img { flex: none; width: 64px; height: 76px; object-fit: cover; border-radius: 8px; background: #3a2d29; }
-.whdl-piece__words { min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
-.whdl-piece__words small { font-size: 9.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--rose-2); }
-.whdl-piece__words strong { font: 500 16.5px/1.15 var(--serif); color: var(--text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.whdl-piece__words em { font-style: normal; font-size: 12.5px; font-weight: 600; color: var(--soft); }
-.whdl-piece__words .whdl-piece__out { color: var(--dim); }
-.whdl-piece.is-on button { border-color: var(--rose); background: #33241f; }
 
 /* ─── the video ─── */
 
@@ -342,7 +329,6 @@ body.whdl-body { overflow: hidden; }
 
 @media (max-width: 1180px) {
 	.whdl-grid { grid-template-columns: minmax(0, 1fr) 320px; }
-	.whdl-rail { display: none; }
 }
 
 @media (max-width: 860px) {
@@ -351,20 +337,12 @@ body.whdl-body { overflow: hidden; }
 	.whdl-title h1 { font-size: 18px; }
 	.whdl-bag { width: 38px; height: 38px; }
 
-	.whdl-grid, .whdl-grid:not(:has(.whdl-piece)) { display: flex; flex-direction: column; gap: 0; padding: 0; }
+	.whdl-grid { display: flex; flex-direction: column; gap: 0; padding: 0; }
 	.whdl-stage { order: 1; flex: none; gap: 0; }
 	.whdl-stagebox { flex: none; container-type: normal; display: block; }
 	.whdl-player { width: 100%; border-radius: 0; box-shadow: none; }
 	.whdl-now { width: auto; margin: 8px 10px 0; align-self: stretch; }
 
-	.whdl-rail { order: 2; display: block; flex: none; padding: 10px 0 0; }
-	.whdl-piece.is-on { display: none; }
-	.whdl-grid:not(:has(.whdl-piece)) .whdl-rail { display: none; }
-	.whdl-rail h2 { display: none; }
-	.whdl-pieces { flex-direction: row; overflow-x: auto; overflow-y: hidden; padding: 0 10px 2px; gap: 8px; }
-	.whdl-piece { flex: none; width: 210px; }
-	.whdl-piece img { width: 44px; height: 52px; }
-	.whdl-piece__words strong { font-size: 14.5px; -webkit-line-clamp: 1; }
 
 	.whdl-chat { order: 3; flex: 1 1 auto; min-height: 0; margin-top: 10px; border-radius: 16px 16px 0 0; padding: 12px 12px calc(10px + env(safe-area-inset-bottom)); }
 	.whdl-chat h2 { display: none; }
@@ -376,7 +354,7 @@ body.whdl-body { overflow: hidden; }
 	.whdl-sheet__photo img { max-height: 46vh; }
 
 	/* Asking for a name and an email: they get the room, whatever else was in the column. */
-	.whdl.is-asking .whdl-rail, .whdl.is-asking .whdl-now { display: none; }
+	.whdl.is-asking .whdl-now { display: none; }
 
 	/* A vertical stream on a phone is the whole screen, with the comments over the bottom of it. */
 	.whdl--portrait .whdl-top { position: absolute; top: 0; left: 0; right: 0; z-index: 5; border: 0; background: linear-gradient(180deg, rgba(0, 0, 0, .55), transparent); pointer-events: none; }
@@ -389,7 +367,6 @@ body.whdl-body { overflow: hidden; }
 	.whdl--portrait .whdl-player { width: 100%; height: 100%; aspect-ratio: auto; }
 	.whdl--portrait .whdl-player video { object-fit: cover; }
 	.whdl--portrait .whdl-now { position: absolute; left: 0; right: 0; bottom: calc(136px + env(safe-area-inset-bottom)); z-index: 4; background: rgba(36, 27, 24, .88); backdrop-filter: blur(10px); }
-	.whdl--portrait .whdl-rail { display: none; }
 	.whdl--portrait .whdl-chat { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; max-height: 62%; margin: 0; background: linear-gradient(180deg, transparent, rgba(20, 14, 12, .86) 26%); border-radius: 0; }
 	.whdl--portrait .whdl-messages { -webkit-mask-image: linear-gradient(180deg, transparent, #000 34px); mask-image: linear-gradient(180deg, transparent, #000 34px); }
 	.whdl--portrait .whdl-message { text-shadow: 0 1px 3px rgba(0, 0, 0, .6); }

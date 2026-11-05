@@ -83,12 +83,16 @@
 		} );
 	} );
 
-	/* ─────────────────────────── pieces ─────────────────────────── */
+	/* ─────────────────────────── pieces: search and select ─────────────────────────── */
 
 	document.querySelectorAll( '[data-whdla-picker]' ).forEach( function ( box ) {
 		var hidden = box.querySelector( 'input[type="hidden"]' );
-		var search = box.querySelector( 'input[type="search"]' );
-		var results = box.querySelector( '.whdla-picker__results' );
+		var search = box.querySelector( '.whdla-finder__search' );
+		var category = box.querySelector( '.whdla-finder__cat select' );
+		var results = box.querySelector( '.whdla-finder__results' );
+		var counter = box.querySelector( '.whdla-finder__count' );
+		var more = box.querySelector( '.whdla-finder__more' );
+		var chosen = box.querySelector( '.whdla-picker__chosen' );
 		var list = box.querySelector( '.whdla-picker__list' );
 		var rows = [];
 		try {
@@ -97,6 +101,9 @@
 			rows = [];
 		}
 		var timer = null;
+		var page = 1;
+		var asking = 0;
+		var PER_PAGE = 20;
 
 		function write() {
 			hidden.value = JSON.stringify( rows.map( function ( r ) {
@@ -104,7 +111,27 @@
 			} ) );
 		}
 
-		function render() {
+		function indexOf( id ) {
+			for ( var i = 0; i < rows.length; i++ ) {
+				if ( rows[ i ].id === id ) {
+					return i;
+				}
+			}
+			return -1;
+		}
+
+		/* The ticks in the list follow what is selected, whichever way it got selected or removed. */
+		function markResults() {
+			results.querySelectorAll( '[data-id]' ).forEach( function ( btn ) {
+				var on = indexOf( +btn.getAttribute( 'data-id' ) ) >= 0;
+				btn.classList.toggle( 'is-picked', on );
+				btn.setAttribute( 'aria-pressed', on ? 'true' : 'false' );
+			} );
+		}
+
+		function renderChosen() {
+			chosen.textContent = rows.length ? T.chosen.replace( '%d', rows.length ) : T.chosenNone;
+			chosen.classList.toggle( 'is-empty', ! rows.length );
 			list.textContent = '';
 			rows.forEach( function ( row, i ) {
 				var li = el( 'li', 'whdla-pick' );
@@ -143,7 +170,7 @@
 					up.setAttribute( 'aria-label', T.up );
 					up.addEventListener( 'click', function () {
 						rows.splice( i - 1, 0, rows.splice( i, 1 )[ 0 ] );
-						render();
+						renderChosen();
 						write();
 					} );
 					li.appendChild( up );
@@ -153,7 +180,8 @@
 				x.setAttribute( 'aria-label', T.remove );
 				x.addEventListener( 'click', function () {
 					rows.splice( i, 1 );
-					render();
+					renderChosen();
+					markResults();
 					write();
 				} );
 				li.appendChild( x );
@@ -161,67 +189,134 @@
 			} );
 		}
 
-		function find( q ) {
-			window.fetch( D.rest.root + 'products?q=' + encodeURIComponent( q ), {
+		/* One press adds it, another takes it off. The list stays put, to pick several in a row. */
+		function toggle( item ) {
+			var at = indexOf( item.id );
+			if ( at >= 0 ) {
+				rows.splice( at, 1 );
+			} else {
+				rows.push( { id: item.id, name: item.name, price: item.price, thumb: item.thumb, code: '' } );
+			}
+			renderChosen();
+			markResults();
+			write();
+		}
+
+		function foundRow( item ) {
+			var btn = el( 'button', 'whdla-found' );
+			btn.type = 'button';
+			btn.setAttribute( 'data-id', item.id );
+			var img = el( 'img' );
+			img.src = item.thumb;
+			img.alt = '';
+			img.loading = 'lazy';
+			btn.appendChild( img );
+			var words = el( 'span', 'whdla-found__words' );
+			words.appendChild( el( 'strong', '', item.name ) );
+			var line = el( 'small', '', item.price );
+			if ( ! item.stock ) {
+				line.appendChild( el( 'em', '', T.soldOut ) );
+			}
+			words.appendChild( line );
+			btn.appendChild( words );
+			btn.appendChild( el( 'i', 'whdla-found__tick' ) );
+			btn.addEventListener( 'click', function () {
+				toggle( item );
+			} );
+			return btn;
+		}
+
+		function say( text, isError, onRetry ) {
+			results.textContent = '';
+			var note = el( 'p', 'whdla-finder__note' + ( isError ? ' is-bad' : '' ), text );
+			if ( onRetry ) {
+				note.appendChild( document.createTextNode( ' ' ) );
+				var again = el( 'button', 'button button-small', T.retry );
+				again.type = 'button';
+				again.addEventListener( 'click', onRetry );
+				note.appendChild( again );
+			}
+			results.appendChild( note );
+		}
+
+		function find( fresh ) {
+			var mine = ++asking; // only the newest question's answer is shown
+			if ( fresh ) {
+				page = 1;
+			}
+			results.classList.add( 'is-loading' );
+			more.disabled = true;
+			var query = 'products?per_page=' + PER_PAGE + '&page=' + page + '&q=' + encodeURIComponent( search.value.trim() ) + ( category && +category.value ? '&cat=' + category.value : '' );
+			window.fetch( D.rest.root + query, {
 				credentials: 'same-origin',
 				headers: { 'X-WP-Nonce': D.rest.nonce }
 			} ).then( function ( r ) {
-				return r.json();
+				return r.json().catch( function () {
+					return {};
+				} ).then( function ( data ) {
+					if ( ! r.ok ) {
+						throw new Error( data.message || ( 'HTTP ' + r.status ) );
+					}
+					return data;
+				} );
 			} ).then( function ( res ) {
-				results.textContent = '';
+				if ( mine !== asking ) {
+					return;
+				}
 				var items = res.items || [];
-				if ( ! items.length ) {
-					results.appendChild( el( 'p', 'whdla-picker__none', T.none ) );
+				if ( fresh ) {
+					results.textContent = '';
+				}
+				if ( ! items.length && fresh ) {
+					say( T.none );
 				}
 				items.forEach( function ( item ) {
-					var btn = el( 'button', 'whdla-result' );
-					btn.type = 'button';
-					var img = el( 'img' );
-					img.src = item.thumb;
-					img.alt = '';
-					btn.appendChild( img );
-					var words = el( 'span' );
-					words.appendChild( el( 'strong', '', item.name ) );
-					words.appendChild( el( 'small', '', item.price ) );
-					btn.appendChild( words );
-					btn.addEventListener( 'click', function () {
-						if ( ! rows.some( function ( r ) {
-							return r.id === item.id;
-						} ) ) {
-							rows.push( { id: item.id, name: item.name, price: item.price, thumb: item.thumb, code: '' } );
-							render();
-							write();
-						}
-						results.hidden = true;
-						search.value = '';
-					} );
-					results.appendChild( btn );
+					results.appendChild( foundRow( item ) );
 				} );
-				results.hidden = false;
-			} ).catch( function () {} );
+				markResults();
+				var shown = results.querySelectorAll( '[data-id]' ).length;
+				counter.textContent = shown ? T.found.replace( '%1$d', shown ).replace( '%2$d', res.total ) : '';
+				more.hidden = ! res.more;
+				more.disabled = false;
+				results.classList.remove( 'is-loading' );
+			} ).catch( function ( err ) {
+				if ( mine !== asking ) {
+					return;
+				}
+				results.classList.remove( 'is-loading' );
+				more.disabled = false;
+				more.hidden = true;
+				counter.textContent = '';
+				say( T.failed.replace( '%s', err.message ), true, function () {
+					find( true );
+				} );
+			} );
 		}
 
 		search.addEventListener( 'input', function () {
 			clearTimeout( timer );
-			var q = search.value.trim();
 			timer = setTimeout( function () {
-				find( q );
+				find( true );
 			}, 220 );
-		} );
-		search.addEventListener( 'focus', function () {
-			find( search.value.trim() );
 		} );
 		search.addEventListener( 'keydown', function ( e ) {
 			if ( 'Enter' === e.key ) {
 				e.preventDefault(); // never submit the whole form from a search box
+				clearTimeout( timer );
+				find( true );
 			}
 		} );
-		document.addEventListener( 'click', function ( e ) {
-			if ( ! box.querySelector( '.whdla-picker__search' ).contains( e.target ) ) {
-				results.hidden = true;
-			}
+		if ( category ) {
+			category.addEventListener( 'change', function () {
+				find( true );
+			} );
+		}
+		more.addEventListener( 'click', function () {
+			page++;
+			find( false );
 		} );
 
-		render();
+		renderChosen();
+		find( true );
 	} );
 }() );

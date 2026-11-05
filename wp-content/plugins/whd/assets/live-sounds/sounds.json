@@ -1,0 +1,330 @@
+{
+	"music": [
+		{
+			"file": "music/picnic-on-the-seine.mp3",
+			"title": "Picnic On The Seine",
+			"artist": "John Bartmann",
+			"mood": "Café",
+			"seconds": 147,
+			"source": "https://freemusicarchive.org/music/John_Bartmann/picnic-on-the-seine-euro-vacation-sounds/picnic-on-the-seine/",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "music/mellow-cafe-vibe.mp3",
+			"title": "Mellow Cafe Vibe",
+			"artist": "John Bartmann",
+			"mood": "Café",
+			"seconds": 100,
+			"source": "https://freemusicarchive.org/music/John_Bartmann/picnic-on-the-seine-euro-vacation-sounds/mellow-cafe-vibe/",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "music/nova-serenade.mp3",
+			"title": "Nova Serenade",
+			"artist": "John Bartmann",
+			"mood": "Café",
+			"seconds": 141,
+			"source": "https://freemusicarchive.org/music/John_Bartmann/picnic-on-the-seine-euro-vacation-sounds/nova-serenade/",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "music/allez-allez.mp3",
+			"title": "Allez! Allez!",
+			"artist": "John Bartmann",
+			"mood": "Café",
+			"seconds": 80,
+			"source": "https://freemusicarchive.org/music/John_Bartmann/picnic-on-the-seine-euro-vacation-sounds/allez-allez/",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "music/shop-theme.mp3",
+			"title": "Shop Theme",
+			"artist": "CleytonKauffman",
+			"mood": "Bossa",
+			"seconds": 176,
+			"source": "https://opengameart.org/content/shop-theme",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "music/two-left-socks.mp3",
+			"title": "Two Left Socks",
+			"artist": "congusbongus",
+			"mood": "Bossa",
+			"seconds": 200,
+			"source": "https://opengameart.org/content/two-left-socks",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "music/bossa-shop-theme.mp3",
+			"title": "Bossa Shop Theme",
+			"artist": "SpringySpringo",
+			"mood": "Bossa",
+			"seconds": 87,
+			"source": "https://opengameart.org/content/bossa-shop-theme-in-low-fi-and-hd",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "music/cozy-puzzle.mp3",
+			"title": "Cozy Puzzle",
+			"artist": "MintoDog",
+			"mood": "Bossa",
+			"seconds": 130,
+			"source": "https://opengameart.org/content/cozy-puzzle-in-game-1",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "music/sax-and-piano.mp3",
+			"title": "Sax and Piano",
+			"artist": "Maarten Schellekens",
+			"mood": "Soft jazz",
+			"seconds": 94,
+			"source": "https://freemusicarchive.org/music/maarten-schellekens/public-domain-1/sax-and-piano-free-track/",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "music/keeping-cool.mp3",
+			"title": "Keeping Cool",
+			"artist": "HoliznaCC0",
+			"mood": "Soft jazz",
+			"seconds": 153,
+			"source": "https://freemusicarchive.org/music/holiznacc0/busted-guitar-lofi-edit/keeping-cool/",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "music/a-little-shade.mp3",
+			"title": "A Little Shade",
+			"artist": "HoliznaCC0",
+			"mood": "Soft jazz",
+			"seconds": 179,
+			"source": "https://freemusicarchive.org/music/holiznacc0/lo-fi-and-chill/a-little-shade/",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "music/roger-moore.mp3",
+			"title": "Roger Moore",
+			"artist": "TRG Banks",
+			"mood": "Soft jazz",
+			"seconds": 194,
+			"source": "https://freemusicarchive.org/music/TRG_Banks/singles-compilation-1/roger-moore/",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "music/falling-in-love-with-yourself.mp3",
+			"title": "Falling In Love With Yourself",
+			"artist": "HoliznaCC0",
+			"mood": "Dreamy",
+			"seconds": 163,
+			"source": "https://freemusicarchive.org/music/holiznacc0/be-happy-with-who-you-are/falling-in-love-with-yourself/",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "music/clouds.mp3",
+			"title": "Clouds",
+			"artist": "HoliznaCC0",
+			"mood": "Dreamy",
+			"seconds": 230,
+			"source": "https://freemusicarchive.org/music/holiznacc0/lo-fi-and-chill/clouds-6/",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "music/ocean-breeze.mp3",
+			"title": "Ocean Breeze",
+			"artist": "HoliznaCC0",
+			"mood": "Dreamy",
+			"seconds": 198,
+			"source": "https://freemusicarchive.org/music/holiznacc0/public-domain-lofi/ocean-breeze-lofi-ukulele-peaceful-mp3/",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "music/softly.mp3",
+			"title": "Softly",
+			"artist": "Loyalty Freak Music",
+			"mood": "Dreamy",
+			"seconds": 262,
+			"source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/MELODIES_WITH_A_BEAT/Loyalty_Freak_Music_-_MELODIES_WITH_A_BEAT_-_06_Softly/",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "music/sweet-sun.mp3",
+			"title": "Sweet Sun",
+			"artist": "Loyalty Freak Music",
+			"mood": "Feel-good",
+			"seconds": 120,
+			"source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/POSITIVE_ATTITUDE_/Loyalty_Freak_Music_-_POSITIVE_ATTITUDE__-_04_Sweet_Sun/",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "music/yippee.mp3",
+			"title": "Yippee!",
+			"artist": "Loyalty Freak Music",
+			"mood": "Feel-good",
+			"seconds": 130,
+			"source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/POSITIVE_ATTITUDE_/Loyalty_Freak_Music_-_POSITIVE_ATTITUDE__-_08_Yippee_/",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "music/hop.mp3",
+			"title": "Hop",
+			"artist": "Monplaisir",
+			"mood": "Feel-good",
+			"seconds": 159,
+			"source": "https://freemusicarchive.org/music/Monplaisir/Relaxing_Ukulele/Monplaisir_-_Relaxing_Ukulele_-_08_Hop/",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "music/pop-city.mp3",
+			"title": "Pop City",
+			"artist": "Komiku",
+			"mood": "Feel-good",
+			"seconds": 96,
+			"source": "https://freemusicarchive.org/music/Komiku/Helice_Awesome_Dance_Adventure_/pop-city/",
+			"license": "CC0 1.0"
+		}
+	],
+	"fx": [
+		{
+			"file": "fx/applause.mp3",
+			"label": "Applause",
+			"icon": "👏",
+			"seconds": 6,
+			"source": "https://bigsoundbank.com/applause-from-40-people-5-s3521.html",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "fx/big-applause.mp3",
+			"label": "Big applause",
+			"icon": "🙌",
+			"seconds": 7,
+			"source": "https://bigsoundbank.com/applause-300-people-s0020.html",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "fx/cheering.mp3",
+			"label": "Cheering",
+			"icon": "📣",
+			"seconds": 4.3,
+			"source": "https://bigsoundbank.com/shouts-and-applauses-of-teens-1-s0236.html",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "fx/party-horn.mp3",
+			"label": "Party horn",
+			"icon": "🥳",
+			"seconds": 1.4,
+			"source": "https://bigsoundbank.com/party-horn-3-s1555.html",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "fx/drum-roll.mp3",
+			"label": "Drum roll",
+			"icon": "🥁",
+			"seconds": 5.1,
+			"source": "https://bigsoundbank.com/drum-roll-1-l-s2402.html",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "fx/ba-dum-tss.mp3",
+			"label": "Ba-dum-tss",
+			"icon": "🎭",
+			"seconds": 4,
+			"source": "https://bigsoundbank.com/battery-joke-s0433.html",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "fx/counter-bell.mp3",
+			"label": "Counter bell",
+			"icon": "🛎️",
+			"seconds": 3,
+			"source": "https://bigsoundbank.com/counter-bell-3-s2531.html",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "fx/coins.mp3",
+			"label": "Coins",
+			"icon": "🪙",
+			"seconds": 3,
+			"source": "https://bigsoundbank.com/coins-1-s0193.html",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "fx/till-beep.mp3",
+			"label": "Till beep",
+			"icon": "🧾",
+			"seconds": 0.2,
+			"source": "https://bigsoundbank.com/beep-of-a-cash-register-s1417.html",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "fx/laughter.mp3",
+			"label": "Laughter",
+			"icon": "😂",
+			"seconds": 5,
+			"source": "https://bigsoundbank.com/laughter-s0490.html",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "fx/surprise.mp3",
+			"label": "Surprise!",
+			"icon": "😮",
+			"seconds": 2.7,
+			"source": "https://bigsoundbank.com/surprise-exclamation-s3534.html",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "fx/kiss.mp3",
+			"label": "Kiss",
+			"icon": "😘",
+			"seconds": 0.4,
+			"source": "https://bigsoundbank.com/kiss-1-s2196.html",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "fx/sparkle.mp3",
+			"label": "Sparkle",
+			"icon": "✨",
+			"seconds": 2.3,
+			"source": "https://bigsoundbank.com/chimes-dream-1-s2079.html",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "fx/camera-flash.mp3",
+			"label": "Camera flash",
+			"icon": "📸",
+			"seconds": 4,
+			"source": "https://bigsoundbank.com/paparazzi-1-s2389.html",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "fx/whoosh.mp3",
+			"label": "Whoosh",
+			"icon": "💨",
+			"seconds": 1.1,
+			"source": "https://bigsoundbank.com/whoosh-4-s1796.html",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "fx/boing.mp3",
+			"label": "Boing",
+			"icon": "🪀",
+			"seconds": 2,
+			"source": "https://bigsoundbank.com/boing-cartoon-2-s2278.html",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "fx/idea.mp3",
+			"label": "Idea!",
+			"icon": "💡",
+			"seconds": 3,
+			"source": "https://bigsoundbank.com/idea-1-s1398.html",
+			"license": "CC0 1.0"
+		},
+		{
+			"file": "fx/heartbeat.mp3",
+			"label": "Heartbeat",
+			"icon": "💓",
+			"seconds": 5,
+			"source": "https://bigsoundbank.com/heart-beat-s0218.html",
+			"license": "CC0 1.0"
+		}
+	]
+}

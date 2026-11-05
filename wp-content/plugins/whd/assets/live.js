@@ -26,14 +26,12 @@
 	var video = byId( 'video' );
 
 	var state = D.state || {};
-	var pieces = D.pieces || [];
 	var seen = {};
 	var call = null;
 	var joining = false;
 	var joined = false;
 	var hasPicture = false;
 	var retries = 0;
-	var pv = state.pv || 0;
 	var sheetPiece = 0;
 	var pollTimer = null;
 
@@ -46,12 +44,6 @@
 			node.textContent = text;
 		}
 		return node;
-	}
-
-	function pieceById( id ) {
-		return pieces.filter( function ( p ) {
-			return p.id === id;
-		} )[ 0 ] || null;
 	}
 
 	/* ─────────────────────────── who is commenting ─────────────────────────── */
@@ -213,48 +205,11 @@
 		} );
 	}
 
-	/* ─────────────────────────── the pieces ─────────────────────────── */
-
-	function renderPieces() {
-		var box = byId( 'pieces' );
-		var showing = state.showing ? state.showing.id : 0;
-		box.textContent = '';
-		// What is on screen first; the rest in the host's order.
-		var list = pieces.slice().sort( function ( a, b ) {
-			return ( b.id === showing ? 1 : 0 ) - ( a.id === showing ? 1 : 0 );
-		} );
-		list.forEach( function ( piece ) {
-			var row = el( 'li', 'whdl-piece' + ( piece.id === showing ? ' is-on' : '' ) );
-			var btn = el( 'button' );
-			btn.type = 'button';
-			var img = el( 'img' );
-			img.src = piece.thumb;
-			img.alt = '';
-			img.loading = 'lazy';
-			btn.appendChild( img );
-			var words = el( 'span', 'whdl-piece__words' );
-			if ( piece.id === showing ) {
-				words.appendChild( el( 'small', '', T.nowShowing ) );
-			}
-			words.appendChild( el( 'strong', '', piece.name ) );
-			var price = el( 'em', '', piece.price );
-			words.appendChild( price );
-			if ( ! piece.stock ) {
-				words.appendChild( el( 'small', 'whdl-piece__out', T.soldOut ) );
-			}
-			btn.appendChild( words );
-			btn.addEventListener( 'click', function () {
-				openSheet( piece, '', false );
-			} );
-			row.appendChild( btn );
-			box.appendChild( row );
-		} );
-		root.classList.toggle( 'has-pieces', pieces.length > 0 );
-	}
+	/* ─────────────────────────── the piece on screen ─────────────────────────── */
 
 	function renderShowing() {
 		var showing = state.showing;
-		var piece = showing ? pieceById( showing.id ) : null;
+		var piece = showing && showing.piece ? showing.piece : null;
 		var now = byId( 'now' );
 		var hit = byId( 'hit' );
 		now.hidden = ! piece || 'live' !== state.stage;
@@ -276,7 +231,7 @@
 	}
 
 	function showingPiece() {
-		return state.showing ? pieceById( state.showing.id ) : null;
+		return state.showing && state.showing.piece ? state.showing.piece : null;
 	}
 
 	/* ─────────────────────────── the side panel ─────────────────────────── */
@@ -511,7 +466,7 @@
 
 		if ( 'ended' === stage ) {
 			kicker.textContent = T.wrap;
-			text.textContent = pieces.length ? T.wrapPieces : T.wrapText;
+			text.textContent = T.wrapText;
 		} else if ( 'live' === stage ) {
 			kicker.textContent = joined ? T.back : T.connecting;
 			spinner.hidden = false;
@@ -708,17 +663,6 @@
 		var before = state.stage;
 		state = next;
 		renderComments();
-		if ( next.pv !== pv ) {
-			pv = next.pv;
-			window.fetch( D.piecesUrl, { cache: 'no-cache' } ).then( function ( r ) {
-				return r.json();
-			} ).then( function ( list ) {
-				pieces = Array.isArray( list ) ? list : pieces;
-				renderPieces();
-				renderShowing();
-			} ).catch( function () {} );
-		}
-		renderPieces();
 		if ( ! joined ) {
 			setViewers( next.viewers || 0 );
 		}
@@ -810,7 +754,6 @@
 	byId( 'now' ).addEventListener( 'click', openShowing );
 
 	renderWho();
-	renderPieces();
 	renderComments();
 	renderStage();
 	renderClock();

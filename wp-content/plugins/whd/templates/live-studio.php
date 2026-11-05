@@ -114,14 +114,20 @@ $whd_tabs = [
 					<span class="whdls-nowplaying" id="whdls-music-now"></span>
 				</div>
 				<ol class="whdls-tracks" id="whdls-music-list"></ol>
-				<button type="button" class="whdls-btn whdls-btn--quiet" id="whdls-music-add"><?php esc_html_e( 'Add music from the media library', 'whd' ); ?></button>
+
+				<h3><?php esc_html_e( 'Ready-made music', 'whd' ); ?></h3>
+				<div class="whdls-filter whdls-filter--moods" id="whdls-moods"></div>
+				<ol class="whdls-library" id="whdls-library"></ol>
+				<p class="whdls-hint"><?php esc_html_e( 'Preview plays only on this computer, not on the stream. Wear headphones so your mic doesn’t pick it up.', 'whd' ); ?></p>
+				<button type="button" class="whdls-btn whdls-btn--quiet" id="whdls-music-add"><?php esc_html_e( 'Add your own from the media library', 'whd' ); ?></button>
 				<label class="whdls-switch whdls-switch--block"><input type="checkbox" id="whdls-music-duck" checked><span></span><?php esc_html_e( 'Lower the music when I talk', 'whd' ); ?></label>
 				<label class="whdls-switch whdls-switch--block"><input type="checkbox" id="whdls-music-loop" checked><span></span><?php esc_html_e( 'Start over at the end of the list', 'whd' ); ?></label>
 				<label class="whdls-switch whdls-switch--block"><input type="checkbox" id="whdls-monitor"><span></span><?php esc_html_e( 'Let me hear music and pads (wear headphones)', 'whd' ); ?></label>
-				<p class="whdls-note"><?php esc_html_e( 'Use music you have the rights to. Facebook and YouTube can mute or stop a live for copyrighted music.', 'whd' ); ?></p>
+				<p class="whdls-note"><?php esc_html_e( 'The ready-made music and sounds are public domain (CC0), free for a shop to use with no credit needed. Anything you add yourself must be yours to use: Facebook and YouTube can mute or stop a live for copyrighted music, and their automatic checks can occasionally flag even free tracks.', 'whd' ); ?></p>
 
 				<h3><?php esc_html_e( 'Sound pads', 'whd' ); ?></h3>
 				<div class="whdls-tiles" id="whdls-pads"></div>
+				<p class="whdls-hint"><?php esc_html_e( 'Viewers hear these. To hear them yourself, turn on “Let me hear music and pads”.', 'whd' ); ?></p>
 				<button type="button" class="whdls-btn whdls-btn--quiet" id="whdls-pad-add"><?php esc_html_e( 'Add your own sound', 'whd' ); ?></button>
 			</div>
 

@@ -9,7 +9,8 @@
  * Nothing here plays through the host's speakers unless they ask to hear it: a speaker next to a live
  * microphone is an echo for everyone watching.
  *
- * Pads are synthesised, so there are no sound files to ship, and no question of who owns them.
+ * A few pads are synthesised here. The rest, and the ready-made music, are public-domain recordings in
+ * assets/live-sounds (see CREDITS.md there), played through the same buses.
  *
  * @package whd
  */
@@ -21,10 +22,7 @@
 	var PADS = {
 		ding: { label: 'Ding', icon: '🔔' },
 		sold: { label: 'Cha-ching', icon: '💰' },
-		tada: { label: 'Ta-da', icon: '🎉' },
-		drums: { label: 'Drum roll', icon: '🥁' },
-		whoosh: { label: 'Whoosh', icon: '💨' },
-		claps: { label: 'Applause', icon: '👏' }
+		tada: { label: 'Ta-da', icon: '🎉' }
 	};
 
 	function Mixer() {
@@ -303,7 +301,6 @@
 	Mixer.prototype.playPad = function ( key ) {
 		this.wake();
 		var t = this.ctx.currentTime + 0.01;
-		var i;
 		switch ( key ) {
 			case 'ding':
 				this._tone( 1318.5, t, 1.1, 0.5 );
@@ -323,47 +320,39 @@
 					this._tone( f, t + 0.17, 1, 0.22, 'triangle' );
 				}, this );
 				break;
-			case 'drums':
-				for ( i = 0; i < 40; i++ ) {
-					this._noise( t + i * 0.05, 0.06, 0.1 + 0.3 * ( i / 40 ), 'bandpass', 1800 );
-				}
-				this._noise( t + 2, 0.5, 0.6, 'highpass', 4000 );
-				this._tone( 90, t + 2, 0.4, 0.7 );
-				break;
-			case 'whoosh':
-				this._noise( t, 0.7, 0.5, 'bandpass', 400, 5000 );
-				break;
-			case 'claps':
-				for ( i = 0; i < 70; i++ ) {
-					var at = t + Math.random() * 2.4;
-					this._noise( at, 0.05, 0.08 + Math.random() * 0.2, 'bandpass', 1200 + Math.random() * 1500 );
-				}
-				break;
 			default:
 				this._playOwn( key );
 		}
 	};
 
-	/* A pad from the media library: fetched and decoded once, then instant. */
+	/* A recording: fetched and decoded once, then instant. */
+	Mixer.prototype._load = function ( url ) {
+		var self = this;
+		if ( ! this.padBuffers[ url ] ) {
+			this.padBuffers[ url ] = window.fetch( url, { credentials: 'same-origin' } ).then( function ( r ) {
+				return r.arrayBuffer();
+			} ).then( function ( bytes ) {
+				return self.ctx.decodeAudioData( bytes );
+			} ).catch( function ( err ) {
+				delete self.padBuffers[ url ]; // a blip should not break this pad for the rest of the stream
+				throw err;
+			} );
+		}
+		return this.padBuffers[ url ];
+	};
+
+	/* Ready in advance, so the first press is as quick as the rest. */
+	Mixer.prototype.preload = function ( url ) {
+		this._load( url ).catch( function () {} );
+	};
+
 	Mixer.prototype._playOwn = function ( url ) {
 		var self = this;
-		var fire = function ( buffer ) {
+		this._load( url ).then( function ( buffer ) {
 			var src = self.ctx.createBufferSource();
 			src.buffer = buffer;
 			src.connect( self.buses.pads );
 			src.start();
-		};
-		if ( this.padBuffers[ url ] ) {
-			fire( this.padBuffers[ url ] );
-			return;
-		}
-		window.fetch( url, { credentials: 'same-origin' } ).then( function ( r ) {
-			return r.arrayBuffer();
-		} ).then( function ( bytes ) {
-			return self.ctx.decodeAudioData( bytes );
-		} ).then( function ( buffer ) {
-			self.padBuffers[ url ] = buffer;
-			fire( buffer );
 		} ).catch( function () {} );
 	};
 

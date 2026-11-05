@@ -524,14 +524,18 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   report by name. Viewers join hidden (`enable_hidden_participants`), no token, `audioSource/videoSource: false`.
   **No PHP per viewer:** everything a viewer needs is `uploads/whd-live/<id>-<key>.json`, rewritten only on a change and
   polled with `cache: no-cache` (a 304 from the web server); public, so first names and words only, never an address. The
-  link is not in it: a site comment's REST answer carries the piece and that opens the side panel. Falls back to REST
-  when uploads can't be written. `.ftp-sync` excludes that folder.
+  only piece it holds is the one on air (`showing.piece`); a site comment's REST answer carries the piece that was asked for
+  and that opens the side panel. Falls back to REST when uploads can't be written. `.ftp-sync` excludes that folder.
+  **The pieces are a surprise, the owner's rule:** the page has no list of what's coming, and neither its source nor the
+  state file names a piece before it is on air. `WHD_Live::set_showing()` records a piece as `_whd_live_revealed` only while
+  the stage is `live`, and `on-air` re-sets a piece put on stage in the preview, so that one goes public then and not before.
   Comments: table `whd_live_comments`, unique on (stream, source, platform id), so `INSERT IGNORE` is what makes each
   polled comment act once; a reply is claimed by a conditional UPDATE before sending. **Only typing a piece's code earns
   a link, the owner's rule:** anybody can comment anything, and a comment without a code is just a comment; which piece is
   on screen makes no difference. There are no modes and no trigger words (both were removed on request). `match()`: the
-  codes the host set first, as whole words anywhere in the comment, then for a piece with no code its number. A code
-  that is only digits must be the whole comment, so "size 8" and "I have 2 kids" are not orders. The host's Send link
+  codes the host set first, as whole words anywhere in the comment, then for a piece with no code its number, but only
+  once that piece has been on air (numbers can be guessed; a set code can be typed any time, since knowing it means the host
+  gave it out). A code that is only digits must be the whole comment, so "size 8" and "I have 2 kids" are not orders. The host's Send link
   button on a comment is a deliberate exception. Facebook and YouTube: one link per person per piece per stream; on the
   site the panel just opens again. No cron or webhook: the studio's heartbeat (`feed`, on the worker's clock) pulls Facebook
   (4 s) and YouTube (10 s, for the 10,000-a-day quota) and sends after its response, because a stream only exists while
@@ -541,6 +545,14 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   site: the tick goes through `WHD_Subscribers` (source `live`), else `whd_live_lead` → `WHD_Contacts` as a profile.
   Each piece has a code (`_whd_live_pieces`: `[ id, code ]`; one code, one piece; none = its number, `piece['say']`). The
   card and the comment box say it: `card_cta` is "Comment {code} for the link", and the card follows the code as it is typed.
+  "Pieces you'll show" on the form is search and select (`admin/live-form.js`; `live/products` takes `q`, `cat`, `page`,
+  an exact SKU first, up to 30 a page).
+  **Ready-made sounds** (`assets/live-sounds/`: `sounds.json`, `CREDITS.md`, `music/`, `fx/`; `sound_library()` hands them to
+  the studio): 20 tracks in five moods chosen for the shop (Café, Bossa, Soft jazz, Dreamy, Feel-good) and 18 effects, real
+  recordings that replaced the synthesised drums, whoosh and claps; the Sound tab lists them with Preview and Add
+  (`renderLibrary`), and `Mixer` fetches and decodes them through the same mix as the host's own files. Only add a sound whose
+  own page says CC0 (read per item, not per site), and level it with ffmpeg first (music -18 LUFS, effects -16). Pixabay and
+  Mixkit are not CC0. A platform's automatic check can still flag a free track now and then.
   Every stream's link is unique for good: `WHD_Live::new_slug()` puts a random end on the title's slug at creation and an
   edit never changes it, so a deleted stream's address is never reissued. It is shown from the moment of saving (list,
   form, studio's top bar, preflight), on the waiting page with Copy, on the cover under the words, and is sent in the

@@ -1590,6 +1590,7 @@
 				}
 				S.music.splice( i, 1 );
 				renderMusic();
+				renderLibrary();
 				saveSoon();
 			} );
 			row.appendChild( x );
@@ -1598,6 +1599,89 @@
 		var now = mixer && S.music[ mixer.index ] && ! mixer.audio.paused ? S.music[ mixer.index ].title : '';
 		$( 'music-now' ).textContent = now;
 		$( 'music-play' ).classList.toggle( 'is-on', !! now );
+	}
+
+	/* ─ the ready-made music ─ */
+	var mood = '';
+	var previewing = '';
+	var previewPlayer = new Audio();
+	previewPlayer.preload = 'none';
+	previewPlayer.addEventListener( 'ended', function () {
+		previewing = '';
+		renderLibrary();
+	} );
+
+	function trackLength( seconds ) {
+		return Math.floor( seconds / 60 ) + ':' + pad2( seconds % 60 );
+	}
+
+	/* Straight to the speakers, past the mixer, so a track can be judged without the audience hearing. */
+	function togglePreview( url ) {
+		if ( previewing === url ) {
+			previewPlayer.pause();
+			previewing = '';
+		} else {
+			previewPlayer.src = url;
+			var played = previewPlayer.play();
+			if ( played && played.catch ) {
+				played.catch( function () {} );
+			}
+			previewing = url;
+		}
+		renderLibrary();
+	}
+
+	function renderLibrary() {
+		var tracks = ( D.sounds || {} ).music || [];
+		var filters = $( 'moods' );
+		var list = $( 'library' );
+		filters.textContent = '';
+		list.textContent = '';
+		var moods = tracks.reduce( function ( all, t ) {
+			return all.indexOf( t.mood ) < 0 ? all.concat( t.mood ) : all;
+		}, [] );
+		[ '' ].concat( moods ).forEach( function ( name ) {
+			var btn = el( 'button', 'whdls-mini' + ( mood === name ? ' is-on' : '' ), name || T.allMoods );
+			btn.type = 'button';
+			btn.addEventListener( 'click', function () {
+				mood = name;
+				renderLibrary();
+			} );
+			filters.appendChild( btn );
+		} );
+		tracks.forEach( function ( track ) {
+			if ( mood && track.mood !== mood ) {
+				return;
+			}
+			var row = el( 'li', 'whdls-libtrack' );
+			var hear = el( 'button', 'whdls-libtrack__hear' + ( previewing === track.url ? ' is-on' : '' ) );
+			hear.type = 'button';
+			hear.title = previewing === track.url ? T.hearStop : T.hear;
+			hear.setAttribute( 'aria-label', hear.title + ': ' + track.title );
+			hear.setAttribute( 'aria-pressed', previewing === track.url ? 'true' : 'false' );
+			hear.addEventListener( 'click', function () {
+				togglePreview( track.url );
+			} );
+			row.appendChild( hear );
+			var words = el( 'span', 'whdls-libtrack__words' );
+			words.appendChild( el( 'strong', '', track.title ) );
+			words.appendChild( el( 'small', '', track.mood + ' · ' + trackLength( track.seconds ) ) );
+			row.appendChild( words );
+			var added = S.music.some( function ( m ) {
+				return m.url === track.url;
+			} );
+			var add = el( 'button', 'whdls-mini' + ( added ? ' is-on' : '' ), added ? T.trackAdded : T.addTrack );
+			add.type = 'button';
+			add.disabled = added;
+			add.addEventListener( 'click', function () {
+				S.music.push( { url: track.url, title: track.title } );
+				renderMusic();
+				renderLibrary();
+				saveSoon();
+			} );
+			row.appendChild( add );
+			list.appendChild( row );
+		} );
 	}
 
 	function renderPads() {
@@ -1627,6 +1711,9 @@
 			}
 			box.appendChild( tile );
 		};
+		( ( D.sounds || {} ).fx || [] ).forEach( function ( fx ) {
+			make( fx.url, fx.icon, fx.label );
+		} );
 		Object.keys( Sound.PADS ).forEach( function ( key ) {
 			make( key, Sound.PADS[ key ].icon, Sound.PADS[ key ].label );
 		} );
@@ -2616,6 +2703,11 @@
 			if ( 'cameras' === key ) {
 				refreshDevices().catch( function () {} );
 			}
+			if ( 'sound' === key && mixer ) {
+				( ( D.sounds || {} ).fx || [] ).forEach( function ( fx ) {
+					mixer.preload( fx.url );
+				} );
+			}
 		} );
 	} );
 	document.querySelectorAll( '.whdls-sidetabs button' ).forEach( function ( btn ) {
@@ -2718,6 +2810,7 @@
 	renderTextTools();
 	renderLooks();
 	renderMusic();
+	renderLibrary();
 	renderPads();
 	renderScenes();
 	renderLayers();
