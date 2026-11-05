@@ -1,0 +1,2469 @@
+/**
+ * The live studio.
+ *
+ * Going live, in order: the server makes the room and readies the platforms (`start`), this browser
+ * joins with the canvas as its camera and the mixer as its microphone, then the server starts the RTMP
+ * copy and opens the page (`on-air`). Both are safe to repeat, so a reload mid-stream comes back through
+ * the same path with the same room, and the five minutes Daily keeps an idle stream alive cover it.
+ *
+ * Everything the host sets up here is saved as the scene, so a reload brings it all back, including a
+ * cover that is on. A reload must never put a camera back on air that the host had just covered.
+ *
+ * @package whd
+ */
+( function () {
+	'use strict';
+
+	var D = window.WHD_STUDIO;
+	if ( ! D ) {
+		return;
+	}
+	var T = D.i18n;
+	var Stage = window.WHDStage;
+	var Sound = window.WHDMixer;
+
+	function $( id ) {
+		return document.getElementById( 'whdls-' + id );
+	}
+	function el( tag, cls, text ) {
+		var node = document.createElement( tag );
+		if ( cls ) {
+			node.className = cls;
+		}
+		if ( null !== text && undefined !== text ) {
+			node.textContent = text;
+		}
+		return node;
+	}
+	function fmt( text ) {
+		var args = Array.prototype.slice.call( arguments, 1 );
+		var i = 0;
+		return String( text ).replace( /%(?:\d\$)?[sd]/g, function () {
+			return args[ i++ ];
+		} );
+	}
+
+	var root = $( '' ) || document.getElementById( 'whdls' );
+	var portrait = 'portrait' === D.format;
+	var saved = D.scene || {};
+
+	var S = {
+		stage: D.stage,
+		onAir: false,
+		ending: false,
+		call: null,
+		pieces: ( D.pieces || [] ).slice(),
+		showing: D.showing || 0,
+		comments: {},
+		after: 0,
+		filter: 'all',
+		side: 'comments',
+		dests: D.dests || {},
+		destState: {},
+		startedAt: D.startedAt || 0,
+		viewers: 0,
+		selected: null,
+		drag: null,
+		effectMode: 'burst',
+		rain: '',
+		transition: undefined !== saved.transition ? +saved.transition : 400,
+		muted: !! saved.muted,
+		coverMuted: !! saved.coverMuted,
+		library: saved.library || [],
+		floats: saved.floats || [],
+		music: saved.music || [],
+		ownPads: saved.ownPads || [],
+		scenes: saved.scenes || [],
+		activeScene: saved.activeScene || '',
+		net: '',
+		polling: false,
+		ticks: 0,
+		recorder: null,
+		cameras: {},
+		devices: []
+	};
+
+	/* ─────────────────────────── the server ─────────────────────────── */
+
+	function api( method, path, body ) {
+		var opts = {
+			method: method,
+			credentials: 'same-origin',
+			headers: { 'X-WP-Nonce': D.rest.nonce }
+		};
+		if ( body ) {
+			opts.headers[ 'Content-Type' ] = 'application/json';
+			opts.body = JSON.stringify( body );
+		}
+		return window.fetch( D.rest.root + path, opts ).then( function ( r ) {
+			return r.json().catch( function () {
+				return {};
+			} ).then( function ( data ) {
+				if ( ! r.ok ) {
+					var error = new Error( data.message || ( 'HTTP ' + r.status ) );
+					error.status = r.status;
+					throw error;
+				}
+				return data;
+			} );
+		} );
+	}
+
+	/* ─────────────────────────── messages ─────────────────────────── */
+
+	function banner( key, text, kind, action ) {
+		var box = $( 'banners' );
+		var node = box.querySelector( '[data-key="' + key + '"]' );
+		if ( ! node ) {
+			node = el( 'div', 'whdls-banner' );
+			node.setAttribute( 'data-key', key );
+			box.appendChild( node );
+		}
+		node.className = 'whdls-banner whdls-banner--' + ( kind || 'warn' );
+		node.textContent = '';
+		node.appendChild( el( 'span', '', text ) );
+		if ( action ) {
+			var btn;
+			if ( action.href ) {
+				btn = el( 'a', 'whdls-banner__do', action.label );
+				btn.href = action.href;
+			} else {
+				btn = el( 'button', 'whdls-banner__do', action.label );
+				btn.type = 'button';
+				btn.addEventListener( 'click', action.run );
+			}
+			node.appendChild( btn );
+		}
+		var close = el( 'button', 'whdls-banner__x', '×' );
+		close.type = 'button';
+		close.setAttribute( 'aria-label', 'Close' );
+		close.addEventListener( 'click', function () {
+			node.remove();
+		} );
+		node.appendChild( close );
+	}
+
+	function clearBanner( key ) {
+		var node = $( 'banners' ).querySelector( '[data-key="' + key + '"]' );
+		if ( node ) {
+			node.remove();
+		}
+	}
+
+	/* ─────────────────────────── stage and mixer ─────────────────────────── */
+
+	var canvas = $( 'canvas' );
+	var stage = new Stage.Stage( canvas, {
+		width: portrait ? 720 : 1280,
+		height: portrait ? 1280 : 720,
+		placeholder: T.placeholder,
+		coverLogo: D.coverLogo,
+		brand: D.brand
+	} );
+	var mixer = Sound.supported ? new Sound.Mixer() : null;
+
+	stage.load( saved.stage || {} );
+	stage.setCover( !! saved.cover, undefined !== saved.coverLine ? saved.coverLine : $( 'cover-line' ).options[ 0 ].text );
+	if ( undefined !== saved.coverLine ) {
+		$( 'cover-line' ).value = saved.coverLine;
+	}
+
+	if ( ! saved.stage && D.logo ) {
+		// A first visit: the shop's mark in the corner, which every stream will want.
+		stage.add( { type: 'image', src: D.logo, x: portrait ? 0.14 : 0.08, y: portrait ? 0.07 : 0.11, w: portrait ? 0.18 : 0.1, opacity: 0.9 }, true );
+	}
+
+	document.fonts && document.fonts.ready.then( function () {
+		[ '500 40px "Cormorant Garamond"', 'italic 500 40px "Cormorant Garamond"', '800 40px Manrope', '600 40px Manrope' ].forEach( function ( font ) {
+			document.fonts.load( font );
+		} );
+		setTimeout( function () {
+			stage.layers.forEach( function ( layer ) {
+				layer._key = '';
+			} );
+			stage._coverText = null;
+		}, 700 );
+	} );
+
+	/* Saving is debounced: dragging something around must not be a request per pixel. */
+	var saveTimer = null;
+	function sceneData() {
+		var sources = [];
+		Object.keys( stage.sources ).forEach( function ( id ) {
+			var s = stage.sources[ id ];
+			if ( 'camera' === s.kind ) {
+				sources.push( { id: id, deviceId: s.deviceId, label: s.label, flip: !! s.flip, zoom: +s.zoom || 1, fit: s.fit } );
+			}
+		} );
+		return {
+			stage: stage.toJSON(),
+			sources: sources,
+			main: stage.main,
+			cover: stage.cover,
+			coverLine: stage.coverLine,
+			muted: S.muted,
+			coverMuted: S.coverMuted,
+			transition: S.transition,
+			library: S.library,
+			floats: S.floats,
+			music: S.music,
+			ownPads: S.ownPads,
+			scenes: S.scenes,
+			activeScene: S.activeScene,
+			mic: S.micId || '',
+			volumes: mixer ? mixer.volumes : null,
+			duck: mixer ? mixer.duck : true,
+			loop: mixer ? mixer.loop : true
+		};
+	}
+	function saveSoon() {
+		clearTimeout( saveTimer );
+		saveTimer = setTimeout( function () {
+			if ( 'ended' !== S.stage ) {
+				api( 'POST', D.id + '/scene', { scene: sceneData() } ).catch( function () {} );
+			}
+		}, 900 );
+	}
+	stage.onChange = function () {
+		renderLayers();
+		saveSoon();
+	};
+
+	/* ─────────────────────────── cameras ─────────────────────────── */
+
+	function videoConstraints( deviceId ) {
+		var c = portrait ? { width: { ideal: 1920 }, height: { ideal: 1080 } } : { width: { ideal: 1280 }, height: { ideal: 720 } };
+		c.frameRate = { ideal: 30 };
+		if ( deviceId ) {
+			c.deviceId = { exact: deviceId };
+		}
+		return c;
+	}
+
+	var AUDIO_RULES = { echoCancellation: true, noiseSuppression: true, autoGainControl: true };
+
+	function makeVideo( stream ) {
+		var video = el( 'video' );
+		video.muted = true;
+		video.playsInline = true;
+		video.autoplay = true;
+		video.srcObject = stream;
+		$( 'videos' ).appendChild( video );
+		var played = video.play();
+		if ( played && played.catch ) {
+			played.catch( function () {} );
+		}
+		return video;
+	}
+
+	function labelFor( deviceId, fallback ) {
+		var found = S.devices.filter( function ( d ) {
+			return d.deviceId === deviceId;
+		} )[ 0 ];
+		return found && found.label ? found.label.replace( /\s*\([0-9a-f]{4}:[0-9a-f]{4}\)\s*$/i, '' ) : fallback;
+	}
+
+	function camId( deviceId ) {
+		return 'cam:' + ( deviceId || 'default' );
+	}
+
+	/* A stream already open becomes a source: one for each camera, all kept running. */
+	function addCameraStream( stream, deviceId, meta ) {
+		var id = camId( deviceId );
+		var count = Object.keys( stage.sources ).length + 1;
+		var props = {
+			kind: 'camera',
+			deviceId: deviceId,
+			stream: stream,
+			label: labelFor( deviceId, T.camera + ' ' + count ),
+			flip: false,
+			zoom: 1,
+			fit: 'cover'
+		};
+		for ( var k in meta || {} ) {
+			props[ k ] = meta[ k ];
+		}
+		stage.addSource( id, makeVideo( stream ), props );
+		renderSources();
+		return id;
+	}
+
+	function openCamera( deviceId, meta ) {
+		if ( stage.sources[ camId( deviceId ) ] ) {
+			return Promise.resolve( camId( deviceId ) );
+		}
+		return navigator.mediaDevices.getUserMedia( { video: videoConstraints( deviceId ), audio: false } ).then( function ( stream ) {
+			// The id it was asked for, not the one the track reports: that is what the device list has.
+			return addCameraStream( stream, deviceId || stream.getVideoTracks()[ 0 ].getSettings().deviceId, meta );
+		} );
+	}
+
+	function stopSource( id ) {
+		var source = stage.sources[ id ];
+		if ( ! source ) {
+			return;
+		}
+		( source.stream ? source.stream.getTracks() : [] ).forEach( function ( t ) {
+			t.stop();
+		} );
+		if ( source.video && source.video.parentNode ) {
+			source.video.parentNode.removeChild( source.video );
+		}
+		if ( 'screen' === source.kind && mixer ) {
+			mixer.setScreen( null );
+		}
+		stage.removeSource( id );
+		renderSources();
+	}
+
+	function refreshDevices() {
+		return navigator.mediaDevices.enumerateDevices().then( function ( list ) {
+			S.devices = list;
+			var mics = list.filter( function ( d ) {
+				return 'audioinput' === d.kind;
+			} );
+			var box = $( 'mic-select' );
+			box.textContent = '';
+			mics.forEach( function ( d, i ) {
+				var o = el( 'option', '', d.label || ( 'Microphone ' + ( i + 1 ) ) );
+				o.value = d.deviceId;
+				box.appendChild( o );
+			} );
+			if ( S.micId ) {
+				box.value = S.micId;
+			}
+			renderAddCamera();
+		} );
+	}
+
+	function renderAddCamera() {
+		var box = $( 'add-cam' );
+		box.textContent = '';
+		var free = S.devices.filter( function ( d ) {
+			return 'videoinput' === d.kind && ! stage.sources[ camId( d.deviceId ) ];
+		} );
+		free.forEach( function ( d, i ) {
+			var o = el( 'option', '', d.label || ( T.camera + ' ' + ( i + 1 ) ) );
+			o.value = d.deviceId;
+			box.appendChild( o );
+		} );
+		if ( ! free.length ) {
+			var none = el( 'option', '', T.noMoreCams );
+			none.value = '';
+			box.appendChild( none );
+		}
+		box.disabled = ! free.length;
+		$( 'add-cam-btn' ).disabled = ! free.length;
+	}
+
+	/* The first camera and microphone, then whatever else this stream was using last time. */
+	function openDevices() {
+		if ( ! navigator.mediaDevices || ! navigator.mediaDevices.getUserMedia ) {
+			banner( 'https', window.isSecureContext ? T.unsupported : T.needHttps, 'error' );
+			return Promise.resolve();
+		}
+		var wanted = saved.sources || [];
+		var first = wanted[ 0 ] || {};
+		var ask = function ( video, audio ) {
+			return navigator.mediaDevices.getUserMedia( {
+				video: video ? videoConstraints( first.deviceId ) : false,
+				audio: audio ? AUDIO_RULES : false
+			} );
+		};
+		return ask( true, true ).catch( function ( err ) {
+			// A saved camera that is gone, or a computer with no camera or no microphone: take what there is.
+			if ( first.deviceId ) {
+				first = {};
+			}
+			return ask( true, true ).catch( function () {
+				return ask( false, true ).catch( function () {
+					return ask( true, false ).catch( function () {
+						throw err;
+					} );
+				} );
+			} );
+		} ).then( function ( stream ) {
+			var video = stream.getVideoTracks();
+			var audio = stream.getAudioTracks();
+			if ( audio.length && mixer ) {
+				S.micId = audio[ 0 ].getSettings().deviceId || '';
+				mixer.setMic( new MediaStream( audio ) );
+			}
+			return refreshDevices().then( function () {
+				if ( video.length ) {
+					var deviceId = video[ 0 ].getSettings().deviceId || '';
+					addCameraStream( new MediaStream( video ), deviceId, first.deviceId === deviceId ? { flip: first.flip, zoom: first.zoom, fit: first.fit } : null );
+				}
+				// The rest one at a time: opening several together can fail on some cameras.
+				return wanted.slice( 1 ).reduce( function ( chain, w ) {
+					return chain.then( function () {
+						return openCamera( w.deviceId, { flip: w.flip, zoom: w.zoom, fit: w.fit } ).catch( function () {} );
+					} );
+				}, Promise.resolve() );
+			} ).then( function () {
+				if ( saved.main && stage.sources[ saved.main ] ) {
+					stage.main = saved.main;
+				}
+				renderSources();
+				renderAddCamera();
+			} );
+		} ).catch( function () {
+			banner( 'camera', T.noCamera, 'error' );
+		} );
+	}
+
+	/* What each camera card and each chip above the stage shows. */
+	function renderSources() {
+		var box = $( 'sources' );
+		var chips = $( 'cut-sources' );
+		var ids = Object.keys( stage.sources );
+		box.textContent = '';
+		chips.textContent = '';
+
+		ids.forEach( function ( id ) {
+			var source = stage.sources[ id ];
+			var isMain = stage.main === id;
+			var inset = stage.layers.filter( function ( l ) {
+				return 'source' === l.type && l.sourceId === id && ! l._gone;
+			} )[ 0 ];
+
+			var chip = el( 'button', 'whdls-chip' + ( isMain ? ' is-on' : '' ), source.label );
+			chip.type = 'button';
+			chip.title = source.label;
+			chip.addEventListener( 'click', function () {
+				makeMain( id );
+			} );
+			chips.appendChild( chip );
+
+			var card = el( 'article', 'whdls-source' + ( isMain ? ' is-main' : '' ) );
+			var thumb = el( 'video' );
+			thumb.muted = true;
+			thumb.playsInline = true;
+			thumb.autoplay = true;
+			thumb.srcObject = source.stream;
+			if ( source.flip ) {
+				thumb.style.transform = 'scaleX(-1)';
+			}
+			var hit = el( 'button', 'whdls-source__thumb' );
+			hit.type = 'button';
+			hit.title = T.makeMain;
+			hit.appendChild( thumb );
+			if ( isMain ) {
+				hit.appendChild( el( 'span', 'whdls-source__on', T.main ) );
+			}
+			hit.addEventListener( 'click', function () {
+				makeMain( id );
+			} );
+			card.appendChild( hit );
+			card.appendChild( el( 'strong', '', source.label ) );
+
+			var row = el( 'div', 'whdls-source__do' );
+			var corner = el( 'button', 'whdls-mini' + ( inset ? ' is-on' : '' ), inset ? T.cornerOff : T.corner );
+			corner.type = 'button';
+			corner.disabled = isMain && ! inset;
+			corner.addEventListener( 'click', function () {
+				if ( inset ) {
+					stage.remove( inset.id );
+				} else {
+					var layer = stage.add( {
+						type: 'source',
+						sourceId: id,
+						x: portrait ? 0.76 : 0.84,
+						y: portrait ? 0.2 : 0.2,
+						w: portrait ? 0.38 : 0.26,
+						shape: 'rounded'
+					} );
+					select( layer.id );
+				}
+				renderSources();
+			} );
+			row.appendChild( corner );
+
+			var flip = el( 'button', 'whdls-mini' + ( source.flip ? ' is-on' : '' ), T.flip );
+			flip.type = 'button';
+			flip.addEventListener( 'click', function () {
+				stage.setSourceProps( id, { flip: ! source.flip } );
+				renderSources();
+			} );
+			row.appendChild( flip );
+
+			if ( 'screen' === source.kind || ids.length > 1 ) {
+				var drop = el( 'button', 'whdls-mini whdls-mini--danger', T.remove );
+				drop.type = 'button';
+				drop.addEventListener( 'click', function () {
+					stopSource( id );
+					renderAddCamera();
+				} );
+				row.appendChild( drop );
+			}
+			card.appendChild( row );
+
+			var zoom = el( 'label', 'whdls-range' );
+			zoom.appendChild( el( 'span', '', T.zoom ) );
+			var range = el( 'input' );
+			range.type = 'range';
+			range.min = 1;
+			range.max = 3;
+			range.step = 0.01;
+			range.value = source.zoom || 1;
+			range.addEventListener( 'input', function () {
+				stage.setSourceProps( id, { zoom: +range.value } );
+			} );
+			zoom.appendChild( range );
+			card.appendChild( zoom );
+
+			var whole = el( 'label', 'whdls-switch' );
+			var check = el( 'input' );
+			check.type = 'checkbox';
+			check.checked = 'contain' === source.fit;
+			check.addEventListener( 'change', function () {
+				stage.setSourceProps( id, { fit: check.checked ? 'contain' : 'cover' } );
+			} );
+			whole.appendChild( check );
+			whole.appendChild( el( 'span' ) );
+			whole.appendChild( document.createTextNode( T.whole ) );
+			card.appendChild( whole );
+
+			box.appendChild( card );
+		} );
+	}
+
+	function makeMain( id ) {
+		stage.setMain( id, S.transition );
+		S.activeScene = '';
+		renderScenes();
+		renderSources();
+		updatePeek();
+	}
+
+	$( 'add-cam-btn' ).addEventListener( 'click', function () {
+		var deviceId = $( 'add-cam' ).value;
+		if ( ! deviceId ) {
+			return;
+		}
+		openCamera( deviceId ).then( function () {
+			renderAddCamera();
+			saveSoon();
+		} ).catch( function () {
+			banner( 'camera', T.camFailed, 'error' );
+		} );
+	} );
+
+	$( 'share' ).addEventListener( 'click', function () {
+		if ( ! navigator.mediaDevices || ! navigator.mediaDevices.getDisplayMedia ) {
+			banner( 'share', T.shareFailed, 'error' );
+			return;
+		}
+		navigator.mediaDevices.getDisplayMedia( { video: { frameRate: 30 }, audio: true } ).then( function ( stream ) {
+			stopSource( 'screen' );
+			stage.addSource( 'screen', makeVideo( stream ), { kind: 'screen', label: T.screen, stream: stream, fit: 'contain' } );
+			if ( mixer ) {
+				mixer.setScreen( stream );
+			}
+			stream.getVideoTracks()[ 0 ].addEventListener( 'ended', function () {
+				stopSource( 'screen' );
+			} );
+			makeMain( 'screen' );
+		} ).catch( function ( err ) {
+			if ( err && 'NotAllowedError' !== err.name ) {
+				banner( 'share', T.shareFailed, 'error' );
+			}
+		} );
+	} );
+
+	$( 'mic-select' ).addEventListener( 'change', function () {
+		var deviceId = this.value;
+		var rules = Object.assign( {}, AUDIO_RULES, { deviceId: { exact: deviceId } } );
+		navigator.mediaDevices.getUserMedia( { audio: rules } ).then( function ( stream ) {
+			S.micId = deviceId;
+			if ( mixer ) {
+				mixer.setMic( stream );
+			}
+			saveSoon();
+		} ).catch( function () {
+			banner( 'camera', T.noCamera, 'error' );
+		} );
+	} );
+
+	/* ─────────────────────────── scenes ─────────────────────────── */
+
+	function renderScenes() {
+		var box = $( 'scenes' );
+		box.textContent = '';
+		S.scenes.forEach( function ( scene, i ) {
+			var chip = el( 'button', 'whdls-chip whdls-chip--scene' + ( S.activeScene === scene.id ? ' is-on' : '' ) );
+			chip.type = 'button';
+			chip.title = scene.name + ( i < 9 ? ' (' + ( i + 1 ) + ')' : '' );
+			chip.appendChild( el( 'span', '', scene.name ) );
+			var x = el( 'i', 'whdls-chip__x', '×' );
+			x.addEventListener( 'click', function ( e ) {
+				e.stopPropagation();
+				if ( window.confirm( T.sceneRemove ) ) {
+					S.scenes.splice( i, 1 );
+					if ( S.activeScene === scene.id ) {
+						S.activeScene = '';
+					}
+					renderScenes();
+					saveSoon();
+				}
+			} );
+			chip.appendChild( x );
+			chip.addEventListener( 'click', function () {
+				applyScene( i );
+			} );
+			chip.addEventListener( 'dblclick', function () {
+				var name = window.prompt( T.sceneRename, scene.name );
+				if ( name ) {
+					scene.name = name.slice( 0, 30 );
+					renderScenes();
+					saveSoon();
+				}
+			} );
+			box.appendChild( chip );
+		} );
+	}
+
+	$( 'scene-save' ).addEventListener( 'click', function () {
+		var id = 's' + Date.now().toString( 36 );
+		S.scenes.push( {
+			id: id,
+			name: fmt( T.sceneName, S.scenes.length + 1 ),
+			stage: stage.toJSON(),
+			main: stage.main
+		} );
+		S.activeScene = id;
+		renderScenes();
+		saveSoon();
+	} );
+
+	function applyScene( i ) {
+		var scene = S.scenes[ i ];
+		if ( ! scene ) {
+			return;
+		}
+		stage.holdFrame( S.transition );
+		stage.load( JSON.parse( JSON.stringify( scene.stage ) ) );
+		if ( scene.main && stage.sources[ scene.main ] ) {
+			stage.main = scene.main;
+		}
+		S.activeScene = scene.id;
+		select( null );
+		syncLooks();
+		renderScenes();
+		renderSources();
+		renderLayers();
+		updatePeek();
+		syncShowing();
+		saveSoon();
+	}
+
+	/* A scene can bring a piece on or take it off: the page and the piece list follow. */
+	function syncShowing() {
+		var layer = productLayer();
+		S.showing = layer ? layer.productId : 0;
+		renderPieces();
+		postShowing();
+	}
+
+	/* ─────────────────────────── mute and cover ─────────────────────────── */
+
+	function setMuted( on, byCover ) {
+		S.muted = !! on;
+		if ( ! byCover ) {
+			S.coverMuted = false;
+		}
+		if ( mixer ) {
+			mixer.setMuted( S.muted );
+		}
+		var btn = $( 'mute' );
+		btn.classList.toggle( 'is-on', S.muted );
+		btn.setAttribute( 'aria-pressed', S.muted ? 'true' : 'false' );
+		$( 'mute-label' ).textContent = S.muted ? T.unmute : T.mute;
+		root.classList.toggle( 'is-muted', S.muted );
+		saveSoon();
+	}
+
+	function updatePeek() {
+		var peek = $( 'peek' );
+		var source = stage.sources[ stage.main ];
+		peek.hidden = ! stage.cover || ! source;
+		var video = $( 'peek-video' );
+		if ( stage.cover && source && video.srcObject !== source.stream ) {
+			video.srcObject = source.stream;
+			video.style.transform = source.flip ? 'scaleX(-1)' : '';
+		}
+		if ( ! stage.cover && video.srcObject ) {
+			video.srcObject = null;
+		}
+	}
+
+	function setCover( on ) {
+		on = !! on;
+		stage.setCover( on, $( 'cover-line' ).value );
+		var btn = $( 'cover' );
+		btn.classList.toggle( 'is-on', on );
+		btn.setAttribute( 'aria-pressed', on ? 'true' : 'false' );
+		$( 'cover-label' ).textContent = on ? T.uncover : T.cover;
+		root.classList.toggle( 'is-covered', on );
+
+		if ( on ) {
+			if ( $( 'cover-mute' ).checked && ! S.muted ) {
+				S.coverMuted = true;
+				setMuted( true, true );
+			}
+			select( null );
+		} else if ( S.coverMuted ) {
+			S.coverMuted = false;
+			setMuted( false, true );
+		}
+		updatePeek();
+		saveSoon();
+		if ( S.onAir ) {
+			api( 'POST', D.id + '/cover', { covered: on } ).catch( function () {} );
+		}
+	}
+
+	$( 'cover' ).addEventListener( 'click', function () {
+		setCover( ! stage.cover );
+	} );
+	$( 'cover-line' ).addEventListener( 'change', function () {
+		stage.setCover( stage.cover, this.value );
+	} );
+	$( 'mute' ).addEventListener( 'click', function () {
+		setMuted( ! S.muted );
+	} );
+
+	/* ─────────────────────────── selecting things on stage ─────────────────────────── */
+
+	function select( id ) {
+		S.selected = id;
+		var layer = id ? stage.get( id ) : null;
+		var bar = $( 'selbar' );
+		bar.hidden = ! layer;
+		if ( ! layer ) {
+			$( 'handles' ).textContent = '';
+			renderLayers();
+			return;
+		}
+		$( 'sel-name' ).textContent = T.typeLayer[ layer.type ] || T.camera;
+		$( 'sel-size' ).value = layer.w;
+		$( 'sel-size' ).disabled = 'ticker' === layer.type;
+		$( 'sel-opacity' ).value = layer.opacity;
+		$( 'sel-rot' ).value = layer.rot || 0;
+		$( 'sel-rot' ).disabled = 'ticker' === layer.type;
+		$( 'sel-anim' ).value = layer.anim || 'none';
+		$( 'sel-anim' ).disabled = 'ticker' === layer.type;
+		$( 'sel-shape-box' ).hidden = 'source' !== layer.type;
+		$( 'sel-shape' ).value = layer.shape || 'rounded';
+
+		var field = { text: 'text', ticker: 'text', lower: 'title', countdown: 'label' }[ layer.type ];
+		var input = $( 'sel-text' );
+		input.hidden = ! field;
+		input.value = field ? layer[ field ] || '' : '';
+		renderLayers();
+	}
+
+	function drawHandles() {
+		var layer = S.selected ? stage.get( S.selected ) : null;
+		var box = $( 'handles' );
+		if ( ! layer || ! layer._box || layer._gone || stage.cover || stage.hideGraphics ) {
+			if ( box.firstChild ) {
+				box.textContent = '';
+			}
+			return;
+		}
+		var sel = box.firstChild;
+		if ( ! sel ) {
+			sel = el( 'div', 'whdls-sel' );
+			[ 'nw', 'ne', 'sw', 'se' ].forEach( function ( corner ) {
+				var knob = el( 'i', 'whdls-sel__knob whdls-sel__knob--' + corner );
+				knob.setAttribute( 'data-handle', corner );
+				sel.appendChild( knob );
+			} );
+			box.appendChild( sel );
+		}
+		var b = layer._box;
+		sel.style.left = ( ( b.cx - b.w / 2 ) / stage.W * 100 ) + '%';
+		sel.style.top = ( ( b.cy - b.h / 2 ) / stage.H * 100 ) + '%';
+		sel.style.width = ( b.w / stage.W * 100 ) + '%';
+		sel.style.height = ( b.h / stage.H * 100 ) + '%';
+		sel.classList.toggle( 'is-band', 'ticker' === layer.type );
+	}
+
+	function pointAt( e ) {
+		var r = canvas.getBoundingClientRect();
+		return { x: ( e.clientX - r.left ) / r.width, y: ( e.clientY - r.top ) / r.height };
+	}
+
+	var frame = $( 'frame' );
+	frame.addEventListener( 'pointerdown', function ( e ) {
+		if ( stage.cover || 'ended' === S.stage ) {
+			return;
+		}
+		var p = pointAt( e );
+		var handle = e.target.getAttribute && e.target.getAttribute( 'data-handle' );
+		if ( handle && S.selected ) {
+			S.drag = { mode: 'size', id: S.selected };
+			frame.setPointerCapture( e.pointerId );
+			e.preventDefault();
+			return;
+		}
+		var hit = stage.hit( p.x, p.y );
+		select( hit ? hit.id : null );
+		if ( hit ) {
+			S.drag = { mode: 'move', id: hit.id, dx: hit.x - p.x, dy: hit.y - p.y };
+			frame.setPointerCapture( e.pointerId );
+			e.preventDefault();
+		}
+	} );
+	frame.addEventListener( 'pointermove', function ( e ) {
+		if ( ! S.drag ) {
+			return;
+		}
+		var layer = stage.get( S.drag.id );
+		if ( ! layer ) {
+			return;
+		}
+		var p = pointAt( e );
+		if ( 'size' === S.drag.mode ) {
+			if ( 'ticker' !== layer.type ) {
+				layer.w = Math.max( 0.04, Math.min( 1, Math.abs( p.x - layer.x ) * 2 ) );
+				$( 'sel-size' ).value = layer.w;
+			}
+		} else {
+			if ( 'ticker' !== layer.type ) {
+				layer.x = Math.max( 0, Math.min( 1, p.x + S.drag.dx ) );
+			}
+			layer.y = Math.max( 0, Math.min( 1, p.y + S.drag.dy ) );
+		}
+	} );
+	var endDrag = function () {
+		if ( ! S.drag ) {
+			return;
+		}
+		var layer = stage.get( S.drag.id );
+		S.drag = null;
+		S.activeScene = '';
+		renderScenes();
+		saveSoon();
+		if ( layer && 'product' === layer.type ) {
+			postShowing();
+		}
+	};
+	frame.addEventListener( 'pointerup', endDrag );
+	frame.addEventListener( 'pointercancel', endDrag );
+
+	function selProp( id, key, parse ) {
+		$( id ).addEventListener( 'input', function () {
+			if ( ! S.selected ) {
+				return;
+			}
+			var props = {};
+			props[ key ] = parse ? parse( this.value ) : this.value;
+			stage.update( S.selected, props );
+			S.activeScene = '';
+			renderScenes();
+			if ( 'w' === key ) {
+				var layer = stage.get( S.selected );
+				if ( layer && 'product' === layer.type ) {
+					postShowingSoon();
+				}
+			}
+		} );
+	}
+	selProp( 'sel-size', 'w', Number );
+	selProp( 'sel-opacity', 'opacity', Number );
+	selProp( 'sel-rot', 'rot', Number );
+	selProp( 'sel-anim', 'anim' );
+	selProp( 'sel-shape', 'shape' );
+
+	$( 'sel-text' ).addEventListener( 'input', function () {
+		var layer = S.selected ? stage.get( S.selected ) : null;
+		if ( ! layer ) {
+			return;
+		}
+		var field = { text: 'text', ticker: 'text', lower: 'title', countdown: 'label' }[ layer.type ];
+		if ( field ) {
+			var props = {};
+			props[ field ] = this.value;
+			stage.update( layer.id, props );
+		}
+	} );
+	$( 'sel-raise' ).addEventListener( 'click', function () {
+		if ( S.selected ) {
+			stage.raise( S.selected );
+		}
+	} );
+	$( 'sel-remove' ).addEventListener( 'click', function () {
+		removeLayer( S.selected );
+	} );
+
+	var animBox = $( 'sel-anim' );
+	Object.keys( Stage.ANIMS ).forEach( function ( key ) {
+		var o = el( 'option', '', Stage.ANIMS[ key ] );
+		o.value = key;
+		animBox.appendChild( o );
+	} );
+
+	function removeLayer( id ) {
+		var layer = id ? stage.get( id ) : null;
+		if ( ! layer ) {
+			return;
+		}
+		var wasProduct = 'product' === layer.type;
+		stage.remove( id );
+		if ( S.selected === id ) {
+			select( null );
+		}
+		if ( wasProduct ) {
+			S.showing = 0;
+			renderPieces();
+			postShowing();
+		}
+		if ( 'source' === layer.type ) {
+			setTimeout( renderSources, 300 );
+		}
+	}
+
+	/* ─────────────────────────── on stage list ─────────────────────────── */
+
+	function layerName( layer ) {
+		switch ( layer.type ) {
+			case 'text':
+			case 'ticker':
+				return layer.text;
+			case 'lower':
+				return layer.title;
+			case 'product':
+				return layer.name;
+			case 'countdown':
+				return layer.label;
+			case 'source':
+				return stage.sources[ layer.sourceId ] ? stage.sources[ layer.sourceId ].label : T.camera;
+			default:
+				return T.typeLayer.image;
+		}
+	}
+
+	function renderLayers() {
+		var box = $( 'layers' );
+		if ( ! box ) {
+			return;
+		}
+		box.textContent = '';
+		var list = stage.layers.filter( function ( l ) {
+			return ! l._gone;
+		} ).slice().reverse();
+		if ( ! list.length ) {
+			box.appendChild( el( 'li', 'whdls-empty', T.nothingOn ) );
+		}
+		list.forEach( function ( layer ) {
+			var row = el( 'li', 'whdls-layer' + ( S.selected === layer.id ? ' is-on' : '' ) );
+			var pick = el( 'button', 'whdls-layer__name' );
+			pick.type = 'button';
+			pick.appendChild( el( 'small', '', T.typeLayer[ layer.type ] || T.camera ) );
+			pick.appendChild( el( 'span', '', layerName( layer ) ) );
+			pick.addEventListener( 'click', function () {
+				select( layer.id );
+			} );
+			row.appendChild( pick );
+
+			var eye = el( 'button', 'whdls-mini' + ( false === layer.visible ? '' : ' is-on' ), false === layer.visible ? 'Off' : 'On' );
+			eye.type = 'button';
+			eye.addEventListener( 'click', function () {
+				stage.update( layer.id, { visible: false === layer.visible } );
+			} );
+			row.appendChild( eye );
+
+			var x = el( 'button', 'whdls-mini whdls-mini--danger', '×' );
+			x.type = 'button';
+			x.setAttribute( 'aria-label', T.remove );
+			x.addEventListener( 'click', function () {
+				removeLayer( layer.id );
+			} );
+			row.appendChild( x );
+			box.appendChild( row );
+		} );
+	}
+
+	$( 'clear' ).addEventListener( 'click', function () {
+		var hadProduct = !! productLayer();
+		stage.clear();
+		S.rain = '';
+		renderEffects();
+		select( null );
+		if ( hadProduct ) {
+			S.showing = 0;
+			renderPieces();
+			postShowing();
+		}
+	} );
+
+	/* ─────────────────────────── pieces ─────────────────────────── */
+
+	function productLayer() {
+		return stage.layers.filter( function ( l ) {
+			return 'product' === l.type && ! l._gone;
+		} )[ 0 ] || null;
+	}
+
+	var showingTimer = null;
+	function postShowingSoon() {
+		clearTimeout( showingTimer );
+		showingTimer = setTimeout( postShowing, 300 );
+	}
+
+	/* Where the card is, so the page can put a clickable area over it. Waits a frame for the box. */
+	function postShowing() {
+		setTimeout( function () {
+			var layer = productLayer();
+			var rect = layer ? stage.rect( layer.id ) : null;
+			if ( 'ended' !== S.stage ) {
+				api( 'POST', D.id + '/showing', { product: layer ? layer.productId : 0, rect: rect } ).catch( function () {} );
+			}
+		}, 80 );
+	}
+
+	function showPiece( piece ) {
+		var old = productLayer();
+		var props = {
+			type: 'product',
+			productId: piece.id,
+			name: piece.name,
+			price: piece.price,
+			regular: piece.regular,
+			image: piece.image,
+			link: piece.shortUrl,
+			cta: D.cta,
+			kicker: T.nowShowing,
+			x: old ? old.x : ( portrait ? 0.5 : 0.25 ),
+			// Portrait: above the bottom third, where TikTok lays its own comments over the video.
+			y: old ? old.y : ( portrait ? 0.58 : 0.8 ),
+			w: old ? old.w : ( portrait ? 0.86 : 0.44 )
+		};
+		if ( old ) {
+			stage.remove( old.id );
+		}
+		var layer = stage.add( props );
+		S.showing = piece.id;
+		S.activeScene = '';
+		renderScenes();
+		renderPieces();
+		select( layer.id );
+		postShowing();
+	}
+
+	function hidePiece() {
+		var layer = productLayer();
+		if ( layer ) {
+			removeLayer( layer.id ); // also tells the page
+		}
+	}
+
+	function asked( pieceId ) {
+		var n = 0;
+		Object.keys( S.comments ).forEach( function ( id ) {
+			var c = S.comments[ id ];
+			if ( c.product === pieceId && ( 'sent' === c.status || 'queued' === c.status || 'sending' === c.status ) ) {
+				n++;
+			}
+		} );
+		return n;
+	}
+
+	var keywordTimer = null;
+	function savePieces() {
+		clearTimeout( keywordTimer );
+		keywordTimer = setTimeout( function () {
+			api( 'POST', D.id + '/pieces', {
+				pieces: S.pieces.map( function ( p ) {
+					return { id: p.id, keyword: p.keyword || '' };
+				} )
+			} ).then( function ( res ) {
+				if ( res.pieces ) {
+					// Keep the numbers the server gave; keep typing in the keyword box undisturbed.
+					res.pieces.forEach( function ( fresh ) {
+						var mine = S.pieces.filter( function ( p ) {
+							return p.id === fresh.id;
+						} )[ 0 ];
+						if ( mine ) {
+							mine.code = fresh.code;
+						}
+					} );
+				}
+			} ).catch( function ( err ) {
+				banner( 'pieces', err.message );
+			} );
+		}, 500 );
+	}
+
+	function renderPieces() {
+		var box = $( 'pieces' );
+		box.textContent = '';
+		if ( ! S.pieces.length ) {
+			box.appendChild( el( 'li', 'whdls-empty', T.noPieces ) );
+			return;
+		}
+		S.pieces.forEach( function ( piece, i ) {
+			var on = S.showing === piece.id;
+			var row = el( 'li', 'whdls-piece' + ( on ? ' is-on' : '' ) );
+			row.appendChild( el( 'span', 'whdls-piece__n', String( i + 1 ) ) );
+			var img = el( 'img' );
+			img.src = piece.thumb;
+			img.alt = '';
+			row.appendChild( img );
+
+			var mid = el( 'div', 'whdls-piece__mid' );
+			mid.appendChild( el( 'strong', '', piece.name ) );
+			var line = el( 'span', 'whdls-piece__line' );
+			line.appendChild( el( 'b', '', piece.price ) );
+			if ( piece.regular ) {
+				line.appendChild( el( 's', '', piece.regular ) );
+			}
+			if ( ! piece.stock ) {
+				line.appendChild( el( 'em', '', T.soldOut ) );
+			}
+			var n = asked( piece.id );
+			if ( n ) {
+				line.appendChild( el( 'em', 'is-asked', n + ' ' + T.requests ) );
+			}
+			mid.appendChild( line );
+			var key = el( 'input', 'whdls-piece__key' );
+			key.type = 'text';
+			key.placeholder = T.keyword;
+			key.value = piece.keyword || '';
+			key.setAttribute( 'aria-label', T.keyword );
+			key.addEventListener( 'input', function () {
+				piece.keyword = key.value;
+				savePieces();
+			} );
+			mid.appendChild( key );
+			row.appendChild( mid );
+
+			var acts = el( 'div', 'whdls-piece__do' );
+			var show = el( 'button', 'whdls-show', on ? T.hide : T.show );
+			show.type = 'button';
+			show.addEventListener( 'click', function () {
+				if ( on ) {
+					hidePiece();
+				} else {
+					showPiece( piece );
+				}
+			} );
+			acts.appendChild( show );
+			var float = el( 'button', 'whdls-mini', T.float );
+			float.type = 'button';
+			float.addEventListener( 'click', function () {
+				stage.floatImage( piece.image );
+			} );
+			acts.appendChild( float );
+			var drop = el( 'button', 'whdls-mini whdls-mini--danger', T.remove );
+			drop.type = 'button';
+			drop.addEventListener( 'click', function () {
+				if ( on ) {
+					hidePiece();
+				}
+				S.pieces.splice( i, 1 );
+				renderPieces();
+				savePieces();
+			} );
+			acts.appendChild( drop );
+			row.appendChild( acts );
+			box.appendChild( row );
+		} );
+	}
+
+	var searchTimer = null;
+	$( 'search' ).addEventListener( 'input', function () {
+		var q = this.value.trim();
+		clearTimeout( searchTimer );
+		searchTimer = setTimeout( function () {
+			runSearch( q );
+		}, 220 );
+	} );
+	$( 'search' ).addEventListener( 'focus', function () {
+		runSearch( this.value.trim() );
+	} );
+	document.addEventListener( 'click', function ( e ) {
+		if ( ! e.target.closest || ! e.target.closest( '.whdls-search' ) ) {
+			$( 'results' ).hidden = true;
+		}
+	} );
+
+	function runSearch( q ) {
+		api( 'GET', 'products?q=' + encodeURIComponent( q ) ).then( function ( res ) {
+			var box = $( 'results' );
+			box.textContent = '';
+			( res.items || [] ).forEach( function ( item ) {
+				var row = el( 'button', 'whdls-result' );
+				row.type = 'button';
+				var img = el( 'img' );
+				img.src = item.thumb;
+				img.alt = '';
+				row.appendChild( img );
+				var words = el( 'span' );
+				words.appendChild( el( 'strong', '', item.name ) );
+				words.appendChild( el( 'small', '', item.price ) );
+				row.appendChild( words );
+				row.addEventListener( 'click', function () {
+					$( 'results' ).hidden = true;
+					$( 'search' ).value = '';
+					if ( ! S.pieces.some( function ( p ) {
+						return p.id === item.id;
+					} ) ) {
+						S.pieces.push( item );
+						renderPieces();
+						savePieces();
+					}
+				} );
+				box.appendChild( row );
+			} );
+			box.hidden = ! ( res.items || [] ).length;
+		} ).catch( function () {} );
+	}
+
+	/* ─────────────────────────── media library ─────────────────────────── */
+
+	function chooseMedia( opts, done ) {
+		if ( ! window.wp || ! window.wp.media ) {
+			return;
+		}
+		var frameMedia = window.wp.media( {
+			title: opts.title,
+			library: { type: opts.type },
+			multiple: !! opts.multiple,
+			button: { text: opts.button }
+		} );
+		frameMedia.on( 'select', function () {
+			done( frameMedia.state().get( 'selection' ).toJSON() );
+		} );
+		frameMedia.open();
+		// Straight to what is already there: mid-stream is not the moment for the upload tab.
+		if ( frameMedia.content && frameMedia.content.mode ) {
+			frameMedia.content.mode( 'browse' );
+		}
+	}
+
+	/* ─────────────────────────── effects ─────────────────────────── */
+
+	function renderEffects() {
+		var box = $( 'effects' );
+		box.textContent = '';
+		Object.keys( Stage.EFFECTS ).forEach( function ( key ) {
+			var fx = Stage.EFFECTS[ key ];
+			var tile = el( 'button', 'whdls-tile' + ( S.rain === key ? ' is-on' : '' ) );
+			tile.type = 'button';
+			tile.appendChild( el( 'span', 'whdls-tile__icon', fx.icon ) );
+			tile.appendChild( el( 'span', 'whdls-tile__label', fx.label ) );
+			tile.addEventListener( 'click', function () {
+				if ( 'rain' === S.effectMode ) {
+					S.rain = S.rain === key ? '' : key;
+					stage.setRain( S.rain || null );
+					renderEffects();
+				} else {
+					stage.burst( key );
+				}
+			} );
+			box.appendChild( tile );
+		} );
+		renderFloats();
+	}
+
+	function renderFloats() {
+		var box = $( 'float-list' );
+		box.textContent = '';
+		S.floats.forEach( function ( url, i ) {
+			var key = 'img:' + url;
+			var tile = el( 'button', 'whdls-thumb' + ( S.rain === key ? ' is-on' : '' ) );
+			tile.type = 'button';
+			var img = el( 'img' );
+			img.src = url;
+			img.alt = '';
+			tile.appendChild( img );
+			var x = el( 'i', 'whdls-thumb__x', '×' );
+			x.addEventListener( 'click', function ( e ) {
+				e.stopPropagation();
+				if ( S.rain === key ) {
+					S.rain = '';
+					stage.setRain( null );
+				}
+				S.floats.splice( i, 1 );
+				renderFloats();
+				saveSoon();
+			} );
+			tile.appendChild( x );
+			tile.addEventListener( 'click', function () {
+				if ( 'rain' === S.effectMode ) {
+					S.rain = S.rain === key ? '' : key;
+					stage.setRain( S.rain ? key : null, S.rain ? url : '' );
+					renderFloats();
+				} else {
+					stage.floatImage( url );
+				}
+			} );
+			box.appendChild( tile );
+		} );
+	}
+
+	$( 'effect-mode' ).addEventListener( 'click', function ( e ) {
+		var btn = e.target.closest( 'button' );
+		if ( ! btn ) {
+			return;
+		}
+		S.effectMode = btn.getAttribute( 'data-mode' );
+		this.querySelectorAll( 'button' ).forEach( function ( b ) {
+			b.classList.toggle( 'is-on', b === btn );
+		} );
+	} );
+
+	$( 'float-pick' ).addEventListener( 'click', function () {
+		chooseMedia( { title: T.pickImage, type: 'image', button: T.useImage }, function ( files ) {
+			if ( files[ 0 ] ) {
+				var url = sizedUrl( files[ 0 ] );
+				if ( S.floats.indexOf( url ) < 0 ) {
+					S.floats.push( url );
+				}
+				renderFloats();
+				saveSoon();
+				stage.floatImage( url );
+			}
+		} );
+	} );
+
+	/* No need to load a 4000px file to draw it at 300. */
+	function sizedUrl( file ) {
+		var sizes = file.sizes || {};
+		return ( sizes.large || sizes.medium_large || sizes.full || file ).url;
+	}
+
+	/* ─────────────────────────── pictures ─────────────────────────── */
+
+	function addImage( url ) {
+		var layer = stage.add( { type: 'image', src: url, x: 0.5, y: 0.5, w: portrait ? 0.45 : 0.24, anim: 'none' } );
+		select( layer.id );
+	}
+
+	function renderImages() {
+		var box = $( 'image-list' );
+		box.textContent = '';
+		S.library.forEach( function ( url, i ) {
+			var tile = el( 'button', 'whdls-thumb' );
+			tile.type = 'button';
+			var img = el( 'img' );
+			img.src = url;
+			img.alt = '';
+			tile.appendChild( img );
+			var x = el( 'i', 'whdls-thumb__x', '×' );
+			x.addEventListener( 'click', function ( e ) {
+				e.stopPropagation();
+				S.library.splice( i, 1 );
+				renderImages();
+				saveSoon();
+			} );
+			tile.appendChild( x );
+			tile.addEventListener( 'click', function () {
+				addImage( url );
+			} );
+			box.appendChild( tile );
+		} );
+	}
+
+	$( 'image-pick' ).addEventListener( 'click', function () {
+		chooseMedia( { title: T.pickImage, type: 'image', button: T.useImage }, function ( files ) {
+			if ( files[ 0 ] ) {
+				var url = sizedUrl( files[ 0 ] );
+				if ( S.library.indexOf( url ) < 0 ) {
+					S.library.push( url );
+				}
+				renderImages();
+				addImage( url );
+			}
+		} );
+	} );
+
+	if ( D.logo ) {
+		$( 'logo-add' ).hidden = false;
+		$( 'logo-add' ).addEventListener( 'click', function () {
+			var layer = stage.add( { type: 'image', src: D.logo, x: portrait ? 0.14 : 0.08, y: portrait ? 0.07 : 0.11, w: portrait ? 0.18 : 0.1, opacity: 0.9 } );
+			select( layer.id );
+		} );
+	}
+
+	/* ─────────────────────────── text ─────────────────────────── */
+
+	var TEXT_STYLES = {
+		ribbon: 'Ribbon',
+		serif: 'Serif',
+		tag: 'Tag',
+		dark: 'Dark',
+		neon: 'Neon',
+		burst: 'Burst'
+	};
+	var textStyle = 'ribbon';
+
+	var TEXT_PRESETS = [
+		{ text: 'Flash sale', style: 'ribbon' },
+		{ text: 'Just dropped', style: 'serif' },
+		{ text: 'Last few left', style: 'dark' },
+		{ text: 'New in', style: 'tag' },
+		{ text: 'SALE', style: 'burst' },
+		{ text: 'Comment MINE', style: 'neon' },
+		{ text: 'Link in comments', style: 'ribbon' },
+		{ text: 'Back in stock', style: 'tag' }
+	];
+
+	function addText( text, style ) {
+		var layer = stage.add( {
+			type: 'text',
+			text: text,
+			style: style,
+			x: 0.5,
+			y: portrait ? 0.14 : 0.16,
+			w: 'burst' === style ? ( portrait ? 0.4 : 0.2 ) : ( portrait ? 0.74 : 0.4 ),
+			anim: 'burst' === style ? 'pulse' : 'none'
+		} );
+		select( layer.id );
+	}
+
+	function renderTextTools() {
+		var presets = $( 'text-presets' );
+		TEXT_PRESETS.forEach( function ( preset ) {
+			var btn = el( 'button', 'whdls-preset whdls-preset--' + preset.style, preset.text );
+			btn.type = 'button';
+			btn.addEventListener( 'click', function () {
+				addText( preset.text, preset.style );
+			} );
+			presets.appendChild( btn );
+		} );
+		var styles = $( 'text-styles' );
+		Object.keys( TEXT_STYLES ).forEach( function ( key ) {
+			var btn = el( 'button', 'whdls-mini' + ( key === textStyle ? ' is-on' : '' ), TEXT_STYLES[ key ] );
+			btn.type = 'button';
+			btn.addEventListener( 'click', function () {
+				textStyle = key;
+				styles.querySelectorAll( 'button' ).forEach( function ( b ) {
+					b.classList.toggle( 'is-on', b === btn );
+				} );
+			} );
+			styles.appendChild( btn );
+		} );
+	}
+
+	$( 'text-add' ).addEventListener( 'click', function () {
+		var text = $( 'text-input' ).value.trim();
+		if ( text ) {
+			addText( text, textStyle );
+			$( 'text-input' ).value = '';
+		}
+	} );
+	$( 'lower-add' ).addEventListener( 'click', function () {
+		var title = $( 'lower-title' ).value.trim();
+		if ( title ) {
+			var layer = stage.add( { type: 'lower', title: title, subtitle: $( 'lower-sub' ).value.trim(), x: portrait ? 0.5 : 0.3, y: portrait ? 0.68 : 0.84, w: portrait ? 0.9 : 0.5 } );
+			select( layer.id );
+		}
+	} );
+	$( 'ticker-add' ).addEventListener( 'click', function () {
+		var input = $( 'ticker-text' );
+		var text = input.value.trim() || input.placeholder;
+		var layer = stage.add( { type: 'ticker', text: text, x: 0.5, y: 0.955 } );
+		select( layer.id );
+	} );
+	$( 'count-add' ).addEventListener( 'click', function () {
+		var minutes = Math.max( 1, Math.min( 180, +$( 'count-min' ).value || 5 ) );
+		var layer = stage.add( {
+			type: 'countdown',
+			label: $( 'count-label' ).value.trim() || T.endsIn,
+			endsAt: Date.now() + minutes * 60000,
+			x: portrait ? 0.76 : 0.86,
+			y: portrait ? 0.32 : 0.16,
+			w: portrait ? 0.4 : 0.22
+		} );
+		select( layer.id );
+	} );
+
+	/* ─────────────────────────── looks ─────────────────────────── */
+
+	function syncLooks() {
+		document.querySelectorAll( '#whdls-looks .whdls-tile' ).forEach( function ( t ) {
+			t.classList.toggle( 'is-on', t.getAttribute( 'data-key' ) === stage.look );
+		} );
+		document.querySelectorAll( '#whdls-frames .whdls-tile' ).forEach( function ( t ) {
+			t.classList.toggle( 'is-on', t.getAttribute( 'data-key' ) === stage.frame );
+		} );
+		$( 'brightness' ).value = stage.brightness;
+	}
+
+	function renderLooks() {
+		var looks = $( 'looks' );
+		Object.keys( Stage.LOOKS ).forEach( function ( key ) {
+			var tile = el( 'button', 'whdls-tile', Stage.LOOKS[ key ].label );
+			tile.type = 'button';
+			tile.setAttribute( 'data-key', key );
+			tile.addEventListener( 'click', function () {
+				stage.setLook( key );
+				syncLooks();
+			} );
+			looks.appendChild( tile );
+		} );
+		var frames = $( 'frames' );
+		Object.keys( Stage.FRAMES ).forEach( function ( key ) {
+			var tile = el( 'button', 'whdls-tile', Stage.FRAMES[ key ].label );
+			tile.type = 'button';
+			tile.setAttribute( 'data-key', key );
+			tile.addEventListener( 'click', function () {
+				stage.setFrame( key );
+				syncLooks();
+			} );
+			frames.appendChild( tile );
+		} );
+		syncLooks();
+		if ( ! stage.canFilter ) {
+			looks.closest( '.whdls-pane' ).querySelector( 'h3' ).hidden = true;
+			looks.hidden = true;
+		}
+	}
+	$( 'brightness' ).addEventListener( 'input', function () {
+		stage.setBrightness( +this.value );
+	} );
+	$( 'hide' ).addEventListener( 'change', function () {
+		stage.hideGraphics = this.checked;
+	} );
+
+	/* ─────────────────────────── sound ─────────────────────────── */
+
+	function renderMusic() {
+		var box = $( 'music-list' );
+		box.textContent = '';
+		if ( ! S.music.length ) {
+			box.appendChild( el( 'li', 'whdls-empty', T.noTracks ) );
+		}
+		if ( mixer ) {
+			mixer.setPlaylist( S.music );
+		}
+		S.music.forEach( function ( track, i ) {
+			var playing = mixer && mixer.index === i && ! mixer.audio.paused;
+			var row = el( 'li', 'whdls-track' + ( playing ? ' is-on' : '' ) );
+			var name = el( 'button', 'whdls-track__name', track.title );
+			name.type = 'button';
+			name.addEventListener( 'click', function () {
+				if ( mixer ) {
+					mixer.playIndex( i );
+				}
+			} );
+			row.appendChild( name );
+			var x = el( 'button', 'whdls-mini whdls-mini--danger', '×' );
+			x.type = 'button';
+			x.setAttribute( 'aria-label', T.remove );
+			x.addEventListener( 'click', function () {
+				if ( mixer && mixer.index === i ) {
+					mixer.stop();
+				}
+				S.music.splice( i, 1 );
+				renderMusic();
+				saveSoon();
+			} );
+			row.appendChild( x );
+			box.appendChild( row );
+		} );
+		var now = mixer && S.music[ mixer.index ] && ! mixer.audio.paused ? S.music[ mixer.index ].title : '';
+		$( 'music-now' ).textContent = now;
+		$( 'music-play' ).classList.toggle( 'is-on', !! now );
+	}
+
+	function renderPads() {
+		var box = $( 'pads' );
+		box.textContent = '';
+		var make = function ( key, icon, label, onRemove ) {
+			var tile = el( 'button', 'whdls-tile' );
+			tile.type = 'button';
+			tile.appendChild( el( 'span', 'whdls-tile__icon', icon ) );
+			tile.appendChild( el( 'span', 'whdls-tile__label', label ) );
+			tile.addEventListener( 'click', function () {
+				if ( mixer ) {
+					mixer.playPad( key );
+				}
+				tile.classList.add( 'is-hit' );
+				setTimeout( function () {
+					tile.classList.remove( 'is-hit' );
+				}, 180 );
+			} );
+			if ( onRemove ) {
+				var x = el( 'i', 'whdls-thumb__x', '×' );
+				x.addEventListener( 'click', function ( e ) {
+					e.stopPropagation();
+					onRemove();
+				} );
+				tile.appendChild( x );
+			}
+			box.appendChild( tile );
+		};
+		Object.keys( Sound.PADS ).forEach( function ( key ) {
+			make( key, Sound.PADS[ key ].icon, Sound.PADS[ key ].label );
+		} );
+		S.ownPads.forEach( function ( pad, i ) {
+			make( pad.url, '🎵', pad.title, function () {
+				S.ownPads.splice( i, 1 );
+				renderPads();
+				saveSoon();
+			} );
+		} );
+	}
+
+	function wireSound() {
+		if ( ! mixer ) {
+			return;
+		}
+		if ( saved.volumes ) {
+			[ 'mic', 'music', 'pads' ].forEach( function ( bus ) {
+				if ( undefined !== saved.volumes[ bus ] ) {
+					mixer.volumes[ bus ] = saved.volumes[ bus ];
+					$( 'vol-' + bus ).value = saved.volumes[ bus ];
+				}
+			} );
+		}
+		if ( undefined !== saved.duck ) {
+			mixer.duck = !! saved.duck;
+			$( 'music-duck' ).checked = mixer.duck;
+		}
+		if ( undefined !== saved.loop ) {
+			mixer.loop = !! saved.loop;
+			$( 'music-loop' ).checked = mixer.loop;
+		}
+		mixer.setMuted( S.muted );
+		mixer.onMusic = renderMusic;
+
+		[ 'mic', 'music', 'pads' ].forEach( function ( bus ) {
+			$( 'vol-' + bus ).addEventListener( 'input', function () {
+				mixer.setVolume( bus, +this.value );
+				saveSoon();
+			} );
+		} );
+		$( 'music-play' ).addEventListener( 'click', function () {
+			mixer.toggle();
+		} );
+		$( 'music-next' ).addEventListener( 'click', function () {
+			mixer.next();
+		} );
+		$( 'music-duck' ).addEventListener( 'change', function () {
+			mixer.duck = this.checked;
+			saveSoon();
+		} );
+		$( 'music-loop' ).addEventListener( 'change', function () {
+			mixer.loop = this.checked;
+			saveSoon();
+		} );
+		$( 'monitor' ).addEventListener( 'change', function () {
+			mixer.wake();
+			mixer.setMonitor( this.checked );
+		} );
+		$( 'music-add' ).addEventListener( 'click', function () {
+			chooseMedia( { title: T.pickAudio, type: 'audio', multiple: true, button: T.useAudio }, function ( files ) {
+				files.forEach( function ( file ) {
+					S.music.push( { url: file.url, title: file.title || file.filename } );
+				} );
+				renderMusic();
+				saveSoon();
+			} );
+		} );
+		$( 'pad-add' ).addEventListener( 'click', function () {
+			chooseMedia( { title: T.pickPad, type: 'audio', button: T.useAudio }, function ( files ) {
+				if ( files[ 0 ] ) {
+					S.ownPads.push( { url: files[ 0 ].url, title: ( files[ 0 ].title || files[ 0 ].filename ).slice( 0, 18 ) } );
+					renderPads();
+					saveSoon();
+				}
+			} );
+		} );
+
+		// Audio only starts after a click somewhere; any click will do.
+		document.addEventListener( 'pointerdown', function () {
+			mixer.wake();
+		} );
+	}
+
+	/* ─────────────────────────── recording ─────────────────────────── */
+
+	function pickRecorderType() {
+		var types = [ 'video/mp4;codecs=avc1,mp4a.40.2', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm' ];
+		for ( var i = 0; i < types.length; i++ ) {
+			if ( window.MediaRecorder && MediaRecorder.isTypeSupported( types[ i ] ) ) {
+				return types[ i ];
+			}
+		}
+		return '';
+	}
+
+	/* A copy on this computer, made from the same canvas and mix the audience gets. */
+	function toggleRecord() {
+		if ( S.recorder ) {
+			S.recorder.stop();
+			return;
+		}
+		var type = pickRecorderType();
+		if ( ! type ) {
+			banner( 'record', T.recordFailed, 'error' );
+			return;
+		}
+		var tracks = [ stage.captureTrack().clone() ];
+		if ( mixer ) {
+			tracks.push( mixer.track.clone() );
+		}
+		var chunks = [];
+		var recorder = new MediaRecorder( new MediaStream( tracks ), { mimeType: type, videoBitsPerSecond: 4000000 } );
+		recorder.ondataavailable = function ( e ) {
+			if ( e.data && e.data.size ) {
+				chunks.push( e.data );
+			}
+		};
+		recorder.onstop = function () {
+			tracks.forEach( function ( t ) {
+				t.stop();
+			} );
+			var ext = 0 === type.indexOf( 'video/mp4' ) ? 'mp4' : 'webm';
+			var url = URL.createObjectURL( new Blob( chunks, { type: type.split( ';' )[ 0 ] } ) );
+			var a = el( 'a' );
+			a.href = url;
+			a.download = 'live-' + D.id + '-' + new Date().toISOString().slice( 0, 16 ).replace( /[:T]/g, '-' ) + '.' + ext;
+			document.body.appendChild( a );
+			a.click();
+			a.remove();
+			setTimeout( function () {
+				URL.revokeObjectURL( url );
+			}, 60000 );
+			S.recorder = null;
+			$( 'record' ).classList.remove( 'is-on' );
+			$( 'record' ).setAttribute( 'aria-pressed', 'false' );
+			$( 'record-label' ).textContent = T.record;
+		};
+		recorder.start( 4000 );
+		S.recorder = recorder;
+		$( 'record' ).classList.add( 'is-on' );
+		$( 'record' ).setAttribute( 'aria-pressed', 'true' );
+		$( 'record-label' ).textContent = T.recording;
+	}
+	$( 'record' ).addEventListener( 'click', toggleRecord );
+
+	/* ─────────────────────────── destinations ─────────────────────────── */
+
+	var ENDPOINTS = { whd_facebook: 'facebook', whd_youtube: 'youtube', whd_tiktok: 'tiktok' };
+
+	function renderDests() {
+		var box = $( 'dests' );
+		box.textContent = '';
+		Object.keys( D.destinations || {} ).forEach( function ( key ) {
+			var dest = D.destinations[ key ];
+			var info = S.dests[ key ] || {};
+			var state = S.destState[ key ] || ( S.onAir && 'local' === info.state ? 'connected' : info.state || 'waiting' );
+			var words = { waiting: T.waiting, ready: T.waiting, local: T.waiting, connecting: T.connecting, connected: T.connected, interrupted: T.interrupted, failed: T.failed, stopped: T.stopped }[ state ] || state;
+			var tag = info.live_url ? 'a' : 'span';
+			var chip = el( tag, 'whdls-dest whdls-dest--' + state );
+			if ( info.live_url ) {
+				chip.href = info.live_url;
+				chip.target = '_blank';
+				chip.rel = 'noopener';
+			}
+			chip.title = info.message || words;
+			chip.appendChild( el( 'i' ) );
+			chip.appendChild( el( 'span', '', dest.label ) );
+			box.appendChild( chip );
+		} );
+	}
+
+	function setAllRtmp( state ) {
+		Object.keys( S.dests ).forEach( function ( key ) {
+			if ( S.dests[ key ].endpoint && 'failed' !== S.destState[ key ] && 'failed' !== S.dests[ key ].state ) {
+				S.destState[ key ] = state;
+			}
+		} );
+		renderDests();
+	}
+
+	/* ─────────────────────────── on air ─────────────────────────── */
+
+	var dailyLoading = null;
+	function loadDaily() {
+		if ( window.Daily || window.DailyIframe ) {
+			return Promise.resolve();
+		}
+		if ( ! dailyLoading ) {
+			dailyLoading = new Promise( function ( resolve, reject ) {
+				var s = el( 'script' );
+				s.src = D.dailyJs;
+				s.crossOrigin = 'anonymous';
+				s.onload = function () {
+					if ( window.Daily || window.DailyIframe ) {
+						resolve();
+					} else {
+						reject( new Error( 'no global' ) );
+					}
+				};
+				s.onerror = function () {
+					dailyLoading = null;
+					reject( new Error( 'blocked' ) );
+				};
+				document.head.appendChild( s );
+			} );
+		}
+		return dailyLoading;
+	}
+
+	function setState( stageName ) {
+		S.stage = stageName;
+		root.setAttribute( 'data-stage', stageName );
+		var state = $( 'state' );
+		state.textContent = S.onAir ? T.onAir : ( 'ended' === stageName ? T.ended : ( 'live' === stageName ? T.offAir : T.preview ) );
+		state.className = 'whdls-state' + ( S.onAir ? ' is-on' : '' );
+		$( 'onair' ).hidden = ! S.onAir;
+		var btn = $( 'golive' );
+		btn.classList.toggle( 'whdls-golive--stop', S.onAir );
+		btn.disabled = 'ended' === stageName;
+		if ( 'ended' === stageName ) {
+			btn.textContent = T.ended;
+		} else if ( S.onAir ) {
+			btn.textContent = T.endLive;
+		} else {
+			btn.textContent = 'live' === stageName ? T.rejoin : T.goLive;
+		}
+	}
+
+	function bindCall( call ) {
+		call.on( 'participant-counts-updated', function ( e ) {
+			var counts = e.participantCounts || {};
+			S.viewers = Math.max( 0, ( counts.hidden || 0 ) + ( counts.present || 1 ) - 1 );
+			$( 'viewers' ).textContent = String( S.viewers );
+		} );
+		call.on( 'live-streaming-started', function () {
+			setAllRtmp( 'connecting' );
+		} );
+		call.on( 'live-streaming-updated', function ( e ) {
+			var key = e.endpoint ? ENDPOINTS[ e.endpoint.endpoint ] : '';
+			if ( key ) {
+				S.destState[ key ] = e.state;
+				renderDests();
+			} else {
+				setAllRtmp( e.state );
+			}
+		} );
+		call.on( 'live-streaming-stopped', function () {
+			if ( ! S.ending ) {
+				setAllRtmp( 'stopped' );
+			}
+		} );
+		call.on( 'live-streaming-error', function ( e ) {
+			var names = e.details && e.details.endpoints ? e.details.endpoints : [];
+			if ( names.length ) {
+				names.forEach( function ( name ) {
+					var key = ENDPOINTS[ name ];
+					if ( key ) {
+						S.destState[ key ] = 'failed';
+						banner( 'rtmp-' + key, fmt( T.destFailed, D.destinations[ key ] ? D.destinations[ key ].label : key, e.errorMsg ), 'error' );
+					}
+				} );
+				renderDests();
+			} else {
+				setAllRtmp( 'failed' );
+				banner( 'rtmp', fmt( T.rtmpFailed, e.errorMsg || '' ), 'error', { label: T.tryAgain, run: startRtmp } );
+			}
+		} );
+		call.on( 'network-connection', function ( e ) {
+			if ( 'interrupted' === e.event ) {
+				banner( 'net', T.lostHost, 'warn' );
+			} else if ( 'connected' === e.event ) {
+				clearBanner( 'net' );
+			}
+		} );
+		call.on( 'network-quality-change', function ( e ) {
+			S.net = e.networkState || '';
+			if ( 'bad' === S.net ) {
+				banner( 'quality', T.netBanner, 'warn' );
+			} else {
+				clearBanner( 'quality' );
+			}
+		} );
+		call.on( 'error', function ( e ) {
+			S.onAir = false;
+			setState( S.stage );
+			banner( 'call', fmt( T.joinFailed, ( e.error && e.error.msg ) || e.errorMsg || '' ), 'error', { label: T.rejoin, run: goLive } );
+		} );
+		call.on( 'left-meeting', function () {
+			if ( ! S.ending && S.onAir ) {
+				S.onAir = false;
+				setState( S.stage );
+				banner( 'call', T.lostHost, 'warn', { label: T.rejoin, run: goLive } );
+			}
+		} );
+	}
+
+	function startRtmp() {
+		clearBanner( 'rtmp' );
+		return api( 'POST', D.id + '/on-air', {} ).then( function ( res ) {
+			if ( res.rtmpError ) {
+				setAllRtmp( 'failed' );
+				banner( 'rtmp', fmt( T.rtmpFailed, res.rtmpError ), 'error', { label: T.tryAgain, run: startRtmp } );
+			}
+			return res;
+		} );
+	}
+
+	function goLive() {
+		if ( ! D.dailyReady ) {
+			banner( 'daily', T.noDaily, 'error', { label: T.settings, href: D.settingsUrl } );
+			return Promise.resolve();
+		}
+		if ( ! canvas.captureStream ) {
+			banner( 'browser', T.unsupported, 'error' );
+			return Promise.resolve();
+		}
+		if ( mixer ) {
+			mixer.wake();
+		}
+		clearBanner( 'call' );
+		var btn = $( 'golive' );
+		btn.disabled = true;
+		btn.textContent = T.going;
+
+		var tiktok = $( 'tiktok-key' ).value.trim();
+
+		return loadDaily().catch( function () {
+			throw new Error( T.dailyLoad );
+		} ).then( function () {
+			return api( 'POST', D.id + '/start', tiktok ? { tiktok_key: tiktok } : {} );
+		} ).then( function ( start ) {
+			S.dests = start.dests || {};
+			renderDests();
+			Object.keys( S.dests ).forEach( function ( key ) {
+				if ( 'failed' === S.dests[ key ].state ) {
+					banner( 'rtmp-' + key, fmt( T.destFailed, D.destinations[ key ] ? D.destinations[ key ].label : key, S.dests[ key ].message ), 'error' );
+				}
+			} );
+
+			var Factory = window.Daily || window.DailyIframe;
+			if ( S.call ) {
+				try {
+					S.call.destroy();
+				} catch ( e ) {}
+			}
+			var call = S.call = Factory.createCallObject( {
+				videoSource: stage.captureTrack(),
+				audioSource: mixer ? mixer.track : false,
+				subscribeToTracksAutomatically: false,
+				// Music goes down this track as well as a voice: speech mode would chew it up.
+				dailyConfig: { micAudioMode: 'music' }
+			} );
+			bindCall( call );
+			return call.join( { url: start.url, token: start.token } );
+		} ).then( function () {
+			// The high layer is what the RTMP copy is made from, so it gets the bandwidth.
+			return S.call.updateSendSettings( {
+				video: {
+					encodings: {
+						low: { maxBitrate: 200000, scaleResolutionDownBy: 4, maxFramerate: 15 },
+						medium: { maxBitrate: 700000, scaleResolutionDownBy: 2, maxFramerate: 24 },
+						high: { maxBitrate: 3000000, scaleResolutionDownBy: 1, maxFramerate: 30 }
+					},
+					maxQuality: 'high'
+				}
+			} ).catch( function () {} );
+		} ).then( startRtmp ).then( function ( res ) {
+			S.onAir = true;
+			S.startedAt = res.startedAt || S.startedAt || Math.floor( Date.now() / 1000 );
+			setState( 'live' );
+			renderDests();
+			holdScreenAwake();
+			postShowing();
+			api( 'POST', D.id + '/cover', { covered: stage.cover } ).catch( function () {} );
+			btn.disabled = false;
+		} ).catch( function ( err ) {
+			btn.disabled = false;
+			setState( S.stage );
+			banner( 'call', fmt( T.joinFailed, err.message || err.errorMsg || '' ), 'error', { label: T.tryAgain, run: goLive } );
+		} );
+	}
+
+	function endLive() {
+		S.ending = true;
+		var btn = $( 'end-confirm' );
+		btn.disabled = true;
+		api( 'POST', D.id + '/end', {} ).then( function ( res ) {
+			S.onAir = false;
+			setState( 'ended' );
+			if ( S.call ) {
+				S.call.leave().catch( function () {} ).then( function () {
+					try {
+						S.call.destroy();
+					} catch ( e ) {}
+				} );
+			}
+			if ( mixer ) {
+				mixer.stop();
+			}
+			if ( S.recorder ) {
+				S.recorder.stop();
+			}
+			releaseScreen();
+			$( 'end' ).close();
+			showWrap( res );
+		} ).catch( function ( err ) {
+			S.ending = false;
+			btn.disabled = false;
+			$( 'end' ).close();
+			banner( 'end', err.message, 'error' );
+		} );
+	}
+
+	function showWrap( res ) {
+		$( 'wrap-title' ).textContent = D.title;
+		var box = $( 'wrapstats' );
+		box.textContent = '';
+		var seconds = res.seconds || 0;
+		var h = Math.floor( seconds / 3600 );
+		var m = Math.round( ( seconds % 3600 ) / 60 );
+		var time = h ? fmt( T.hours, h, m ) : fmt( T.minutes, m );
+		var stats = res.stats || {};
+		[ [ time, T.wrapTime ], [ res.peak || 0, T.wrapPeak ], [ stats.comments || 0, T.wrapComments ], [ stats.leads || 0, T.wrapLeads ], [ stats.links || 0, T.wrapLinks ], [ stats.clicks || 0, T.wrapClicks ] ].forEach( function ( row ) {
+			var cell = el( 'div' );
+			cell.appendChild( el( 'dd', '', String( row[ 0 ] ) ) );
+			cell.appendChild( el( 'dt', '', row[ 1 ] ) );
+			box.appendChild( cell );
+		} );
+		$( 'wrap-csv' ).href = D.leadsCsv;
+		$( 'wrap-csv' ).hidden = ! stats.leads;
+		$( 'wrap' ).showModal();
+	}
+
+	var wakeLock = null;
+	function holdScreenAwake() {
+		if ( navigator.wakeLock && S.onAir ) {
+			navigator.wakeLock.request( 'screen' ).then( function ( lock ) {
+				wakeLock = lock;
+			} ).catch( function () {} );
+		}
+	}
+	function releaseScreen() {
+		if ( wakeLock ) {
+			wakeLock.release().catch( function () {} );
+			wakeLock = null;
+		}
+	}
+	document.addEventListener( 'visibilitychange', function () {
+		if ( 'visible' === document.visibilityState ) {
+			holdScreenAwake();
+		}
+	} );
+	window.addEventListener( 'beforeunload', function ( e ) {
+		if ( S.onAir || S.recorder ) {
+			e.preventDefault();
+			e.returnValue = S.recorder ? T.recordLeave : T.confirmLeave;
+			return e.returnValue;
+		}
+	} );
+
+	/* The top-right button: go live, come back, or end, depending. */
+	$( 'golive' ).addEventListener( 'click', function () {
+		if ( S.onAir ) {
+			$( 'end' ).showModal();
+		} else if ( 'live' === S.stage ) {
+			goLive();
+		} else {
+			openPreflight();
+		}
+	} );
+
+	function openPreflight() {
+		var list = $( 'checklist' );
+		list.textContent = '';
+		Object.keys( D.destinations || {} ).forEach( function ( key ) {
+			var dest = D.destinations[ key ];
+			var row = el( 'li', dest.ready ? 'is-ok' : 'is-bad' );
+			row.appendChild( el( 'strong', '', dest.label ) );
+			if ( dest.note ) {
+				row.appendChild( el( 'span', '', dest.note ) );
+			}
+			list.appendChild( row );
+		} );
+		$( 'tiktok-box' ).hidden = ! D.needsTikTokKey;
+		$( 'start-covered' ).checked = stage.cover;
+		$( 'preflight' ).showModal();
+	}
+
+	$( 'confirm' ).addEventListener( 'click', function () {
+		if ( ! $( 'tiktok-box' ).hidden && ! $( 'tiktok-key' ).value.trim() ) {
+			$( 'tiktok-key' ).focus();
+			return;
+		}
+		if ( $( 'start-covered' ).checked !== stage.cover ) {
+			setCover( $( 'start-covered' ).checked );
+		}
+		$( 'preflight' ).close();
+		goLive();
+	} );
+	$( 'end-confirm' ).addEventListener( 'click', endLive );
+
+	document.querySelectorAll( '.whdls-dialog [data-close]' ).forEach( function ( btn ) {
+		btn.addEventListener( 'click', function () {
+			btn.closest( 'dialog' ).close();
+		} );
+	} );
+
+	/* ─────────────────────────── comments ─────────────────────────── */
+
+	var STATUS_WORDS = {
+		panel: 'statusPanel',
+		dm: 'statusDm',
+		comment: 'statusComment',
+		chat: 'statusChat'
+	};
+
+	function statusOf( c ) {
+		switch ( c.status ) {
+			case 'sent':
+				return { text: T[ STATUS_WORDS[ c.channel ] ] || T.statusPanel, cls: 'is-sent' };
+			case 'queued':
+			case 'sending':
+				return { text: T.statusQueued, cls: 'is-wait' };
+			case 'failed':
+				return { text: T.statusFailed, cls: 'is-bad' };
+			case 'skipped':
+				return { text: c.note || T.statusSkipped, cls: 'is-quiet' };
+			default:
+				return null;
+		}
+	}
+
+	function commentNode( c ) {
+		var node = el( 'li', 'whdls-comment whdls-comment--' + c.source + ( c.hidden ? ' is-hidden' : '' ) );
+		node.setAttribute( 'data-id', c.id );
+		node.setAttribute( 'data-source', c.source );
+		var head = el( 'div', 'whdls-comment__head' );
+		head.appendChild( el( 'span', 'whdls-source-dot', T[ c.source ] || c.source ) );
+		head.appendChild( el( 'strong', '', c.author ) );
+		head.appendChild( el( 'time', '', c.time ) );
+		node.appendChild( head );
+		node.appendChild( el( 'p', '', c.message ) );
+
+		var st = statusOf( c );
+		if ( st ) {
+			var chip = el( 'span', 'whdls-status ' + st.cls, st.text );
+			if ( c.note ) {
+				chip.title = c.note;
+			}
+			node.appendChild( chip );
+		}
+		var acts = el( 'div', 'whdls-comment__do' );
+		if ( 'site' !== c.source && ( D.destinations[ c.source ] || {} ).replies && 'sent' !== c.status ) {
+			var send = el( 'button', 'whdls-mini', T.sendLink );
+			send.type = 'button';
+			send.addEventListener( 'click', function () {
+				if ( ! S.showing ) {
+					banner( 'piece', T.needPiece );
+					return;
+				}
+				api( 'POST', 'comment/' + c.id + '/send', { product: S.showing } ).then( function ( res ) {
+					if ( res.row ) {
+						absorb( res.row );
+					}
+				} ).catch( function ( err ) {
+					banner( 'send', err.message );
+				} );
+			} );
+			acts.appendChild( send );
+		}
+		if ( ! c.hidden ) {
+			var hide = el( 'button', 'whdls-mini', T.hideComment );
+			hide.type = 'button';
+			hide.addEventListener( 'click', function () {
+				api( 'POST', 'comment/' + c.id + '/hide', {} ).then( function () {
+					c.hidden = true;
+					absorb( c );
+				} );
+			} );
+			acts.appendChild( hide );
+			var block = el( 'button', 'whdls-mini whdls-mini--danger', T.block );
+			block.type = 'button';
+			block.addEventListener( 'click', function () {
+				api( 'POST', 'comment/' + c.id + '/block', {} ).then( function () {
+					c.hidden = true;
+					absorb( c );
+				} );
+			} );
+			acts.appendChild( block );
+		}
+		node.appendChild( acts );
+		return node;
+	}
+
+	function absorb( c ) {
+		var feed = $( 'feed' );
+		var old = feed.querySelector( '[data-id="' + c.id + '"]' );
+		S.comments[ c.id ] = c;
+		var node = commentNode( c );
+		node.hidden = 'all' !== S.filter && c.source !== S.filter;
+		if ( old ) {
+			feed.replaceChild( node, old );
+		} else {
+			var stick = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 80;
+			feed.appendChild( node );
+			if ( stick ) {
+				feed.scrollTop = feed.scrollHeight;
+			}
+		}
+	}
+
+	function renderFilter() {
+		var box = $( 'filter' );
+		box.textContent = '';
+		var keys = [ 'all' ].concat( Object.keys( D.destinations || {} ).filter( function ( k ) {
+			return D.destinations[ k ].replies;
+		} ) );
+		if ( keys.length < 3 ) {
+			box.hidden = true;
+			return;
+		}
+		keys.forEach( function ( key ) {
+			var btn = el( 'button', 'whdls-mini' + ( S.filter === key ? ' is-on' : '' ), 'all' === key ? T.allSources : T[ key ] );
+			btn.type = 'button';
+			btn.addEventListener( 'click', function () {
+				S.filter = key;
+				renderFilter();
+				$( 'feed' ).querySelectorAll( '.whdls-comment' ).forEach( function ( n ) {
+					n.hidden = 'all' !== key && n.getAttribute( 'data-source' ) !== key;
+				} );
+			} );
+			box.appendChild( btn );
+		} );
+	}
+
+	function renderLeads( leads ) {
+		var box = $( 'leads' );
+		box.textContent = '';
+		$( 'leads-csv' ).hidden = ! leads.length;
+		if ( ! leads.length ) {
+			box.appendChild( el( 'li', 'whdls-empty', T.noLeads ) );
+			return;
+		}
+		leads.forEach( function ( lead ) {
+			var row = el( 'li', 'whdls-lead' );
+			row.appendChild( el( 'strong', '', lead.name ) );
+			var mail = el( 'a', '', lead.email );
+			mail.href = 'mailto:' + lead.email;
+			row.appendChild( mail );
+			if ( lead.pieces.length ) {
+				row.appendChild( el( 'small', '', lead.pieces.join( ', ' ) ) );
+			}
+			box.appendChild( row );
+		} );
+	}
+
+	/* The heartbeat. On the worker's clock, so a tab in the background keeps answering comments. */
+	function poll() {
+		if ( S.polling ) {
+			return;
+		}
+		S.polling = true;
+		var path = D.id + '/feed?after=' + S.after + '&viewers=' + S.viewers + ( 'leads' === S.side ? '&leads=1' : '' );
+		api( 'GET', path ).then( function ( res ) {
+			clearBanner( 'signedout' );
+			( res.new || [] ).forEach( function ( c ) {
+				absorb( c );
+				S.after = Math.max( S.after, c.id );
+			} );
+			( res.moved || [] ).forEach( absorb );
+			if ( ( res.new || [] ).length || ( res.moved || [] ).length ) {
+				renderPieces();
+			}
+			var stats = res.stats || {};
+			$( 's-comments' ).textContent = stats.comments || 0;
+			$( 's-leads' ).textContent = stats.leads || 0;
+			$( 's-links' ).textContent = stats.links || 0;
+			$( 's-clicks' ).textContent = stats.clicks || 0;
+			Object.keys( res.errors || {} ).forEach( function ( key ) {
+				banner( 'pull-' + key, fmt( T.destFailed, T[ key ] || key, res.errors[ key ] ), 'warn' );
+			} );
+			[ 'facebook', 'youtube' ].forEach( function ( key ) {
+				if ( ! ( res.errors || {} )[ key ] ) {
+					clearBanner( 'pull-' + key );
+				}
+			} );
+			if ( res.leads ) {
+				renderLeads( res.leads );
+			}
+		} ).catch( function ( err ) {
+			if ( 401 === err.status || 403 === err.status ) {
+				banner( 'signedout', T.signedOut, 'warn' );
+			}
+		} ).then( function () {
+			S.polling = false;
+		} );
+	}
+
+	/* ─────────────────────────── screen ─────────────────────────── */
+
+	function pad2( n ) {
+		return ( n < 10 ? '0' : '' ) + n;
+	}
+
+	function updateClock() {
+		if ( ! S.onAir || ! S.startedAt ) {
+			return;
+		}
+		var left = Math.max( 0, Math.floor( Date.now() / 1000 ) - S.startedAt );
+		var h = Math.floor( left / 3600 );
+		$( 'timer' ).textContent = ( h ? h + ':' : '' ) + pad2( Math.floor( left / 60 ) % 60 ) + ':' + pad2( left % 60 );
+	}
+
+	function updateOut() {
+		var net = { good: T.netGood, warning: T.netWarning, bad: T.netBad }[ S.net ] || '';
+		$( 'out' ).textContent = stage.fps + ' fps' + ( net ? ' · ' + net : '' );
+		$( 'out' ).title = stage.W + '×' + stage.H;
+		$( 'out' ).className = 'whdls-out' + ( 'bad' === S.net ? ' is-bad' : '' );
+	}
+
+	function updateMeters() {
+		if ( ! mixer ) {
+			return;
+		}
+		mixer.tick();
+		var mic = mixer.level( 'mic' );
+		$( 'meter' ).style.transform = 'scaleX(' + mic + ')';
+		$( 'vu-mic' ).style.transform = 'scaleX(' + mic + ')';
+		$( 'vu-music' ).style.transform = 'scaleX(' + mixer.level( 'music' ) + ')';
+		$( 'vu-pads' ).style.transform = 'scaleX(' + mixer.level( 'pads' ) + ')';
+	}
+
+	stage.onTick = function () {
+		S.ticks++;
+		if ( 0 === S.ticks % 3 ) {
+			updateMeters();
+			drawHandles();
+		}
+		if ( 0 === S.ticks % 30 ) {
+			updateClock();
+			updateOut();
+		}
+		if ( S.onAir && 0 === S.ticks % 75 ) {
+			poll();
+		}
+	};
+
+	/* Tabs. */
+	document.querySelectorAll( '.whdls-tabs button' ).forEach( function ( btn ) {
+		btn.addEventListener( 'click', function () {
+			var key = btn.getAttribute( 'data-tab' );
+			document.querySelectorAll( '.whdls-tabs button' ).forEach( function ( b ) {
+				b.classList.toggle( 'is-on', b === btn );
+			} );
+			document.querySelectorAll( '.whdls-pane' ).forEach( function ( p ) {
+				p.classList.toggle( 'is-on', p.getAttribute( 'data-pane' ) === key );
+			} );
+			if ( 'cameras' === key ) {
+				refreshDevices().catch( function () {} );
+			}
+		} );
+	} );
+	document.querySelectorAll( '.whdls-sidetabs button' ).forEach( function ( btn ) {
+		btn.addEventListener( 'click', function () {
+			S.side = btn.getAttribute( 'data-side' );
+			document.querySelectorAll( '.whdls-sidetabs button' ).forEach( function ( b ) {
+				b.classList.toggle( 'is-on', b === btn );
+			} );
+			document.querySelectorAll( '.whdls-sideview' ).forEach( function ( v ) {
+				v.classList.toggle( 'is-on', v.getAttribute( 'data-sideview' ) === S.side );
+			} );
+			if ( 'leads' === S.side ) {
+				poll();
+			}
+		} );
+	} );
+
+	$( 'transition' ).addEventListener( 'click', function ( e ) {
+		var btn = e.target.closest( 'button' );
+		if ( ! btn ) {
+			return;
+		}
+		S.transition = +btn.getAttribute( 'data-ms' );
+		this.querySelectorAll( 'button' ).forEach( function ( b ) {
+			b.classList.toggle( 'is-on', b === btn );
+		} );
+		saveSoon();
+	} );
+
+	/*
+	 * C for the cover and M for mute are the two things a host needs without looking. Nothing fires
+	 * while somebody is typing.
+	 */
+	document.addEventListener( 'keydown', function ( e ) {
+		var tag = e.target && e.target.tagName;
+		if ( 'INPUT' === tag || 'TEXTAREA' === tag || 'SELECT' === tag || e.ctrlKey || e.metaKey || e.altKey || document.querySelector( 'dialog[open]' ) ) {
+			return;
+		}
+		var key = e.key.toLowerCase();
+		if ( 'c' === key ) {
+			setCover( ! stage.cover );
+		} else if ( 'm' === key ) {
+			setMuted( ! S.muted );
+		} else if ( /^[1-9]$/.test( key ) ) {
+			applyScene( +key - 1 );
+		} else if ( ( 'delete' === key || 'backspace' === key ) && S.selected ) {
+			e.preventDefault();
+			removeLayer( S.selected );
+		} else if ( 'escape' === key ) {
+			select( null );
+		}
+	} );
+
+	/* ─────────────────────────── start ─────────────────────────── */
+
+	renderDests();
+	renderPieces();
+	renderEffects();
+	renderImages();
+	renderTextTools();
+	renderLooks();
+	renderMusic();
+	renderPads();
+	renderScenes();
+	renderLayers();
+	renderFilter();
+	wireSound();
+	$( 'leads-csv' ).href = D.leadsCsv;
+	$( 'feed' ).setAttribute( 'data-empty', T.noComments );
+
+	document.querySelectorAll( '#whdls-transition button' ).forEach( function ( b ) {
+		b.classList.toggle( 'is-on', +b.getAttribute( 'data-ms' ) === S.transition );
+	} );
+
+	/* A cover or a mute that was on stays on through a reload: the state of the buttons has to agree. */
+	setMuted( S.muted, true );
+	if ( stage.cover ) {
+		$( 'cover' ).classList.add( 'is-on' );
+		$( 'cover' ).setAttribute( 'aria-pressed', 'true' );
+		$( 'cover-label' ).textContent = T.uncover;
+		root.classList.add( 'is-covered' );
+	}
+
+	var productNow = productLayer();
+	S.showing = productNow ? productNow.productId : 0;
+	renderPieces();
+
+	setState( S.stage );
+	updateOut();
+	stage.start();
+
+	if ( 'ended' === S.stage ) {
+		banner( 'ended', T.endedBanner, 'info' );
+		poll();
+	} else {
+		openDevices().then( updatePeek );
+		if ( ! D.dailyReady ) {
+			banner( 'daily', T.noDaily, 'warn', { label: T.settings, href: D.settingsUrl } );
+		} else {
+			loadDaily().catch( function () {
+				banner( 'daily', T.dailyLoad, 'error' );
+			} );
+		}
+		if ( 'live' === S.stage ) {
+			poll();
+		}
+	}
+}() );

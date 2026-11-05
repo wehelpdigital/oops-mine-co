@@ -42,6 +42,7 @@ const DEFAULT_EXCLUDE = [
   "wp-content/uploads/wc-logs/**",        // WooCommerce logs
   "wp-content/uploads/wpcf7_uploads/**",  // Contact Form 7 temporary attachments
   "wp-content/uploads/cache/**",
+  "wp-content/uploads/whd-live/**",       // Live Stream's public state files: each environment writes its own
   "**/*.log", "**/.DS_Store", "**/Thumbs.db", "**/desktop.ini",
 ];
 // PULL exceptions: generated files that are still needed locally because the shared database says they

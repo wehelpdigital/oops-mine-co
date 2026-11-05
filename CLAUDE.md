@@ -12,7 +12,7 @@ places:
 | Path | Role |
 |---|---|
 | `wp-content/themes/moderno-child/` | All site-specific front-end code: the OMC page templates (Home, About), brand CSS/JS, helpers, SEO output. |
-| `wp-content/plugins/whd/` | "WHD" marketing plugin: popups + email designs built in a drag-and-drop block editor, abandoned-cart recovery, newsletter list, tracking scripts. |
+| `wp-content/plugins/whd/` | "WHD" marketing plugin: popups + email designs built in a drag-and-drop block editor, abandoned-cart recovery, newsletter list, tracking scripts, live selling. |
 | `wp-content/plugins/whd-variations/` | "WHD — Variation Tiers": multi-level product variations (Colour → Size → …) built from one grid on the product screen, and one-level-at-a-time picking on the product page. |
 | `.ftp-sync/` | Dev/deploy tooling: an MCP server + CLI for FTPS media sync, DB refresh from live, and the site publish script. Never deployed (dot-folder, hard-blocked). |
 
@@ -506,6 +506,41 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   drop) — not password, verify, failed/cancelled/refunded, on-hold, invoice, note, back-in-stock or the stylist's
   edit. Defaults include it; `add_picks()` put it into designs saved before 1.18.0, once (flag `whd_emails_picks`),
   so deleting the block in the editor sticks. Product photos are all square, which keeps the grid even.
+- **Live Stream** (`includes/class-whd-live*.php`; WHD → Live Stream, connections in WHD → Settings → Live Stream, option
+  `whd_live`, YouTube's connection apart in `whd_live_yt` because the settings sanitiser rebuilds `whd_live` from the form).
+  The host's browser is the studio: `admin/live-stage.js` draws the camera and everything on it (effects, floating pictures,
+  text, product card, picture-in-picture, the cover) onto one canvas on a Web Worker's clock, and that canvas is sent to
+  Daily as the camera, so the site, Facebook, YouTube and TikTok all get the same burned-in picture. `admin/live-sound.js`
+  mixes mic, music and pads in WebAudio into one track, which is why mute is a gain and not `setLocalAudio` (music must
+  survive it). Both tracks stay constant for the whole stream while what feeds them changes. Selection handles and the
+  host's private camera view under the cover are HTML, never in the output. Everything set up is saved as the scene
+  (`_whd_live_scene`), including a cover that is on: a reload must not put a covered camera back on air.
+  Stream = CPT `whd_live`, meta `_whd_live` (stage, destinations, room, secret stream URLs), page `/live/<slug>/` from
+  `templates/live.php` (draws itself; styles and scripts are allow-listed in `WHD_Live::assets()`, popups off). `/live/`
+  redirects to the current or next stream, `/l/<base36 product id>[/<f|y|t|o>]` is the short link: counts a click in
+  `whd_live_clicks`, redirects with UTMs. Going live is `start` (room, platforms ready, owner token) → browser joins →
+  `on-air` (RTMP copy, page opens); both repeatable, and a second `start` reuses the Facebook video and YouTube broadcast.
+  Stream keys go to Daily as named `streaming_endpoints` (`whd_facebook`…), so no browser sees one and Daily's events
+  report by name. Viewers join hidden (`enable_hidden_participants`), no token, `audioSource/videoSource: false`.
+  **No PHP per viewer:** everything a viewer needs is `uploads/whd-live/<id>-<key>.json`, rewritten only on a change and
+  polled with `cache: no-cache` (a 304 from the web server); public, so first names and words only, never an address. The
+  link is not in it: a site comment's REST answer carries the piece and that opens the side panel. Falls back to REST
+  when uploads can't be written. `.ftp-sync` excludes that folder.
+  Comments: table `whd_live_comments`, unique on (stream, source, platform id), so `INSERT IGNORE` is what makes each
+  polled comment act once; a reply is claimed by a conditional UPDATE before sending. `match()`: a piece's keyword or
+  number first ("mine 3", not "size 8"), then a trigger word, then in `any` mode any comment while a piece shows; one
+  piece per person per stream. No cron or webhook: the studio's heartbeat (`feed`, on the worker's clock) pulls Facebook
+  (4 s) and YouTube (10 s, for the 10,000-a-day quota) and sends after its response, because a stream only exists while
+  the studio is open. Facebook: Messenger private reply + a public line, falling back to the link as a comment reply
+  (the normal case until `pages_messaging` has Advanced Access). YouTube: live chat, 200 characters, link never cut.
+  TikTok: stream key only, it has no API for comments, so the card always carries the short link. Name + email on the
+  site: the tick goes through `WHD_Subscribers` (source `live`), else `whd_live_lead` → `WHD_Contacts` as a profile.
+  **Not run against real Daily, Meta or YouTube yet** (no keys): tests stub them. The request shapes come from their docs,
+  and the real daily-js accepted the options and events. Testing: a temporary mu-plugin answering `pre_http_request` for
+  those hosts and logging calls; Chromium with `--use-fake-device-for-media-stream --use-file-for-fake-video-capture=<y4m>`
+  and `--unsafely-treat-insecure-origin-as-secure=http://oopsmine.test` (the camera needs a secure origin, so the studio
+  cannot use a camera at plain http://oopsmine.test otherwise). Chromium's default fake camera gives empty 2×2 frames on
+  this PC, so it needs the file.
 - `WHD_AI::call()` takes `$options['images']` (attachment IDs or paths) and sends them as vision parts for all three
   providers; `WHD_AI::picture_part()` resizes a copy to `VISION_EDGE` first so a phone photo is not sent whole.
 - Admin: menu `WHD`; editor screen `admin.php?page=whd-editor&type=popup|email&id=<id>` (vanilla JS in

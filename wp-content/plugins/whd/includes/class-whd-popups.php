@@ -183,6 +183,9 @@ final class WHD_Popups {
 		if ( ! empty( $_GET['elementor-preview'] ) ) {
 			return;
 		}
+		if ( is_singular( WHD_Live::CPT ) ) {
+			return; // nothing jumps over somebody watching a live stream
+		}
 		$settings_global = WHD_Plugin::settings();
 		$preview         = isset( $_GET['whd_preview'] ) ? sanitize_key( $_GET['whd_preview'] ) : '';
 		if ( ! empty( $settings_global['exclude_admins'] ) && current_user_can( 'manage_options' ) && ! $preview ) {

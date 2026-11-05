@@ -101,6 +101,7 @@ final class WHD_Admin {
 		add_submenu_page( 'whd', __( 'Emails', 'whd' ), __( 'Emails', 'whd' ), $cap, 'whd-emails', [ __CLASS__, 'page_emails' ] );
 		add_submenu_page( 'whd', __( 'Abandoned carts', 'whd' ), __( 'Abandoned carts', 'whd' ), $cap, 'whd-carts', [ __CLASS__, 'page_carts' ] );
 		add_submenu_page( 'whd', __( 'Subscribers', 'whd' ), __( 'Subscribers', 'whd' ), $cap, 'whd-subscribers', [ __CLASS__, 'page_subscribers' ] );
+		WHD_Live_Admin::menu();
 		if ( class_exists( 'WHD_Stock_Alerts' ) ) {
 			add_submenu_page( 'whd', __( 'Stock alerts', 'whd' ), __( 'Stock alerts', 'whd' ), $cap, 'whd-stock-alerts', [ __CLASS__, 'page_stock_alerts' ] );
 		}
@@ -127,6 +128,10 @@ final class WHD_Admin {
 		global $submenu_file;
 		if ( isset( $_GET['page'] ) && 'whd-editor' === $_GET['page'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			$submenu_file = ( isset( $_GET['type'] ) && 'email' === $_GET['type'] ) ? 'whd-emails' : 'whd-popups'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			return 'whd';
+		}
+		if ( isset( $_GET['page'] ) && WHD_Live_Admin::STUDIO === $_GET['page'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$submenu_file = WHD_Live_Admin::PAGE;
 			return 'whd';
 		}
 		return $parent_file;
@@ -261,6 +266,9 @@ final class WHD_Admin {
 		if ( class_exists( 'WHD_Wheel' ) && class_exists( 'WooCommerce' ) ) {
 			self::card( __( 'Spin to win', 'whd' ), sprintf( _n( '%d spin', '%d spins', WHD_Wheel::count(), 'whd' ), WHD_Wheel::count() ), admin_url( 'admin.php?page=' . WHD_Wheel::PAGE ) );
 		}
+		$streams = (array) wp_count_posts( WHD_Live::CPT );
+		$streams = (int) ( $streams['publish'] ?? 0 );
+		self::card( __( 'Live Stream', 'whd' ), WHD_Live::daily_ready() ? sprintf( _n( '%d stream', '%d streams', $streams, 'whd' ), $streams ) : __( 'Needs a Daily API key', 'whd' ), WHD_Live_Admin::url() );
 		self::card( __( 'Integrations', 'whd' ), implode( ' · ', WHD_Integrations::status_lines() ), admin_url( 'admin.php?page=whd-integrations' ) );
 		self::card( __( 'Tracking', 'whd' ), implode( ' · ', array_filter( [ $s['ga4_id'] ? 'GA4' : '', $s['gsc_verification'] ? 'Search Console' : '', $s['fb_pixel_id'] ? 'Meta Pixel' : '', WHD_Capi::enabled() ? 'Conversions API' : '' ] ) ) ?: __( 'Nothing configured yet', 'whd' ), admin_url( 'admin.php?page=whd-scripts' ) );
 		echo '</div></div>';
@@ -591,6 +599,19 @@ final class WHD_Admin {
 	public static function page_settings() {
 		$s = WHD_Plugin::settings();
 		self::header( __( 'Settings', 'whd' ) );
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- which tab
+		$tab = isset( $_GET['tab'] ) && 'live' === $_GET['tab'] ? 'live' : 'general';
+		echo '<nav class="nav-tab-wrapper">';
+		echo '<a class="nav-tab' . ( 'general' === $tab ? ' nav-tab-active' : '' ) . '" href="' . esc_url( admin_url( 'admin.php?page=whd-settings' ) ) . '">' . esc_html__( 'General', 'whd' ) . '</a>';
+		echo '<a class="nav-tab' . ( 'live' === $tab ? ' nav-tab-active' : '' ) . '" href="' . esc_url( WHD_Live_Admin::settings_url() ) . '">' . esc_html__( 'Live Stream', 'whd' ) . '</a>';
+		echo '</nav>';
+		if ( 'live' === $tab ) {
+			WHD_Live_Admin::settings_tab();
+			echo '</div>';
+			return;
+		}
+
 		echo '<form method="post" action="options.php" class="whd-form">';
 		settings_fields( 'whd_settings_group' );
 		echo '<table class="form-table"><tbody>';

@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: WHD — Popups, Emails & Tracking
- * Description: Marketing toolkit for Oops, Mine Co.: exit-intent, welcome and spin-to-win popups with a drag-and-drop editor and cookie-based countdowns, drop reminders, a "just got mine" story card after checkout, a drag-and-drop email builder for every WooCommerce trigger (including abandoned-cart recovery), a newsletter list with phone capture, integrations that push subscribers to Mailchimp, Klaviyo or a webhook and send SMS through Twilio, a tracking-scripts module (GA4, Search Console, Meta Pixel and Conversions API), size charts, product stories, and an AI copywriter that writes against your own brief, rules and keyword list.
- * Version:     1.19.1
+ * Description: Marketing toolkit for Oops, Mine Co.: exit-intent, welcome and spin-to-win popups with a drag-and-drop editor and cookie-based countdowns, drop reminders, a "just got mine" story card after checkout, a drag-and-drop email builder for every WooCommerce trigger (including abandoned-cart recovery), a newsletter list with phone capture, integrations that push subscribers to Mailchimp, Klaviyo or a webhook and send SMS through Twilio, a tracking-scripts module (GA4, Search Console, Meta Pixel and Conversions API), live selling from the browser to the site, Facebook, YouTube and TikTok (cameras, scenes, effects, music, product cards, and a link for whoever comments), size charts, product stories, and an AI copywriter that writes against your own brief, rules and keyword list.
+ * Version:     1.20.0
  * Author:      WeHelpDigital - John Tugare and Team
  * Text Domain: whd
  * Requires at least: 6.4
@@ -11,7 +11,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'WHD_VERSION', '1.19.1' );
+define( 'WHD_VERSION', '1.20.0' );
 define( 'WHD_FILE', __FILE__ );
 define( 'WHD_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WHD_URL', plugin_dir_url( __FILE__ ) );
@@ -34,6 +34,11 @@ require_once WHD_DIR . 'includes/class-whd-stylist.php';
 require_once WHD_DIR . 'includes/class-whd-wheel.php';
 require_once WHD_DIR . 'includes/class-whd-reminders.php';
 require_once WHD_DIR . 'includes/class-whd-share-card.php';
+require_once WHD_DIR . 'includes/class-whd-live.php';
+require_once WHD_DIR . 'includes/class-whd-live-channels.php';
+require_once WHD_DIR . 'includes/class-whd-live-comments.php';
+require_once WHD_DIR . 'includes/class-whd-live-rest.php';
+require_once WHD_DIR . 'includes/class-whd-live-admin.php';
 require_once WHD_DIR . 'includes/class-whd-ai.php';
 require_once WHD_DIR . 'includes/class-whd-ai-keywords.php';
 require_once WHD_DIR . 'includes/class-whd-ai-images.php';
@@ -86,6 +91,9 @@ final class WHD_Plugin {
 		WHD_Product_Story::init();
 		WHD_Story_Comments::init();
 		WHD_Reminders::init();
+		WHD_Live::init();
+		WHD_Live_Rest::init();
+		WHD_Live_Admin::init();
 		if ( class_exists( 'WooCommerce' ) ) {
 			WHD_Stock_Alerts::init();
 			WHD_Stylist::init();
@@ -198,6 +206,7 @@ final class WHD_Plugin {
 		}
 		WHD_Wheel::install();
 		WHD_Reminders::install();
+		WHD_Live::install();
 		if ( ! wp_next_scheduled( WHD_Reminders::CRON ) ) {
 			wp_schedule_event( time() + 420, 'whd_15min', WHD_Reminders::CRON );
 		}

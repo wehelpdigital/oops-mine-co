@@ -51,6 +51,9 @@ final class WHD_Contacts {
 		// A review on a product, or a comment under a story.
 		add_action( 'comment_post', [ __CLASS__, 'on_comment' ], 10, 3 );
 
+		// A name and an address left to comment on a live stream, without ticking the box.
+		add_action( 'whd_live_lead', [ __CLASS__, 'on_live_comment' ], 10, 4 );
+
 		// The tick box itself.
 		add_filter( 'woocommerce_checkout_fields', [ __CLASS__, 'checkout_field' ] );
 		add_action( 'woocommerce_checkout_create_order', [ __CLASS__, 'save_optin' ], 10, 2 );
@@ -143,6 +146,21 @@ final class WHD_Contacts {
 				( $review ? 'Last Review Of' : 'Last Comment On' ) => $about,
 				'Last Said Something' => current_time( 'c' ),
 				'Accepts Marketing'   => WHD_Integrations::list_everyone(),
+			],
+		] );
+	}
+
+	/** Somebody who commented on a live stream on this site. */
+	public static function on_live_comment( $email, $name, $stream_id, $product_id = 0 ) {
+		self::hand_over( [
+			'email'      => (string) $email,
+			'first_name' => (string) $name,
+			'source'     => 'live',
+			'properties' => [
+				'Last Live Stream'  => html_entity_decode( (string) get_the_title( (int) $stream_id ), ENT_QUOTES, 'UTF-8' ),
+				'Asked About'       => $product_id ? html_entity_decode( (string) get_the_title( (int) $product_id ), ENT_QUOTES, 'UTF-8' ) : '',
+				'Last Commented'    => current_time( 'c' ),
+				'Accepts Marketing' => WHD_Integrations::list_everyone(),
 			],
 		] );
 	}
