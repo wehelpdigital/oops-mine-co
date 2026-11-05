@@ -145,6 +145,7 @@ final class WHD_Live_Admin {
 			'dailyJs'   => WHD_Live::DAILY_JS,
 			'pieces'    => WHD_Live::pieces( $id ),
 			'sounds'    => self::sound_library(),
+			'stickers'  => self::sticker_library(),
 			'scene'     => is_array( $scene ) ? $scene : null,
 			'showing'   => is_array( $showing ) ? (int) ( $showing['id'] ?? 0 ) : 0,
 			// With nowhere that can answer a comment, the card asks for nothing and shows the link.
@@ -171,6 +172,19 @@ final class WHD_Live_Admin {
 				unset( $item['file'], $item['source'], $item['license'] );
 				$out[ $kind ][] = $item;
 			}
+		}
+		return $out;
+	}
+
+	/** The ready-made moving stickers, listed in stickers.json. */
+	private static function sticker_library(): array {
+		$file = WHD_DIR . 'assets/live-stickers/stickers.json';
+		$data = file_exists( $file ) ? json_decode( (string) file_get_contents( $file ), true ) : null; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- the plugin's own file
+		$out  = [];
+		foreach ( (array) $data as $item ) {
+			$item['url'] = WHD_URL . 'assets/live-stickers/' . $item['file'];
+			unset( $item['file'], $item['source'] );
+			$out[] = $item;
 		}
 		return $out;
 	}
@@ -205,7 +219,26 @@ final class WHD_Live_Admin {
 			'searchPieces' => __( 'Search your pieces…', 'whd' ),
 			'show'         => __( 'Show', 'whd' ),
 			'hide'         => __( 'Take off', 'whd' ),
-			'float'        => __( 'Float photo', 'whd' ),
+			/* translators: %d: how many photos the piece has */
+			'photos'       => __( 'Photos (%d)', 'whd' ),
+			'photosClose'  => __( 'Close photos', 'whd' ),
+			'photosHint'   => __( 'Open this piece’s photos large in the video, at the spot you chose', 'whd' ),
+			'photoPrev'    => __( 'Previous photo', 'whd' ),
+			'photoNext'    => __( 'Next photo', 'whd' ),
+			'photoHold'    => __( 'Hold this one', 'whd' ),
+			'photoPlay'    => __( 'Keep going', 'whd' ),
+			'spotPlaces'   => [
+				'left'   => __( 'Left', 'whd' ),
+				'centre' => __( 'Centre', 'whd' ),
+				'right'  => __( 'Right', 'whd' ),
+				'top'    => __( 'Top', 'whd' ),
+				'middle' => __( 'Middle', 'whd' ),
+				'lower'  => __( 'Lower', 'whd' ),
+			],
+			'pickGif'      => __( 'Choose GIFs', 'whd' ),
+			'useGif'       => __( 'Use these', 'whd' ),
+			'pressPlay'    => __( 'Press play to start', 'whd' ),
+			'soundFailed'  => __( 'That sound wouldn’t play. Check your connection, then try it again or pick another.', 'whd' ),
 			'remove'       => __( 'Remove', 'whd' ),
 			'soldOut'      => __( 'Sold out', 'whd' ),
 			'requests'     => __( 'asked', 'whd' ),
@@ -302,6 +335,8 @@ final class WHD_Live_Admin {
 				'ticker'    => __( 'Ticker', 'whd' ),
 				'lower'     => __( 'Name strip', 'whd' ),
 				'countdown' => __( 'Countdown', 'whd' ),
+				'gallery'   => __( 'Photos', 'whd' ),
+				'spot'      => __( 'Photo spot', 'whd' ),
 			],
 		];
 	}

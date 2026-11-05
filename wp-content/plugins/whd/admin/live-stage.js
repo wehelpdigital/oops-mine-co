@@ -66,7 +66,11 @@
 		pulse: 'Pulse',
 		swing: 'Swing',
 		bounce: 'Bounce',
-		spin: 'Spin'
+		spin: 'Spin',
+		wobble: 'Wobble',
+		jelly: 'Jelly',
+		shake: 'Shake',
+		hop: 'Hop'
 	};
 
 	/* What each kind of layer starts as. x, y: its centre as a fraction of the picture. w: fraction of the width. */
@@ -77,8 +81,20 @@
 		lower: { w: 0.5, enter: 'slide', title: '', subtitle: '' },
 		countdown: { w: 0.26, enter: 'pop', label: 'Ends in', endsAt: 0 },
 		ticker: { w: 1, enter: 'fade', text: '', speed: 110 },
-		source: { w: 0.27, enter: 'pop', shape: 'rounded', sourceId: '' }
+		source: { w: 0.27, enter: 'pop', shape: 'rounded', sourceId: '' },
+		gallery: { w: 0.34, enter: 'pop', at: 0, auto: true, images: [] },
+		spot: { w: 0.34, enter: 'fade' }
 	};
+
+	/* The slideshow's card, in the units its sprite is drawn in: margin for the shadow, then the photo, then the words. */
+	var GALLERY = { W: 600, H: 732, MX: 14, MY: 12, CARD_W: 572, CARD_H: 702, RADIUS: 24, PHOTO_X: 28, PHOTO_Y: 26, PHOTO: 544 };
+	var SLIDE_MS = 4200; // how long each photo stays
+	var SLIDE_IN_MS = 560;
+	var REVEAL_MS = 1900; // how long a piece or its photos keep drawing the eye after appearing
+
+	/* A canvas only ever draws the first frame of an animated picture, so those are decoded. */
+	var MAX_GIF_FRAMES = 150;
+	var MAX_GIF_EDGE = 420;
 
 	var uid = 0;
 
@@ -97,6 +113,9 @@
 	}
 	function easeOutCubic( t ) {
 		return 1 - Math.pow( 1 - t, 3 );
+	}
+	function easeInOut( t ) {
+		return t < 0.5 ? 2 * t * t : 1 - Math.pow( -2 * t + 2, 2 ) / 2;
 	}
 
 	function makeCanvas( w, h ) {
@@ -358,6 +377,7 @@
 		var self = this;
 		var entry = this.images[ src ];
 		if ( entry ) {
+			this._decodeFrames( src, entry );
 			if ( entry.ok && done ) {
 				done( entry.img );
 			}
@@ -366,6 +386,7 @@
 		var img = new Image();
 		img.crossOrigin = 'anonymous';
 		entry = this.images[ src ] = { img: img, ok: false };
+		this._decodeFrames( src, entry );
 		img.onload = function () {
 			entry.ok = true;
 			// Anything drawn from this image is out of date now.
@@ -381,6 +402,101 @@
 		};
 		img.src = src;
 		return null;
+	};
+
+	/*
+	 * The frames of a GIF or animated WebP, each with the moment it ends. Until they are ready, and in a browser with
+	 * no ImageDecoder, the picture just shows its first frame. Read with fetch, so a file that does not allow it fails
+	 * here instead of tainting the canvas, which would stop the whole stream.
+	 */
+	Stage.prototype._decodeFrames = function ( src, entry ) {
+		var type = /\.gif(\?|$)/i.test( src ) ? 'image/gif' : ( /\.webp(\?|$)/i.test( src ) ? 'image/webp' : '' );
+		if ( ! type || entry.frames || entry.decoding || entry.still || ! window.ImageDecoder || ! window.createImageBitmap ) {
+			return;
+		}
+		entry.decoding = true;
+		var decoder = null;
+		window.fetch( src, { credentials: 'same-origin' } ).then( function ( r ) {
+			if ( ! r.ok ) {
+				throw new Error( 'HTTP ' + r.status );
+			}
+			return r.arrayBuffer();
+		} ).then( function ( bytes ) {
+			decoder = new window.ImageDecoder( { data: bytes, type: type } );
+			return decoder.tracks.ready.then( function () {
+				return decoder.completed;
+			} );
+		} ).then( function () {
+			var total = decoder.tracks.selectedTrack.frameCount;
+			if ( total < 2 ) {
+				entry.still = true;
+				return null;
+			}
+			var step = Math.ceil( total / MAX_GIF_FRAMES );
+			var frames = [];
+			var span = 0;
+			var next = function ( i ) {
+				if ( i >= total ) {
+					return { frames: frames, span: span };
+				}
+				return decoder.decode( { frameIndex: i } ).then( function ( result ) {
+					var image = result.image;
+					var ms = ( image.duration || 0 ) / 1000;
+					// Browsers play a delay under 20 ms as 100 ms, and GIFs are made expecting that.
+					ms = ( ms < 20 ? 100 : ms ) * step;
+					var fit = Math.min( 1, MAX_GIF_EDGE / Math.max( image.displayWidth, image.displayHeight ) );
+					return window.createImageBitmap( image, {
+						resizeWidth: Math.max( 1, Math.round( image.displayWidth * fit ) ),
+						resizeHeight: Math.max( 1, Math.round( image.displayHeight * fit ) ),
+						resizeQuality: 'medium'
+					} ).then( function ( bitmap ) {
+						image.close();
+						span += ms;
+						frames.push( { bitmap: bitmap, until: span } );
+						return next( i + step );
+					} );
+				} );
+			};
+			return next( 0 );
+		} ).then( function ( done ) {
+			entry.decoding = false;
+			if ( done ) {
+				entry.frames = done.frames;
+				entry.span = done.span;
+			}
+		} ).catch( function () {
+			entry.decoding = false;
+			entry.still = true; // the first frame is still there
+		} ).then( function () {
+			if ( decoder ) {
+				decoder.close();
+			}
+		} );
+	};
+
+	function frameAt( entry, now ) {
+		var t = now % entry.span;
+		for ( var i = 0; i < entry.frames.length; i++ ) {
+			if ( t < entry.frames[ i ].until ) {
+				return entry.frames[ i ].bitmap;
+			}
+		}
+		return entry.frames[ entry.frames.length - 1 ].bitmap;
+	}
+
+	/* A decoded GIF is a lot of memory, so it goes when nothing is showing it, and is decoded again if it comes back. */
+	Stage.prototype._releaseFrames = function ( src ) {
+		var entry = this.images[ src ];
+		var inUse = this.layers.some( function ( layer ) {
+			return layer.src === src && ! layer._gone;
+		} );
+		if ( ! entry || ! entry.frames || inUse ) {
+			return;
+		}
+		entry.frames.forEach( function ( frame ) {
+			frame.bitmap.close();
+		} );
+		entry.frames = null;
 	};
 
 	/* ─────────────────────────── layers ─────────────────────────── */
@@ -407,6 +523,11 @@
 		this.layers.push( layer );
 		if ( layer.src ) {
 			this.image( layer.src );
+		}
+		if ( layer.images ) {
+			layer.images.forEach( function ( src ) {
+				this.image( src );
+			}, this );
 		}
 		if ( ! quiet ) {
 			this.changed();
@@ -492,14 +613,14 @@
 		return null;
 	};
 
-	/* What gets saved. Anything starting with an underscore is only for this page's life. */
+	/* What gets saved. Anything starting with an underscore is only for this page's life; `_brief` layers too. */
 	Stage.prototype.toJSON = function () {
 		return {
 			look: this.look,
 			brightness: this.brightness,
 			frame: this.frame,
 			layers: this.layers.filter( function ( layer ) {
-				return ! layer._gone;
+				return ! layer._gone && ! layer._brief;
 			} ).map( function ( layer ) {
 				var out = {};
 				for ( var key in layer ) {
@@ -976,6 +1097,54 @@
 		return c;
 	};
 
+	/* The slideshow's card, without the photo: that changes every frame, the card does not. */
+	Stage.prototype._gallerySprite = function ( layer ) {
+		var G = GALLERY;
+		var c = makeCanvas( G.W, G.H );
+		var x = c.getContext( '2d' );
+
+		x.save();
+		x.shadowColor = 'rgba(30,20,16,.4)';
+		x.shadowBlur = 22;
+		x.shadowOffsetY = 7;
+		roundRect( x, G.MX, G.MY, G.CARD_W, G.CARD_H, G.RADIUS );
+		x.fillStyle = '#fffaf6';
+		x.fill();
+		x.restore();
+
+		roundRect( x, G.PHOTO_X, G.PHOTO_Y, G.PHOTO, G.PHOTO, 16 );
+		x.fillStyle = '#efe6de';
+		x.fill();
+
+		var tx = G.PHOTO_X + 4;
+		var tw = G.PHOTO - 8;
+		var y = G.PHOTO_Y + G.PHOTO + 46;
+		x.textBaseline = 'alphabetic';
+		x.font = '500 38px ' + SERIF;
+		spaced( x, '', 0 );
+		x.fillStyle = INK;
+		var lines = wrapLines( x, layer.caption || '', tw, 1 );
+		x.fillText( lines[ 0 ] || '', tx, y );
+
+		y += 18;
+		if ( layer.cta ) {
+			x.font = '700 22px ' + SANS;
+			var cw = Math.min( x.measureText( layer.cta ).width + 40, tw );
+			roundRect( x, tx, y, cw, 46, 23 );
+			x.fillStyle = ROSE;
+			x.fill();
+			x.fillStyle = '#fff';
+			x.textBaseline = 'middle';
+			x.fillText( layer.cta, tx + 20, y + 24, tw - 40 );
+		} else if ( layer.price ) {
+			x.font = '800 30px ' + SANS;
+			x.fillStyle = INK;
+			x.textBaseline = 'middle';
+			x.fillText( layer.price, tx, y + 24, tw );
+		}
+		return c;
+	};
+
 	/* The ready-drawn canvas for a layer, redrawn only when what it shows has changed. */
 	Stage.prototype._spriteOf = function ( layer ) {
 		if ( 'image' === layer.type ) {
@@ -995,6 +1164,9 @@
 				break;
 			case 'product':
 				key = 'p|' + layer.name + layer.price + layer.regular + layer.cta + layer.link + layer.kicker + ( layer.image && this.images[ layer.image ] && this.images[ layer.image ].ok ? 1 : 0 );
+				break;
+			case 'gallery':
+				key = 'g|' + layer.caption + layer.cta + layer.price;
 				break;
 			default:
 				return null;
@@ -1017,6 +1189,9 @@
 					this.image( layer.image );
 				}
 				layer._sprite = this._productSprite( layer );
+				break;
+			case 'gallery':
+				layer._sprite = this._gallerySprite( layer );
 				break;
 		}
 		layer._key = key;
@@ -1059,8 +1234,16 @@
 	Stage.prototype._drawLayer = function ( ctx, layer, now ) {
 		var age = now - layer._t0;
 		var leaving = layer._gone ? ( now - layer._gone ) / 260 : 0;
-		var enter = clamp( age / 460, 0, 1 );
+		var showcase = 'product' === layer.type || 'gallery' === layer.type;
+		var enter = clamp( age / ( showcase ? 680 : 460 ), 0, 1 );
 		var alpha = layer._gone ? 1 - clamp( leaving, 0, 1 ) : clamp( age / 200, 0, 1 );
+
+		// Where the photos will open: the host's own marker, in the page. Nothing of it goes in the picture.
+		if ( 'spot' === layer.type ) {
+			var spotW = ( +layer.w || 0.34 ) * this.W;
+			layer._box = { cx: layer.x * this.W, cy: layer.y * this.H, w: spotW, h: spotW * GALLERY.H / GALLERY.W };
+			return;
+		}
 
 		if ( 'ticker' === layer.type ) {
 			this._drawTicker( ctx, layer, now, alpha );
@@ -1073,6 +1256,12 @@
 			layer._box = null;
 			return;
 		}
+		if ( 'image' === layer.type ) {
+			var picture = this.images[ layer.src ];
+			if ( picture && picture.frames ) {
+				sprite = frameAt( picture, now );
+			}
+		}
 		var sw = sprite.videoWidth || sprite.naturalWidth || sprite.width;
 		var sh = sprite.videoHeight || sprite.naturalHeight || sprite.height;
 		var dw = ( +layer.w || 0.2 ) * this.W;
@@ -1083,6 +1272,7 @@
 
 		var t = now / 1000;
 		var scale = 1;
+		var stretch = 0; // wider and shorter by this much, or narrower and taller when negative
 		var rot = ( +layer.rot || 0 ) * Math.PI / 180;
 		var dx = 0;
 		var dy = 0;
@@ -1103,10 +1293,33 @@
 			case 'spin':
 				rot += t * 0.9;
 				break;
+			case 'wobble':
+				rot += Math.sin( t * 6 ) * 0.17;
+				dy = -Math.abs( Math.sin( t * 6 ) ) * this.H * 0.012;
+				break;
+			case 'jelly':
+				stretch = Math.sin( t * 7 ) * 0.1;
+				break;
+			case 'shake':
+				dx = Math.sin( t * 31 ) * this.W * 0.006;
+				rot += Math.sin( t * 23 ) * 0.055;
+				break;
+			case 'hop':
+				var hop = Math.abs( Math.sin( t * 4.4 ) );
+				dy = -hop * this.H * 0.05;
+				stretch = hop < 0.2 ? ( 0.2 - hop ) * 0.6 : 0; // squashes as it lands
+				break;
 		}
 
 		if ( enter < 1 ) {
-			if ( 'slide' === layer.enter ) {
+			if ( showcase ) {
+				// Rises into place, a little too far, and settles.
+				scale *= 0.68 + 0.32 * easeOutBack( enter );
+				dy += ( 1 - easeOutCubic( enter ) ) * dh * 0.2;
+				if ( 'gallery' === layer.type ) {
+					rot += ( 1 - easeOutCubic( enter ) ) * -0.12;
+				}
+			} else if ( 'slide' === layer.enter ) {
 				var fromLeft = layer.x < 0.5;
 				dx += ( fromLeft ? -1 : 1 ) * ( 1 - easeOutCubic( enter ) ) * ( dw * 0.6 + this.W * 0.1 );
 			} else if ( 'pop' === layer.enter ) {
@@ -1123,13 +1336,206 @@
 		if ( rot ) {
 			ctx.rotate( rot );
 		}
-		ctx.scale( scale, scale );
+		ctx.scale( scale * ( 1 + stretch ), scale * ( 1 - stretch ) );
+		var reveal = showcase && ! layer._gone && age < REVEAL_MS ? this._cardBox( layer, dw ) : null;
+		if ( reveal ) {
+			this._drawRings( ctx, age, reveal );
+		}
 		if ( isSource ) {
 			this._drawInset( ctx, sprite, inset, layer, dw, dh );
 		} else {
 			ctx.drawImage( sprite, -dw / 2, -dh / 2, dw, dh );
 		}
+		if ( 'gallery' === layer.type ) {
+			this._drawSlides( ctx, layer, now, dw, dh );
+		}
+		if ( reveal ) {
+			this._drawSheen( ctx, age, reveal );
+			this._drawSparks( ctx, layer, age, reveal );
+		}
 		ctx.restore();
+	};
+
+	/* ─ the big moment: rings of light opening out, a shine across the card, and a few sparks ─ */
+
+	/* Where the card itself sits inside its sprite, around the middle of the layer. */
+	Stage.prototype._cardBox = function ( layer, dw ) {
+		if ( 'gallery' === layer.type ) {
+			var g = dw / GALLERY.W;
+			return { x: ( GALLERY.MX - GALLERY.W / 2 ) * g, y: ( GALLERY.MY - GALLERY.H / 2 ) * g, w: GALLERY.CARD_W * g, h: GALLERY.CARD_H * g, r: GALLERY.RADIUS * g };
+		}
+		var k = dw / 860;
+		return { x: ( 12 - 430 ) * k, y: ( 10 - 192 ) * k, w: 836 * k, h: 358 * k, r: 26 * k };
+	};
+
+	Stage.prototype._drawRings = function ( ctx, age, box ) {
+		var base = ctx.globalAlpha;
+		var reach = Math.min( this.W, this.H ) * 0.09;
+		[ [ 140, '#fff6ec' ], [ 460, ROSE ] ].forEach( function ( ring ) {
+			var t = clamp( ( age - ring[ 0 ] ) / 1050, 0, 1 );
+			if ( t <= 0 || t >= 1 ) {
+				return;
+			}
+			var grow = easeOutCubic( t ) * reach;
+			ctx.globalAlpha = base * ( 1 - t ) * 0.95;
+			roundRect( ctx, box.x - grow, box.y - grow, box.w + grow * 2, box.h + grow * 2, box.r + grow );
+			ctx.lineWidth = 2 + ( 1 - t ) * reach * 0.13;
+			ctx.strokeStyle = ring[ 1 ];
+			ctx.stroke();
+		} );
+		ctx.globalAlpha = base;
+	};
+
+	Stage.prototype._drawSheen = function ( ctx, age, box ) {
+		var t = clamp( ( age - 420 ) / 820, 0, 1 );
+		if ( t <= 0 || t >= 1 ) {
+			return;
+		}
+		var band = box.w * 0.24;
+		var at = box.x - band + ( box.w + band * 2 ) * easeInOut( t );
+		var shine = ctx.createLinearGradient( at - band, box.y, at + band, box.y + box.h * 0.5 );
+		shine.addColorStop( 0, 'rgba(240,196,168,0)' );
+		shine.addColorStop( 0.5, 'rgba(240,196,168,.62)' );
+		shine.addColorStop( 1, 'rgba(240,196,168,0)' );
+		ctx.save();
+		roundRect( ctx, box.x, box.y, box.w, box.h, box.r );
+		ctx.clip();
+		ctx.fillStyle = shine;
+		ctx.fillRect( box.x, box.y, box.w, box.h );
+		ctx.restore();
+	};
+
+	Stage.prototype._drawSparks = function ( ctx, layer, age, box ) {
+		if ( ! layer._sparks ) {
+			layer._sparks = [];
+			for ( var n = 0; n < 16; n++ ) {
+				var angle = rand( 0, Math.PI * 2 );
+				var edge = 1 / Math.max( Math.abs( Math.cos( angle ) ), Math.abs( Math.sin( angle ) ) );
+				layer._sparks.push( {
+					cos: Math.cos( angle ),
+					sin: Math.sin( angle ),
+					edge: edge,
+					far: rand( 0.05, 0.15 ) * Math.min( this.W, this.H ),
+					size: rand( 0.012, 0.026 ) * Math.min( this.W, this.H ),
+					delay: rand( 120, 620 ),
+					life: rand( 620, 1100 ),
+					turn: rand( -2, 2 ),
+					colour: pick( [ '#fff6ec', '#f3d9c3', ROSE ] )
+				} );
+			}
+		}
+		var base = ctx.globalAlpha;
+		var cx = box.x + box.w / 2;
+		var cy = box.y + box.h / 2;
+		layer._sparks.forEach( function ( spark ) {
+			var t = ( age - spark.delay ) / spark.life;
+			if ( t <= 0 || t >= 1 ) {
+				return;
+			}
+			var out = easeOutCubic( t ) * spark.far;
+			var size = spark.size * Math.sin( Math.PI * t );
+			ctx.save();
+			ctx.globalAlpha = base * ( t < 0.7 ? 1 : ( 1 - t ) / 0.3 );
+			ctx.translate( cx + spark.cos * ( spark.edge * box.w / 2 + out ), cy + spark.sin * ( spark.edge * box.h / 2 + out ) );
+			ctx.rotate( spark.turn * t );
+			// Four points, drawn thin so it reads as a glint and not a star on a flag.
+			ctx.beginPath();
+			for ( var i = 0; i < 8; i++ ) {
+				var r = i % 2 ? size * 0.22 : size;
+				var a = i * Math.PI / 4;
+				ctx[ i ? 'lineTo' : 'moveTo' ]( Math.cos( a ) * r, Math.sin( a ) * r );
+			}
+			ctx.closePath();
+			ctx.fillStyle = spark.colour;
+			ctx.fill();
+			ctx.restore();
+		} );
+		ctx.globalAlpha = base;
+	};
+
+	/* ─ the photos of a piece ─ */
+
+	/* The next photo that has loaded, this way round. Stays put if none has. */
+	Stage.prototype.slide = function ( id, step ) {
+		var layer = this.get( id );
+		if ( ! layer || ! layer.images || layer.images.length < 2 ) {
+			return;
+		}
+		var count = layer.images.length;
+		for ( var i = 1; i < count; i++ ) {
+			var at = ( ( layer.at || 0 ) + step * i + count * i ) % count;
+			var entry = this.images[ layer.images[ at ] ];
+			if ( entry && entry.ok ) {
+				layer._from = layer.at || 0;
+				layer._dir = step < 0 ? -1 : 1;
+				layer.at = at;
+				layer._slideT = performance.now();
+				return;
+			}
+		}
+	};
+
+	Stage.prototype._drawFitted = function ( ctx, src, x, y, w, h, grow, shiftX ) {
+		var entry = src ? this.images[ src ] : null;
+		if ( ! entry || ! entry.ok ) {
+			return;
+		}
+		var img = entry.img;
+		var fit = Math.min( w / img.naturalWidth, h / img.naturalHeight ) * grow;
+		var dw = img.naturalWidth * fit;
+		var dh = img.naturalHeight * fit;
+		ctx.drawImage( img, x + ( w - dw ) / 2 + shiftX, y + ( h - dh ) / 2, dw, dh );
+	};
+
+	Stage.prototype._drawSlides = function ( ctx, layer, now, dw, dh ) {
+		var images = layer.images || [];
+		if ( ! images.length ) {
+			return;
+		}
+		layer._slideT = layer._slideT || now;
+		if ( false !== layer.auto && ! layer._gone && now - layer._slideT > SLIDE_MS ) {
+			this.slide( layer.id, 1 );
+		}
+		var k = dw / GALLERY.W;
+		var px = ( GALLERY.PHOTO_X - GALLERY.W / 2 ) * k;
+		var py = ( GALLERY.PHOTO_Y - GALLERY.H / 2 ) * k;
+		var size = GALLERY.PHOTO * k;
+		var shown = now - layer._slideT;
+		var t = clamp( shown / SLIDE_IN_MS, 0, 1 );
+		var move = easeOutCubic( t );
+		var dir = layer._dir || 1;
+		var base = ctx.globalAlpha;
+
+		ctx.save();
+		roundRect( ctx, px, py, size, size, 16 * k );
+		ctx.clip();
+		if ( t < 1 && undefined !== layer._from ) {
+			ctx.globalAlpha = base * ( 1 - move );
+			this._drawFitted( ctx, images[ layer._from ], px, py, size, size, 1.04, -move * size * 0.28 * dir );
+		}
+		// In from the side, large, settling; then a slow drift the whole time it is up.
+		var drift = 1 + 0.045 * clamp( shown / SLIDE_MS, 0, 1 );
+		ctx.globalAlpha = base * ( undefined === layer._from ? 1 : move );
+		this._drawFitted( ctx, images[ layer.at || 0 ], px, py, size, size, drift + ( 1 - move ) * 0.1, undefined === layer._from ? 0 : ( 1 - move ) * size * 0.42 * dir );
+		ctx.restore();
+		ctx.globalAlpha = base;
+
+		if ( images.length > 1 ) {
+			var gap = 15 * k;
+			var dot = 4.5 * k;
+			var wide = gap * ( images.length - 1 );
+			var dotY = py + size - 20 * k;
+			var startX = px + size / 2 - wide / 2;
+			roundRect( ctx, startX - dot * 2.4, dotY - dot * 2.2, wide + dot * 4.8, dot * 4.4, dot * 2.2 );
+			ctx.fillStyle = 'rgba(43,31,27,.42)';
+			ctx.fill();
+			images.forEach( function ( src, i ) {
+				ctx.beginPath();
+				ctx.arc( startX + gap * i, dotY, i === ( layer.at || 0 ) ? dot * 1.2 : dot * 0.8, 0, Math.PI * 2 );
+				ctx.fillStyle = i === ( layer.at || 0 ) ? '#fff' : 'rgba(255,255,255,.55)';
+				ctx.fill();
+			} );
+		}
 	};
 
 	/* A camera in a corner: cropped to fill its shape, with a thin edge so it reads against the picture. */
@@ -1486,9 +1892,17 @@
 			}
 		}
 		if ( drop ) {
+			var dropped = this.layers.filter( function ( l ) {
+				return l._gone && now - l._gone > 280;
+			} );
 			this.layers = this.layers.filter( function ( l ) {
 				return ! ( l._gone && now - l._gone > 280 );
 			} );
+			dropped.forEach( function ( l ) {
+				if ( l.src ) {
+					this._releaseFrames( l.src );
+				}
+			}, this );
 		}
 
 		this._runRain( dt );

@@ -1,0 +1,282 @@
+[
+	{
+		"file": "lol.png",
+		"label": "LOL",
+		"group": "Funny",
+		"anim": "jelly",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f602.png"
+	},
+	{
+		"file": "rofl.png",
+		"label": "ROFL",
+		"group": "Funny",
+		"anim": "wobble",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f923.png"
+	},
+	{
+		"file": "zany.png",
+		"label": "Zany",
+		"group": "Funny",
+		"anim": "shake",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f92a.png"
+	},
+	{
+		"file": "cheeky.png",
+		"label": "Cheeky",
+		"group": "Funny",
+		"anim": "wobble",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f61c.png"
+	},
+	{
+		"file": "melting.png",
+		"label": "Melting",
+		"group": "Funny",
+		"anim": "jelly",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1fae0.png"
+	},
+	{
+		"file": "clown.png",
+		"label": "Clown",
+		"group": "Funny",
+		"anim": "hop",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f921.png"
+	},
+	{
+		"file": "poop.png",
+		"label": "Poop",
+		"group": "Funny",
+		"anim": "hop",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f4a9.png"
+	},
+	{
+		"file": "ghost.png",
+		"label": "Ghost",
+		"group": "Funny",
+		"anim": "float",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f47b.png"
+	},
+	{
+		"file": "love-it.png",
+		"label": "Love it",
+		"group": "Love",
+		"anim": "pulse",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f60d.png"
+	},
+	{
+		"file": "star-eyes.png",
+		"label": "Star eyes",
+		"group": "Love",
+		"anim": "pulse",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f929.png"
+	},
+	{
+		"file": "adore.png",
+		"label": "Adore",
+		"group": "Love",
+		"anim": "float",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f970.png"
+	},
+	{
+		"file": "kiss.png",
+		"label": "Kiss",
+		"group": "Love",
+		"anim": "wobble",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f618.png"
+	},
+	{
+		"file": "heart.png",
+		"label": "Heart",
+		"group": "Love",
+		"anim": "pulse",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u2764.png"
+	},
+	{
+		"file": "hot-love.png",
+		"label": "Hot love",
+		"group": "Love",
+		"anim": "pulse",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u2764_200d_1f525.png"
+	},
+	{
+		"file": "sparkle-love.png",
+		"label": "Sparkle love",
+		"group": "Love",
+		"anim": "pulse",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f496.png"
+	},
+	{
+		"file": "mind-blown.png",
+		"label": "Mind blown",
+		"group": "Wow",
+		"anim": "shake",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f92f.png"
+	},
+	{
+		"file": "scream.png",
+		"label": "Scream",
+		"group": "Wow",
+		"anim": "shake",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f631.png"
+	},
+	{
+		"file": "wow.png",
+		"label": "Wow",
+		"group": "Wow",
+		"anim": "jelly",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f62e.png"
+	},
+	{
+		"file": "oops.png",
+		"label": "Oops!",
+		"group": "Wow",
+		"anim": "wobble",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1fae2.png"
+	},
+	{
+		"file": "look.png",
+		"label": "Look",
+		"group": "Wow",
+		"anim": "swing",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f440.png"
+	},
+	{
+		"file": "cool.png",
+		"label": "Cool",
+		"group": "Wow",
+		"anim": "swing",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f60e.png"
+	},
+	{
+		"file": "money.png",
+		"label": "Money",
+		"group": "Wow",
+		"anim": "hop",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f911.png"
+	},
+	{
+		"file": "lol-cat.png",
+		"label": "LOL cat",
+		"group": "Cats",
+		"anim": "wobble",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f639.png"
+	},
+	{
+		"file": "love-cat.png",
+		"label": "Love cat",
+		"group": "Cats",
+		"anim": "pulse",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f63b.png"
+	},
+	{
+		"file": "shock-cat.png",
+		"label": "Shock cat",
+		"group": "Cats",
+		"anim": "shake",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f640.png"
+	},
+	{
+		"file": "peek.png",
+		"label": "Peek",
+		"group": "Cats",
+		"anim": "jelly",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f648.png"
+	},
+	{
+		"file": "party.png",
+		"label": "Party",
+		"group": "Party",
+		"anim": "hop",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f389.png"
+	},
+	{
+		"file": "party-face.png",
+		"label": "Party face",
+		"group": "Party",
+		"anim": "wobble",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f973.png"
+	},
+	{
+		"file": "clap.png",
+		"label": "Clap",
+		"group": "Party",
+		"anim": "jelly",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f44f.png"
+	},
+	{
+		"file": "dance.png",
+		"label": "Dance",
+		"group": "Party",
+		"anim": "swing",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f483.png"
+	},
+	{
+		"file": "fire.png",
+		"label": "Fire",
+		"group": "Party",
+		"anim": "jelly",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f525.png"
+	},
+	{
+		"file": "sparkle.png",
+		"label": "Sparkle",
+		"group": "Party",
+		"anim": "pulse",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u2728.png"
+	},
+	{
+		"file": "100.png",
+		"label": "100",
+		"group": "Party",
+		"anim": "hop",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f4af.png"
+	},
+	{
+		"file": "sassy.png",
+		"label": "Sassy",
+		"group": "Shop",
+		"anim": "swing",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f485.png"
+	},
+	{
+		"file": "dress.png",
+		"label": "Dress",
+		"group": "Shop",
+		"anim": "swing",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f457.png"
+	},
+	{
+		"file": "heels.png",
+		"label": "Heels",
+		"group": "Shop",
+		"anim": "hop",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f460.png"
+	},
+	{
+		"file": "shopping.png",
+		"label": "Shopping",
+		"group": "Shop",
+		"anim": "swing",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f6cd.png"
+	},
+	{
+		"file": "gift.png",
+		"label": "Gift",
+		"group": "Shop",
+		"anim": "hop",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f381.png"
+	},
+	{
+		"file": "cha-ching.png",
+		"label": "Cha-ching",
+		"group": "Shop",
+		"anim": "hop",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f4b0.png"
+	},
+	{
+		"file": "tag.png",
+		"label": "Tag",
+		"group": "Shop",
+		"anim": "swing",
+		"source": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u1f3f7.png"
+	}
+]

@@ -6,8 +6,8 @@
  * setLocalAudio: muting the host must not silence the music, and changing microphone must not touch
  * the call.
  *
- * Nothing here plays through the host's speakers unless they ask to hear it: a speaker next to a live
- * microphone is an echo for everyone watching.
+ * Music and pads also play through the host's own speakers (`monitor`), because a host who presses a
+ * pad and hears nothing thinks it is broken. They can turn that off. Their microphone never plays back.
  *
  * A few pads are synthesised here. The rest, and the ready-made music, are public-domain recordings in
  * assets/live-sounds (see CREDITS.md there), played through the same buses.
@@ -43,8 +43,10 @@
 
 		// What the host can choose to hear: music and pads, never their own microphone.
 		this.monitor = ctx.createGain();
-		this.monitor.gain.value = 0;
+		this.monitor.gain.value = 1;
 		this.monitor.connect( ctx.destination );
+		this.hearing = true;
+		this.onError = null;
 
 		this.buses = {};
 		this.levels = {};
@@ -92,6 +94,14 @@
 		this.audio.addEventListener( 'ended', function () {
 			self.next( true );
 		} );
+		this.audio.addEventListener( 'error', function () {
+			if ( self.onError ) {
+				self.onError();
+			}
+			if ( self.onMusic ) {
+				self.onMusic();
+			}
+		} );
 		[ 'play', 'pause', 'loadedmetadata' ].forEach( function ( type ) {
 			self.audio.addEventListener( type, function () {
 				if ( self.onMusic ) {
@@ -130,7 +140,16 @@
 	};
 
 	Mixer.prototype.setMonitor = function ( on ) {
+		this.hearing = !! on;
 		this.monitor.gain.setTargetAtTime( on ? 1 : 0, this.ctx.currentTime, 0.03 );
+	};
+
+	/* A file that will not play says so through the `error` event; the promise has nothing to add. */
+	Mixer.prototype._start = function () {
+		var played = this.audio.play();
+		if ( played && played.catch ) {
+			played.catch( function () {} );
+		}
 	};
 
 	/* The microphone. Measured before the fader, so the meter shows a voice even while muted. */
@@ -213,7 +232,7 @@
 		if ( this.audio.src !== item.url ) {
 			this.audio.src = item.url;
 		}
-		this.audio.play();
+		this._start();
 	};
 
 	Mixer.prototype.toggle = function () {
@@ -221,7 +240,7 @@
 		if ( ! this.audio.paused ) {
 			this.audio.pause();
 		} else if ( this.audio.src ) {
-			this.audio.play();
+			this._start();
 		} else {
 			this.playIndex( this.index );
 		}
@@ -353,7 +372,11 @@
 			src.buffer = buffer;
 			src.connect( self.buses.pads );
 			src.start();
-		} ).catch( function () {} );
+		} ).catch( function () {
+			if ( self.onError ) {
+				self.onError();
+			}
+		} );
 	};
 
 	root.WHDMixer = { Mixer: Mixer, PADS: PADS, supported: !! AudioCtx };

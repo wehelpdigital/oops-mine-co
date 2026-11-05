@@ -47,6 +47,18 @@
 	var portrait = 'portrait' === D.format;
 	var saved = D.scene || {};
 
+	/* Where the product photos can open: to the host's side, so they can turn and point at them. */
+	var SPOT_PLACES = portrait ? {
+		top: { x: 0.5, y: 0.265, w: 0.6 },
+		middle: { x: 0.5, y: 0.42, w: 0.6 },
+		lower: { x: 0.5, y: 0.6, w: 0.6 }
+	} : {
+		left: { x: 0.2, y: 0.5, w: 0.34 },
+		centre: { x: 0.5, y: 0.5, w: 0.4 },
+		right: { x: 0.8, y: 0.5, w: 0.34 }
+	};
+	var SPOT_FIRST = portrait ? 'top' : 'right';
+
 	var S = {
 		stage: D.stage,
 		onAir: false,
@@ -73,6 +85,10 @@
 		floats: saved.floats || [],
 		music: saved.music || [],
 		ownPads: saved.ownPads || [],
+		gifs: saved.gifs || [],
+		stickerGroup: '',
+		photos: 0,
+		spot: saved.spot || { x: SPOT_PLACES[ SPOT_FIRST ].x, y: SPOT_PLACES[ SPOT_FIRST ].y, w: SPOT_PLACES[ SPOT_FIRST ].w, on: true },
 		scenes: saved.scenes || [],
 		activeScene: saved.activeScene || '',
 		net: '',
@@ -172,6 +188,10 @@
 		// A first visit: the shop's mark in the corner, which every stream will want.
 		stage.add( { type: 'image', src: D.logo, x: portrait ? 0.14 : 0.08, y: portrait ? 0.07 : 0.11, w: portrait ? 0.18 : 0.1, opacity: 0.9 }, true );
 	}
+	if ( galleryLayer() ) {
+		S.photos = galleryLayer().productId;
+	}
+	ensureSpot();
 
 	document.fonts && document.fonts.ready.then( function () {
 		[ '500 40px "Cormorant Garamond"', 'italic 500 40px "Cormorant Garamond"', '800 40px Manrope', '600 40px Manrope' ].forEach( function ( font ) {
@@ -208,12 +228,16 @@
 			floats: S.floats,
 			music: S.music,
 			ownPads: S.ownPads,
+			gifs: S.gifs,
+			gifStay: +$( 'gif-stay' ).value,
+			spot: S.spot,
 			scenes: S.scenes,
 			activeScene: S.activeScene,
 			mic: S.micId || '',
 			volumes: mixer ? mixer.volumes : null,
 			duck: mixer ? mixer.duck : true,
-			loop: mixer ? mixer.loop : true
+			loop: mixer ? mixer.loop : true,
+			hear: mixer ? mixer.hearing : true
 		};
 	}
 	function saveSoon() {
@@ -661,7 +685,10 @@
 	/* A scene can bring a piece on or take it off: the page and the piece list follow. */
 	function syncShowing() {
 		var layer = productLayer();
+		var photos = galleryLayer();
 		S.showing = layer ? layer.productId : 0;
+		S.photos = photos ? photos.productId : 0;
+		ensureSpot();
 		renderPieces();
 		postShowing();
 	}
@@ -750,10 +777,11 @@
 		$( 'sel-size' ).value = layer.w;
 		$( 'sel-size' ).disabled = 'ticker' === layer.type;
 		$( 'sel-opacity' ).value = layer.opacity;
+		$( 'sel-opacity' ).disabled = 'spot' === layer.type;
 		$( 'sel-rot' ).value = layer.rot || 0;
-		$( 'sel-rot' ).disabled = 'ticker' === layer.type;
+		$( 'sel-rot' ).disabled = 'ticker' === layer.type || 'spot' === layer.type;
 		$( 'sel-anim' ).value = layer.anim || 'none';
-		$( 'sel-anim' ).disabled = 'ticker' === layer.type;
+		$( 'sel-anim' ).disabled = 'ticker' === layer.type || 'spot' === layer.type;
 		$( 'sel-shape-box' ).hidden = 'source' !== layer.type;
 		$( 'sel-shape' ).value = layer.shape || 'rounded';
 
@@ -789,6 +817,23 @@
 		sel.style.width = ( b.w / stage.W * 100 ) + '%';
 		sel.style.height = ( b.h / stage.H * 100 ) + '%';
 		sel.classList.toggle( 'is-band', 'ticker' === layer.type );
+	}
+
+	/* The dashed box. It lives in the page, so it cannot reach the video. */
+	function drawSpot() {
+		var layer = spotLayer();
+		var box = $( 'spot' );
+		var on = layer && layer._box && false !== layer.visible && ! stage.cover && ! stage.hideGraphics;
+		if ( box.hidden === !! on ) {
+			box.hidden = ! on;
+		}
+		if ( on ) {
+			var b = layer._box;
+			box.style.left = ( ( b.cx - b.w / 2 ) / stage.W * 100 ) + '%';
+			box.style.top = ( ( b.cy - b.h / 2 ) / stage.H * 100 ) + '%';
+			box.style.width = ( b.w / stage.W * 100 ) + '%';
+			box.style.height = ( b.h / stage.H * 100 ) + '%';
+		}
 	}
 
 	function pointAt( e ) {
@@ -850,6 +895,9 @@
 		if ( layer && 'product' === layer.type ) {
 			postShowing();
 		}
+		if ( layer && ( 'spot' === layer.type || 'gallery' === layer.type ) ) {
+			rememberSpot( layer );
+		}
 	};
 	frame.addEventListener( 'pointerup', endDrag );
 	frame.addEventListener( 'pointercancel', endDrag );
@@ -868,6 +916,9 @@
 				var layer = stage.get( S.selected );
 				if ( layer && 'product' === layer.type ) {
 					postShowingSoon();
+				}
+				if ( layer && ( 'spot' === layer.type || 'gallery' === layer.type ) ) {
+					rememberSpot( layer );
 				}
 			}
 		} );
@@ -911,6 +962,11 @@
 		if ( ! layer ) {
 			return;
 		}
+		if ( 'spot' === layer.type ) {
+			setSpotOn( false );
+			select( null );
+			return;
+		}
 		var wasProduct = 'product' === layer.type;
 		stage.remove( id );
 		if ( S.selected === id ) {
@@ -918,8 +974,14 @@
 		}
 		if ( wasProduct ) {
 			S.showing = 0;
+			if ( S.photos ) {
+				closePhotos();
+			}
 			renderPieces();
 			postShowing();
+		}
+		if ( 'gallery' === layer.type ) {
+			closePhotos();
 		}
 		if ( 'source' === layer.type ) {
 			setTimeout( renderSources, 300 );
@@ -937,6 +999,8 @@
 				return layer.title;
 			case 'product':
 				return layer.name;
+			case 'gallery':
+				return layer.caption;
 			case 'countdown':
 				return layer.label;
 			case 'source':
@@ -953,7 +1017,7 @@
 		}
 		box.textContent = '';
 		var list = stage.layers.filter( function ( l ) {
-			return ! l._gone;
+			return ! l._gone && 'spot' !== l.type;
 		} ).slice().reverse();
 		if ( ! list.length ) {
 			box.appendChild( el( 'li', 'whdls-empty', T.nothingOn ) );
@@ -993,11 +1057,14 @@
 		S.rain = '';
 		renderEffects();
 		select( null );
+		photoToken++;
+		S.photos = 0;
+		ensureSpot();
 		if ( hadProduct ) {
 			S.showing = 0;
-			renderPieces();
 			postShowing();
 		}
+		renderPieces();
 	} );
 
 	/* ─────────────────────────── pieces ─────────────────────────── */
@@ -1043,9 +1110,20 @@
 		if ( piece && layer.cta !== ctaFor( piece ) ) {
 			stage.update( layer.id, { cta: ctaFor( piece ) } );
 		}
+		var photos = galleryLayer();
+		var shown = photos ? S.pieces.filter( function ( p ) {
+			return p.id === photos.productId;
+		} )[ 0 ] : null;
+		if ( shown && photos.cta !== ctaFor( shown ) ) {
+			stage.update( photos.id, { cta: ctaFor( shown ) } );
+		}
 	}
 
 	function showPiece( piece ) {
+		if ( S.photos && S.photos !== piece.id ) {
+			closePhotos();
+		}
+		preloadPhotos( piece ); // so that Photos, when it is pressed, is instant
 		var old = productLayer();
 		var props = {
 			type: 'product',
@@ -1081,6 +1159,181 @@
 		}
 	}
 
+	/* ─ a piece's photos, large, at the spot the host has chosen ─ */
+
+	function galleryLayer() {
+		return stage.layers.filter( function ( l ) {
+			return 'gallery' === l.type && ! l._gone;
+		} )[ 0 ] || null;
+	}
+
+	function spotLayer() {
+		return stage.layers.filter( function ( l ) {
+			return 'spot' === l.type && ! l._gone;
+		} )[ 0 ] || null;
+	}
+
+	/* The marker is a layer so it drags and sizes like everything else. At the bottom, so it never gets in the way. */
+	function ensureSpot() {
+		var layer = spotLayer();
+		if ( ! layer ) {
+			layer = stage.add( { type: 'spot', x: S.spot.x, y: S.spot.y, w: S.spot.w, _brief: true }, true );
+			stage.layers.splice( stage.layers.indexOf( layer ), 1 );
+			stage.layers.unshift( layer );
+		}
+		layer.visible = !! S.spot.on && ! galleryLayer();
+		return layer;
+	}
+
+	function rememberSpot( layer ) {
+		S.spot.x = layer.x;
+		S.spot.y = layer.y;
+		S.spot.w = layer.w;
+		var spot = spotLayer();
+		if ( spot ) {
+			spot.x = layer.x;
+			spot.y = layer.y;
+			spot.w = layer.w;
+		}
+		renderSpotPlaces();
+		saveSoon();
+	}
+
+	function placeSpot( key ) {
+		var place = SPOT_PLACES[ key ];
+		S.spot.x = place.x;
+		S.spot.y = place.y;
+		S.spot.w = place.w;
+		[ spotLayer(), galleryLayer() ].forEach( function ( layer ) {
+			if ( layer ) {
+				layer.x = place.x;
+				layer.y = place.y;
+				layer.w = place.w;
+			}
+		} );
+		renderSpotPlaces();
+		saveSoon();
+	}
+
+	function setSpotOn( on ) {
+		S.spot.on = !! on;
+		$( 'spot-on' ).checked = !! on;
+		ensureSpot();
+		saveSoon();
+	}
+
+	function renderSpotPlaces() {
+		var box = $( 'spot-places' );
+		box.textContent = '';
+		Object.keys( SPOT_PLACES ).forEach( function ( key ) {
+			var place = SPOT_PLACES[ key ];
+			var here = Math.abs( place.x - S.spot.x ) < 0.005 && Math.abs( place.y - S.spot.y ) < 0.005;
+			var btn = el( 'button', here ? 'is-on' : '', T.spotPlaces[ key ] );
+			btn.type = 'button';
+			btn.addEventListener( 'click', function () {
+				placeSpot( key );
+			} );
+			box.appendChild( btn );
+		} );
+	}
+
+	function photosOf( piece ) {
+		return piece.images && piece.images.length ? piece.images : ( piece.image ? [ piece.image ] : [] );
+	}
+
+	function preloadPhotos( piece ) {
+		photosOf( piece ).forEach( function ( src ) {
+			stage.image( src );
+		} );
+	}
+
+	var photoToken = 0;
+
+	function openPhotos( piece ) {
+		var images = photosOf( piece );
+		if ( ! images.length ) {
+			return;
+		}
+		closePhotos();
+		S.photos = piece.id;
+		// It has to count as shown: the photos say what to comment, and a number only works once a piece has been on air.
+		if ( S.showing !== piece.id ) {
+			showPiece( piece );
+		}
+		var token = ++photoToken;
+		var started = false;
+		var start = function () {
+			if ( started || token !== photoToken ) {
+				return;
+			}
+			started = true;
+			stage.add( {
+				type: 'gallery',
+				productId: piece.id,
+				images: images,
+				caption: piece.name,
+				price: piece.price,
+				cta: ctaFor( piece ),
+				x: S.spot.x,
+				y: S.spot.y,
+				w: S.spot.w
+			} );
+			ensureSpot();
+			select( null );
+			saveSoon();
+		};
+		// The first photo ready before anything appears, unless the connection is slow: then the card comes anyway.
+		stage.image( images[ 0 ], start );
+		preloadPhotos( piece );
+		setTimeout( start, 1200 );
+		renderPieces();
+	}
+
+	function closePhotos() {
+		photoToken++;
+		var layer = galleryLayer();
+		if ( layer ) {
+			stage.remove( layer.id );
+		}
+		S.photos = 0;
+		ensureSpot();
+		renderPieces();
+		saveSoon();
+	}
+
+	function photoControls( piece ) {
+		var box = el( 'div', 'whdls-slidectl' );
+		var button = function ( label, name, run ) {
+			var b = el( 'button', 'whdls-mini', label );
+			b.type = 'button';
+			b.setAttribute( 'aria-label', name );
+			b.addEventListener( 'click', run );
+			box.appendChild( b );
+			return b;
+		};
+		var step = function ( by ) {
+			var layer = galleryLayer();
+			if ( layer ) {
+				stage.slide( layer.id, by );
+			}
+		};
+		button( '‹', T.photoPrev, function () {
+			step( -1 );
+		} );
+		var layer = galleryLayer();
+		var hold = button( layer && false === layer.auto ? T.photoPlay : T.photoHold, T.photoHold, function () {
+			var now = galleryLayer();
+			if ( now ) {
+				now.auto = false === now.auto;
+				hold.textContent = false === now.auto ? T.photoPlay : T.photoHold;
+			}
+		} );
+		button( '›', T.photoNext, function () {
+			step( 1 );
+		} );
+		return box;
+	}
+
 	function asked( pieceId ) {
 		var n = 0;
 		Object.keys( S.comments ).forEach( function ( id ) {
@@ -1100,6 +1353,15 @@
 				pieces: S.pieces.map( function ( p ) {
 					return { id: p.id, code: p.code || '' };
 				} )
+			} ).then( function ( res ) {
+				// A piece added from the search comes back with its photos.
+				( res.pieces || [] ).forEach( function ( full ) {
+					S.pieces.forEach( function ( piece ) {
+						if ( piece.id === full.id ) {
+							piece.images = full.images;
+						}
+					} );
+				} );
 			} ).catch( function ( err ) {
 				banner( 'pieces', err.message );
 			} );
@@ -1175,17 +1437,29 @@
 				}
 			} );
 			acts.appendChild( show );
-			var float = el( 'button', 'whdls-mini', T.float );
-			float.type = 'button';
-			float.addEventListener( 'click', function () {
-				stage.floatImage( piece.image );
+			var open = S.photos === piece.id;
+			var photos = el( 'button', 'whdls-mini whdls-photos' + ( open ? ' is-on' : '' ), open ? T.photosClose : fmt( T.photos, photosOf( piece ).length ) );
+			photos.type = 'button';
+			photos.title = T.photosHint;
+			photos.addEventListener( 'pointerenter', function () {
+				preloadPhotos( piece );
 			} );
-			acts.appendChild( float );
+			photos.addEventListener( 'click', function () {
+				if ( open ) {
+					closePhotos();
+				} else {
+					openPhotos( piece );
+				}
+			} );
+			acts.appendChild( photos );
 			var drop = el( 'button', 'whdls-mini whdls-mini--danger', T.remove );
 			drop.type = 'button';
 			drop.addEventListener( 'click', function () {
 				if ( on ) {
 					hidePiece();
+				}
+				if ( open ) {
+					closePhotos();
 				}
 				S.pieces.splice( i, 1 );
 				renderPieces();
@@ -1194,6 +1468,9 @@
 			} );
 			acts.appendChild( drop );
 			row.appendChild( acts );
+			if ( open && photosOf( piece ).length > 1 ) {
+				row.appendChild( photoControls( piece ) );
+			}
 			box.appendChild( row );
 		} );
 	}
@@ -1357,6 +1634,10 @@
 
 	/* No need to load a 4000px file to draw it at 300. */
 	function sizedUrl( file ) {
+		// WordPress's smaller copies of a GIF are stills.
+		if ( 'image/gif' === file.mime ) {
+			return file.url;
+		}
 		var sizes = file.sizes || {};
 		return ( sizes.large || sizes.medium_large || sizes.full || file ).url;
 	}
@@ -1413,6 +1694,130 @@
 			select( layer.id );
 		} );
 	}
+
+	/* ─────────────────────────── GIFs and moving stickers ─────────────────────────── */
+
+	/* Round the edges, away from the logo, the card's corner and the photos' usual side. */
+	var GIF_PLACES = portrait
+		? [ [ 0.24, 0.16 ], [ 0.76, 0.16 ], [ 0.5, 0.08 ], [ 0.14, 0.34 ], [ 0.86, 0.34 ] ]
+		: [ [ 0.46, 0.2 ], [ 0.26, 0.3 ], [ 0.58, 0.48 ], [ 0.38, 0.52 ], [ 0.86, 0.18 ] ];
+	var gifPlace = 0;
+
+	function popGif( src, w, anim ) {
+		var at = GIF_PLACES[ gifPlace++ % GIF_PLACES.length ];
+		var stay = +$( 'gif-stay' ).value;
+		var def = { type: 'image', src: src, x: at[ 0 ], y: at[ 1 ], w: w, anim: anim || 'none', enter: 'pop', rot: Math.round( Math.random() * 16 - 8 ) };
+		if ( stay ) {
+			def._brief = true; // gone in a moment, so not part of what a reload brings back
+		}
+		var layer = stage.add( def );
+		if ( stay ) {
+			setTimeout( function () {
+				if ( S.selected === layer.id ) {
+					select( null );
+				}
+				stage.remove( layer.id );
+			}, stay * 1000 );
+		} else {
+			select( layer.id );
+		}
+	}
+
+	function renderStickers() {
+		var all = D.stickers || [];
+		var groups = $( 'gif-groups' );
+		var box = $( 'stickers' );
+		groups.textContent = '';
+		box.textContent = '';
+		var names = all.reduce( function ( list, item ) {
+			return list.indexOf( item.group ) < 0 ? list.concat( item.group ) : list;
+		}, [] );
+		[ '' ].concat( names ).forEach( function ( name ) {
+			var btn = el( 'button', 'whdls-mini' + ( S.stickerGroup === name ? ' is-on' : '' ), name || T.allMoods );
+			btn.type = 'button';
+			btn.addEventListener( 'click', function () {
+				S.stickerGroup = name;
+				renderStickers();
+			} );
+			groups.appendChild( btn );
+		} );
+		all.forEach( function ( item ) {
+			if ( S.stickerGroup && item.group !== S.stickerGroup ) {
+				return;
+			}
+			var tile = el( 'button', 'whdls-tile whdls-tile--sticker' );
+			tile.type = 'button';
+			var icon = el( 'span', 'whdls-tile__icon' );
+			var img = el( 'img' );
+			img.src = item.url;
+			img.alt = '';
+			img.loading = 'lazy';
+			icon.appendChild( img );
+			tile.appendChild( icon );
+			tile.appendChild( el( 'span', 'whdls-tile__label', item.label ) );
+			tile.addEventListener( 'click', function () {
+				popGif( item.url, portrait ? 0.3 : 0.16, item.anim );
+				tile.classList.add( 'is-hit' );
+				setTimeout( function () {
+					tile.classList.remove( 'is-hit' );
+				}, 180 );
+			} );
+			box.appendChild( tile );
+		} );
+	}
+
+	function renderGifs() {
+		var box = $( 'gif-list' );
+		box.textContent = '';
+		S.gifs.forEach( function ( url, i ) {
+			var tile = el( 'button', 'whdls-thumb' );
+			tile.type = 'button';
+			var img = el( 'img' );
+			img.src = url;
+			img.alt = '';
+			img.loading = 'lazy';
+			tile.appendChild( img );
+			var x = el( 'i', 'whdls-thumb__x', '×' );
+			x.addEventListener( 'click', function ( e ) {
+				e.stopPropagation();
+				S.gifs.splice( i, 1 );
+				renderGifs();
+				saveSoon();
+			} );
+			tile.appendChild( x );
+			tile.addEventListener( 'click', function () {
+				popGif( url, portrait ? 0.5 : 0.26, 'none' );
+			} );
+			box.appendChild( tile );
+		} );
+	}
+
+	$( 'gif-pick' ).addEventListener( 'click', function () {
+		chooseMedia( { title: T.pickGif, type: [ 'image/gif', 'image/webp' ], multiple: true, button: T.useGif }, function ( files ) {
+			files.forEach( function ( file ) {
+				if ( S.gifs.indexOf( file.url ) < 0 ) {
+					S.gifs.push( file.url );
+				}
+			} );
+			renderGifs();
+			saveSoon();
+			if ( files[ 0 ] ) {
+				popGif( files[ 0 ].url, portrait ? 0.5 : 0.26, 'none' );
+			}
+		} );
+	} );
+	if ( undefined !== saved.gifStay ) {
+		$( 'gif-stay' ).value = String( saved.gifStay );
+	}
+	$( 'gif-stay' ).addEventListener( 'change', saveSoon );
+	renderStickers();
+	renderGifs();
+
+	$( 'spot-on' ).checked = !! S.spot.on;
+	$( 'spot-on' ).addEventListener( 'change', function () {
+		setSpotOn( this.checked );
+	} );
+	renderSpotPlaces();
 
 	/* ─────────────────────────── text ─────────────────────────── */
 
@@ -1597,8 +2002,18 @@
 			box.appendChild( row );
 		} );
 		var now = mixer && S.music[ mixer.index ] && ! mixer.audio.paused ? S.music[ mixer.index ].title : '';
-		$( 'music-now' ).textContent = now;
+		$( 'music-now' ).textContent = now || ( S.music.length ? T.pressPlay : '' );
 		$( 'music-play' ).classList.toggle( 'is-on', !! now );
+	}
+
+	/*
+	 * Before going live nobody else can hear it, so the first track added starts straight away: that is how you find
+	 * out it works. On air it waits for Play, because music starting by itself would surprise the people watching.
+	 */
+	function firstTrackStarts() {
+		if ( mixer && ! S.onAir && ! mixer.audio.src ) {
+			mixer.playIndex( S.music.length - 1 );
+		}
 	}
 
 	/* ─ the ready-made music ─ */
@@ -1678,6 +2093,7 @@
 				renderMusic();
 				renderLibrary();
 				saveSoon();
+				firstTrackStarts();
 			} );
 			row.appendChild( add );
 			list.appendChild( row );
@@ -1746,8 +2162,15 @@
 			mixer.loop = !! saved.loop;
 			$( 'music-loop' ).checked = mixer.loop;
 		}
+		if ( undefined !== saved.hear ) {
+			mixer.setMonitor( !! saved.hear );
+			$( 'monitor' ).checked = !! saved.hear;
+		}
 		mixer.setMuted( S.muted );
 		mixer.onMusic = renderMusic;
+		mixer.onError = function () {
+			banner( 'sound', T.soundFailed, 'error' );
+		};
 
 		[ 'mic', 'music', 'pads' ].forEach( function ( bus ) {
 			$( 'vol-' + bus ).addEventListener( 'input', function () {
@@ -1772,6 +2195,7 @@
 		$( 'monitor' ).addEventListener( 'change', function () {
 			mixer.wake();
 			mixer.setMonitor( this.checked );
+			saveSoon();
 		} );
 		$( 'music-add' ).addEventListener( 'click', function () {
 			chooseMedia( { title: T.pickAudio, type: 'audio', multiple: true, button: T.useAudio }, function ( files ) {
@@ -1780,6 +2204,7 @@
 				} );
 				renderMusic();
 				saveSoon();
+				firstTrackStarts();
 			} );
 		} );
 		$( 'pad-add' ).addEventListener( 'click', function () {
@@ -2424,6 +2849,7 @@
 		} );
 		$( 'tiktok-box' ).hidden = ! D.needsTikTokKey;
 		$( 'start-covered' ).checked = stage.cover;
+		$( 'headphones' ).hidden = ! ( mixer && mixer.hearing );
 		$( 'preflight' ).showModal();
 	}
 
@@ -2677,6 +3103,7 @@
 		if ( 0 === S.ticks % 3 ) {
 			updateMeters();
 			drawHandles();
+			drawSpot();
 		}
 		if ( 0 === S.ticks % 30 ) {
 			updateClock();

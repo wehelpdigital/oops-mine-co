@@ -207,6 +207,8 @@
 
 	/* ─────────────────────────── the piece on screen ─────────────────────────── */
 
+	var lastShown = 0;
+
 	function renderShowing() {
 		var showing = state.showing;
 		var piece = showing && showing.piece ? showing.piece : null;
@@ -218,6 +220,14 @@
 			byId( 'now-name' ).textContent = piece.name;
 			byId( 'now-price' ).textContent = piece.price;
 		}
+		// A new piece draws the eye here too, even when the bar was already up for the one before.
+		var shownId = piece && 'live' === state.stage ? piece.id : 0;
+		if ( shownId && shownId !== lastShown ) {
+			now.classList.remove( 'is-new' );
+			void now.offsetWidth;
+			now.classList.add( 'is-new' );
+		}
+		lastShown = shownId;
 		// The card itself is part of the video, so what makes it clickable is a box laid over the spot.
 		var rect = showing && showing.rect;
 		var on = piece && rect && 4 === rect.length && hasPicture && ! state.covered && 'live' === state.stage;

@@ -553,6 +553,24 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   (`renderLibrary`), and `Mixer` fetches and decodes them through the same mix as the host's own files. Only add a sound whose
   own page says CC0 (read per item, not per site), and level it with ffmpeg first (music -18 LUFS, effects -16). Pixabay and
   Mixkit are not CC0. A platform's automatic check can still flag a free track now and then.
+  **The host hears music and pads** by default (`Mixer.monitor` to the speakers, `hear` in the scene, switch under the
+  faders, a headphones line in the preflight): it was off to prevent echo and the owner took that for a fault. The mic never
+  plays back. The first track added before going live starts itself; on air it waits for Play.
+  **Emphasis:** a piece's card and its photos rise in with an overshoot, then `_drawRings` / `_drawSheen` / `_drawSparks` for
+  `REVEAL_MS`, burned into the video so every platform sees it; the site's now-bar gets `.is-new` when the piece changes.
+  **Photos** (replaced "Float photo"): a `gallery` layer on the canvas, cream card, one photo at a time sliding in with a slow
+  drift, the piece's name and code under it. `WHD_Live::photos()` (main, gallery, variation pictures, max 12) is only on the
+  host's list, so the public files never hold more than the piece on air. Photos also shows the piece's card: its caption says
+  what to comment, and a bare number only answers once a piece has been on air. It opens at the **spot**, a `spot` layer that
+  draws nothing and exists so it can be dragged and sized like the rest; the dashed box is HTML (`drawSpot`), so it cannot
+  reach the video. `S.spot` is saved at the scene's root, because `stage.load()` replaces layers.
+  **GIFs tab:** tap and it pops up for 4, 6 or 10 s (`_brief`: not saved with the scene) or until taken off. Moving stickers
+  are Noto Emoji 3D art (`assets/live-stickers/`) with the stage's own moves (`wobble`, `jelly`, `shake`, `hop`). Its README
+  says Apache 2.0 and links a LICENSE that holds the OFL; both allow this and both texts are kept. Google's *animated* Noto emoji
+  were left out: only third parties state a licence for them. **A canvas only draws a GIF's first frame**, so `_decodeFrames`
+  decodes GIF/animated WebP with `ImageDecoder` (read through fetch, so a file that refuses cannot taint the canvas, which
+  would stop the stream), max 150 frames at 420 px, released when nothing shows it. WordPress's resized copies of a GIF are
+  stills, so `sizedUrl` keeps the original.
   Every stream's link is unique for good: `WHD_Live::new_slug()` puts a random end on the title's slug at creation and an
   edit never changes it, so a deleted stream's address is never reissued. It is shown from the moment of saving (list,
   form, studio's top bar, preflight), on the waiting page with Copy, on the cover under the words, and is sent in the

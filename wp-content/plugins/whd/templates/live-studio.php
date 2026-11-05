@@ -16,6 +16,7 @@ $whd_icons = [
 	'cameras' => '<rect x="3" y="6.500" width="13" height="11" rx="2.500"/><path d="m16 11 5-3v8l-5-3"/>',
 	'sound'   => '<path d="M9 18V6l10-2v12"/><circle cx="6.500" cy="18" r="2.500"/><circle cx="16.500" cy="16" r="2.500"/>',
 	'effects' => '<path d="M12 3.500 13.800 9l5.700 1.800-5.700 1.800L12 18l-1.800-5.400-5.700-1.800L10.200 9 12 3.500Z"/><path d="M19 16.500v4M17 18.500h4"/>',
+	'gifs'    => '<circle cx="12" cy="12" r="8.500"/><path d="M8.500 14.500c.8 1.400 2 2.100 3.500 2.100s2.700-.7 3.500-2.100"/><path d="M9 9.500v1M15 9.500v1"/>',
 	'images'  => '<rect x="3.500" y="5" width="17" height="14" rx="2"/><circle cx="9" cy="10" r="1.600"/><path d="m4 17 5-4.500 3.500 3 3-2.500 4.500 4"/>',
 	'text'    => '<path d="M5 6.500V5h14v1.500M12 5v14M9.500 19h5"/>',
 	'looks'   => '<circle cx="12" cy="12" r="8.500"/><path d="M12 3.500v17M12 7l5.800-2M12 11.500h8M12 16l6 2.800"/>',
@@ -26,6 +27,7 @@ $whd_tabs = [
 	'cameras' => __( 'Cameras', 'whd' ),
 	'sound'   => __( 'Sound', 'whd' ),
 	'effects' => __( 'Effects', 'whd' ),
+	'gifs'    => __( 'GIFs', 'whd' ),
 	'images'  => __( 'Pictures', 'whd' ),
 	'text'    => __( 'Text', 'whd' ),
 	'looks'   => __( 'Looks', 'whd' ),
@@ -79,6 +81,11 @@ $whd_tabs = [
 				</div>
 				<ol class="whdls-pieces" id="whdls-pieces"></ol>
 				<p class="whdls-hint"><?php esc_html_e( 'Press Show and the card goes into the video. Drag it where you want it. Viewers who comment its code get the link.', 'whd' ); ?></p>
+
+				<h3><?php esc_html_e( 'Where the photos open', 'whd' ); ?></h3>
+				<div class="whdls-seg" role="group" id="whdls-spot-places"></div>
+				<label class="whdls-switch whdls-switch--block"><input type="checkbox" id="whdls-spot-on" checked><span></span><?php esc_html_e( 'Show me the spot', 'whd' ); ?></label>
+				<p class="whdls-hint"><?php esc_html_e( 'Drag the dashed box in the picture to where you’ll point, and pull a corner to size it. Only you can see it. Press Photos on a piece and its pictures open right there.', 'whd' ); ?></p>
 			</div>
 
 			<div class="whdls-pane" data-pane="cameras">
@@ -106,6 +113,8 @@ $whd_tabs = [
 					<div class="whdls-fader"><span><?php esc_html_e( 'Music', 'whd' ); ?></span><input type="range" id="whdls-vol-music" min="0" max="1" step="0.01" value="0.35"><i class="whdls-vu"><b id="whdls-vu-music"></b></i></div>
 					<div class="whdls-fader"><span><?php esc_html_e( 'Sound pads', 'whd' ); ?></span><input type="range" id="whdls-vol-pads" min="0" max="1" step="0.01" value="0.8"><i class="whdls-vu"><b id="whdls-vu-pads"></b></i></div>
 				</div>
+				<label class="whdls-switch whdls-switch--block"><input type="checkbox" id="whdls-monitor" checked><span></span><?php esc_html_e( 'Hear music and pads on this computer', 'whd' ); ?></label>
+				<p class="whdls-hint"><?php esc_html_e( 'Viewers hear them either way. Once you’re live, wear headphones if you can, so your mic doesn’t pick them up.', 'whd' ); ?></p>
 
 				<h3><?php esc_html_e( 'Background music', 'whd' ); ?></h3>
 				<div class="whdls-transport">
@@ -122,12 +131,11 @@ $whd_tabs = [
 				<button type="button" class="whdls-btn whdls-btn--quiet" id="whdls-music-add"><?php esc_html_e( 'Add your own from the media library', 'whd' ); ?></button>
 				<label class="whdls-switch whdls-switch--block"><input type="checkbox" id="whdls-music-duck" checked><span></span><?php esc_html_e( 'Lower the music when I talk', 'whd' ); ?></label>
 				<label class="whdls-switch whdls-switch--block"><input type="checkbox" id="whdls-music-loop" checked><span></span><?php esc_html_e( 'Start over at the end of the list', 'whd' ); ?></label>
-				<label class="whdls-switch whdls-switch--block"><input type="checkbox" id="whdls-monitor"><span></span><?php esc_html_e( 'Let me hear music and pads (wear headphones)', 'whd' ); ?></label>
 				<p class="whdls-note"><?php esc_html_e( 'The ready-made music and sounds are public domain (CC0), free for a shop to use with no credit needed. Anything you add yourself must be yours to use: Facebook and YouTube can mute or stop a live for copyrighted music, and their automatic checks can occasionally flag even free tracks.', 'whd' ); ?></p>
 
 				<h3><?php esc_html_e( 'Sound pads', 'whd' ); ?></h3>
 				<div class="whdls-tiles" id="whdls-pads"></div>
-				<p class="whdls-hint"><?php esc_html_e( 'Viewers hear these. To hear them yourself, turn on “Let me hear music and pads”.', 'whd' ); ?></p>
+				<p class="whdls-hint"><?php esc_html_e( 'Press one and it goes out to your viewers too.', 'whd' ); ?></p>
 				<button type="button" class="whdls-btn whdls-btn--quiet" id="whdls-pad-add"><?php esc_html_e( 'Add your own sound', 'whd' ); ?></button>
 			</div>
 
@@ -142,6 +150,26 @@ $whd_tabs = [
 				<p class="whdls-hint"><?php esc_html_e( 'A photo or sticker that floats up over the video.', 'whd' ); ?></p>
 				<button type="button" class="whdls-btn" id="whdls-float-pick"><?php esc_html_e( 'Choose a floating picture', 'whd' ); ?></button>
 				<div class="whdls-thumbs" id="whdls-float-list"></div>
+			</div>
+
+			<div class="whdls-pane" data-pane="gifs">
+				<h2><?php esc_html_e( 'GIFs', 'whd' ); ?></h2>
+				<p class="whdls-hint"><?php esc_html_e( 'Press one and it pops up over the video. Drag it anywhere while it’s up.', 'whd' ); ?></p>
+				<label class="whdls-field whdls-field--row"><span><?php esc_html_e( 'Stays on screen', 'whd' ); ?></span>
+					<select id="whdls-gif-stay">
+						<option value="4"><?php esc_html_e( '4 seconds', 'whd' ); ?></option>
+						<option value="6" selected><?php esc_html_e( '6 seconds', 'whd' ); ?></option>
+						<option value="10"><?php esc_html_e( '10 seconds', 'whd' ); ?></option>
+						<option value="0"><?php esc_html_e( 'Until I take it off', 'whd' ); ?></option>
+					</select>
+				</label>
+				<h3><?php esc_html_e( 'Moving stickers', 'whd' ); ?></h3>
+				<div class="whdls-filter whdls-filter--moods" id="whdls-gif-groups"></div>
+				<div class="whdls-tiles" id="whdls-stickers"></div>
+				<h3><?php esc_html_e( 'Your own GIFs', 'whd' ); ?></h3>
+				<button type="button" class="whdls-btn" id="whdls-gif-pick"><?php esc_html_e( 'Add a GIF from the media library', 'whd' ); ?></button>
+				<div class="whdls-thumbs" id="whdls-gif-list"></div>
+				<p class="whdls-note"><?php esc_html_e( 'The moving stickers are free for a shop to use. A funny GIF you find online usually belongs to someone else, and Facebook and YouTube can act on clips from films or TV, so use ones you’re allowed to.', 'whd' ); ?></p>
 			</div>
 
 			<div class="whdls-pane" data-pane="images">
@@ -208,6 +236,10 @@ $whd_tabs = [
 			<div class="whdls-stagebox" id="whdls-stagebox">
 				<div class="whdls-frame" id="whdls-frame">
 					<canvas id="whdls-canvas"></canvas>
+					<div class="whdls-spot" id="whdls-spot" hidden>
+						<strong><?php esc_html_e( 'Product photos open here', 'whd' ); ?></strong>
+						<small><?php esc_html_e( 'Only you see this box. Drag it where you’ll point.', 'whd' ); ?></small>
+					</div>
 					<div class="whdls-handles" id="whdls-handles"></div>
 					<span class="whdls-onair" id="whdls-onair" hidden><i></i><?php esc_html_e( 'On air', 'whd' ); ?></span>
 					<div class="whdls-peek" id="whdls-peek" hidden>
@@ -290,6 +322,7 @@ $whd_tabs = [
 		</label>
 		<label class="whdls-switch whdls-switch--block"><input type="checkbox" id="whdls-start-covered"><span></span><?php esc_html_e( 'Start behind the cover, and lift it when you’re ready', 'whd' ); ?></label>
 		<p class="whdls-hint"><?php esc_html_e( 'Keep this tab open while you are live. Your picture comes from here.', 'whd' ); ?></p>
+		<p class="whdls-hint" id="whdls-headphones" hidden><?php esc_html_e( 'You’ll hear music and pads on this computer. Wear headphones if you can, so your mic doesn’t pick them up and send them out twice.', 'whd' ); ?></p>
 		<div class="whdls-dialog__actions">
 			<button type="button" class="whdls-btn whdls-btn--quiet" data-close><?php esc_html_e( 'Not yet', 'whd' ); ?></button>
 			<button type="button" class="whdls-golive" id="whdls-confirm"><?php esc_html_e( 'Go live now', 'whd' ); ?></button>

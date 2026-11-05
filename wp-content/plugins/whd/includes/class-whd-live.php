@@ -459,10 +459,39 @@ final class WHD_Live {
 		foreach ( self::piece_rows( $id ) as $i => $row ) {
 			$piece = self::piece( $row['id'], $i + 1, $row['code'] );
 			if ( $piece ) {
-				$out[] = $piece;
+				$piece['images'] = self::photos( $row['id'] );
+				$out[]           = $piece;
 			}
 		}
 		return $out;
+	}
+
+	/**
+	 * Every photo of a piece, for the studio's slideshow: the main one, the gallery, then any a colour or size has
+	 * of its own. Only the host's list carries this, so the public files never name more than the piece on air.
+	 */
+	public static function photos( $product_id ): array {
+		$product = function_exists( 'wc_get_product' ) ? wc_get_product( (int) $product_id ) : null;
+		if ( ! $product ) {
+			return [];
+		}
+		$ids = array_merge( [ (int) $product->get_image_id() ], array_map( 'intval', $product->get_gallery_image_ids() ) );
+		if ( $product->is_type( 'variable' ) ) {
+			foreach ( $product->get_children() as $child ) {
+				$variation = wc_get_product( $child );
+				if ( $variation ) {
+					$ids[] = (int) $variation->get_image_id();
+				}
+			}
+		}
+		$urls = [];
+		foreach ( array_slice( array_values( array_unique( array_filter( $ids ) ) ), 0, 12 ) as $id ) {
+			$url = wp_get_attachment_image_url( $id, 'large' );
+			if ( $url ) {
+				$urls[] = (string) $url;
+			}
+		}
+		return $urls;
 	}
 
 	/* ─────────────────────────── short links ─────────────────────────── */
