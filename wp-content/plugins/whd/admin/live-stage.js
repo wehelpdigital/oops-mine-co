@@ -57,7 +57,12 @@
 		balloons: { label: 'Balloons', icon: '🎈', emoji: [ '🎈' ], kind: 'rise', count: 16, size: [ 0.08, 0.14 ] },
 		petals: { label: 'Petals', icon: '🌸', emoji: [ '🌸', '🌷', '🌹' ], kind: 'fall', count: 30, size: [ 0.04, 0.08 ] },
 		fire: { label: 'Hot', icon: '🔥', emoji: [ '🔥' ], kind: 'rise', count: 26, size: [ 0.05, 0.1 ] },
-		snow: { label: 'Snow', icon: '❄️', emoji: [ '❄️' ], kind: 'fall', count: 40, size: [ 0.025, 0.05 ] }
+		snow: { label: 'Snow', icon: '❄️', emoji: [ '❄️' ], kind: 'fall', count: 40, size: [ 0.025, 0.05 ] },
+		leaves: { label: 'Leaves', icon: '🍁', emoji: [ '🍁', '🍂' ], kind: 'fall', count: 26, size: [ 0.04, 0.075 ] },
+		lanterns: { label: 'Lanterns', icon: '🏮', emoji: [ '🏮' ], kind: 'rise', count: 14, size: [ 0.06, 0.1 ] },
+		bats: { label: 'Bats', icon: '🦇', emoji: [ '🦇' ], kind: 'fall', count: 16, size: [ 0.05, 0.09 ] },
+		tags: { label: 'Tags', icon: '🏷️', emoji: [ '🏷️' ], kind: 'fall', count: 18, size: [ 0.045, 0.08 ] },
+		bolts: { label: 'Bolts', icon: '⚡', emoji: [ '⚡' ], kind: 'twinkle', count: 16, size: [ 0.05, 0.09 ] }
 	};
 
 	var ANIMS = {
@@ -362,6 +367,23 @@
 
 	Stage.prototype.setFrame = function ( key ) {
 		this.frame = FRAMES[ key ] ? key : 'none';
+		this.occasion = null;
+		this.changed();
+	};
+
+	/* A frame for a season or celebration: { key, words, font, band: [ a, b ], line, ribbon: [ a, b ], ink, art: [ urls ] }. */
+	Stage.prototype.setOccasion = function ( occasion ) {
+		var self = this;
+		this.occasion = occasion || null;
+		this._occasionFrame = null;
+		if ( occasion ) {
+			this.frame = 'none';
+			( occasion.art || [] ).forEach( function ( src ) {
+				self.image( src, function () {
+					self._occasionFrame = null; // drawn again with this picture in it
+				} );
+			} );
+		}
 		this.changed();
 	};
 
@@ -629,7 +651,8 @@
 					}
 				}
 				return out;
-			} )
+			} ),
+			occasion: this.occasion
 		};
 	};
 
@@ -643,6 +666,7 @@
 		this.look = LOOKS[ scene.look ] ? scene.look : 'natural';
 		this.brightness = +scene.brightness || 1;
 		this.frame = FRAMES[ scene.frame ] ? scene.frame : 'none';
+		this.setOccasion( scene.occasion || null );
 		this._rebuildFilter();
 	};
 
@@ -750,8 +774,8 @@
 	};
 
 	/* An effect that keeps going until it is turned off. */
-	Stage.prototype.setRain = function ( key, src ) {
-		this.rain = key && ( EFFECTS[ key ] || src ) ? { key: key, src: src || '', acc: 0 } : null;
+	Stage.prototype.setRain = function ( key, src, rate ) {
+		this.rain = key && ( EFFECTS[ key ] || src ) ? { key: key, src: src || '', acc: 0, rate: rate || 1 } : null;
 		if ( src ) {
 			this.image( src );
 		}
@@ -764,7 +788,7 @@
 		}
 		var effect = rain.src ? { kind: 'rise', size: [ 0.1, 0.18 ], count: 12 } : EFFECTS[ rain.key ];
 		// A burst spread over 2.2 s, repeating: the same density as pressing it over and over.
-		rain.acc += dt * ( effect.count / 2.2 );
+		rain.acc += dt * ( effect.count / 2.2 ) * rain.rate;
 		while ( rain.acc >= 1 ) {
 			rain.acc -= 1;
 			this.emitOne( effect, rain.src );
@@ -1623,7 +1647,121 @@
 		ctx.drawImage( this._blank, 0, 0 );
 	};
 
+	/*
+	 * Drawn once and kept: a coloured edge, a fine line inside it, the words on a ribbon at the top, and pictures in the
+	 * corners, largest on the right because the piece's card sits bottom left and the logo top left.
+	 */
+	Stage.prototype._buildOccasion = function ( o ) {
+		var W = this.W;
+		var H = this.H;
+		var u = Math.min( W, H );
+		var tall = H > W; // a phone's picture: less room across, so the words are smaller and the second picture goes lower
+		var c = makeCanvas( W, H );
+		var x = c.getContext( '2d' );
+
+		var edge = u * 0.024;
+		var band = x.createLinearGradient( 0, 0, W, H );
+		band.addColorStop( 0, o.band[ 0 ] );
+		band.addColorStop( 1, o.band[ 1 ] );
+		x.strokeStyle = band;
+		x.lineWidth = edge * 2;
+		x.strokeRect( 0, 0, W, H );
+		x.strokeStyle = o.line;
+		x.lineWidth = Math.max( 1.5, u * 0.0032 );
+		var gap = edge + u * 0.009;
+		roundRect( x, gap, gap, W - gap * 2, H - gap * 2, u * 0.012 );
+		x.stroke();
+
+		var art = o.art || [];
+		var images = this.images;
+		[
+			[ 0, W - u * 0.105, u * 0.11, 0.21, 0.14 ],
+			[ 1, tall ? W - u * 0.08 : W - u * 0.245, tall ? u * 0.265 : u * 0.065, 0.1, -0.2 ],
+			[ 2, W - u * 0.105, H - u * 0.11, 0.21, -0.1 ],
+			[ 3, W - u * 0.245, H - u * 0.06, 0.095, 0.18 ],
+			[ 4, u * 0.062, u * 0.27, 0.09, -0.16 ],
+			[ 5, u * 0.062, H - u * 0.065, 0.09, 0.12 ]
+		].forEach( function ( place ) {
+			var entry = art[ place[ 0 ] ] ? images[ art[ place[ 0 ] ] ] : null;
+			if ( ! entry || ! entry.ok ) {
+				return;
+			}
+			var size = u * place[ 3 ];
+			x.save();
+			x.shadowColor = 'rgba(0,0,0,.38)';
+			x.shadowBlur = u * 0.014;
+			x.shadowOffsetY = u * 0.004;
+			x.translate( place[ 1 ], place[ 2 ] );
+			x.rotate( place[ 4 ] );
+			x.drawImage( entry.img, -size / 2, -size / 2, size, size );
+			x.restore();
+		} );
+
+		var words = String( o.words || '' ).trim();
+		if ( words ) {
+			var bold = 'sans' === o.font;
+			var size = u * ( bold ? ( tall ? 0.04 : 0.048 ) : ( tall ? 0.05 : 0.062 ) );
+			var font = ( bold ? '800 ' : 'italic 500 ' ) + size + 'px ' + ( bold ? SANS : SERIF );
+			x.font = font;
+			spaced( x, '', bold ? u * 0.006 : 0 );
+			var text = bold ? words.toUpperCase() : words;
+			var room = W * ( tall ? 0.46 : 0.56 );
+			var wide = Math.min( x.measureText( text ).width, room );
+			var h = u * ( tall ? 0.078 : 0.092 );
+			var w = wide + u * ( tall ? 0.1 : 0.15 );
+			var left = ( W - w ) / 2;
+			var top = u * 0.018;
+
+			x.save();
+			x.shadowColor = 'rgba(0,0,0,.42)';
+			x.shadowBlur = u * 0.022;
+			x.shadowOffsetY = u * 0.006;
+			var ribbon = x.createLinearGradient( left, 0, left + w, 0 );
+			ribbon.addColorStop( 0, o.ribbon[ 0 ] );
+			ribbon.addColorStop( 1, o.ribbon[ 1 ] );
+			roundRect( x, left, top, w, h, h / 2 );
+			x.fillStyle = ribbon;
+			x.fill();
+			x.restore();
+
+			roundRect( x, left + u * 0.007, top + u * 0.007, w - u * 0.014, h - u * 0.014, ( h - u * 0.014 ) / 2 );
+			x.strokeStyle = o.line;
+			x.lineWidth = Math.max( 1, u * 0.002 );
+			x.stroke();
+
+			x.fillStyle = o.ink;
+			x.textAlign = 'center';
+			x.textBaseline = 'middle';
+			x.fillText( text, W / 2, top + h / 2 + u * 0.002, room );
+			x.textAlign = 'left';
+			spaced( x, '', 0 );
+
+			// A glint either side of the words.
+			var inset = u * ( tall ? 0.028 : 0.045 );
+			[ left + inset, left + w - inset ].forEach( function ( at ) {
+				var r = u * ( tall ? 0.011 : 0.014 );
+				x.beginPath();
+				for ( var i = 0; i < 8; i++ ) {
+					var reach = i % 2 ? r * 0.26 : r;
+					var a = i * Math.PI / 4;
+					x[ i ? 'lineTo' : 'moveTo' ]( at + Math.cos( a ) * reach, top + h / 2 + Math.sin( a ) * reach );
+				}
+				x.closePath();
+				x.fillStyle = o.line;
+				x.fill();
+			} );
+		}
+		return c;
+	};
+
 	Stage.prototype._drawFrame = function ( ctx ) {
+		if ( this.occasion ) {
+			if ( ! this._occasionFrame ) {
+				this._occasionFrame = this._buildOccasion( this.occasion );
+			}
+			ctx.drawImage( this._occasionFrame, 0, 0 );
+			return;
+		}
 		var key = this.frame;
 		if ( 'none' === key ) {
 			return;

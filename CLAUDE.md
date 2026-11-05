@@ -560,8 +560,10 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   `REVEAL_MS`, burned into the video so every platform sees it; the site's now-bar gets `.is-new` when the piece changes.
   **Photos** (replaced "Float photo"): a `gallery` layer on the canvas, cream card, one photo at a time sliding in with a slow
   drift, the piece's name and code under it. `WHD_Live::photos()` (main, gallery, variation pictures, max 12) is only on the
-  host's list, so the public files never hold more than the piece on air. Photos also shows the piece's card: its caption says
-  what to comment, and a bare number only answers once a piece has been on air. It opens at the **spot**, a `spot` layer that
+  host's list, so the public files never hold more than the piece on air. **The card or the photos, never both** (the owner's
+  call: they said the same thing and covered the screen). The photos replace the card and come with the same `/showing` post,
+  so the piece is public, its number answers and the page's clickable area sits over them; closing brings back that piece's card
+  (`S.cardBack`), where it was. It opens at the **spot**, a `spot` layer that
   draws nothing and exists so it can be dragged and sized like the rest; the dashed box is HTML (`drawSpot`), so it cannot
   reach the video. `S.spot` is saved at the scene's root, because `stage.load()` replaces layers.
   **GIFs tab:** tap and it pops up for 4, 6 or 10 s (`_brief`: not saved with the scene) or until taken off. Moving stickers
@@ -571,6 +573,12 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   decodes GIF/animated WebP with `ImageDecoder` (read through fetch, so a file that refuses cannot taint the canvas, which
   would stop the stream), max 150 frames at 420 px, released when nothing shows it. WordPress's resized copies of a GIF are
   stills, so `sizedUrl` keeps the original.
+  **Occasions tab:** 13 seasons and celebrations (`occasion_library()` in the admin class: words, colours, six corner pictures
+  from `assets/live-stickers/frames/`, what falls; tracks from `sounds.json` → `occasions`, files in `assets/live-sounds/
+  occasions/`, cut to 170 s). One tap: `Stage.setOccasion()` draws the frame once into the video (`_buildOccasion`, saved in
+  the scene as `stage.occasion`, words editable), `setRain( key, '', 0.34 )` at a third of the density, and the music list is
+  swapped with the host's own kept in `musicBefore` for when it comes off. Before going live the music starts; on air it
+  only changes if music is already playing. A plain frame in Looks ends the occasion's frame. No year in the words.
   Every stream's link is unique for good: `WHD_Live::new_slug()` puts a random end on the title's slug at creation and an
   edit never changes it, so a deleted stream's address is never reissued. It is shown from the moment of saving (list,
   form, studio's top bar, preflight), on the waiting page with Copy, on the cover under the words, and is sent in the

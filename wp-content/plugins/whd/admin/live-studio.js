@@ -87,6 +87,10 @@
 		ownPads: saved.ownPads || [],
 		gifs: saved.gifs || [],
 		stickerGroup: '',
+		occWords: saved.occWords || {},
+		occMusic: false !== saved.occMusic,
+		occRain: false !== saved.occRain,
+		musicBefore: saved.musicBefore || null,
 		photos: 0,
 		spot: saved.spot || { x: SPOT_PLACES[ SPOT_FIRST ].x, y: SPOT_PLACES[ SPOT_FIRST ].y, w: SPOT_PLACES[ SPOT_FIRST ].w, on: true },
 		scenes: saved.scenes || [],
@@ -190,6 +194,7 @@
 	}
 	if ( galleryLayer() ) {
 		S.photos = galleryLayer().productId;
+		S.showing = productLayer() ? productLayer().productId : 0; // the server's "showing" is the piece, not its card
 	}
 	ensureSpot();
 
@@ -230,6 +235,10 @@
 			ownPads: S.ownPads,
 			gifs: S.gifs,
 			gifStay: +$( 'gif-stay' ).value,
+			occWords: S.occWords,
+			occMusic: S.occMusic,
+			occRain: S.occRain,
+			musicBefore: S.musicBefore,
 			spot: S.spot,
 			scenes: S.scenes,
 			activeScene: S.activeScene,
@@ -679,6 +688,7 @@
 		updatePeek();
 		refreshCard();
 		syncShowing();
+		renderOccasions();
 		saveSoon();
 	}
 
@@ -688,6 +698,7 @@
 		var photos = galleryLayer();
 		S.showing = layer ? layer.productId : 0;
 		S.photos = photos ? photos.productId : 0;
+		S.cardBack = null;
 		ensureSpot();
 		renderPieces();
 		postShowing();
@@ -892,7 +903,7 @@
 		S.activeScene = '';
 		renderScenes();
 		saveSoon();
-		if ( layer && 'product' === layer.type ) {
+		if ( layer && ( 'product' === layer.type || 'gallery' === layer.type ) ) {
 			postShowing();
 		}
 		if ( layer && ( 'spot' === layer.type || 'gallery' === layer.type ) ) {
@@ -914,7 +925,7 @@
 			renderScenes();
 			if ( 'w' === key ) {
 				var layer = stage.get( S.selected );
-				if ( layer && 'product' === layer.type ) {
+				if ( layer && ( 'product' === layer.type || 'gallery' === layer.type ) ) {
 					postShowingSoon();
 				}
 				if ( layer && ( 'spot' === layer.type || 'gallery' === layer.type ) ) {
@@ -974,9 +985,6 @@
 		}
 		if ( wasProduct ) {
 			S.showing = 0;
-			if ( S.photos ) {
-				closePhotos();
-			}
 			renderPieces();
 			postShowing();
 		}
@@ -1058,9 +1066,11 @@
 		renderEffects();
 		select( null );
 		photoToken++;
+		var hadPhotos = !! S.photos;
 		S.photos = 0;
+		S.cardBack = null;
 		ensureSpot();
-		if ( hadProduct ) {
+		if ( hadProduct || hadPhotos ) {
 			S.showing = 0;
 			postShowing();
 		}
@@ -1084,7 +1094,7 @@
 	/* Where the card is, so the page can put a clickable area over it. Waits a frame for the box. */
 	function postShowing() {
 		setTimeout( function () {
-			var layer = productLayer();
+			var layer = productLayer() || galleryLayer();
 			var rect = layer ? stage.rect( layer.id ) : null;
 			if ( 'ended' !== S.stage ) {
 				api( 'POST', D.id + '/showing', { product: layer ? layer.productId : 0, rect: rect } ).catch( function () {} );
@@ -1119,12 +1129,12 @@
 		}
 	}
 
-	function showPiece( piece ) {
-		if ( S.photos && S.photos !== piece.id ) {
-			closePhotos();
+	function showPiece( piece, at ) {
+		if ( S.photos ) {
+			closePhotos( true ); // the card or the photos, never both: the photos already say what the card says
 		}
 		preloadPhotos( piece ); // so that Photos, when it is pressed, is instant
-		var old = productLayer();
+		var old = productLayer() || at;
 		var props = {
 			type: 'product',
 			productId: piece.id,
@@ -1212,6 +1222,9 @@
 			}
 		} );
 		renderSpotPlaces();
+		if ( galleryLayer() ) {
+			postShowingSoon();
+		}
 		saveSoon();
 	}
 
@@ -1254,11 +1267,19 @@
 		if ( ! images.length ) {
 			return;
 		}
-		closePhotos();
+		if ( S.photos ) {
+			closePhotos( true );
+		}
 		S.photos = piece.id;
-		// It has to count as shown: the photos say what to comment, and a number only works once a piece has been on air.
-		if ( S.showing !== piece.id ) {
-			showPiece( piece );
+		// The photos stand in for the card while they are up. If it was this piece's card, it comes back afterwards.
+		var card = productLayer();
+		S.cardBack = card && card.productId === piece.id ? { piece: piece, x: card.x, y: card.y, w: card.w } : null;
+		if ( card ) {
+			if ( S.selected === card.id ) {
+				select( null );
+			}
+			stage.remove( card.id );
+			S.showing = 0;
 		}
 		var token = ++photoToken;
 		var started = false;
@@ -1280,6 +1301,8 @@
 			} );
 			ensureSpot();
 			select( null );
+			// This is what makes the piece public: the photos say what to comment, and a number only works once it has been on air.
+			postShowing();
 			saveSoon();
 		};
 		// The first photo ready before anything appears, unless the connection is slow: then the card comes anyway.
@@ -1289,15 +1312,22 @@
 		renderPieces();
 	}
 
-	function closePhotos() {
+	function closePhotos( noCard ) {
 		photoToken++;
 		var layer = galleryLayer();
 		if ( layer ) {
 			stage.remove( layer.id );
 		}
+		var back = noCard ? null : S.cardBack;
+		S.cardBack = null;
 		S.photos = 0;
 		ensureSpot();
-		renderPieces();
+		if ( back ) {
+			showPiece( back.piece, back );
+		} else {
+			renderPieces();
+			postShowing();
+		}
 		saveSoon();
 	}
 
@@ -1384,7 +1414,8 @@
 		}
 		S.pieces.forEach( function ( piece, i ) {
 			var on = S.showing === piece.id;
-			var row = el( 'li', 'whdls-piece' + ( on ? ' is-on' : '' ) );
+			var open = S.photos === piece.id;
+			var row = el( 'li', 'whdls-piece' + ( on || open ? ' is-on' : '' ) );
 			row.appendChild( el( 'span', 'whdls-piece__n', String( i + 1 ) ) );
 			var img = el( 'img' );
 			img.src = piece.thumb;
@@ -1437,7 +1468,6 @@
 				}
 			} );
 			acts.appendChild( show );
-			var open = S.photos === piece.id;
 			var photos = el( 'button', 'whdls-mini whdls-photos' + ( open ? ' is-on' : '' ), open ? T.photosClose : fmt( T.photos, photosOf( piece ).length ) );
 			photos.type = 'button';
 			photos.title = T.photosHint;
@@ -1459,7 +1489,7 @@
 					hidePiece();
 				}
 				if ( open ) {
-					closePhotos();
+					closePhotos( true );
 				}
 				S.pieces.splice( i, 1 );
 				renderPieces();
@@ -1695,6 +1725,167 @@
 		} );
 	}
 
+	/* ─────────────────────────── occasions: a frame, its music and something falling, in one tap ─────────────────────────── */
+
+	function occasionNow() {
+		return stage.occasion && D.occasions && D.occasions[ stage.occasion.key ] ? D.occasions[ stage.occasion.key ] : null;
+	}
+
+	function frameFor( key ) {
+		var o = D.occasions[ key ];
+		return {
+			key: key,
+			words: undefined !== S.occWords[ key ] ? S.occWords[ key ] : o.words,
+			font: o.font,
+			band: o.band,
+			line: o.line,
+			ribbon: o.ribbon,
+			ink: o.ink,
+			art: o.art
+		};
+	}
+
+	/*
+	 * Swaps the list. Before going live, or if music is already playing, it starts straight away; on air with
+	 * nothing playing it waits for Play, for the same reason adding a track does.
+	 */
+	function swapMusic( list ) {
+		var playing = mixer && ! mixer.audio.paused;
+		if ( mixer ) {
+			mixer.stop();
+		}
+		S.music = list.slice();
+		if ( mixer ) {
+			mixer.setPlaylist( S.music );
+			mixer.index = 0;
+		}
+		renderMusic();
+		renderLibrary();
+		if ( mixer && S.music.length && ( playing || ! S.onAir ) ) {
+			mixer.playIndex( 0 );
+		}
+	}
+
+	function occasionTracks( o ) {
+		return ( o.tracks || [] ).map( function ( t ) {
+			return { url: t.url, title: t.title };
+		} );
+	}
+
+	function occasionRain( o ) {
+		var on = S.occRain && o && o.rain;
+		S.rain = on ? o.rain : '';
+		stage.setRain( on ? o.rain : null, '', 0.34 );
+		renderEffects();
+	}
+
+	function useOccasion( key ) {
+		var o = D.occasions[ key ];
+		var had = occasionNow();
+		stage.setOccasion( frameFor( key ) );
+		S.activeScene = '';
+		renderScenes();
+		syncLooks();
+		occasionRain( o );
+		if ( S.occMusic ) {
+			if ( ! had ) {
+				S.musicBefore = S.music.slice(); // what comes back when the occasion is taken off
+			}
+			swapMusic( occasionTracks( o ) );
+		}
+		renderOccasions();
+		saveSoon();
+	}
+
+	function endOccasion() {
+		var o = occasionNow();
+		stage.setOccasion( null );
+		if ( o && S.rain === o.rain ) {
+			occasionRain( null );
+		}
+		if ( S.occMusic && S.musicBefore ) {
+			swapMusic( S.musicBefore );
+		}
+		S.musicBefore = null;
+		S.activeScene = '';
+		renderScenes();
+		renderOccasions();
+		saveSoon();
+	}
+
+	function renderOccasions() {
+		var box = $( 'occasions' );
+		var now = occasionNow();
+		box.textContent = '';
+		Object.keys( D.occasions || {} ).forEach( function ( key ) {
+			var o = D.occasions[ key ];
+			var on = now && stage.occasion.key === key;
+			var tile = el( 'button', 'whdls-tile whdls-tile--sticker' + ( on ? ' is-on' : '' ) );
+			tile.type = 'button';
+			tile.setAttribute( 'data-key', key );
+			var icon = el( 'span', 'whdls-tile__icon' );
+			var img = el( 'img' );
+			img.src = o.art[ 0 ];
+			img.alt = '';
+			img.loading = 'lazy';
+			icon.appendChild( img );
+			tile.appendChild( icon );
+			tile.appendChild( el( 'span', 'whdls-tile__label', o.label ) );
+			tile.addEventListener( 'click', function () {
+				if ( on ) {
+					endOccasion();
+				} else {
+					useOccasion( key );
+				}
+			} );
+			box.appendChild( tile );
+		} );
+
+		var panel = $( 'occ-panel' );
+		panel.hidden = ! now;
+		if ( now ) {
+			$( 'occ-name' ).textContent = now.label;
+			var words = $( 'occ-words' );
+			if ( document.activeElement !== words ) {
+				words.value = stage.occasion.words || '';
+			}
+		}
+		renderOccasionTracks();
+	}
+
+	function renderOccasionTracks() {
+		var now = occasionNow();
+		var list = $( 'occ-tracks' );
+		list.textContent = '';
+		if ( now ) {
+			( now.tracks || [] ).forEach( function ( track ) {
+				list.appendChild( libraryRow( { url: track.url, title: track.title, mood: now.label, seconds: track.seconds } ) );
+			} );
+		}
+	}
+
+	$( 'occ-words' ).addEventListener( 'input', function () {
+		if ( stage.occasion ) {
+			S.occWords[ stage.occasion.key ] = this.value;
+			stage.setOccasion( frameFor( stage.occasion.key ) );
+			saveSoon();
+		}
+	} );
+	$( 'occ-off' ).addEventListener( 'click', endOccasion );
+	$( 'occ-music' ).checked = S.occMusic;
+	$( 'occ-rain' ).checked = S.occRain;
+	$( 'occ-music' ).addEventListener( 'change', function () {
+		S.occMusic = this.checked;
+		saveSoon();
+	} );
+	$( 'occ-rain' ).addEventListener( 'change', function () {
+		S.occRain = this.checked;
+		if ( occasionNow() ) {
+			occasionRain( occasionNow() );
+		}
+		saveSoon();
+	} );
+
 	/* ─────────────────────────── GIFs and moving stickers ─────────────────────────── */
 
 	/* Round the edges, away from the logo, the card's corner and the photos' usual side. */
@@ -1812,6 +2003,10 @@
 	$( 'gif-stay' ).addEventListener( 'change', saveSoon );
 	renderStickers();
 	renderGifs();
+	renderOccasions();
+	if ( occasionNow() && S.occRain ) {
+		occasionRain( occasionNow() ); // a reload keeps the snow falling
+	}
 
 	$( 'spot-on' ).checked = !! S.spot.on;
 	$( 'spot-on' ).addEventListener( 'change', function () {
@@ -1948,6 +2143,8 @@
 			tile.addEventListener( 'click', function () {
 				stage.setFrame( key );
 				syncLooks();
+				renderOccasions(); // a plain frame takes the occasion's place
+				saveSoon();
 			} );
 			frames.appendChild( tile );
 		} );
@@ -1996,6 +2193,7 @@
 				S.music.splice( i, 1 );
 				renderMusic();
 				renderLibrary();
+				renderOccasionTracks();
 				saveSoon();
 			} );
 			row.appendChild( x );
@@ -2024,6 +2222,7 @@
 	previewPlayer.addEventListener( 'ended', function () {
 		previewing = '';
 		renderLibrary();
+		renderOccasionTracks();
 	} );
 
 	function trackLength( seconds ) {
@@ -2044,6 +2243,7 @@
 			previewing = url;
 		}
 		renderLibrary();
+		renderOccasionTracks();
 	}
 
 	function renderLibrary() {
@@ -2068,6 +2268,11 @@
 			if ( mood && track.mood !== mood ) {
 				return;
 			}
+			list.appendChild( libraryRow( track ) );
+		} );
+	}
+
+	function libraryRow( track ) {
 			var row = el( 'li', 'whdls-libtrack' );
 			var hear = el( 'button', 'whdls-libtrack__hear' + ( previewing === track.url ? ' is-on' : '' ) );
 			hear.type = 'button';
@@ -2092,12 +2297,12 @@
 				S.music.push( { url: track.url, title: track.title } );
 				renderMusic();
 				renderLibrary();
+				renderOccasionTracks();
 				saveSoon();
 				firstTrackStarts();
 			} );
 			row.appendChild( add );
-			list.appendChild( row );
-		} );
+			return row;
 	}
 
 	function renderPads() {

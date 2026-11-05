@@ -49,3 +49,47 @@ shortened, with ffmpeg. `sounds.json` is what the studio reads.
 - Boing: https://bigsoundbank.com/boing-cartoon-2-s2278.html
 - Idea!: https://bigsoundbank.com/idea-1-s1398.html
 - Heartbeat: https://bigsoundbank.com/heart-beat-s0218.html
+
+## Music for occasions
+
+Longer tracks were cut to 170 seconds with a short fade.
+
+- christmas: Jingle Bells, Mystery Mammal: https://freemusicarchive.org/music/Mystery_Mammal/Xmas_in_Space_II/jingle-bells/
+- christmas: Deck The Halls, John Bartmann: https://freemusicarchive.org/music/John_Bartmann/public-domain-lofi-xmas-sludge/deck-the-halls-1/
+- christmas: Silent Night, HoliznaCC0: https://freemusicarchive.org/music/holiznacc0/a-lo-fi-christmas-special/silent-night-lo-fi/
+- christmas: Christmas Town, TRG Banks: https://freemusicarchive.org/music/TRG_Banks/TRG_Banks_Christmas_Album/Christmas_Town/
+- newyear: Auld Lang Syne, HoliznaCC0: https://freemusicarchive.org/music/holiznacc0/a-synth-wave-christmas-special/auld-lang-syne-synth-wave/
+- newyear: Party Party Disco Party, John Bartmann: https://freemusicarchive.org/music/John_Bartmann/eurodisco-party-heaven/party-party-disco-party/
+- newyear: Auld Lang Syne (soft), HoliznaCC0: https://freemusicarchive.org/music/holiznacc0/a-lo-fi-christmas-special/auld-lang-syne-lo-fi/
+- blackfriday: I'm On Fire, Loyalty Freak Music: https://freemusicarchive.org/music/Loyalty_Freak_Music/ROLLER_DISCO_DANCE_DANCE/Loyalty_Freak_Music_-_ROLLER_DISCO_DANCE_DANCE_-_03_IM_ON_FIRE/
+- blackfriday: Make Money, HoliznaCC0: https://freemusicarchive.org/music/holiznacc0/bassic/make-money/
+- blackfriday: Funky Pop, HoliznaCC0: https://freemusicarchive.org/music/holiznacc0/power-pop/funky-pop/
+- cybermonday: Cyber Anxiety, HoliznaCC0: https://freemusicarchive.org/music/holiznacc0/waves-of-nostalgia-2/cyber-anxiety/
+- cybermonday: Dance Robot Activate, Loyalty Freak Music: https://freemusicarchive.org/music/Loyalty_Freak_Music/ROLLER_DISCO_DANCE_DANCE/Loyalty_Freak_Music_-_ROLLER_DISCO_DANCE_DANCE_-_02_Dance_Robot_ACTIVATE/
+- cybermonday: Back In The 80s, HoliznaCC0: https://freemusicarchive.org/music/holiznacc0/power-pop/back-in-the-80s/
+- valentine: Dumplings For Two, John Bartmann: https://freemusicarchive.org/music/John_Bartmann/chinese-valentine/dumplings-for-two/
+- valentine: Neon City Love Affair, John Bartmann: https://freemusicarchive.org/music/John_Bartmann/chinese-valentine/neon-city-love-affair/
+- valentine: Love Love Love, HoliznaCC0: https://freemusicarchive.org/music/holiznacc0/power-pop/love-love-love/
+- lunar: Floating Lanterns, John Bartmann: https://freemusicarchive.org/music/John_Bartmann/chinese-valentine/floating-lanterns/
+- lunar: Oriental Bossa, John Bartmann: https://freemusicarchive.org/music/John_Bartmann/chinese-valentine/oriental-bossa/
+- lunar: Long Way To Kunming, John Bartmann: https://freemusicarchive.org/music/John_Bartmann/chinese-valentine/long-way-to-kunming/
+- mothers: Garden Party, TRG Banks: https://freemusicarchive.org/music/TRG_Banks/The_Rainbows_End/Garden_party/
+- mothers: Softly, Loyalty Freak Music: https://freemusicarchive.org/music/Loyalty_Freak_Music/MELODIES_WITH_A_BEAT/Loyalty_Freak_Music_-_MELODIES_WITH_A_BEAT_-_06_Softly/
+- mothers: Falling In Love With Yourself, HoliznaCC0: https://freemusicarchive.org/music/holiznacc0/be-happy-with-who-you-are/falling-in-love-with-yourself/
+- halloween: Halloween Ghost Party, Loyalty Freak Music: https://freemusicarchive.org/music/Loyalty_Freak_Music/WITCHY_BATTY_SPOOKY_HALLOWEEN_IN_SEPTEMBER_/Halloween_Ghost_Party/
+- halloween: Monster Parade, Loyalty Freak Music: https://freemusicarchive.org/music/Loyalty_Freak_Music/WITCHY_BATTY_SPOOKY_HALLOWEEN_IN_SEPTEMBER_/Monster_Parade/
+- halloween: Halloween Lofi, HoliznaCC0: https://freemusicarchive.org/music/holiznacc0/beats-from-the-crypt/halloween-lofi/
+- sale: Happy Dance, HoliznaCC0: https://freemusicarchive.org/music/holiznacc0/power-pop/happy-dance-2/
+- sale: Can't Stop My Feet!, Loyalty Freak Music: https://freemusicarchive.org/music/Loyalty_Freak_Music/ROLLER_DISCO_DANCE_DANCE/Loyalty_Freak_Music_-_ROLLER_DISCO_DANCE_DANCE_-_04_Cant_Stop_My_Feet_/
+- sale: Funky Pop, HoliznaCC0: https://freemusicarchive.org/music/holiznacc0/power-pop/funky-pop/
+- spring: Spring At Last, HoliznaCC0: https://freemusicarchive.org/music/holiznacc0/spring-at-last-lofi-tape/spring-at-last/
+- spring: Cherry Blossom, John Bartmann: https://freemusicarchive.org/music/John_Bartmann/chinese-valentine/cherry-blossom/
+- spring: Spring In Sight, HoliznaCC0: https://freemusicarchive.org/music/holiznacc0/spring-woke-me-up/spring-in-sight/
+- summer: Back To The Sea, Shaloza: https://freemusicarchive.org/music/shaloza/tropical-house/back-to-the-sea-1/
+- summer: Waves, Shaloza: https://freemusicarchive.org/music/shaloza/tropical-house/waves-8/
+- summer: Blue Skies, HoliznaCC0: https://freemusicarchive.org/music/holiznacc0/lazy-summer-lofi-1/blue-skiesmp3/
+- autumn: Autumn, HoliznaCC0: https://freemusicarchive.org/music/holiznacc0/lo-fi-and-chill/autumn/
+- autumn: Autumn Wind, John Bartmann: https://freemusicarchive.org/music/John_Bartmann/softly-boldly-with-a-piano/autumn-wind/
+- winter: Snow Drift, HoliznaCC0: https://freemusicarchive.org/music/holiznacc0/winter-lofi/snow-drift/
+- winter: Fire Place, HoliznaCC0: https://freemusicarchive.org/music/holiznacc0/winter-lofi/fire-place/
+- winter: Snow Globe, Ondrosik: https://freemusicarchive.org/music/Ondrosik/enchanted-valley/snow-globe/

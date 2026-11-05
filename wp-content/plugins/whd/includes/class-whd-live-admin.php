@@ -146,6 +146,7 @@ final class WHD_Live_Admin {
 			'pieces'    => WHD_Live::pieces( $id ),
 			'sounds'    => self::sound_library(),
 			'stickers'  => self::sticker_library(),
+			'occasions' => (object) self::occasion_library(),
 			'scene'     => is_array( $scene ) ? $scene : null,
 			'showing'   => is_array( $showing ) ? (int) ( $showing['id'] ?? 0 ) : 0,
 			// With nowhere that can answer a comment, the card asks for nothing and shows the link.
@@ -185,6 +186,54 @@ final class WHD_Live_Admin {
 			$item['url'] = WHD_URL . 'assets/live-stickers/' . $item['file'];
 			unset( $item['file'], $item['source'] );
 			$out[] = $item;
+		}
+		return $out;
+	}
+
+	/**
+	 * Seasons and celebrations: the frame's colours, words and corner pictures (largest first; the fifth and sixth go on
+	 * the left), what falls, and the music from sounds.json. No year in the words, so they are right every year.
+	 */
+	private static function occasion_library(): array {
+		$list = [
+			'christmas'   => [ __( 'Christmas', 'whd' ), __( 'Merry Christmas', 'whd' ), 'serif', [ '#8c1c13', '#0f5132' ], '#e3c26b', [ '#a3201a', '#7c1610' ], '#fff4dc', 'snow', [ 'tree', 'bell', 'gift', 'santa', 'star', 'snowman' ] ],
+			'newyear'     => [ __( 'New Year', 'whd' ), __( 'Happy New Year', 'whd' ), 'serif', [ '#111a33', '#3b2a12' ], '#e8c872', [ '#161f3d', '#2b2140' ], '#f6dd9a', 'confetti', [ 'fireworks', 'sparkler', 'champagne', 'clink', 'popper', 'balloon' ] ],
+			'blackfriday' => [ __( 'Black Friday', 'whd' ), __( 'Black Friday', 'whd' ), 'sans', [ '#050505', '#1d1d1d' ], '#e0b64a', [ '#0a0a0a', '#222222' ], '#f2cd63', 'tags', [ 'bags', 'bolt', 'tag', 'blackheart', 'moneybag', 'fire' ] ],
+			'cybermonday' => [ __( 'Cyber Monday', 'whd' ), __( 'Cyber Monday', 'whd' ), 'sans', [ '#0b1e6b', '#8a1cff' ], '#46e8ff', [ '#0d2a8c', '#7a1cf0' ], '#ffffff', 'bolts', [ 'laptop', 'bolt', 'robot', 'phone', 'card', 'box' ] ],
+			'valentine'   => [ __( 'Valentine’s', 'whd' ), __( 'Happy Valentine’s Day', 'whd' ), 'serif', [ '#b3123f', '#f27a9b' ], '#ffe3ea', [ '#c1174a', '#e0456f' ], '#fff5f7', 'hearts', [ 'rose', 'hearts', 'letter', 'cupid', 'heart', 'kiss' ] ],
+			'lunar'       => [ __( 'Lunar New Year', 'whd' ), __( 'Happy Lunar New Year', 'whd' ), 'serif', [ '#a30e14', '#d4202a' ], '#f4cf6e', [ '#b5121a', '#8f0b11' ], '#ffe9ad', 'lanterns', [ 'lantern', 'firecracker', 'dragonface', 'envelope', 'coin', 'dragon' ] ],
+			'mothers'     => [ __( 'Mother’s Day', 'whd' ), __( 'Happy Mother’s Day', 'whd' ), 'serif', [ '#d98aa0', '#f2c6cf' ], '#fff7ef', [ '#c97b92', '#dd98ab' ], '#fffaf5', 'petals', [ 'bouquet', 'ribbon', 'tulip', 'growingheart', 'hibiscus', 'gift' ] ],
+			'halloween'   => [ __( 'Halloween', 'whd' ), __( 'Happy Halloween', 'whd' ), 'serif', [ '#1c0f2e', '#d9590a' ], '#ffb04d', [ '#25123d', '#3a1a52' ], '#ffc27a', 'bats', [ 'pumpkin', 'bat', 'ghost', 'spider', 'moon', 'web' ] ],
+			'sale'        => [ __( 'Big sale', 'whd' ), __( 'Big Sale', 'whd' ), 'sans', [ '#6f4a3f', '#b98b7e' ], '#fff4e8', [ '#7c5347', '#a87b6e' ], '#ffffff', 'confetti', [ 'bags', 'sparkles', 'tag', 'megaphone', 'gift', 'moneybag' ] ],
+			'spring'      => [ __( 'Spring', 'whd' ), __( 'Hello Spring', 'whd' ), 'serif', [ '#7fb77e', '#f7b2c4' ], '#fffdf2', [ '#6ea96d', '#e596ad' ], '#fffef5', 'petals', [ 'blossom', 'butterfly', 'tulip', 'bee', 'rainbow', 'sprout' ] ],
+			'summer'      => [ __( 'Summer', 'whd' ), __( 'Hello Summer', 'whd' ), 'serif', [ '#0ea5b7', '#ffb703' ], '#fffbe6', [ '#0c93a3', '#f29e02' ], '#ffffff', '', [ 'palm', 'shades', 'sun', 'watermelon', 'drink', 'wave' ] ],
+			'autumn'      => [ __( 'Autumn', 'whd' ), __( 'Hello Autumn', 'whd' ), 'serif', [ '#8a3a12', '#d98324' ], '#ffe9c9', [ '#96421a', '#b5611b' ], '#fff3df', 'leaves', [ 'maple', 'leaf', 'pumpkin', 'mushroom', 'chestnut', 'scarf' ] ],
+			'winter'      => [ __( 'Winter', 'whd' ), __( 'Hello Winter', 'whd' ), 'serif', [ '#2f5f96', '#a9d3ee' ], '#ffffff', [ '#2f5f96', '#4f85bd' ], '#ffffff', 'snow', [ 'snowflake', 'cocoa', 'snowman', 'gloves', 'coat', 'scarf' ] ],
+		];
+		$file   = WHD_DIR . 'assets/live-sounds/sounds.json';
+		$sounds = file_exists( $file ) ? json_decode( (string) file_get_contents( $file ), true ) : null; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- the plugin's own file
+		$out    = [];
+		foreach ( $list as $key => $o ) {
+			$tracks = [];
+			foreach ( (array) ( $sounds['occasions'][ $key ] ?? [] ) as $track ) {
+				$tracks[] = [
+					'url'     => WHD_URL . 'assets/live-sounds/' . $track['file'],
+					'title'   => $track['title'],
+					'seconds' => (int) $track['seconds'],
+				];
+			}
+			$out[ $key ] = [
+				'label'  => $o[0],
+				'words'  => $o[1],
+				'font'   => $o[2],
+				'band'   => $o[3],
+				'line'   => $o[4],
+				'ribbon' => $o[5],
+				'ink'    => $o[6],
+				'rain'   => $o[7],
+				'art'    => array_map( static fn( $name ) => WHD_URL . 'assets/live-stickers/frames/' . $name . '.png', $o[8] ),
+				'tracks' => $tracks,
+			];
 		}
 		return $out;
 	}

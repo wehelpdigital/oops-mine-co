@@ -326,5 +326,345 @@
 			"source": "https://bigsoundbank.com/heart-beat-s0218.html",
 			"license": "CC0 1.0"
 		}
-	]
+	],
+	"occasions": {
+		"christmas": [
+			{
+				"file": "occasions/jingle-bells.mp3",
+				"title": "Jingle Bells",
+				"artist": "Mystery Mammal",
+				"seconds": 62,
+				"source": "https://freemusicarchive.org/music/Mystery_Mammal/Xmas_in_Space_II/jingle-bells/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/deck-the-halls.mp3",
+				"title": "Deck The Halls",
+				"artist": "John Bartmann",
+				"seconds": 154,
+				"source": "https://freemusicarchive.org/music/John_Bartmann/public-domain-lofi-xmas-sludge/deck-the-halls-1/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/silent-night.mp3",
+				"title": "Silent Night",
+				"artist": "HoliznaCC0",
+				"seconds": 136,
+				"source": "https://freemusicarchive.org/music/holiznacc0/a-lo-fi-christmas-special/silent-night-lo-fi/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/christmas-town.mp3",
+				"title": "Christmas Town",
+				"artist": "TRG Banks",
+				"seconds": 170,
+				"source": "https://freemusicarchive.org/music/TRG_Banks/TRG_Banks_Christmas_Album/Christmas_Town/",
+				"license": "CC0 1.0"
+			}
+		],
+		"newyear": [
+			{
+				"file": "occasions/auld-lang-syne.mp3",
+				"title": "Auld Lang Syne",
+				"artist": "HoliznaCC0",
+				"seconds": 154,
+				"source": "https://freemusicarchive.org/music/holiznacc0/a-synth-wave-christmas-special/auld-lang-syne-synth-wave/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/party-party-disco-party.mp3",
+				"title": "Party Party Disco Party",
+				"artist": "John Bartmann",
+				"seconds": 113,
+				"source": "https://freemusicarchive.org/music/John_Bartmann/eurodisco-party-heaven/party-party-disco-party/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/auld-lang-syne-soft.mp3",
+				"title": "Auld Lang Syne (soft)",
+				"artist": "HoliznaCC0",
+				"seconds": 167,
+				"source": "https://freemusicarchive.org/music/holiznacc0/a-lo-fi-christmas-special/auld-lang-syne-lo-fi/",
+				"license": "CC0 1.0"
+			}
+		],
+		"blackfriday": [
+			{
+				"file": "occasions/im-on-fire.mp3",
+				"title": "I'm On Fire",
+				"artist": "Loyalty Freak Music",
+				"seconds": 170,
+				"source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/ROLLER_DISCO_DANCE_DANCE/Loyalty_Freak_Music_-_ROLLER_DISCO_DANCE_DANCE_-_03_IM_ON_FIRE/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/make-money.mp3",
+				"title": "Make Money",
+				"artist": "HoliznaCC0",
+				"seconds": 170,
+				"source": "https://freemusicarchive.org/music/holiznacc0/bassic/make-money/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/funky-pop.mp3",
+				"title": "Funky Pop",
+				"artist": "HoliznaCC0",
+				"seconds": 143,
+				"source": "https://freemusicarchive.org/music/holiznacc0/power-pop/funky-pop/",
+				"license": "CC0 1.0"
+			}
+		],
+		"cybermonday": [
+			{
+				"file": "occasions/cyber-anxiety.mp3",
+				"title": "Cyber Anxiety",
+				"artist": "HoliznaCC0",
+				"seconds": 170,
+				"source": "https://freemusicarchive.org/music/holiznacc0/waves-of-nostalgia-2/cyber-anxiety/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/dance-robot-activate.mp3",
+				"title": "Dance Robot Activate",
+				"artist": "Loyalty Freak Music",
+				"seconds": 159,
+				"source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/ROLLER_DISCO_DANCE_DANCE/Loyalty_Freak_Music_-_ROLLER_DISCO_DANCE_DANCE_-_02_Dance_Robot_ACTIVATE/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/back-in-the-80s.mp3",
+				"title": "Back In The 80s",
+				"artist": "HoliznaCC0",
+				"seconds": 170,
+				"source": "https://freemusicarchive.org/music/holiznacc0/power-pop/back-in-the-80s/",
+				"license": "CC0 1.0"
+			}
+		],
+		"valentine": [
+			{
+				"file": "occasions/dumplings-for-two.mp3",
+				"title": "Dumplings For Two",
+				"artist": "John Bartmann",
+				"seconds": 122,
+				"source": "https://freemusicarchive.org/music/John_Bartmann/chinese-valentine/dumplings-for-two/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/neon-city-love-affair.mp3",
+				"title": "Neon City Love Affair",
+				"artist": "John Bartmann",
+				"seconds": 138,
+				"source": "https://freemusicarchive.org/music/John_Bartmann/chinese-valentine/neon-city-love-affair/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/love-love-love.mp3",
+				"title": "Love Love Love",
+				"artist": "HoliznaCC0",
+				"seconds": 170,
+				"source": "https://freemusicarchive.org/music/holiznacc0/power-pop/love-love-love/",
+				"license": "CC0 1.0"
+			}
+		],
+		"lunar": [
+			{
+				"file": "occasions/floating-lanterns.mp3",
+				"title": "Floating Lanterns",
+				"artist": "John Bartmann",
+				"seconds": 170,
+				"source": "https://freemusicarchive.org/music/John_Bartmann/chinese-valentine/floating-lanterns/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/oriental-bossa.mp3",
+				"title": "Oriental Bossa",
+				"artist": "John Bartmann",
+				"seconds": 121,
+				"source": "https://freemusicarchive.org/music/John_Bartmann/chinese-valentine/oriental-bossa/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/long-way-to-kunming.mp3",
+				"title": "Long Way To Kunming",
+				"artist": "John Bartmann",
+				"seconds": 118,
+				"source": "https://freemusicarchive.org/music/John_Bartmann/chinese-valentine/long-way-to-kunming/",
+				"license": "CC0 1.0"
+			}
+		],
+		"mothers": [
+			{
+				"file": "occasions/garden-party.mp3",
+				"title": "Garden Party",
+				"artist": "TRG Banks",
+				"seconds": 170,
+				"source": "https://freemusicarchive.org/music/TRG_Banks/The_Rainbows_End/Garden_party/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "music/softly.mp3",
+				"title": "Softly",
+				"artist": "Loyalty Freak Music",
+				"seconds": 262,
+				"source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/MELODIES_WITH_A_BEAT/Loyalty_Freak_Music_-_MELODIES_WITH_A_BEAT_-_06_Softly/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "music/falling-in-love-with-yourself.mp3",
+				"title": "Falling In Love With Yourself",
+				"artist": "HoliznaCC0",
+				"seconds": 163,
+				"source": "https://freemusicarchive.org/music/holiznacc0/be-happy-with-who-you-are/falling-in-love-with-yourself/",
+				"license": "CC0 1.0"
+			}
+		],
+		"halloween": [
+			{
+				"file": "occasions/halloween-ghost-party.mp3",
+				"title": "Halloween Ghost Party",
+				"artist": "Loyalty Freak Music",
+				"seconds": 166,
+				"source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/WITCHY_BATTY_SPOOKY_HALLOWEEN_IN_SEPTEMBER_/Halloween_Ghost_Party/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/monster-parade.mp3",
+				"title": "Monster Parade",
+				"artist": "Loyalty Freak Music",
+				"seconds": 110,
+				"source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/WITCHY_BATTY_SPOOKY_HALLOWEEN_IN_SEPTEMBER_/Monster_Parade/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/halloween-lofi.mp3",
+				"title": "Halloween Lofi",
+				"artist": "HoliznaCC0",
+				"seconds": 93,
+				"source": "https://freemusicarchive.org/music/holiznacc0/beats-from-the-crypt/halloween-lofi/",
+				"license": "CC0 1.0"
+			}
+		],
+		"sale": [
+			{
+				"file": "occasions/happy-dance.mp3",
+				"title": "Happy Dance",
+				"artist": "HoliznaCC0",
+				"seconds": 156,
+				"source": "https://freemusicarchive.org/music/holiznacc0/power-pop/happy-dance-2/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/cant-stop-my-feet.mp3",
+				"title": "Can't Stop My Feet!",
+				"artist": "Loyalty Freak Music",
+				"seconds": 170,
+				"source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/ROLLER_DISCO_DANCE_DANCE/Loyalty_Freak_Music_-_ROLLER_DISCO_DANCE_DANCE_-_04_Cant_Stop_My_Feet_/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/funky-pop.mp3",
+				"title": "Funky Pop",
+				"artist": "HoliznaCC0",
+				"seconds": 143,
+				"source": "https://freemusicarchive.org/music/holiznacc0/power-pop/funky-pop/",
+				"license": "CC0 1.0"
+			}
+		],
+		"spring": [
+			{
+				"file": "occasions/spring-at-last.mp3",
+				"title": "Spring At Last",
+				"artist": "HoliznaCC0",
+				"seconds": 137,
+				"source": "https://freemusicarchive.org/music/holiznacc0/spring-at-last-lofi-tape/spring-at-last/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/cherry-blossom.mp3",
+				"title": "Cherry Blossom",
+				"artist": "John Bartmann",
+				"seconds": 128,
+				"source": "https://freemusicarchive.org/music/John_Bartmann/chinese-valentine/cherry-blossom/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/spring-in-sight.mp3",
+				"title": "Spring In Sight",
+				"artist": "HoliznaCC0",
+				"seconds": 132,
+				"source": "https://freemusicarchive.org/music/holiznacc0/spring-woke-me-up/spring-in-sight/",
+				"license": "CC0 1.0"
+			}
+		],
+		"summer": [
+			{
+				"file": "occasions/back-to-the-sea.mp3",
+				"title": "Back To The Sea",
+				"artist": "Shaloza",
+				"seconds": 170,
+				"source": "https://freemusicarchive.org/music/shaloza/tropical-house/back-to-the-sea-1/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/waves-sea.mp3",
+				"title": "Waves",
+				"artist": "Shaloza",
+				"seconds": 170,
+				"source": "https://freemusicarchive.org/music/shaloza/tropical-house/waves-8/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/blue-skies.mp3",
+				"title": "Blue Skies",
+				"artist": "HoliznaCC0",
+				"seconds": 170,
+				"source": "https://freemusicarchive.org/music/holiznacc0/lazy-summer-lofi-1/blue-skiesmp3/",
+				"license": "CC0 1.0"
+			}
+		],
+		"autumn": [
+			{
+				"file": "occasions/autumn.mp3",
+				"title": "Autumn",
+				"artist": "HoliznaCC0",
+				"seconds": 170,
+				"source": "https://freemusicarchive.org/music/holiznacc0/lo-fi-and-chill/autumn/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/autumn-wind.mp3",
+				"title": "Autumn Wind",
+				"artist": "John Bartmann",
+				"seconds": 138,
+				"source": "https://freemusicarchive.org/music/John_Bartmann/softly-boldly-with-a-piano/autumn-wind/",
+				"license": "CC0 1.0"
+			}
+		],
+		"winter": [
+			{
+				"file": "occasions/snow-drift.mp3",
+				"title": "Snow Drift",
+				"artist": "HoliznaCC0",
+				"seconds": 170,
+				"source": "https://freemusicarchive.org/music/holiznacc0/winter-lofi/snow-drift/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/fire-place.mp3",
+				"title": "Fire Place",
+				"artist": "HoliznaCC0",
+				"seconds": 170,
+				"source": "https://freemusicarchive.org/music/holiznacc0/winter-lofi/fire-place/",
+				"license": "CC0 1.0"
+			},
+			{
+				"file": "occasions/snow-globe.mp3",
+				"title": "Snow Globe",
+				"artist": "Ondrosik",
+				"seconds": 109,
+				"source": "https://freemusicarchive.org/music/Ondrosik/enchanted-valley/snow-globe/",
+				"license": "CC0 1.0"
+			}
+		]
+	}
 }

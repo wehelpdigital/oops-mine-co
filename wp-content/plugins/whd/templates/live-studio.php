@@ -17,6 +17,7 @@ $whd_icons = [
 	'sound'   => '<path d="M9 18V6l10-2v12"/><circle cx="6.500" cy="18" r="2.500"/><circle cx="16.500" cy="16" r="2.500"/>',
 	'effects' => '<path d="M12 3.500 13.800 9l5.700 1.800-5.700 1.800L12 18l-1.800-5.400-5.700-1.800L10.200 9 12 3.500Z"/><path d="M19 16.500v4M17 18.500h4"/>',
 	'gifs'    => '<circle cx="12" cy="12" r="8.500"/><path d="M8.500 14.500c.8 1.400 2 2.100 3.500 2.100s2.700-.7 3.500-2.100"/><path d="M9 9.500v1M15 9.500v1"/>',
+	'occasions' => '<rect x="4" y="5.500" width="16" height="15" rx="2.500"/><path d="M4 10h16M8.500 3.500v4M15.500 3.500v4"/><path d="m12 12.300.9 1.900 2.100.3-1.500 1.400.4 2-1.900-1-1.900 1 .4-2-1.500-1.400 2.100-.3.900-1.900Z"/>',
 	'images'  => '<rect x="3.500" y="5" width="17" height="14" rx="2"/><circle cx="9" cy="10" r="1.600"/><path d="m4 17 5-4.500 3.500 3 3-2.500 4.500 4"/>',
 	'text'    => '<path d="M5 6.500V5h14v1.500M12 5v14M9.500 19h5"/>',
 	'looks'   => '<circle cx="12" cy="12" r="8.500"/><path d="M12 3.500v17M12 7l5.800-2M12 11.500h8M12 16l6 2.800"/>',
@@ -28,6 +29,7 @@ $whd_tabs = [
 	'sound'   => __( 'Sound', 'whd' ),
 	'effects' => __( 'Effects', 'whd' ),
 	'gifs'    => __( 'GIFs', 'whd' ),
+	'occasions' => __( 'Occasions', 'whd' ),
 	'images'  => __( 'Pictures', 'whd' ),
 	'text'    => __( 'Text', 'whd' ),
 	'looks'   => __( 'Looks', 'whd' ),
@@ -85,7 +87,7 @@ $whd_tabs = [
 				<h3><?php esc_html_e( 'Where the photos open', 'whd' ); ?></h3>
 				<div class="whdls-seg" role="group" id="whdls-spot-places"></div>
 				<label class="whdls-switch whdls-switch--block"><input type="checkbox" id="whdls-spot-on" checked><span></span><?php esc_html_e( 'Show me the spot', 'whd' ); ?></label>
-				<p class="whdls-hint"><?php esc_html_e( 'Drag the dashed box in the picture to where you’ll point, and pull a corner to size it. Only you can see it. Press Photos on a piece and its pictures open right there.', 'whd' ); ?></p>
+				<p class="whdls-hint"><?php esc_html_e( 'Drag the dashed box in the picture to where you’ll point, and pull a corner to size it. Only you can see it. Press Photos on a piece and its pictures open right there, in place of its card, with its code under them.', 'whd' ); ?></p>
 			</div>
 
 			<div class="whdls-pane" data-pane="cameras">
@@ -172,6 +174,22 @@ $whd_tabs = [
 				<p class="whdls-note"><?php esc_html_e( 'The moving stickers are free for a shop to use. A funny GIF you find online usually belongs to someone else, and Facebook and YouTube can act on clips from films or TV, so use ones you’re allowed to.', 'whd' ); ?></p>
 			</div>
 
+			<div class="whdls-pane" data-pane="occasions">
+				<h2><?php esc_html_e( 'Occasions', 'whd' ); ?></h2>
+				<p class="whdls-hint"><?php esc_html_e( 'Press one for its frame, its music and something gently falling. Press it again to take it all off.', 'whd' ); ?></p>
+				<div class="whdls-tiles" id="whdls-occasions"></div>
+				<div class="whdls-occ" id="whdls-occ-panel" hidden>
+					<h3 id="whdls-occ-name"></h3>
+					<label class="whdls-field"><span><?php esc_html_e( 'Words on the frame', 'whd' ); ?></span><input type="text" id="whdls-occ-words" maxlength="40"></label>
+					<p class="whdls-hint"><?php esc_html_e( 'Leave it empty for no words. Music from this occasion:', 'whd' ); ?></p>
+					<ol class="whdls-library" id="whdls-occ-tracks"></ol>
+					<button type="button" class="whdls-btn whdls-btn--quiet" id="whdls-occ-off"><?php esc_html_e( 'Take this occasion off', 'whd' ); ?></button>
+				</div>
+				<label class="whdls-switch whdls-switch--block"><input type="checkbox" id="whdls-occ-music" checked><span></span><?php esc_html_e( 'Change the music too', 'whd' ); ?></label>
+				<label class="whdls-switch whdls-switch--block"><input type="checkbox" id="whdls-occ-rain" checked><span></span><?php esc_html_e( 'Something falling (snow, leaves, confetti…)', 'whd' ); ?></label>
+				<p class="whdls-note"><?php esc_html_e( 'Before you go live the music starts right away. On air it only changes if music is already playing, so nothing starts by surprise. Taking the occasion off brings your own list back.', 'whd' ); ?></p>
+			</div>
+
 			<div class="whdls-pane" data-pane="images">
 				<h2><?php esc_html_e( 'Pictures', 'whd' ); ?></h2>
 				<p class="whdls-hint"><?php esc_html_e( 'Put a picture on top of the video. Drag it, pull a corner to size it, and give it a movement in the bar under the stage.', 'whd' ); ?></p>
@@ -214,6 +232,7 @@ $whd_tabs = [
 				<label class="whdls-range"><span><?php esc_html_e( 'Brightness', 'whd' ); ?></span><input type="range" id="whdls-brightness" min="0.6" max="1.5" step="0.01" value="1"></label>
 				<h3><?php esc_html_e( 'Frame', 'whd' ); ?></h3>
 				<div class="whdls-tiles whdls-tiles--text" id="whdls-frames"></div>
+				<p class="whdls-hint"><?php esc_html_e( 'Frames for Christmas, New Year, Black Friday and the seasons are in the Occasions tab, with their music.', 'whd' ); ?></p>
 			</div>
 
 			<div class="whdls-pane" data-pane="layers">
