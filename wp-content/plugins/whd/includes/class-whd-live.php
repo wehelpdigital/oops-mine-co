@@ -74,8 +74,6 @@ final class WHD_Live {
 			'daily_api_key' => '',
 
 			'site_on'       => 1,
-			'trigger_words' => 'link, price, how much, i want, interested, buy, size, sizes, available',
-			'reply_mode'    => 'any',
 			'card_cta'      => __( 'Comment {code} for the link', 'whd' ),
 			'site_text'     => __( 'Here it is, {name}.', 'whd' ),
 
@@ -144,7 +142,7 @@ final class WHD_Live {
 				'on'      => (bool) $s['site_on'],
 				'ready'   => $daily && $s['site_on'],
 				'replies' => true,
-				'how'     => __( 'A live page with comments. The piece opens in a side panel.', 'whd' ),
+				'how'     => __( 'A live page with comments. Typing a piece’s code opens it in a side panel.', 'whd' ),
 				'note'    => $daily ? '' : __( 'Add your Daily API key', 'whd' ),
 			],
 			'facebook' => [
@@ -184,7 +182,6 @@ final class WHD_Live {
 			'started_at'   => 0,
 			'ended_at'     => 0,
 			'destinations' => [ 'site' ],
-			'reply_mode'   => self::settings()['reply_mode'],
 			'key'          => '',          // part of the state file's name
 			'room'         => [],          // name, url
 			'dests'        => [],          // key => [ endpoint, url (secret), state, message, live_url ]

@@ -527,10 +527,13 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   link is not in it: a site comment's REST answer carries the piece and that opens the side panel. Falls back to REST
   when uploads can't be written. `.ftp-sync` excludes that folder.
   Comments: table `whd_live_comments`, unique on (stream, source, platform id), so `INSERT IGNORE` is what makes each
-  polled comment act once; a reply is claimed by a conditional UPDATE before sending. `match()`: the code the host set
-  for a piece first (across all pieces, so a code beats another piece's number), then a number ("3", "want 3", not
-  "size 8"), then a trigger word, then in `any` mode any comment while a piece shows; one
-  piece per person per stream. No cron or webhook: the studio's heartbeat (`feed`, on the worker's clock) pulls Facebook
+  polled comment act once; a reply is claimed by a conditional UPDATE before sending. **Only typing a piece's code earns
+  a link, the owner's rule:** anybody can comment anything, and a comment without a code is just a comment; which piece is
+  on screen makes no difference. There are no modes and no trigger words (both were removed on request). `match()`: the
+  codes the host set first, as whole words anywhere in the comment, then for a piece with no code its number. A code
+  that is only digits must be the whole comment, so "size 8" and "I have 2 kids" are not orders. The host's Send link
+  button on a comment is a deliberate exception. Facebook and YouTube: one link per person per piece per stream; on the
+  site the panel just opens again. No cron or webhook: the studio's heartbeat (`feed`, on the worker's clock) pulls Facebook
   (4 s) and YouTube (10 s, for the 10,000-a-day quota) and sends after its response, because a stream only exists while
   the studio is open. Facebook: Messenger private reply + a public line, falling back to the link as a comment reply
   (the normal case until `pages_messaging` has Advanced Access). YouTube: live chat, 200 characters, link never cut.

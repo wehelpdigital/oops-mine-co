@@ -117,11 +117,6 @@
 .whdla-format:has(input:checked) i { border-color: var(--ink); background: var(--ink); }
 .whdla-format:has(input:focus-visible) { box-shadow: 0 0 0 2px var(--rose); }
 
-.whdla-radios { display: flex; flex-direction: column; gap: 8px; }
-.whdla-radios label { display: flex; align-items: flex-start; gap: 9px; cursor: pointer; }
-.whdla-radios input { margin-top: 3px !important; }
-.whdla-radios strong { display: block; color: var(--ink); }
-.whdla-radios small { display: block; font-size: 12px; color: #7a6c65; }
 
 .whdla-actions { margin-top: 18px; display: flex; gap: 8px; }
 

@@ -299,10 +299,9 @@ final class WHD_Live_Admin {
 		foreach ( [ 'site_on', 'fb_on', 'yt_on', 'tt_on' ] as $key ) {
 			$out[ $key ] = empty( $in[ $key ] ) ? 0 : 1;
 		}
-		foreach ( [ 'trigger_words', 'card_cta', 'site_text', 'fb_page_id', 'fb_server', 'fb_dm_text', 'fb_public_text', 'yt_client_id', 'yt_server', 'yt_text', 'tt_server' ] as $key ) {
+		foreach ( [ 'card_cta', 'site_text', 'fb_page_id', 'fb_server', 'fb_dm_text', 'fb_public_text', 'yt_client_id', 'yt_server', 'yt_text', 'tt_server' ] as $key ) {
 			$out[ $key ] = sanitize_text_field( (string) ( $in[ $key ] ?? '' ) );
 		}
-		$out['reply_mode'] = 'keyword' === ( $in['reply_mode'] ?? '' ) ? 'keyword' : 'any';
 		$out['yt_privacy'] = in_array( $in['yt_privacy'] ?? '', [ 'public', 'unlisted', 'private' ], true ) ? $in['yt_privacy'] : 'public';
 		return $out;
 	}
@@ -383,19 +382,9 @@ final class WHD_Live_Admin {
 		self::toggle( 'site_on', __( 'Offer this website as a place to stream to', 'whd' ) );
 		echo '<p class="description">' . esc_html( sprintf(
 			/* translators: %s: address */
-			__( 'Each stream gets its own page, and %s always leads to the current one. Viewers leave a name and email once, then comment; the piece opens in a side panel.', 'whd' ),
+			__( 'Each stream gets its own page, and %s always leads to the current one. Anyone can comment after leaving a name and email once. A comment with a piece’s code opens it in a side panel.', 'whd' ),
 			preg_replace( '#^https?://#', '', home_url( '/live/' ) )
 		) ) . '</p></td></tr>';
-
-		$mode = (string) $s['reply_mode'];
-		echo '<tr><th>' . esc_html__( 'Who gets the link', 'whd' ) . '</th><td>'
-			. '<label><input type="radio" name="' . esc_attr( WHD_Live::OPTION ) . '[reply_mode]" value="any" ' . checked( $mode, 'any', false ) . '> ' . esc_html__( 'Anyone who comments while a piece is on screen', 'whd' ) . '</label><br>'
-			. '<label><input type="radio" name="' . esc_attr( WHD_Live::OPTION ) . '[reply_mode]" value="keyword" ' . checked( $mode, 'keyword', false ) . '> ' . esc_html__( 'Only comments with the piece’s code or a trigger word', 'whd' ) . '</label>'
-			. '<p class="description">' . esc_html__( 'The default for new streams; each stream can choose. Nobody gets the same piece twice in one stream.', 'whd' ) . '</p></td></tr>';
-
-		echo '<tr><th><label for="whdla-words">' . esc_html__( 'Trigger words', 'whd' ) . '</label></th><td>';
-		self::text_box( 'trigger_words', 'whdla-words', 'large-text' );
-		echo '<p class="description">' . esc_html__( 'Separated by commas. A comment with one of these gets the piece on screen. A comment with a piece’s code or number always gets that piece.', 'whd' ) . '</p></td></tr>';
 
 		echo '<tr><th><label for="whdla-cta">' . esc_html__( 'Line on the product card', 'whd' ) . '</label></th><td>';
 		self::text_box( 'card_cta', 'whdla-cta' );
@@ -755,7 +744,7 @@ final class WHD_Live_Admin {
 		echo '<button type="button" class="whdla-poster__btn" ' . ( $url ? 'style="background-image:url(' . esc_url( $url ) . ')"' : '' ) . '><span>' . esc_html__( 'Choose', 'whd' ) . '</span></button></div><small>' . esc_html__( 'Shown on the page before you go live.', 'whd' ) . '</small></div>';
 		echo '</section>';
 
-		echo '<section class="whdla-card"><h2>' . esc_html__( 'Pieces you’ll show', 'whd' ) . '</h2><p class="whdla-sub">' . esc_html__( 'You can add more from the studio while you’re live. Give each one a code, like DRESS1. The card in the video tells viewers to comment it, and that gets them the link. With no code, its number is the code.', 'whd' ) . '</p>';
+		echo '<section class="whdla-card"><h2>' . esc_html__( 'Pieces you’ll show', 'whd' ) . '</h2><p class="whdla-sub">' . esc_html__( 'You can add more from the studio while you’re live. Give each one a code, like DRESS1. The card in the video tells viewers to comment it. Only a comment with the code gets the link; anything else is just a comment. With no code, its number is the code.', 'whd' ) . '</p>';
 		if ( ! function_exists( 'wc_get_product' ) ) {
 			echo '<p class="whd-muted">' . esc_html__( 'WooCommerce is not active.', 'whd' ) . '</p>';
 		}
@@ -788,12 +777,6 @@ final class WHD_Live_Admin {
 		}
 		echo '</div></section>';
 
-		echo '<section class="whdla-card"><h2>' . esc_html__( 'Who gets the link', 'whd' ) . '</h2><div class="whdla-radios">';
-		foreach ( [ 'any' => [ __( 'Anyone who comments', 'whd' ), __( 'While a piece is on screen, any comment gets its link. Once per person, per piece.', 'whd' ) ], 'keyword' => [ __( 'Only when they ask', 'whd' ), __( 'A comment with the piece’s code, or a trigger word like “link” or “how much”.', 'whd' ) ] ] as $value => $words ) {
-			echo '<label><input type="radio" name="reply_mode" value="' . esc_attr( $value ) . '" ' . checked( $stream['reply_mode'], $value, false ) . '><span><strong>' . esc_html( $words[0] ) . '</strong><small>' . esc_html( $words[1] ) . '</small></span></label>';
-		}
-		echo '</div></section>';
-
 		echo '</div></div>';
 
 		echo '<div class="whdla-actions">';
@@ -813,7 +796,6 @@ final class WHD_Live_Admin {
 		$pieces = json_decode( wp_unslash( (string) ( $_POST['pieces_json'] ?? '' ) ), true );
 		$picked = array_map( 'sanitize_key', (array) wp_unslash( $_POST['destinations'] ?? [] ) );
 		$format = 'portrait' === ( $_POST['format'] ?? '' ) ? 'portrait' : 'landscape';
-		$mode   = 'keyword' === ( $_POST['reply_mode'] ?? '' ) ? 'keyword' : 'any';
 		$then   = sanitize_key( wp_unslash( $_POST['then'] ?? 'list' ) );
 		// phpcs:enable
 
@@ -855,7 +837,6 @@ final class WHD_Live_Admin {
 
 		WHD_Live::patch( $id, [
 			'format'       => $format,
-			'reply_mode'   => $mode,
 			'destinations' => $dests,
 			'starts_at'    => $starts,
 		] );

@@ -78,7 +78,7 @@ $whd_tabs = [
 					<div class="whdls-results" id="whdls-results" hidden></div>
 				</div>
 				<ol class="whdls-pieces" id="whdls-pieces"></ol>
-				<p class="whdls-hint"><?php esc_html_e( 'Press Show and the card goes into the video. Drag it where you want it. Viewers who comment get its link.', 'whd' ); ?></p>
+				<p class="whdls-hint"><?php esc_html_e( 'Press Show and the card goes into the video. Drag it where you want it. Viewers who comment its code get the link.', 'whd' ); ?></p>
 			</div>
 
 			<div class="whdls-pane" data-pane="cameras">
@@ -162,7 +162,7 @@ $whd_tabs = [
 				<button type="button" class="whdls-btn whdls-btn--quiet" id="whdls-lower-add"><?php esc_html_e( 'Add the strip', 'whd' ); ?></button>
 
 				<h3><?php esc_html_e( 'Scrolling line', 'whd' ); ?></h3>
-				<input type="text" id="whdls-ticker-text" placeholder="<?php esc_attr_e( 'New pieces tonight. Comment to get the link.', 'whd' ); ?>">
+				<input type="text" id="whdls-ticker-text" placeholder="<?php esc_attr_e( 'New pieces tonight. Comment the code to get the link.', 'whd' ); ?>">
 				<button type="button" class="whdls-btn whdls-btn--quiet" id="whdls-ticker-add"><?php esc_html_e( 'Add the line', 'whd' ); ?></button>
 
 				<h3><?php esc_html_e( 'Countdown', 'whd' ); ?></h3>

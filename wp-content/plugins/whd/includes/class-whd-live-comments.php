@@ -6,13 +6,12 @@
  * platform's own id), which is the guard that matters: the same comment arrives over and over because
  * the platforms are polled, and INSERT IGNORE means only one request ever gets to act on it.
  *
- * The rules for who gets a link:
+ * The rule for who gets a link, which is the shop owner's: typing the piece's code, and nothing else.
+ * Anybody can comment anything; a comment without a code is simply a comment. It does not matter which
+ * piece is on screen, or whether any is.
  *
- *   A comment naming a piece (the code the host gave it, or its number) gets that piece.
- *   Otherwise, while a piece is on screen: in "anyone" mode any comment gets it, in "keyword" mode
- *   only a comment with a trigger word ("link", "how much").
- *   Nobody is sent the same piece twice in one stream. On Facebook that is also a matter of being
- *   allowed to stay on the platform.
+ * On Facebook and YouTube nobody is sent the same piece twice in one stream, which on Facebook is also
+ * a matter of being allowed to stay on the platform.
  *
  * Sending happens on the studio's heartbeat, after its response has gone (WHD_Plugin::after_response),
  * so a slow Graph call never holds the feed up. A row is claimed with a conditional UPDATE before
@@ -109,39 +108,39 @@ final class WHD_Live_Comments {
 	}
 
 	/**
-	 * @return array [ product id or 0, did the comment ask for it in so many words ]
+	 * Is this comment this code? Words anywhere in it, as whole words: "I'd love DRESS1 please". A code
+	 * that is only a number has to be the whole comment, or "size 8" and "I have 2 kids" would be orders.
 	 */
-	public static function match( $stream_id, string $message ): array {
-		$plain  = self::plain( $message );
-		$stream = WHD_Live::get( $stream_id );
-		$rows   = WHD_Live::piece_rows( $stream_id );
+	private static function says_code( string $plain, string $code ): bool {
+		$digits = trim( str_replace( '#', '', self::plain( $code ) ) );
+		if ( ctype_digit( $digits ) ) {
+			return 1 === preg_match( '/^ #?' . $digits . ' $/', $plain );
+		}
+		return self::says( $plain, $code );
+	}
 
-		// A code first, across all of them: a code that happens to be another piece's number still wins.
+	/**
+	 * Which piece a comment asks for, by its code.
+	 *
+	 * @return int The product id, or 0: it is just a comment.
+	 */
+	public static function match( $stream_id, string $message ): int {
+		$plain = self::plain( $message );
+		$rows  = WHD_Live::piece_rows( $stream_id );
+
+		// The codes the host set first, across all pieces: one can be another piece's number.
 		foreach ( $rows as $row ) {
-			if ( '' !== $row['code'] && self::says( $plain, $row['code'] ) ) {
-				return [ (int) $row['id'], true ];
+			if ( '' !== $row['code'] && self::says_code( $plain, $row['code'] ) ) {
+				return (int) $row['id'];
 			}
 		}
-		// Then its number: "3", "#3", "want 3".
+		// A piece with no code answers to its number, which is what its card tells people to type.
 		foreach ( $rows as $i => $row ) {
-			// Only after words that mean "that one": "size 8" is a question about a size, not piece 8.
-			if ( preg_match( '/^ (?:(?:mine|want|i|buy|get|link|piece|item|no|number|num|for) )*#?' . ( $i + 1 ) . ' $/', $plain ) ) {
-				return [ (int) $row['id'], true ];
+			if ( '' === $row['code'] && self::says_code( $plain, (string) ( $i + 1 ) ) ) {
+				return (int) $row['id'];
 			}
 		}
-
-		$showing = get_post_meta( (int) $stream_id, WHD_Live::SHOWING, true );
-		$on_show = is_array( $showing ) ? (int) ( $showing['id'] ?? 0 ) : 0;
-		if ( ! $on_show ) {
-			return [ 0, false ];
-		}
-
-		foreach ( array_filter( array_map( 'trim', explode( ',', (string) WHD_Live::settings()['trigger_words'] ) ) ) as $word ) {
-			if ( self::says( $plain, $word ) ) {
-				return [ $on_show, true ];
-			}
-		}
-		return 'any' === $stream['reply_mode'] ? [ $on_show, false ] : [ 0, false ];
+		return 0;
 	}
 
 	/** Has this person already been given this piece in this stream? */
@@ -170,7 +169,7 @@ final class WHD_Live_Comments {
 	 * One comment, once.
 	 *
 	 * @param array $c source, external_id, author, author_key, email, message
-	 * @return array|null The row as stored, with `asked` added; null when this copy was already known.
+	 * @return array|null The row as stored; null when this copy was already known.
 	 */
 	public static function ingest( $stream_id, array $c ) {
 		global $wpdb;
@@ -206,24 +205,18 @@ final class WHD_Live_Comments {
 		$id = (int) $wpdb->insert_id;
 
 		// After the insert: the platforms are polled, and most of what arrives is a copy already held.
-		list( $product, $asked ) = self::match( $stream_id, $message );
+		$product = self::match( $stream_id, $message );
 
 		$status  = 'none';
 		$channel = '';
 		$note    = '';
 		if ( $product && ! $hidden ) {
-			if ( self::already_given( $stream_id, $key, $product ) ) {
-				// Named outright, on this site, the panel can simply open again: it costs nothing.
-				if ( ! ( 'site' === $source && $asked ) ) {
-					$status = 'skipped';
-					$note   = __( 'Already had this piece', 'whd' );
-				} else {
-					$status  = 'sent';
-					$channel = 'panel';
-				}
-			} elseif ( 'site' === $source ) {
-				$status  = 'sent'; // the answer to this very request carries it
+			if ( 'site' === $source ) {
+				$status  = 'sent'; // the answer to this very request carries it, and opening again costs nothing
 				$channel = 'panel';
+			} elseif ( self::already_given( $stream_id, $key, $product ) ) {
+				$status = 'skipped';
+				$note   = __( 'Already had this piece', 'whd' );
 			} elseif ( self::can_reply( $source ) ) {
 				$status = 'queued';
 			} else {
@@ -243,7 +236,6 @@ final class WHD_Live_Comments {
 			'id'           => $id,
 			'product_id'   => (int) $product,
 			'reply_status' => $status,
-			'asked'        => (bool) $asked,
 			'hidden'       => (bool) $hidden,
 			'author'       => $author,
 			'message'      => $message,
