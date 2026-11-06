@@ -47,4 +47,7 @@ list( $omc_note, $omc_marks ) = omc_checkout_pay_row( $gateway->id );
 			<?php $gateway->payment_fields(); ?>
 		</div>
 	<?php endif; ?>
+	<?php if ( 'ppcp-gateway' === $gateway->id && omc_checkout_pay_on() ) : ?>
+		<div class="omc-pay-slot"><?php do_action( 'omc_checkout_pay_paypal_buttons' ); ?></div>
+	<?php endif; ?>
 </li>

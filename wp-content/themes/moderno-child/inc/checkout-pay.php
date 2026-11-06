@@ -92,6 +92,20 @@ function omc_checkout_pay_marks( array $marks ) {
 	return $out . '</span>';
 }
 
+/* ─────────────────────────── PayPal's buttons go in its row ─────────────────────────── */
+
+/*
+ * PayPal prints them under the terms, outside this section, so they fell outside the box of their own row. This is its own
+ * setting for where they go, and woocommerce/checkout/payment-method.php fires the action. PayPal reads it on `wp`, on the page
+ * and on each redraw of the section alike, so a redraw prints a new empty holder in the new row, and its script fills it: it draws
+ * into whatever matches its selector and is empty (PayPal Payments 4.2.0, SDK v6). Nothing of PayPal's is moved by a script here.
+ *
+ * omc_checkout_pay_on() cannot be asked at this point: on a redraw is_checkout() is not known yet at `wp`.
+ */
+add_filter( 'woocommerce_paypal_payments_checkout_button_renderer_hook', static function ( $hook ) {
+	return apply_filters( 'omc_checkout_pay_choice', true ) ? 'omc_checkout_pay_paypal_buttons' : $hook;
+} );
+
 /* ─────────────────────────── the wallets become a row ─────────────────────────── */
 
 /*

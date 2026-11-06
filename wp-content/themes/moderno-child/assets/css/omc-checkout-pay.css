@@ -99,8 +99,14 @@
 .omc-pay-ready .omc-pay-wallets.is-open .omc-pay-wallets__box { box-sizing: border-box; height: auto; padding: 12px; overflow: visible; border-top: 1px solid var(--omc-line); visibility: visible; }
 .omc-pay-wallets__box #wc-stripe-express-checkout-element { margin-top: 0 !important; }
 
-/* PayPal's button stands in for ours, at our distance from the terms. On what is inside its wrapper, which PayPal hides
-   and shows, so no gap is left behind when a card is chosen. */
+/* PayPal's buttons, in its row (inc/checkout-pay.php). The line and the room are on what is inside its wrapper, which PayPal
+   hides and shows, so no gap is left behind in the row when another way to pay is chosen. */
+#payment .payment_methods > li.wc_payment_method > .omc-pay-slot { grid-row: 3; }
+.omc-pay-slot .ppc-button-wrapper > :first-child { margin-top: 0; }
+.omc-pay-slot .ppc-button-wrapper > :not(:empty) { box-sizing: border-box; padding: 12px; border-top: 1px solid var(--omc-line); }
+.payment_box + .omc-pay-slot .ppc-button-wrapper > :not(:empty) { padding-top: 0; border-top: 0; }
+
+/* Where PayPal prints them itself (the page for paying an existing order, or with the choice turned off): at our distance from the terms. */
 .ppc-button-wrapper > :first-child { margin-top: 30px; }
 
 /* Nothing chosen yet, or the wallets chosen: no form, no button */
