@@ -22,9 +22,29 @@ function omc_checkout_pay_on() {
 	return function_exists( 'is_checkout' ) && is_checkout() && ! is_order_received_page() && ! is_wc_endpoint_url( 'order-pay' ) && apply_filters( 'omc_checkout_pay_choice', true );
 }
 
+/*
+ * One card row, the owner's call. Stripe and WooPayments each brought one, so a shopper chose between two names for the
+ * same thing and card money landed in two accounts. Stripe's stays, and is called Card.
+ *
+ * WooPayments is only left out of this list, not made unavailable, so nothing else about the plugin changes: its wallet
+ * buttons and the orders it has taken go on as before, and its own script copes with having no row
+ * (WC_Payments_Checkout::maybe_load_checkout_scripts()). Only while Stripe can take the card, or a shop whose Stripe
+ * dropped out would have no card row at all.
+ */
+function omc_checkout_pay_left_out( $gateway_id ) {
+	return 'woocommerce_payments' === $gateway_id && isset( WC()->payment_gateways()->get_available_payment_gateways()['stripe'] );
+}
+
+/* Stripe's own name for its row is "Stripe" until its script writes this filter's answer over it, on every redraw. */
+add_filter( 'wc_stripe_optimized_checkout_title', static fn() => __( 'Card', 'moderno-child' ) );
+
+/** What a row is called: the plugin's own title, which is also what the receipts and the admin call it, except for that one. */
+function omc_checkout_pay_title( $gateway ) {
+	return 'stripe' === $gateway->id ? __( 'Card', 'moderno-child' ) : $gateway->get_title();
+}
+
 /**
- * What a row says and shows, by the kind of gateway. Its title stays the plugin's own, since that is
- * what the receipts and the admin call it.
+ * What a row says and shows, by the kind of gateway.
  *
  * The column is narrow and the marks say most of it, so a note is only for what they cannot: how a thing works.
  *

@@ -23,14 +23,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 ?>
-<?php list( $omc_note, $omc_marks ) = omc_checkout_pay_row( $gateway->id ); ?>
+<?php
+if ( omc_checkout_pay_left_out( $gateway->id ) ) {
+	return;
+}
+list( $omc_note, $omc_marks ) = omc_checkout_pay_row( $gateway->id );
+?>
 <li class="wc_payment_method payment_method_<?php echo esc_attr( $gateway->id ); ?>">
 	<input id="payment_method_<?php echo esc_attr( $gateway->id ); ?>" type="radio" class="c-cart__payment-method-radio input-radio" name="payment_method" value="<?php echo esc_attr( $gateway->id ); ?>" <?php checked( $gateway->chosen, true ); ?> data-order_button_text="<?php echo esc_attr( $gateway->order_button_text ); ?>" />
 
 	<?php /* Only words in the label: Stripe's script replaces whatever is in its own on every redraw. The dot is the label's ::before and the marks lie over its right end. */ ?>
 	<label class="c-cart__payment-methods-title omc-pay__row" for="payment_method_<?php echo esc_attr( $gateway->id ); ?>" style="--omc-pay-marks:<?php echo (int) count( $omc_marks ); ?>">
 		<span class="omc-pay__text">
-			<span class="omc-pay__name"><?php echo wp_kses_post( $gateway->get_title() ); ?></span>
+			<span class="omc-pay__name"><?php echo wp_kses_post( omc_checkout_pay_title( $gateway ) ); ?></span>
 			<?php if ( $omc_note ) : ?>
 				<span class="omc-pay__note"><?php echo esc_html( $omc_note ); ?></span>
 			<?php endif; ?>

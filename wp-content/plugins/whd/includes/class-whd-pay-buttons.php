@@ -1,6 +1,6 @@
 <?php
 /**
- * Where the fast-pay buttons appear: not on a product page, and in the cart. The owner's call.
+ * Where the fast-pay buttons appear: on the cart page, not on a product page or in the slide-out cart. The owner's call.
  *
  * Three plugins draw them, none of which is in this repository (they are installed on live only):
  * Stripe (Apple Pay, Google Pay, Link), WooPayments and PayPal (PayPal, Venmo, Pay Later). Each has a
@@ -67,17 +67,10 @@ final class WHD_Pay_Buttons {
 	/**
 	 * PayPal keeps one filter over its lists of places for buttons, Pay Later and messages.
 	 *
-	 * The slide-out cart ("mini-cart") is the one place that loads PayPal's script on any page it is on,
-	 * so it is only asked for where there can be something in it: a store page, or a cart with something
-	 * in it. The home page does not need to fetch PayPal for somebody just looking.
+	 * Never the slide-out cart ("mini-cart"), the owner's call, even if PayPal's own settings ask for it.
+	 * Its Venmo button is drawn in the same place, so that goes too.
 	 */
 	public static function paypal( $places ) {
-		$places = self::places( $places );
-		$cart   = function_exists( 'WC' ) && WC()->cart ? WC()->cart : null;
-		$store  = function_exists( 'is_woocommerce' ) && did_action( 'wp' ) && is_woocommerce();
-		if ( $store || ( $cart && ! $cart->is_empty() ) ) {
-			$places[] = 'mini-cart';
-		}
-		return array_values( array_unique( $places ) );
+		return array_values( array_diff( self::places( $places ), [ 'mini-cart' ] ) );
 	}
 }
