@@ -234,6 +234,8 @@
 				layer._key = '';
 			} );
 			stage._coverText = null;
+			stage._frameSig = ''; // frames with words on them
+			stage._occasionFrame = null;
 		}, 700 );
 	} );
 
@@ -1663,7 +1665,15 @@
 			var fx = Stage.EFFECTS[ key ];
 			var tile = el( 'button', 'whdls-tile' + ( S.rain === key ? ' is-on' : '' ) );
 			tile.type = 'button';
-			tile.appendChild( el( 'span', 'whdls-tile__icon', fx.icon ) );
+			var icon = el( 'span', 'whdls-tile__icon', fx.icon || '' );
+			if ( fx.paint ) {
+				var picture = el( 'canvas' );
+				picture.width = 72;
+				picture.height = 72;
+				picture.getContext( '2d' ).drawImage( stage.paintedSprite( fx.paint ), 0, 0, 72, 72 );
+				icon.appendChild( picture );
+			}
+			tile.appendChild( icon );
 			tile.appendChild( el( 'span', 'whdls-tile__label', fx.label ) );
 			tile.addEventListener( 'click', function () {
 				if ( 'rain' === S.effectMode ) {
@@ -1860,20 +1870,32 @@
 
 	function useOccasion( key ) {
 		var o = D.occasions[ key ];
-		var had = occasionNow();
 		stage.setOccasion( frameFor( key ) );
+		stage.setLight( o.light || 'none' );
 		S.activeScene = '';
 		renderScenes();
 		syncLooks();
 		occasionRain( o );
 		if ( S.occMusic ) {
-			if ( ! had ) {
-				S.musicBefore = S.music.slice(); // what comes back when the occasion is taken off
-			}
+			keepOwnMusic();
 			swapMusic( occasionTracks( o ) );
 		}
 		renderOccasions();
 		saveSoon();
+	}
+
+	/* What comes back when an occasion or a theme comes off: the host's own list, however many were on in between. */
+	function keepOwnMusic() {
+		if ( ! S.musicBefore ) {
+			S.musicBefore = S.music.slice();
+		}
+	}
+
+	function ownMusicBack() {
+		if ( S.occMusic && S.musicBefore ) {
+			swapMusic( S.musicBefore );
+		}
+		S.musicBefore = null;
 	}
 
 	function endOccasion() {
@@ -1882,12 +1904,13 @@
 		if ( o && S.rain === o.rain ) {
 			occasionRain( null );
 		}
-		if ( S.occMusic && S.musicBefore ) {
-			swapMusic( S.musicBefore );
+		if ( o && o.light === stage.light ) {
+			stage.setLight( 'none' );
 		}
-		S.musicBefore = null;
+		ownMusicBack();
 		S.activeScene = '';
 		renderScenes();
+		syncLooks();
 		renderOccasions();
 		saveSoon();
 	}
@@ -1951,19 +1974,32 @@
 		}
 	} );
 	$( 'occ-off' ).addEventListener( 'click', endOccasion );
-	$( 'occ-music' ).checked = S.occMusic;
-	$( 'occ-rain' ).checked = S.occRain;
-	$( 'occ-music' ).addEventListener( 'change', function () {
-		S.occMusic = this.checked;
-		saveSoon();
+	/* The same two choices for occasions and for themes, each with its own switches because each has its own tab. */
+	function syncDressSwitches() {
+		$( 'occ-music' ).checked = S.occMusic;
+		$( 'theme-music' ).checked = S.occMusic;
+		$( 'occ-rain' ).checked = S.occRain;
+		$( 'theme-rain' ).checked = S.occRain;
+	}
+	[ 'occ-music', 'theme-music' ].forEach( function ( id ) {
+		$( id ).addEventListener( 'change', function () {
+			S.occMusic = this.checked;
+			syncDressSwitches();
+			saveSoon();
+		} );
 	} );
-	$( 'occ-rain' ).addEventListener( 'change', function () {
-		S.occRain = this.checked;
-		if ( occasionNow() ) {
-			occasionRain( occasionNow() );
-		}
-		saveSoon();
+	[ 'occ-rain', 'theme-rain' ].forEach( function ( id ) {
+		$( id ).addEventListener( 'change', function () {
+			S.occRain = this.checked;
+			syncDressSwitches();
+			var on = occasionNow() || Stage.THEMES[ themeNow() ];
+			if ( on ) {
+				occasionRain( on );
+			}
+			saveSoon();
+		} );
 	} );
+	syncDressSwitches();
 
 	/* ─────────────────────────── GIFs and moving stickers ─────────────────────────── */
 
@@ -2250,8 +2286,8 @@
 	renderStickers();
 	renderGifs();
 	renderOccasions();
-	if ( occasionNow() && S.occRain ) {
-		occasionRain( occasionNow() ); // a reload keeps the snow falling
+	if ( ( occasionNow() || themeNow() ) && S.occRain ) {
+		occasionRain( occasionNow() || Stage.THEMES[ themeNow() ] ); // a reload keeps the snow falling
 	}
 
 	document.querySelectorAll( '.whdls-spots-on' ).forEach( function ( box ) {
@@ -2361,50 +2397,352 @@
 
 	/* ─────────────────────────── looks ─────────────────────────── */
 
-	function syncLooks() {
-		document.querySelectorAll( '#whdls-looks .whdls-tile' ).forEach( function ( t ) {
-			t.classList.toggle( 'is-on', t.getAttribute( 'data-key' ) === stage.look );
+	function markTiles( id, key ) {
+		document.querySelectorAll( '#whdls-' + id + ' .whdls-tile' ).forEach( function ( t ) {
+			t.classList.toggle( 'is-on', t.getAttribute( 'data-key' ) === key );
 		} );
-		document.querySelectorAll( '#whdls-frames .whdls-tile' ).forEach( function ( t ) {
-			t.classList.toggle( 'is-on', t.getAttribute( 'data-key' ) === stage.frame );
-		} );
-		$( 'brightness' ).value = stage.brightness;
 	}
+
+	/* Everything in the Looks and Themes tabs, from the stage: a scene or an occasion may have just changed it. */
+	function syncLooks() {
+		markTiles( 'looks', stage.look );
+		markTiles( 'frames', stage.occasion ? '' : stage.frame );
+		markTiles( 'lights', stage.light );
+		markTiles( 'themes', themeNow() );
+		syncAdjust();
+		syncFrameOptions();
+		$( 'light-level' ).value = stage.lightLevel;
+		$( 'light-level' ).disabled = 'none' === stage.light;
+		$( 'adjust-compare' ).hidden = S.onAir; // it would change what the audience sees
+	}
+
+	/*
+	 * A tile that shows what it does to the host's own picture. Painted when its tab opens, from a still of the camera at
+	 * that moment, and one at a time with room between them, more of it on air, so that browsing does not cost the video frames.
+	 */
+	var thumbJobs = [];
+	var thumbTimer = null;
+
+	function thumbTile( key, label, spec, run ) {
+		var tile = el( 'button', 'whdls-tile whdls-tile--thumb' );
+		tile.type = 'button';
+		tile.setAttribute( 'data-key', key );
+		var picture = el( 'canvas' );
+		picture.width = portrait ? 96 : 170;
+		picture.height = portrait ? 170 : 96;
+		tile.appendChild( picture );
+		tile.appendChild( el( 'span', 'whdls-tile__label', label ) );
+		tile.addEventListener( 'click', run );
+		tile.whdSpec = spec;
+		return tile;
+	}
+
+	function pumpThumbs() {
+		if ( thumbTimer || ! thumbJobs.length ) {
+			return;
+		}
+		thumbTimer = setTimeout( function () {
+			thumbTimer = null;
+			var tile = thumbJobs.shift();
+			if ( tile ) {
+				stage.paintThumb( tile.querySelector( 'canvas' ), tile.whdSpec );
+				pumpThumbs();
+			}
+		}, S.onAir ? 110 : 40 );
+	}
+
+	function paintOpenTiles() {
+		stage.takeStill();
+		thumbJobs = Array.prototype.slice.call( document.querySelectorAll( '.whdls-pane.is-on .whdls-sub.is-on .whdls-tile--thumb' ) );
+		pumpThumbs();
+	}
+
+	document.querySelectorAll( '.whdls-subs' ).forEach( function ( seg ) {
+		seg.addEventListener( 'click', function ( e ) {
+			var btn = e.target.closest( 'button' );
+			if ( ! btn ) {
+				return;
+			}
+			seg.querySelectorAll( 'button' ).forEach( function ( b ) {
+				b.classList.toggle( 'is-on', b === btn );
+			} );
+			seg.closest( '.whdls-pane' ).querySelectorAll( '.whdls-sub' ).forEach( function ( pane ) {
+				pane.classList.toggle( 'is-on', pane.getAttribute( 'data-sub-pane' ) === btn.getAttribute( 'data-sub' ) );
+			} );
+			paintOpenTiles();
+		} );
+	} );
+
+	/* ── Adjust ── */
+
+	function paintAdjustRow( row, def ) {
+		var value = stage.adjust[ def.key ] || 0;
+		row.querySelector( 'input' ).value = value;
+		row.querySelector( 'button' ).textContent = value > 0 && def.min < 0 ? '+' + value : String( value );
+		row.classList.toggle( 'is-moved', 0 !== value );
+	}
+
+	function syncAdjust() {
+		Stage.ADJUST.forEach( function ( def ) {
+			paintAdjustRow( $( 'adj-' + def.key ), def );
+		} );
+	}
+
+	function renderAdjust() {
+		var box = $( 'adjust' );
+		var last = '';
+		Stage.ADJUST.forEach( function ( def ) {
+			if ( def.group !== last ) {
+				box.appendChild( el( 'h4', 'whdls-groupname', T.adjustGroups[ def.group ] ) );
+				last = def.group;
+			}
+			var row = el( 'div', 'whdls-adj' );
+			row.id = 'whdls-adj-' + def.key;
+			var label = el( 'label', '', def.label );
+			var input = el( 'input' );
+			input.type = 'range';
+			input.id = 'whdls-adj-input-' + def.key;
+			input.min = def.min;
+			input.max = def.max;
+			input.step = 1;
+			input.disabled = ! stage.canGrade && ! def.css;
+			label.htmlFor = input.id;
+			var zero = el( 'button', 'whdls-adj__val' );
+			zero.type = 'button';
+			zero.title = T.adjustZero;
+			zero.disabled = input.disabled;
+			var set = function ( value ) {
+				stage.setAdjust( def.key, value );
+				paintAdjustRow( row, def );
+				saveSoon();
+			};
+			input.addEventListener( 'input', function () {
+				set( +input.value );
+			} );
+			input.addEventListener( 'dblclick', function () {
+				set( 0 );
+			} );
+			zero.addEventListener( 'click', function () {
+				set( 0 );
+			} );
+			row.appendChild( label );
+			row.appendChild( input );
+			row.appendChild( zero );
+			box.appendChild( row );
+		} );
+		$( 'adjust-note' ).hidden = stage.canGrade;
+	}
+
+	$( 'adjust-auto' ).addEventListener( 'click', function () {
+		if ( stage.autoAdjust() ) {
+			syncAdjust();
+			saveSoon();
+		}
+	} );
+	$( 'adjust-reset' ).addEventListener( 'click', function () {
+		stage.resetAdjust();
+		syncAdjust();
+		saveSoon();
+	} );
+	( function ( btn ) {
+		var hold = function ( on ) {
+			stage.compare = on && ! S.onAir;
+		};
+		btn.addEventListener( 'pointerdown', function () {
+			hold( true );
+		} );
+		[ 'pointerup', 'pointerleave', 'pointercancel', 'blur' ].forEach( function ( name ) {
+			btn.addEventListener( name, function () {
+				hold( false );
+			} );
+		} );
+	}( $( 'adjust-compare' ) ) );
+
+	/* ── Themes ── */
+
+	/* Which theme is on, worked out from the stage, so changing its frame or its look by hand simply ends it. */
+	function themeNow() {
+		if ( stage.occasion ) {
+			return '';
+		}
+		var keys = Object.keys( Stage.THEMES );
+		for ( var i = 0; i < keys.length; i++ ) {
+			var t = Stage.THEMES[ keys[ i ] ];
+			if ( t.look === stage.look && t.frame === stage.frame && t.light === stage.light ) {
+				return keys[ i ];
+			}
+		}
+		return '';
+	}
+
+	function moodTracks( mood ) {
+		return ( ( D.sounds || {} ).music || [] ).filter( function ( track ) {
+			return 0 === String( track.mood ).indexOf( mood );
+		} ).map( function ( track ) {
+			return { url: track.url, title: track.title };
+		} );
+	}
+
+	function afterDressing() {
+		S.activeScene = '';
+		renderScenes();
+		syncLooks();
+		renderOccasions();
+		saveSoon();
+	}
+
+	function useTheme( key ) {
+		var t = Stage.THEMES[ key ];
+		stage.holdFrame( S.transition );
+		stage.setLook( t.look );
+		stage.setFrame( t.frame, t.tint );
+		stage.setLight( t.light, t.level || Stage.LIGHT_LEVEL );
+		occasionRain( t );
+		if ( S.occMusic ) {
+			if ( t.mood ) {
+				keepOwnMusic();
+				swapMusic( moodTracks( t.mood ) );
+			} else {
+				ownMusicBack();
+			}
+		}
+		afterDressing();
+	}
+
+	function endTheme( key ) {
+		var t = Stage.THEMES[ key ];
+		stage.holdFrame( S.transition );
+		stage.setLook( 'natural' );
+		stage.setFrame( 'none' );
+		stage.setLight( 'none' );
+		if ( t.rain && S.rain === t.rain ) {
+			occasionRain( null );
+		}
+		ownMusicBack();
+		afterDressing();
+	}
+
+	function renderThemes() {
+		var box = $( 'themes' );
+		Object.keys( Stage.THEMES ).forEach( function ( key ) {
+			var t = Stage.THEMES[ key ];
+			box.appendChild( thumbTile( key, t.label, { look: t.look, light: t.light, frame: t.frame, tint: t.tint }, function () {
+				if ( themeNow() === key ) {
+					endTheme( key );
+				} else {
+					useTheme( key );
+				}
+			} ) );
+		} );
+	}
+
+	/* ── Frames ── */
+
+	function syncFrameOptions() {
+		var def = Stage.FRAMES[ stage.frame ] || {};
+		var showing = ! stage.occasion && ( def.tint || def.words );
+		$( 'frame-opts' ).hidden = ! showing;
+		$( 'frame-tints' ).textContent = '';
+		$( 'frame-tints' ).hidden = ! def.tint;
+		$( 'frame-words-row' ).hidden = ! def.words;
+		if ( ! showing ) {
+			return;
+		}
+		if ( def.tint ) {
+			var current = stage.frameTint || def.tint;
+			Object.keys( Stage.TINTS ).forEach( function ( key ) {
+				var swatch = el( 'button', 'whdls-swatch' + ( current === key ? ' is-on' : '' ) );
+				swatch.type = 'button';
+				swatch.style.background = Stage.TINTS[ key ].main;
+				swatch.title = Stage.TINTS[ key ].label;
+				swatch.setAttribute( 'aria-label', Stage.TINTS[ key ].label );
+				swatch.addEventListener( 'click', function () {
+					stage.setFrameTint( key === def.tint ? '' : key );
+					syncFrameOptions();
+					repaintFrameTile();
+					saveSoon();
+				} );
+				$( 'frame-tints' ).appendChild( swatch );
+			} );
+		}
+		if ( def.words && document.activeElement !== $( 'frame-words' ) ) {
+			$( 'frame-words' ).value = stage.frameOptions( stage.frame, '' ).words;
+		}
+	}
+
+	function repaintFrameTile() {
+		var tile = document.querySelector( '#whdls-frames .whdls-tile[data-key="' + stage.frame + '"]' );
+		if ( tile ) {
+			tile.whdSpec.tint = stage.frameTint;
+			stage.paintThumb( tile.querySelector( 'canvas' ), tile.whdSpec );
+		}
+	}
+
+	$( 'frame-words' ).addEventListener( 'input', function () {
+		stage.setFrameWords( this.value );
+		repaintFrameTile();
+		saveSoon();
+	} );
+
+	function renderFrames() {
+		var box = $( 'frames' );
+		Object.keys( Stage.FRAME_GROUPS ).forEach( function ( group ) {
+			box.appendChild( el( 'h4', 'whdls-groupname', Stage.FRAME_GROUPS[ group ] ) );
+			var grid = el( 'div', 'whdls-tiles whdls-tiles--thumbs' );
+			Object.keys( Stage.FRAMES ).forEach( function ( key ) {
+				if ( Stage.FRAMES[ key ].group !== group ) {
+					return;
+				}
+				grid.appendChild( thumbTile( key, Stage.FRAMES[ key ].label, { frame: key }, function () {
+					stage.holdFrame( 220 );
+					stage.setFrame( key );
+					syncLooks();
+					renderOccasions(); // a plain frame takes the occasion's place
+					saveSoon();
+				} ) );
+			} );
+			box.appendChild( grid );
+		} );
+	}
+
+	/* ── Light ── */
+
+	function renderLights() {
+		var box = $( 'lights' );
+		Object.keys( Stage.LIGHTS ).forEach( function ( key ) {
+			box.appendChild( thumbTile( key, Stage.LIGHTS[ key ].label, { light: key }, function () {
+				stage.setLight( key );
+				syncLooks();
+				saveSoon();
+			} ) );
+		} );
+	}
+
+	$( 'light-level' ).addEventListener( 'input', function () {
+		stage.lightLevel = +this.value;
+		saveSoon();
+	} );
+
+	/* ── Colour ── */
 
 	function renderLooks() {
 		var looks = $( 'looks' );
 		Object.keys( Stage.LOOKS ).forEach( function ( key ) {
-			var tile = el( 'button', 'whdls-tile', Stage.LOOKS[ key ].label );
-			tile.type = 'button';
-			tile.setAttribute( 'data-key', key );
-			tile.addEventListener( 'click', function () {
+			looks.appendChild( thumbTile( key, Stage.LOOKS[ key ].label, { look: key }, function () {
 				stage.setLook( key );
 				syncLooks();
-			} );
-			looks.appendChild( tile );
-		} );
-		var frames = $( 'frames' );
-		Object.keys( Stage.FRAMES ).forEach( function ( key ) {
-			var tile = el( 'button', 'whdls-tile', Stage.FRAMES[ key ].label );
-			tile.type = 'button';
-			tile.setAttribute( 'data-key', key );
-			tile.addEventListener( 'click', function () {
-				stage.setFrame( key );
-				syncLooks();
-				renderOccasions(); // a plain frame takes the occasion's place
 				saveSoon();
-			} );
-			frames.appendChild( tile );
+			} ) );
 		} );
+		renderAdjust();
+		renderThemes();
+		renderFrames();
+		renderLights();
 		syncLooks();
 		if ( ! stage.canFilter ) {
-			looks.closest( '.whdls-pane' ).querySelector( 'h3' ).hidden = true;
-			looks.hidden = true;
+			document.querySelector( '[data-sub="colour"]' ).hidden = true;
 		}
 	}
-	$( 'brightness' ).addEventListener( 'input', function () {
-		stage.setBrightness( +this.value );
-	} );
 	$( 'hide' ).addEventListener( 'change', function () {
 		stage.hideGraphics = this.checked;
 	} );
@@ -3560,6 +3898,10 @@
 			} );
 			if ( 'cameras' === key ) {
 				refreshDevices().catch( function () {} );
+			}
+			if ( 'looks' === key || 'themes' === key ) {
+				syncLooks();
+				paintOpenTiles();
 			}
 			if ( 'sound' === key && mixer ) {
 				( ( D.sounds || {} ).fx || [] ).forEach( function ( fx ) {

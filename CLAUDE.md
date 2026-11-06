@@ -594,7 +594,36 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   occasions/`, cut to 170 s). One tap: `Stage.setOccasion()` draws the frame once into the video (`_buildOccasion`, saved in
   the scene as `stage.occasion`, words editable), `setRain( key, '', 0.34 )` at a third of the density, and the music list is
   swapped with the host's own kept in `musicBefore` for when it comes off. Before going live the music starts; on air it
-  only changes if music is already playing. A plain frame in Looks ends the occasion's frame. No year in the words.
+  only changes if music is already playing. A plain frame (Themes → Frames) ends the occasion's frame. Each occasion also
+  puts on a light (`light`, the last entry of its line), which goes with it. No year in the words.
+  **Looks tab, Adjust** (`admin/live-grade.js`, `WHDGrade`): eleven sliders (brightness, contrast, highlights, shadows,
+  saturation, warmth, tint, sharpness, soft skin, fade, vignette; `stage.adjust` holds only the moved ones, saved in the scene
+  and in saved scenes). One WebGL 2 pass over the camera in `_drawCamera`, drawn back onto the stage canvas, so it is burned
+  in, only the main camera changes (not the card, text, frames or a picture-in-picture camera), and a shared screen keeps its
+  true colours (looks skip it too now). **With every slider at zero it does not run** (`grader.runs` stays 0). Soft skin
+  is a chroma mask plus the texture's mipmaps for the blur, with edges judged one mip up, or every noisy webcam pixel counts as
+  an edge and stays behind as a speck. `failIfMajorPerformanceCaveat`: without a real graphics card there is no grader and
+  brightness, contrast, saturation and warmth fall back to `ctx.filter` (`cssFilter()`, `css: true`); the others are disabled.
+  **Auto fix** (`WHDGrade.auto`) looks once, only touches six sliders, and leaves alone a median brightness of 36–62%, a
+  red/blue ratio of 0.96–1.4 and a green ratio of 0.96–1.04: a beige wall is not a fault, and plain grey-world turned one cold.
+  Hold to compare is hidden on air because the audience would see it too. Old scenes' `brightness` multiplier becomes the
+  slider (`log2(b) / 0.7 * 100`, the same picture). `toJSON()` must copy `adjust` and `frameWords`: a saved scene shared the
+  live object once and followed every later slider move.
+  **Themes tab** (`admin/live-frames.js`, `WHDFrames`), three sub-tabs. *Frames*: 29, drawn in code in five groups, each
+  `draw()` once into `_frameCanvas` (the cache key has the tint and words) and optionally `live()` every frame for what moves
+  (bulbs, neon, REC). Optional `tint` (eight colours in `TINTS`) and `words` (defaults to the shop's name; `frameWords`
+  per frame). All stay at the edge; a check measures the middle of the picture in both shapes. *Light*: 16, `draw()` every frame
+  under the frame and graphics, mostly sprites and `softSheet()` (shapes drawn small and enlarged: the enlarging is the blur, no
+  filter). `glow` uses `lighten`, not `screen`, which flattened the whole picture. *Themes*: 15 in `THEMES`, each a look,
+  frame, tint, light, level, falling effect and music mood (start of a `sounds.json` mood). Which is on is worked out from the
+  stage (`themeNow()`: look + frame + light), so each must differ in those and changing one by hand just ends it. Themes never
+  touch Adjust, which corrects the room. Occasions and themes share `musicBefore` (`keepOwnMusic()` / `ownMusicBack()`) and the
+  two switches. Colour looks are 18 now, with small hue turns only, because a hue turn is hard on skin. Tiles show the host's own
+  camera: `takeStill()` when the tab opens, then `paintThumb()` one tile per 40 ms, 110 ms on air, so browsing costs no frames.
+  Testing these needs a real camera picture and card: `--use-angle=d3d11 --enable-gpu --ignore-gpu-blocklist` gets the PC's
+  graphics card in headless Chromium, and a photo as a y4m (ffmpeg, `-pix_fmt yuv420p`) is what shows skin and lace. The first
+  `<video>` in the studio is a paused probe; pick the one that is playing. Repeated `getImageData` on a canvas makes Chromium
+  move it off the card, which changes how video is scaled and looks like a bug: read through a copy.
   Every stream's link is unique for good: `WHD_Live::new_slug()` puts a random end on the title's slug at creation and an
   edit never changes it, so a deleted stream's address is never reissued. It is shown from the moment of saving (list,
   form, studio's top bar, preflight), on the waiting page with Copy and on the cover under the words.

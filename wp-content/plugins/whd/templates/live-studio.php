@@ -17,6 +17,7 @@ $whd_icons = [
 	'sound'   => '<path d="M9 18V6l10-2v12"/><circle cx="6.500" cy="18" r="2.500"/><circle cx="16.500" cy="16" r="2.500"/>',
 	'effects' => '<path d="M12 3.500 13.800 9l5.700 1.800-5.700 1.800L12 18l-1.800-5.400-5.700-1.800L10.200 9 12 3.500Z"/><path d="M19 16.500v4M17 18.500h4"/>',
 	'gifs'    => '<circle cx="12" cy="12" r="8.500"/><path d="M8.500 14.500c.8 1.400 2 2.100 3.500 2.100s2.700-.7 3.500-2.100"/><path d="M9 9.500v1M15 9.500v1"/>',
+	'themes'  => '<path d="M12 3.500c-4.700 0-8.500 3.600-8.500 8.200 0 4.400 3.600 8.800 8.500 8.800 1.300 0 2-1 2-2 0-1.200-1-1.600-1-2.700 0-1 .8-1.700 1.900-1.700h2.400c2 0 3.200-1.300 3.200-3 0-4-3.600-7.600-8.500-7.600Z"/><circle cx="8" cy="11" r="1.100"/><circle cx="11.300" cy="7.800" r="1.100"/><circle cx="15.600" cy="8.800" r="1.100"/>',
 	'occasions' => '<rect x="4" y="5.500" width="16" height="15" rx="2.500"/><path d="M4 10h16M8.500 3.500v4M15.500 3.500v4"/><path d="m12 12.300.9 1.900 2.100.3-1.500 1.400.4 2-1.900-1-1.900 1 .4-2-1.500-1.400 2.100-.3.900-1.900Z"/>',
 	'images'  => '<rect x="3.500" y="5" width="17" height="14" rx="2"/><circle cx="9" cy="10" r="1.600"/><path d="m4 17 5-4.500 3.500 3 3-2.500 4.500 4"/>',
 	'text'    => '<path d="M5 6.500V5h14v1.500M12 5v14M9.500 19h5"/>',
@@ -29,6 +30,7 @@ $whd_tabs = [
 	'sound'   => __( 'Sound', 'whd' ),
 	'effects' => __( 'Effects', 'whd' ),
 	'gifs'    => __( 'GIFs', 'whd' ),
+	'themes'  => __( 'Themes', 'whd' ),
 	'occasions' => __( 'Occasions', 'whd' ),
 	'images'  => __( 'Pictures', 'whd' ),
 	'text'    => __( 'Text', 'whd' ),
@@ -198,6 +200,36 @@ $whd_tabs = [
 				<p class="whdls-note"><?php esc_html_e( 'The moving stickers are free for a shop to use. A funny GIF you find online usually belongs to someone else, and Facebook and YouTube can act on clips from films or TV, so use ones you’re allowed to.', 'whd' ); ?></p>
 			</div>
 
+			<div class="whdls-pane" data-pane="themes">
+				<h2><?php esc_html_e( 'Themes', 'whd' ); ?></h2>
+				<div class="whdls-seg whdls-subs" role="group">
+					<button type="button" class="is-on" data-sub="themes"><?php esc_html_e( 'Themes', 'whd' ); ?></button>
+					<button type="button" data-sub="frames"><?php esc_html_e( 'Frames', 'whd' ); ?></button>
+					<button type="button" data-sub="light"><?php esc_html_e( 'Light', 'whd' ); ?></button>
+				</div>
+				<div class="whdls-sub is-on" data-sub-pane="themes">
+					<p class="whdls-hint"><?php esc_html_e( 'A colour, a frame, a light and music, all in one tap. Press it again to take it all off. Your Adjust sliders stay as they are.', 'whd' ); ?></p>
+					<div class="whdls-tiles whdls-tiles--thumbs" id="whdls-themes"></div>
+					<label class="whdls-switch whdls-switch--block"><input type="checkbox" id="whdls-theme-music" checked><span></span><?php esc_html_e( 'Change the music too', 'whd' ); ?></label>
+					<label class="whdls-switch whdls-switch--block"><input type="checkbox" id="whdls-theme-rain" checked><span></span><?php esc_html_e( 'Something falling, where a theme has it', 'whd' ); ?></label>
+					<p class="whdls-note"><?php esc_html_e( 'Before you go live the music starts right away. On air it only changes if music is already playing. Taking the theme off brings your own list back.', 'whd' ); ?></p>
+				</div>
+				<div class="whdls-sub" data-sub-pane="frames">
+					<p class="whdls-hint"><?php esc_html_e( 'Goes round the edge of the video, so everybody on every platform sees it. Your piece’s card and text stay on top.', 'whd' ); ?></p>
+					<div class="whdls-framelist" id="whdls-frames"></div>
+					<div class="whdls-frameopts" id="whdls-frame-opts" hidden>
+						<div class="whdls-swatches" id="whdls-frame-tints"></div>
+						<label class="whdls-field" id="whdls-frame-words-row"><span><?php esc_html_e( 'Words on the frame', 'whd' ); ?></span><input type="text" id="whdls-frame-words" maxlength="40"></label>
+					</div>
+				</div>
+				<div class="whdls-sub" data-sub-pane="light">
+					<p class="whdls-hint"><?php esc_html_e( 'Moves gently over your picture, under the frame and everything else on stage.', 'whd' ); ?></p>
+					<label class="whdls-range"><span><?php esc_html_e( 'Strength', 'whd' ); ?></span><input type="range" id="whdls-light-level" min="0.1" max="1" step="0.01" value="0.8"></label>
+					<div class="whdls-tiles whdls-tiles--thumbs" id="whdls-lights"></div>
+					<p class="whdls-note"><?php esc_html_e( 'Film grain and Old video make the picture busier, which uses more of your connection. On a slow connection they can make the rest look softer.', 'whd' ); ?></p>
+				</div>
+			</div>
+
 			<div class="whdls-pane" data-pane="occasions">
 				<h2><?php esc_html_e( 'Occasions', 'whd' ); ?></h2>
 				<p class="whdls-hint"><?php esc_html_e( 'Press one for its frame, its music and something gently falling. Press it again to take it all off.', 'whd' ); ?></p>
@@ -255,12 +287,25 @@ $whd_tabs = [
 
 			<div class="whdls-pane" data-pane="looks">
 				<h2><?php esc_html_e( 'Looks', 'whd' ); ?></h2>
-				<h3><?php esc_html_e( 'Colour', 'whd' ); ?></h3>
-				<div class="whdls-tiles whdls-tiles--text" id="whdls-looks"></div>
-				<label class="whdls-range"><span><?php esc_html_e( 'Brightness', 'whd' ); ?></span><input type="range" id="whdls-brightness" min="0.6" max="1.5" step="0.01" value="1"></label>
-				<h3><?php esc_html_e( 'Frame', 'whd' ); ?></h3>
-				<div class="whdls-tiles whdls-tiles--text" id="whdls-frames"></div>
-				<p class="whdls-hint"><?php esc_html_e( 'Frames for Christmas, New Year, Black Friday and the seasons are in the Occasions tab, with their music.', 'whd' ); ?></p>
+				<div class="whdls-seg whdls-subs" role="group">
+					<button type="button" class="is-on" data-sub="adjust"><?php esc_html_e( 'Adjust', 'whd' ); ?></button>
+					<button type="button" data-sub="colour"><?php esc_html_e( 'Colour', 'whd' ); ?></button>
+				</div>
+				<div class="whdls-sub is-on" data-sub-pane="adjust">
+					<p class="whdls-hint"><?php esc_html_e( 'Only your camera’s picture changes. Your piece’s card, your text and your frames keep their own colours. Double-click a slider to put it back.', 'whd' ); ?></p>
+					<div class="whdls-adjust__do">
+						<button type="button" class="whdls-mini" id="whdls-adjust-auto"><?php esc_html_e( 'Auto fix', 'whd' ); ?></button>
+						<button type="button" class="whdls-mini" id="whdls-adjust-compare" title="<?php esc_attr_e( 'Shows the camera as it comes, for as long as you hold it. Not offered on air, because the audience would see it too.', 'whd' ); ?>"><?php esc_html_e( 'Hold to compare', 'whd' ); ?></button>
+						<button type="button" class="whdls-mini" id="whdls-adjust-reset"><?php esc_html_e( 'Reset', 'whd' ); ?></button>
+					</div>
+					<div class="whdls-adjust" id="whdls-adjust"></div>
+					<p class="whdls-note" id="whdls-adjust-note" hidden><?php esc_html_e( 'This computer or browser has no graphics card it can use for this, so only Brightness, Contrast, Saturation and Warmth work here.', 'whd' ); ?></p>
+					<p class="whdls-note"><?php esc_html_e( 'Clothes sell on their colour, so check a piece you know against the picture after changing Warmth, Tint or Saturation.', 'whd' ); ?></p>
+				</div>
+				<div class="whdls-sub" data-sub-pane="colour">
+					<p class="whdls-hint"><?php esc_html_e( 'Each one shows your own camera. The Adjust sliders work on top of whichever you pick.', 'whd' ); ?></p>
+					<div class="whdls-tiles whdls-tiles--thumbs" id="whdls-looks"></div>
+				</div>
 			</div>
 
 			<div class="whdls-pane" data-pane="layers">

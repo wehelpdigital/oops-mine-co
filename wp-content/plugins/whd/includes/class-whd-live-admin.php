@@ -105,7 +105,9 @@ final class WHD_Live_Admin {
 		// No version on the fonts: WordPress would rebuild the address and keep only the last family.
 		wp_enqueue_style( 'whd-live-fonts', WHD_Live::FONTS, [], null ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
 		wp_enqueue_style( 'whd-live-studio', WHD_URL . 'admin/live-studio.css', [], WHD_VERSION );
-		wp_enqueue_script( 'whd-live-stage', WHD_URL . 'admin/live-stage.js', [], WHD_VERSION, true );
+		wp_enqueue_script( 'whd-live-grade', WHD_URL . 'admin/live-grade.js', [], WHD_VERSION, true );
+		wp_enqueue_script( 'whd-live-frames', WHD_URL . 'admin/live-frames.js', [], WHD_VERSION, true );
+		wp_enqueue_script( 'whd-live-stage', WHD_URL . 'admin/live-stage.js', [ 'whd-live-grade', 'whd-live-frames' ], WHD_VERSION, true );
 		wp_enqueue_script( 'whd-live-sound', WHD_URL . 'admin/live-sound.js', [], WHD_VERSION, true );
 		wp_enqueue_script( 'whd-live-studio', WHD_URL . 'admin/live-studio.js', [ 'whd-live-stage', 'whd-live-sound' ], WHD_VERSION, true );
 
@@ -193,23 +195,24 @@ final class WHD_Live_Admin {
 
 	/**
 	 * Seasons and celebrations: the frame's colours, words and corner pictures (largest first; the fifth and sixth go on
-	 * the left), what falls, and the music from sounds.json. No year in the words, so they are right every year.
+	 * the left), what falls, the light over the picture (live-frames.js), and the music from sounds.json. No year in the
+	 * words, so they are right every year.
 	 */
 	private static function occasion_library(): array {
 		$list = [
-			'christmas'   => [ __( 'Christmas', 'whd' ), __( 'Merry Christmas', 'whd' ), 'serif', [ '#8c1c13', '#0f5132' ], '#e3c26b', [ '#a3201a', '#7c1610' ], '#fff4dc', 'snow', [ 'tree', 'bell', 'gift', 'santa', 'star', 'snowman' ] ],
-			'newyear'     => [ __( 'New Year', 'whd' ), __( 'Happy New Year', 'whd' ), 'serif', [ '#111a33', '#3b2a12' ], '#e8c872', [ '#161f3d', '#2b2140' ], '#f6dd9a', 'confetti', [ 'fireworks', 'sparkler', 'champagne', 'clink', 'popper', 'balloon' ] ],
-			'blackfriday' => [ __( 'Black Friday', 'whd' ), __( 'Black Friday', 'whd' ), 'sans', [ '#050505', '#1d1d1d' ], '#e0b64a', [ '#0a0a0a', '#222222' ], '#f2cd63', 'tags', [ 'bags', 'bolt', 'tag', 'blackheart', 'moneybag', 'fire' ] ],
-			'cybermonday' => [ __( 'Cyber Monday', 'whd' ), __( 'Cyber Monday', 'whd' ), 'sans', [ '#0b1e6b', '#8a1cff' ], '#46e8ff', [ '#0d2a8c', '#7a1cf0' ], '#ffffff', 'bolts', [ 'laptop', 'bolt', 'robot', 'phone', 'card', 'box' ] ],
-			'valentine'   => [ __( 'Valentine’s', 'whd' ), __( 'Happy Valentine’s Day', 'whd' ), 'serif', [ '#b3123f', '#f27a9b' ], '#ffe3ea', [ '#c1174a', '#e0456f' ], '#fff5f7', 'hearts', [ 'rose', 'hearts', 'letter', 'cupid', 'heart', 'kiss' ] ],
-			'lunar'       => [ __( 'Lunar New Year', 'whd' ), __( 'Happy Lunar New Year', 'whd' ), 'serif', [ '#a30e14', '#d4202a' ], '#f4cf6e', [ '#b5121a', '#8f0b11' ], '#ffe9ad', 'lanterns', [ 'lantern', 'firecracker', 'dragonface', 'envelope', 'coin', 'dragon' ] ],
-			'mothers'     => [ __( 'Mother’s Day', 'whd' ), __( 'Happy Mother’s Day', 'whd' ), 'serif', [ '#d98aa0', '#f2c6cf' ], '#fff7ef', [ '#c97b92', '#dd98ab' ], '#fffaf5', 'petals', [ 'bouquet', 'ribbon', 'tulip', 'growingheart', 'hibiscus', 'gift' ] ],
-			'halloween'   => [ __( 'Halloween', 'whd' ), __( 'Happy Halloween', 'whd' ), 'serif', [ '#1c0f2e', '#d9590a' ], '#ffb04d', [ '#25123d', '#3a1a52' ], '#ffc27a', 'bats', [ 'pumpkin', 'bat', 'ghost', 'spider', 'moon', 'web' ] ],
-			'sale'        => [ __( 'Big sale', 'whd' ), __( 'Big Sale', 'whd' ), 'sans', [ '#6f4a3f', '#b98b7e' ], '#fff4e8', [ '#7c5347', '#a87b6e' ], '#ffffff', 'confetti', [ 'bags', 'sparkles', 'tag', 'megaphone', 'gift', 'moneybag' ] ],
-			'spring'      => [ __( 'Spring', 'whd' ), __( 'Hello Spring', 'whd' ), 'serif', [ '#7fb77e', '#f7b2c4' ], '#fffdf2', [ '#6ea96d', '#e596ad' ], '#fffef5', 'petals', [ 'blossom', 'butterfly', 'tulip', 'bee', 'rainbow', 'sprout' ] ],
-			'summer'      => [ __( 'Summer', 'whd' ), __( 'Hello Summer', 'whd' ), 'serif', [ '#0ea5b7', '#ffb703' ], '#fffbe6', [ '#0c93a3', '#f29e02' ], '#ffffff', '', [ 'palm', 'shades', 'sun', 'watermelon', 'drink', 'wave' ] ],
-			'autumn'      => [ __( 'Autumn', 'whd' ), __( 'Hello Autumn', 'whd' ), 'serif', [ '#8a3a12', '#d98324' ], '#ffe9c9', [ '#96421a', '#b5611b' ], '#fff3df', 'leaves', [ 'maple', 'leaf', 'pumpkin', 'mushroom', 'chestnut', 'scarf' ] ],
-			'winter'      => [ __( 'Winter', 'whd' ), __( 'Hello Winter', 'whd' ), 'serif', [ '#2f5f96', '#a9d3ee' ], '#ffffff', [ '#2f5f96', '#4f85bd' ], '#ffffff', 'snow', [ 'snowflake', 'cocoa', 'snowman', 'gloves', 'coat', 'scarf' ] ],
+			'christmas'   => [ __( 'Christmas', 'whd' ), __( 'Merry Christmas', 'whd' ), 'serif', [ '#8c1c13', '#0f5132' ], '#e3c26b', [ '#a3201a', '#7c1610' ], '#fff4dc', 'snow', [ 'tree', 'bell', 'gift', 'santa', 'star', 'snowman' ], 'bokeh' ],
+			'newyear'     => [ __( 'New Year', 'whd' ), __( 'Happy New Year', 'whd' ), 'serif', [ '#111a33', '#3b2a12' ], '#e8c872', [ '#161f3d', '#2b2140' ], '#f6dd9a', 'confetti', [ 'fireworks', 'sparkler', 'champagne', 'clink', 'popper', 'balloon' ], 'dust' ],
+			'blackfriday' => [ __( 'Black Friday', 'whd' ), __( 'Black Friday', 'whd' ), 'sans', [ '#050505', '#1d1d1d' ], '#e0b64a', [ '#0a0a0a', '#222222' ], '#f2cd63', 'tags', [ 'bags', 'bolt', 'tag', 'blackheart', 'moneybag', 'fire' ], 'spot' ],
+			'cybermonday' => [ __( 'Cyber Monday', 'whd' ), __( 'Cyber Monday', 'whd' ), 'sans', [ '#0b1e6b', '#8a1cff' ], '#46e8ff', [ '#0d2a8c', '#7a1cf0' ], '#ffffff', 'bolts', [ 'laptop', 'bolt', 'robot', 'phone', 'card', 'box' ], 'disco' ],
+			'valentine'   => [ __( 'Valentine’s', 'whd' ), __( 'Happy Valentine’s Day', 'whd' ), 'serif', [ '#b3123f', '#f27a9b' ], '#ffe3ea', [ '#c1174a', '#e0456f' ], '#fff5f7', 'hearts', [ 'rose', 'hearts', 'letter', 'cupid', 'heart', 'kiss' ], 'hearts' ],
+			'lunar'       => [ __( 'Lunar New Year', 'whd' ), __( 'Happy Lunar New Year', 'whd' ), 'serif', [ '#a30e14', '#d4202a' ], '#f4cf6e', [ '#b5121a', '#8f0b11' ], '#ffe9ad', 'lanterns', [ 'lantern', 'firecracker', 'dragonface', 'envelope', 'coin', 'dragon' ], 'bokeh' ],
+			'mothers'     => [ __( 'Mother’s Day', 'whd' ), __( 'Happy Mother’s Day', 'whd' ), 'serif', [ '#d98aa0', '#f2c6cf' ], '#fff7ef', [ '#c97b92', '#dd98ab' ], '#fffaf5', 'petals', [ 'bouquet', 'ribbon', 'tulip', 'growingheart', 'hibiscus', 'gift' ], 'glow' ],
+			'halloween'   => [ __( 'Halloween', 'whd' ), __( 'Happy Halloween', 'whd' ), 'serif', [ '#1c0f2e', '#d9590a' ], '#ffb04d', [ '#25123d', '#3a1a52' ], '#ffc27a', 'bats', [ 'pumpkin', 'bat', 'ghost', 'spider', 'moon', 'web' ], 'leak' ],
+			'sale'        => [ __( 'Big sale', 'whd' ), __( 'Big Sale', 'whd' ), 'sans', [ '#6f4a3f', '#b98b7e' ], '#fff4e8', [ '#7c5347', '#a87b6e' ], '#ffffff', 'confetti', [ 'bags', 'sparkles', 'tag', 'megaphone', 'gift', 'moneybag' ], 'sheen' ],
+			'spring'      => [ __( 'Spring', 'whd' ), __( 'Hello Spring', 'whd' ), 'serif', [ '#7fb77e', '#f7b2c4' ], '#fffdf2', [ '#6ea96d', '#e596ad' ], '#fffef5', 'petals', [ 'blossom', 'butterfly', 'tulip', 'bee', 'rainbow', 'sprout' ], 'sparkle' ],
+			'summer'      => [ __( 'Summer', 'whd' ), __( 'Hello Summer', 'whd' ), 'serif', [ '#0ea5b7', '#ffb703' ], '#fffbe6', [ '#0c93a3', '#f29e02' ], '#ffffff', '', [ 'palm', 'shades', 'sun', 'watermelon', 'drink', 'wave' ], 'golden' ],
+			'autumn'      => [ __( 'Autumn', 'whd' ), __( 'Hello Autumn', 'whd' ), 'serif', [ '#8a3a12', '#d98324' ], '#ffe9c9', [ '#96421a', '#b5611b' ], '#fff3df', 'leaves', [ 'maple', 'leaf', 'pumpkin', 'mushroom', 'chestnut', 'scarf' ], 'leak' ],
+			'winter'      => [ __( 'Winter', 'whd' ), __( 'Hello Winter', 'whd' ), 'serif', [ '#2f5f96', '#a9d3ee' ], '#ffffff', [ '#2f5f96', '#4f85bd' ], '#ffffff', 'snow', [ 'snowflake', 'cocoa', 'snowman', 'gloves', 'coat', 'scarf' ], 'glow' ],
 		];
 		$file   = WHD_DIR . 'assets/live-sounds/sounds.json';
 		$sounds = file_exists( $file ) ? json_decode( (string) file_get_contents( $file ), true ) : null; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- the plugin's own file
@@ -232,6 +235,7 @@ final class WHD_Live_Admin {
 				'ribbon' => $o[5],
 				'ink'    => $o[6],
 				'rain'   => $o[7],
+				'light'  => $o[9],
 				'art'    => array_map( static fn( $name ) => WHD_URL . 'assets/live-stickers/frames/' . $name . '.png', $o[8] ),
 				'tracks' => $tracks,
 			];
@@ -242,6 +246,12 @@ final class WHD_Live_Admin {
 	private static function studio_words(): array {
 		return [
 			'goLive'       => __( 'Go live', 'whd' ),
+			'adjustZero'   => __( 'Back to zero', 'whd' ),
+			'adjustGroups' => [
+				'light'  => __( 'Light', 'whd' ),
+				'colour' => __( 'Colour', 'whd' ),
+				'finish' => __( 'Finish', 'whd' ),
+			],
 			'going'        => __( 'Going live…', 'whd' ),
 			'endLive'      => __( 'End live', 'whd' ),
 			'rejoin'       => __( 'Back on air', 'whd' ),

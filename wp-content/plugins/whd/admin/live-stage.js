@@ -14,6 +14,9 @@
  * Static layers are drawn once into their own small canvas and only stamped each frame. Text with
  * shadows at 30 fps on a laptop that is also encoding video is where frames would otherwise go.
  *
+ * Top to bottom a picture is: the camera (live-grade.js adjusts it), the light over it, the frame (both from
+ * live-frames.js), then the layers, then whatever is falling.
+ *
  * @package whd
  */
 ( function ( root ) {
@@ -35,16 +38,24 @@
 		vivid: { label: 'Vivid', filter: 'saturate(1.35) contrast(1.06)' },
 		cool: { label: 'Cool', filter: 'saturate(.96) hue-rotate(8deg) brightness(1.02)' },
 		vintage: { label: 'Vintage', filter: 'sepia(.35) saturate(.9) contrast(.94) brightness(1.02)' },
-		mono: { label: 'Mono', filter: 'grayscale(1) contrast(1.06)' }
+		mono: { label: 'Mono', filter: 'grayscale(1) contrast(1.06)' },
+		blush: { label: 'Blush', filter: 'brightness(1.06) saturate(1.06) sepia(.06) hue-rotate(-6deg) contrast(.96)' },
+		peach: { label: 'Peach', filter: 'sepia(.14) saturate(1.16) hue-rotate(-8deg) brightness(1.05) contrast(.97)' },
+		golden: { label: 'Golden', filter: 'sepia(.22) saturate(1.28) hue-rotate(-6deg) brightness(1.04) contrast(1.02)' },
+		seoul: { label: 'Seoul café', filter: 'brightness(1.09) contrast(.9) saturate(.9) sepia(.09)' },
+		ivory: { label: 'Ivory', filter: 'brightness(1.1) contrast(.86) saturate(.78)' },
+		fresh: { label: 'Fresh', filter: 'saturate(1.1) hue-rotate(3deg) brightness(1.06) contrast(.97)' },
+		film: { label: 'Film', filter: 'contrast(.9) saturate(.84) sepia(.16) brightness(1.04)' },
+		night: { label: 'Night out', filter: 'saturate(1.25) contrast(1.12) hue-rotate(-5deg) brightness(.97)' },
+		sepia: { label: 'Sepia', filter: 'sepia(.5) contrast(.98) brightness(1.01) saturate(.85)' },
+		noir: { label: 'Noir', filter: 'grayscale(1) contrast(1.28) brightness(.96)' }
 	};
 
-	var FRAMES = {
-		none: { label: 'None' },
-		rose: { label: 'Rose line' },
-		cream: { label: 'Cream edge' },
-		cinema: { label: 'Cinema' },
-		vignette: { label: 'Vignette' }
-	};
+	var FRAMES = root.WHDFrames.FRAMES;
+	var LIGHTS = root.WHDFrames.LIGHTS;
+	var TINTS = root.WHDFrames.TINTS;
+	var GRADE = root.WHDGrade;
+	var LIGHT_LEVEL = 0.8; // what a light starts at, of 1
 
 	/* kind: rise (up from the bottom), fall (down from the top), twinkle (in place), burst (out from the middle). */
 	var EFFECTS = {
@@ -62,7 +73,18 @@
 		lanterns: { label: 'Lanterns', icon: '🏮', emoji: [ '🏮' ], kind: 'rise', count: 14, size: [ 0.06, 0.1 ] },
 		bats: { label: 'Bats', icon: '🦇', emoji: [ '🦇' ], kind: 'fall', count: 16, size: [ 0.05, 0.09 ] },
 		tags: { label: 'Tags', icon: '🏷️', emoji: [ '🏷️' ], kind: 'fall', count: 18, size: [ 0.045, 0.08 ] },
-		bolts: { label: 'Bolts', icon: '⚡', emoji: [ '⚡' ], kind: 'twinkle', count: 16, size: [ 0.05, 0.09 ] }
+		bolts: { label: 'Bolts', icon: '⚡', emoji: [ '⚡' ], kind: 'twinkle', count: 16, size: [ 0.05, 0.09 ] },
+		butterflies: { label: 'Butterflies', icon: '🦋', emoji: [ '🦋' ], kind: 'rise', count: 16, size: [ 0.05, 0.1 ] },
+		bows: { label: 'Bows', icon: '🎀', emoji: [ '🎀' ], kind: 'fall', count: 18, size: [ 0.045, 0.085 ] },
+		kisses: { label: 'Kisses', icon: '💋', emoji: [ '💋' ], kind: 'rise', count: 20, size: [ 0.045, 0.085 ] },
+		flowers: { label: 'Flowers', icon: '🌼', emoji: [ '🌼', '🌻', '🌺' ], kind: 'fall', count: 24, size: [ 0.045, 0.085 ] },
+		diamonds: { label: 'Diamonds', icon: '💎', emoji: [ '💎' ], kind: 'twinkle', count: 20, size: [ 0.04, 0.08 ] },
+		crowns: { label: 'Crowns', icon: '👑', emoji: [ '👑' ], kind: 'fall', count: 14, size: [ 0.05, 0.09 ] },
+		fruit: { label: 'Sweet', icon: '🍓', emoji: [ '🍓', '🍒', '🍑' ], kind: 'fall', count: 22, size: [ 0.04, 0.08 ] },
+		music: { label: 'Music', icon: '🎶', emoji: [ '🎵', '🎶' ], kind: 'rise', count: 20, size: [ 0.04, 0.08 ] },
+		foil: { label: 'Gold foil', icon: '🥇', colors: [ '#d3ad66', '#f8e7bb', '#9a7433', '#f2d5cb', '#b98b7e' ], kind: 'fall', count: 110, size: [ 0.01, 0.022 ] },
+		pearls: { label: 'Pearls', paint: 'pearl', kind: 'fall', count: 26, size: [ 0.025, 0.055 ] },
+		bubbles: { label: 'Bubbles', paint: 'bubble', kind: 'rise', count: 26, size: [ 0.04, 0.11 ] }
 	};
 
 	var ANIMS = {
@@ -193,8 +215,15 @@
 		this.particles = [];
 		this.rain = null;
 		this.look = 'natural';
-		this.brightness = 1;
+		this.adjust = {}; // only the sliders that have been moved
+		this.compare = false; // the camera as it comes, for a moment
+		this.grader = new GRADE.Grader();
+		this.canGrade = this.grader.ok;
 		this.frame = 'none';
+		this.frameTint = '';
+		this.frameWords = {};
+		this.light = 'none';
+		this.lightLevel = LIGHT_LEVEL;
 		this.hideGraphics = false;
 		this.placeholder = options.placeholder || '';
 		this.logo = options.logo || '';
@@ -208,7 +237,11 @@
 		this._last = 0;
 		this._worker = null;
 		this._filter = '';
-		this._frameCache = {};
+		this._frameCanvas = null;
+		this._frameSig = '';
+		this._frameLive = {};
+		this._lightKey = '';
+		this._lightCache = {};
 		this._capture = null;
 
 		this.cover = false;
@@ -348,10 +381,43 @@
 		this.changed();
 	};
 
-	Stage.prototype.setBrightness = function ( value ) {
-		this.brightness = clamp( +value || 1, 0.5, 1.6 );
+	/* One slider. A slider at zero is not kept, so "has anything been moved" is just whether anything is here. */
+	Stage.prototype.setAdjust = function ( key, value ) {
+		var def = GRADE.ADJUST.filter( function ( d ) {
+			return d.key === key;
+		} )[ 0 ];
+		if ( ! def ) {
+			return;
+		}
+		value = clamp( Math.round( +value ) || 0, def.min, def.max );
+		if ( value ) {
+			this.adjust[ key ] = value;
+		} else {
+			delete this.adjust[ key ];
+		}
 		this._rebuildFilter();
-		this.changed();
+	};
+
+	Stage.prototype.resetAdjust = function () {
+		this.adjust = {};
+		this._rebuildFilter();
+	};
+
+	/* One look at the camera now, and the sliders it suggests. @return {boolean} Whether there was a picture to look at. */
+	Stage.prototype.autoAdjust = function () {
+		var source = this.sources[ this.main ];
+		var box = source ? this._box( source ) : null;
+		if ( ! box ) {
+			return false;
+		}
+		var c = makeCanvas( 64, 36 );
+		var x = c.getContext( '2d', { willReadFrequently: true } );
+		x.drawImage( source.video, box.sx, box.sy, box.sw, box.sh, 0, 0, 64, 36 );
+		var values = GRADE.auto( x.getImageData( 0, 0, 64, 36 ).data );
+		for ( var key in values ) {
+			this.setAdjust( key, values[ key ] );
+		}
+		return true;
 	};
 
 	Stage.prototype._rebuildFilter = function () {
@@ -359,15 +425,43 @@
 		if ( LOOKS[ this.look ] && LOOKS[ this.look ].filter ) {
 			parts.push( LOOKS[ this.look ].filter );
 		}
-		if ( 1 !== this.brightness ) {
-			parts.push( 'brightness(' + this.brightness + ')' );
+		// With the graphics card the sliders are done before this; without it, what can be done is done here.
+		if ( ! this.canGrade ) {
+			parts.push( GRADE.cssFilter( this.adjust ) );
 		}
-		this._filter = parts.join( ' ' );
+		this._filter = parts.join( ' ' ).trim();
 	};
 
-	Stage.prototype.setFrame = function ( key ) {
+	/* @param {string} tint One of TINTS, or nothing for the frame's own colour. */
+	Stage.prototype.setFrame = function ( key, tint ) {
 		this.frame = FRAMES[ key ] ? key : 'none';
+		this.frameTint = TINTS[ tint ] ? tint : '';
 		this.occasion = null;
+		this.changed();
+	};
+
+	Stage.prototype.setFrameTint = function ( tint ) {
+		this.frameTint = TINTS[ tint ] ? tint : '';
+		this.changed();
+	};
+
+	/* The words on the frame on now. Never set, it has the shop's name; emptied, none (a masthead keeps the shop's name). */
+	Stage.prototype.setFrameWords = function ( words ) {
+		this.frameWords[ this.frame ] = String( words );
+		this.changed();
+	};
+
+	Stage.prototype.frameOptions = function ( key, tint ) {
+		var def = FRAMES[ key ] || {};
+		var words = undefined !== this.frameWords[ key ] ? this.frameWords[ key ] : this.brand;
+		return { t: TINTS[ tint || def.tint ] || TINTS.rose, words: def.words ? words : '', brand: this.brand };
+	};
+
+	Stage.prototype.setLight = function ( key, level ) {
+		this.light = LIGHTS[ key ] ? key : 'none';
+		if ( undefined !== level ) {
+			this.lightLevel = clamp( +level, 0, 1 );
+		}
 		this.changed();
 	};
 
@@ -639,8 +733,12 @@
 	Stage.prototype.toJSON = function () {
 		return {
 			look: this.look,
-			brightness: this.brightness,
+			adjust: Object.assign( {}, this.adjust ),
 			frame: this.frame,
+			frameTint: this.frameTint,
+			frameWords: Object.assign( {}, this.frameWords ),
+			light: this.light,
+			lightLevel: this.lightLevel,
 			layers: this.layers.filter( function ( layer ) {
 				return ! layer._gone && ! layer._brief;
 			} ).map( function ( layer ) {
@@ -664,8 +762,19 @@
 			self.add( def, true );
 		} );
 		this.look = LOOKS[ scene.look ] ? scene.look : 'natural';
-		this.brightness = +scene.brightness || 1;
+		this.adjust = {};
+		for ( var key in scene.adjust || {} ) {
+			this.setAdjust( key, scene.adjust[ key ] );
+		}
+		if ( ! scene.adjust && +scene.brightness && 1 !== +scene.brightness ) {
+			// A scene saved when brightness was the only slider. Same picture: the slider is stops, this was a multiplier.
+			this.setAdjust( 'bright', Math.log2( +scene.brightness ) / 0.7 * 100 );
+		}
 		this.frame = FRAMES[ scene.frame ] ? scene.frame : 'none';
+		this.frameTint = TINTS[ scene.frameTint ] ? scene.frameTint : '';
+		this.frameWords = scene.frameWords && ! Array.isArray( scene.frameWords ) ? scene.frameWords : {};
+		this.light = LIGHTS[ scene.light ] ? scene.light : 'none';
+		this.lightLevel = undefined !== scene.lightLevel ? clamp( +scene.lightLevel, 0, 1 ) : LIGHT_LEVEL;
 		this.setOccasion( scene.occasion || null );
 		this._rebuildFilter();
 	};
@@ -684,6 +793,17 @@
 		x.fillText( emoji, 80, 88 );
 		this.sprites[ emoji ] = c;
 		return c;
+	};
+
+	/* A particle drawn here rather than an emoji, for what emoji fonts do not all have. */
+	Stage.prototype.paintedSprite = function ( name ) {
+		var key = 'paint:' + name;
+		if ( ! this.sprites[ key ] ) {
+			var c = makeCanvas( 160, 160 );
+			root.WHDFrames.painters[ name ]( c.getContext( '2d' ), 160 );
+			this.sprites[ key ] = c;
+		}
+		return this.sprites[ key ];
 	};
 
 	Stage.prototype.emitOne = function ( effect, src, delay ) {
@@ -708,6 +828,8 @@
 			p.spin = rand( -6, 6 );
 		} else if ( src ) {
 			p.image = src;
+		} else if ( effect.paint ) {
+			p.sprite = this.paintedSprite( effect.paint );
 		} else {
 			p.sprite = this.spriteFor( pick( effect.emoji ) );
 		}
@@ -1595,23 +1717,36 @@
 
 	/* ─────────────────────────── drawing a frame ─────────────────────────── */
 
-	Stage.prototype._drawCamera = function ( ctx ) {
-		var source = this.sources[ this.main ];
-		var video = source ? source.video : null;
+	/* The part of a source that shows and where it goes, or null if it has no picture yet. */
+	Stage.prototype._box = function ( source ) {
+		var video = source.video;
+		if ( ! video || ! video.videoWidth || video.readyState < 2 ) {
+			return null;
+		}
 		var W = this.W;
 		var H = this.H;
-		if ( video && video.videoWidth && video.readyState >= 2 ) {
-			var vw = video.videoWidth;
-			var vh = video.videoHeight;
-			var whole = 'contain' === source.fit;
-			var fit = whole ? Math.min( W / vw, H / vh ) : Math.max( W / vw, H / vh );
-			var scale = fit * ( +source.zoom || 1 );
-			// The part of the camera that fills the frame: zooming in crops from the middle.
-			var sw = Math.min( vw, W / scale );
-			var sh = Math.min( vh, H / scale );
-			var dw = sw * scale;
-			var dh = sh * scale;
-			if ( dw < W || dh < H ) {
+		var vw = video.videoWidth;
+		var vh = video.videoHeight;
+		var whole = 'contain' === source.fit;
+		var fit = whole ? Math.min( W / vw, H / vh ) : Math.max( W / vw, H / vh );
+		var scale = fit * ( +source.zoom || 1 );
+		// The part of the camera that fills the frame: zooming in crops from the middle.
+		var sw = Math.min( vw, W / scale );
+		var sh = Math.min( vh, H / scale );
+		var dw = Math.round( sw * scale );
+		var dh = Math.round( sh * scale );
+		// Whole pixels, so the picture lands in the same place with or without the grader.
+		return { sx: ( vw - sw ) / 2, sy: ( vh - sh ) / 2, sw: sw, sh: sh, dx: Math.round( ( W - dw ) / 2 ), dy: Math.round( ( H - dh ) / 2 ), dw: dw, dh: dh };
+	};
+
+	Stage.prototype._drawCamera = function ( ctx ) {
+		var source = this.sources[ this.main ];
+		var W = this.W;
+		var H = this.H;
+		var box = source ? this._box( source ) : null;
+		if ( box ) {
+			var video = source.video;
+			if ( box.dw < W || box.dh < H ) {
 				ctx.fillStyle = '#17110f'; // the bars round a whole screen shown on a differently shaped stream
 				ctx.fillRect( 0, 0, W, H );
 			}
@@ -1620,10 +1755,17 @@
 				ctx.translate( W, 0 );
 				ctx.scale( -1, 1 );
 			}
-			if ( this.canFilter && this._filter ) {
+			// A shared screen keeps its true colours: a price or a photo on it should look as it does.
+			var dress = 'screen' !== source.kind && ! this.compare;
+			if ( dress && this.canFilter && this._filter ) {
 				ctx.filter = this._filter;
 			}
-			ctx.drawImage( video, ( vw - sw ) / 2, ( vh - sh ) / 2, sw, sh, ( W - dw ) / 2, ( H - dh ) / 2, dw, dh );
+			var graded = dress && this.canGrade && Object.keys( this.adjust ).length ? this.grader.run( video, box, W, H, this.adjust ) : null;
+			if ( graded ) {
+				ctx.drawImage( graded, box.dx, box.dy, box.dw, box.dh, box.dx, box.dy, box.dw, box.dh );
+			} else {
+				ctx.drawImage( video, box.sx, box.sy, box.sw, box.sh, box.dx, box.dy, box.dw, box.dh );
+			}
 			ctx.restore();
 			return;
 		}
@@ -1754,7 +1896,7 @@
 		return c;
 	};
 
-	Stage.prototype._drawFrame = function ( ctx ) {
+	Stage.prototype._drawFrame = function ( ctx, now ) {
 		if ( this.occasion ) {
 			if ( ! this._occasionFrame ) {
 				this._occasionFrame = this._buildOccasion( this.occasion );
@@ -1762,42 +1904,110 @@
 			ctx.drawImage( this._occasionFrame, 0, 0 );
 			return;
 		}
-		var key = this.frame;
-		if ( 'none' === key ) {
+		var def = FRAMES[ this.frame ];
+		if ( ! def || ! def.draw ) {
 			return;
 		}
-		if ( ! this._frameCache[ key ] ) {
-			var W = this.W;
-			var H = this.H;
-			var c = makeCanvas( W, H );
-			var x = c.getContext( '2d' );
-			var u = Math.min( W, H );
-			if ( 'rose' === key ) {
-				x.strokeStyle = ROSE;
-				x.lineWidth = u * 0.008;
-				x.strokeRect( u * 0.025, u * 0.025, W - u * 0.05, H - u * 0.05 );
-				x.strokeStyle = 'rgba(255,255,255,.5)';
-				x.lineWidth = 1.5;
-				x.strokeRect( u * 0.04, u * 0.04, W - u * 0.08, H - u * 0.08 );
-			} else if ( 'cream' === key ) {
-				x.strokeStyle = CREAM;
-				x.lineWidth = u * 0.05;
-				x.strokeRect( 0, 0, W, H );
-			} else if ( 'cinema' === key ) {
-				x.fillStyle = '#000';
-				var bar = H > W ? H * 0.08 : H * 0.1;
-				x.fillRect( 0, 0, W, bar );
-				x.fillRect( 0, H - bar, W, bar );
-			} else {
-				var g = x.createRadialGradient( W / 2, H / 2, u * 0.4, W / 2, H / 2, Math.max( W, H ) * 0.72 );
-				g.addColorStop( 0, 'rgba(20,12,10,0)' );
-				g.addColorStop( 1, 'rgba(20,12,10,.62)' );
-				x.fillStyle = g;
-				x.fillRect( 0, 0, W, H );
-			}
-			this._frameCache[ key ] = c;
+		var W = this.W;
+		var H = this.H;
+		var u = Math.min( W, H );
+		var o = this.frameOptions( this.frame, this.frameTint );
+		var sig = this.frame + '|' + this.frameTint + '|' + o.words;
+		if ( this._frameSig !== sig ) {
+			var c = this._frameCanvas || ( this._frameCanvas = makeCanvas( W, H ) );
+			c.width = W; // empties it, and whatever a frame before this left set
+			def.draw( c.getContext( '2d' ), W, H, u, o );
+			this._frameSig = sig;
+			this._frameLive = {};
 		}
-		ctx.drawImage( this._frameCache[ key ], 0, 0 );
+		ctx.drawImage( this._frameCanvas, 0, 0 );
+		if ( def.live ) {
+			ctx.save();
+			def.live( ctx, W, H, u, now / 1000, this._frameLive, o );
+			ctx.restore();
+		}
+	};
+
+	Stage.prototype._drawLight = function ( ctx, now ) {
+		var def = LIGHTS[ this.light ];
+		if ( ! def || ! def.draw || this.lightLevel <= 0 ) {
+			return;
+		}
+		if ( this._lightKey !== this.light ) {
+			this._lightKey = this.light;
+			this._lightCache = {};
+		}
+		ctx.save();
+		def.draw( ctx, this.W, this.H, Math.min( this.W, this.H ), now / 1000, this._lightCache, this.lightLevel );
+		ctx.restore();
+	};
+
+	/* ─────────────────────────── small previews, for the tiles ─────────────────────────── */
+
+	/* A small copy of the camera as it comes, for the tiles to show what a look or a frame does to this picture. */
+	Stage.prototype.takeStill = function () {
+		var w = Math.round( this.W / 3 );
+		var h = Math.round( this.H / 3 );
+		var c = this._still || ( this._still = makeCanvas( w, h ) );
+		var x = c.getContext( '2d' );
+		var source = this.sources[ this.main ];
+		var box = source ? this._box( source ) : null;
+		x.setTransform( 1, 0, 0, 1, 0, 0 );
+		if ( box ) {
+			x.fillStyle = '#17110f';
+			x.fillRect( 0, 0, w, h );
+			x.setTransform( source.flip ? -1 / 3 : 1 / 3, 0, 0, 1 / 3, source.flip ? w : 0, 0 );
+			x.drawImage( source.video, box.sx, box.sy, box.sw, box.sh, box.dx, box.dy, box.dw, box.dh );
+		} else {
+			var g = x.createLinearGradient( 0, 0, w, h );
+			g.addColorStop( 0, '#8c6f62' );
+			g.addColorStop( 0.5, '#d9bfae' );
+			g.addColorStop( 1, '#6f5348' );
+			x.fillStyle = g;
+			x.fillRect( 0, 0, w, h );
+		}
+		return c;
+	};
+
+	/* @param {Object} spec Any of look, light, frame, tint. Draws on the still from takeStill(). */
+	Stage.prototype.paintThumb = function ( canvas, spec ) {
+		var w = canvas.width;
+		var h = canvas.height;
+		var x = canvas.getContext( '2d' );
+		var look = LOOKS[ spec.look ];
+		var still = this._still || this.takeStill();
+		x.save();
+		if ( this.canFilter ) {
+			x.filter = look && look.filter ? look.filter : 'none';
+		}
+		x.imageSmoothingQuality = 'high';
+		x.drawImage( still, 0, 0, w, h );
+		x.restore();
+		var light = LIGHTS[ spec.light ];
+		if ( light && light.draw ) {
+			x.save();
+			light.draw( x, w, h, Math.min( w, h ), 1.7, {}, LIGHT_LEVEL );
+			x.restore();
+		}
+		var def = FRAMES[ spec.frame ];
+		if ( def && def.draw ) {
+			// Drawn at a quarter of its size and shrunk, so its fine lines come out as they will on stage.
+			var fw = Math.round( this.W / 4 );
+			var fh = Math.round( this.H / 4 );
+			var fu = Math.min( fw, fh );
+			var c = this._thumbFrame || ( this._thumbFrame = makeCanvas( fw, fh ) );
+			c.width = fw;
+			var f = c.getContext( '2d' );
+			var o = this.frameOptions( spec.frame, spec.tint );
+			def.draw( f, fw, fh, fu, o );
+			if ( def.live ) {
+				f.save();
+				def.live( f, fw, fh, fu, 3.2, {}, o );
+				f.restore();
+			}
+			x.imageSmoothingQuality = 'high';
+			x.drawImage( c, 0, 0, w, h );
+		}
 	};
 
 	/* ─────────────────────────── the cover ─────────────────────────── */
@@ -2014,7 +2224,8 @@
 	};
 
 	Stage.prototype._drawGraphics = function ( ctx, now, dt ) {
-		this._drawFrame( ctx );
+		this._drawLight( ctx, now );
+		this._drawFrame( ctx, now );
 
 		var drop = false;
 		for ( var i = 0; i < this.layers.length; i++ ) {
@@ -2051,6 +2262,12 @@
 		Stage: Stage,
 		LOOKS: LOOKS,
 		FRAMES: FRAMES,
+		FRAME_GROUPS: root.WHDFrames.FRAME_GROUPS,
+		TINTS: TINTS,
+		LIGHTS: LIGHTS,
+		THEMES: root.WHDFrames.THEMES,
+		LIGHT_LEVEL: LIGHT_LEVEL,
+		ADJUST: GRADE.ADJUST,
 		EFFECTS: EFFECTS,
 		ANIMS: ANIMS
 	};
