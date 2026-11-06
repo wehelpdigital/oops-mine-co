@@ -261,6 +261,10 @@
 		this.sources = {};
 		this.main = '';
 		this._snap = null;
+		this._snapClean = null;
+		this._snapHasClean = false;
+		this._clean = null;
+		this._cleanPass = false;
 		this._snapFrom = 0;
 		this._snapMs = 0;
 	}
@@ -309,6 +313,27 @@
 		return this._capture;
 	};
 
+	/*
+	 * A second picture, for a recording: the one on air without the product card, and without what only
+	 * means something live (what to comment, the stream's private link on the cover). A recording is sold
+	 * by its video page (Shoppable videos), where a card in the picture would say the same thing twice
+	 * and go out of date. It costs one copy of the canvas each frame, and only while recording.
+	 */
+	Stage.prototype.startClean = function () {
+		var canvas = makeCanvas( this.W, this.H );
+		this._clean = { canvas: canvas, ctx: canvas.getContext( '2d' ) };
+		return canvas.captureStream( FPS ).getVideoTracks()[ 0 ];
+	};
+
+	Stage.prototype.stopClean = function () {
+		this._clean = null;
+	};
+
+	/* What a recording's cover is taken from. */
+	Stage.prototype.cleanCanvas = function () {
+		return this._clean ? this._clean.canvas : this.canvas;
+	};
+
 	/* ─────────────────────────── sources: every camera, and the screen ─────────────────────────── */
 
 	/**
@@ -351,6 +376,11 @@
 			this._snap = makeCanvas( this.W, this.H );
 		}
 		this._snap.getContext( '2d' ).drawImage( this.canvas, 0, 0 );
+		this._snapHasClean = !! this._clean;
+		if ( this._clean ) {
+			this._snapClean = this._snapClean || makeCanvas( this.W, this.H );
+			this._snapClean.getContext( '2d' ).drawImage( this._clean.canvas, 0, 0 );
+		}
 		this._snapFrom = performance.now();
 		this._snapMs = ms;
 	};
@@ -1344,6 +1374,16 @@
 		return layer._sprite;
 	};
 
+	/* The photos' card for a recording: the price where it says what to comment. */
+	Stage.prototype._cleanGallery = function ( layer ) {
+		var key = layer.caption + '|' + layer.price;
+		if ( layer._cleanKey !== key ) {
+			layer._cleanSprite = this._gallerySprite( Object.assign( {}, layer, { cta: '' } ) );
+			layer._cleanKey = key;
+		}
+		return layer._cleanSprite;
+	};
+
 	Stage.prototype._drawTicker = function ( ctx, layer, now, alpha ) {
 		var bandH = Math.round( this.H * 0.075 );
 		var cy = layer.y * this.H;
@@ -1397,7 +1437,7 @@
 		}
 		var isSource = 'source' === layer.type;
 		var inset = isSource ? this.sources[ layer.sourceId ] : null;
-		var sprite = isSource ? ( inset && inset.video.videoWidth ? inset.video : null ) : this._spriteOf( layer );
+		var sprite = isSource ? ( inset && inset.video.videoWidth ? inset.video : null ) : ( this._cleanPass ? this._cleanGallery( layer ) : this._spriteOf( layer ) );
 		if ( ! sprite ) {
 			layer._box = null;
 			return;
@@ -1483,7 +1523,7 @@
 			ctx.rotate( rot );
 		}
 		ctx.scale( scale * ( 1 + stretch ), scale * ( 1 - stretch ) );
-		var reveal = showcase && ! layer._gone && age < REVEAL_MS ? this._cardBox( layer, dw ) : null;
+		var reveal = showcase && ! this._cleanPass && ! layer._gone && age < REVEAL_MS ? this._cardBox( layer, dw ) : null;
 		if ( reveal ) {
 			this._drawRings( ctx, age, reveal );
 		}
@@ -2168,16 +2208,23 @@
 			var line = this._coverLineSprite();
 			ctx.globalAlpha = alpha * ( 0.82 + 0.18 * Math.sin( t * 1.2 ) );
 			ctx.drawImage( line, cx - line.width / 2, cy + ring * 1.28 );
-			if ( this.coverLink ) {
-				// Where to watch and shop, for anybody arriving on another platform before it starts.
-				ctx.globalAlpha = alpha * 0.85;
-				ctx.fillStyle = '#e9c8bc';
-				ctx.font = '600 ' + Math.round( U * 0.026 ) + 'px ' + SANS;
-				ctx.textAlign = 'center';
-				ctx.textBaseline = 'top';
-				ctx.fillText( this.coverLink, cx, cy + ring * 1.28 + line.height + U * 0.01, W * 0.9 );
-			}
 		}
+		ctx.restore();
+	};
+
+	/* Where to watch and shop, for anybody arriving on another platform before it starts. Not for a recording: that link is private. */
+	Stage.prototype._drawCoverLink = function ( ctx, alpha ) {
+		if ( ! this.coverLine || ! this.coverLink ) {
+			return;
+		}
+		var U = Math.min( this.W, this.H );
+		ctx.save();
+		ctx.globalAlpha = alpha * 0.85;
+		ctx.fillStyle = '#e9c8bc';
+		ctx.font = '600 ' + Math.round( U * 0.026 ) + 'px ' + SANS;
+		ctx.textAlign = 'center';
+		ctx.textBaseline = 'top';
+		ctx.fillText( this.coverLink, this.W / 2, this.H * 0.46 + U * 0.235 * 1.28 + this._coverLineSprite().height + U * 0.01, this.W * 0.9 );
 		ctx.restore();
 	};
 
@@ -2187,17 +2234,24 @@
 		var ctx = this.ctx;
 		var dt = this._last ? Math.min( 0.1, ( now - this._last ) / 1000 ) : 1 / FPS;
 		this._last = now;
+		var clean = this._clean ? this._clean.ctx : null;
 
 		// Nothing of the camera is drawn at all while covered, not even underneath.
 		if ( this.cover ) {
 			this._drawCover( ctx, now, 1 );
+			if ( clean ) {
+				clean.drawImage( this.canvas, 0, 0 );
+			}
+			this._drawCoverLink( ctx, 1 );
 			return;
 		}
 
 		this._drawCamera( ctx );
 
 		if ( ! this.hideGraphics ) {
-			this._drawGraphics( ctx, now, dt );
+			this._drawGraphics( ctx, now, dt, clean );
+		} else if ( clean ) {
+			clean.drawImage( this.canvas, 0, 0 );
 		}
 
 		// The last frame of what was on before a switch, fading away over the new one.
@@ -2208,6 +2262,12 @@
 				ctx.globalAlpha = left;
 				ctx.drawImage( this._snap, 0, 0 );
 				ctx.restore();
+				if ( clean ) {
+					clean.save();
+					clean.globalAlpha = left;
+					clean.drawImage( this._snapHasClean ? this._snapClean : this._snap, 0, 0 );
+					clean.restore();
+				}
 			} else {
 				this._snapMs = 0;
 			}
@@ -2217,27 +2277,34 @@
 			var fade = 1 - ( now - this._coverOff ) / 450;
 			if ( fade > 0 ) {
 				this._drawCover( ctx, now, fade );
+				this._drawCoverLink( ctx, fade );
+				if ( clean ) {
+					this._drawCover( clean, now, fade );
+				}
 			} else {
 				this._coverOff = 0;
 			}
 		}
 	};
 
-	Stage.prototype._drawGraphics = function ( ctx, now, dt ) {
+	Stage.prototype._drawGraphics = function ( ctx, now, dt, clean ) {
 		this._drawLight( ctx, now );
 		this._drawFrame( ctx, now );
 
 		var drop = false;
+		var showcase = [];
 		for ( var i = 0; i < this.layers.length; i++ ) {
 			var layer = this.layers[ i ];
 			if ( layer._gone && now - layer._gone > 280 ) {
 				drop = true;
 				continue;
 			}
-			if ( false !== layer.visible ) {
-				this._drawLayer( ctx, layer, now );
-			} else {
+			if ( false === layer.visible ) {
 				layer._box = null;
+			} else if ( 'product' === layer.type || 'gallery' === layer.type ) {
+				showcase.push( layer );
+			} else {
+				this._drawLayer( ctx, layer, now );
 			}
 		}
 		if ( drop ) {
@@ -2256,6 +2323,20 @@
 
 		this._runRain( dt );
 		this._drawParticles( ctx, dt );
+
+		// The card and the photos go on last, over anything falling, so they stay readable. A recording
+		// takes the picture just before them, and keeps the photos, which are something to look at.
+		if ( clean ) {
+			clean.drawImage( this.canvas, 0, 0 );
+		}
+		showcase.forEach( function ( layer ) {
+			if ( clean && 'gallery' === layer.type ) {
+				this._cleanPass = true;
+				this._drawLayer( clean, layer, now );
+				this._cleanPass = false;
+			}
+			this._drawLayer( ctx, layer, now );
+		}, this );
 	};
 
 	root.WHDStage = {

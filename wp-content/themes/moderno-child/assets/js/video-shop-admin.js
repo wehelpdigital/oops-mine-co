@@ -6,7 +6,8 @@
  *
  *   - Pieces in the video: "Add a piece here" takes the player's time and opens the shop search
  *     (assets/js/omc-piece-picker.js). Every moment can be retimed — typed, or set to wherever the
- *     player is — re-pointed at another piece, played from, or removed.
+ *     player is — re-pointed at another piece, played from, or removed. "Move the pop-up" shows a box
+ *     over the player to drag to where the pieces pop up on this video.
  *   - Page words: heading, intro, search title and snippet, keyphrase, alt text, chapters, sections
  *     and questions — typed, or written by AI: stills are taken from the video here and sent with what
  *     the shop explains; the answer comes back as a background job (polled at the WHD studio's job
@@ -27,7 +28,9 @@
 	var known = D.products || {};
 	var state = {}; // slug → moments
 	var words = {}; // slug → page words
+	var places = {}; // slug → where its window sits, 0 to 1 of the room it leaves
 	var savedMoments = '';
+	var savedPlaces = '';
 	var savedWords = {};
 	var busy = false;
 	var leaving = false;
@@ -63,8 +66,10 @@
 		} );
 		words[ v.slug ] = normal( v.content );
 		savedWords[ v.slug ] = JSON.stringify( words[ v.slug ] );
+		places[ v.slug ] = { x: parseFloat( v.place && v.place.x ) || 0, y: parseFloat( v.place && v.place.y ) || 0 };
 	} );
 	savedMoments = JSON.stringify( state );
+	savedPlaces = JSON.stringify( places );
 
 	function esc( s ) {
 		var d = document.createElement( 'div' );
@@ -407,7 +412,9 @@
 				'<div class="omc-vsa__vacts">' + ( D.canAdd ? '<button type="button" class="button omc-vsa__pub"></button>' : '' ) + '<a class="omc-vsa__view" target="_blank" rel="noopener"></a></div>' +
 			'</header>' +
 			'<div class="omc-vsa__grid">' +
-				'<div class="omc-vsa__player"><video controls playsinline preload="metadata"' + ( v.poster ? ' poster="' + esc( v.poster ) + '"' : '' ) + ' src="' + esc( v.src ) + '"></video>' +
+				'<div class="omc-vsa__player"><div class="omc-vsa__stage' + ( v.tall ? ' is-tall' : '' ) + '"><video controls playsinline preload="metadata"' + ( v.poster ? ' poster="' + esc( v.poster ) + '"' : '' ) + ' src="' + esc( v.src ) + '"></video>' +
+						'<div class="omc-vsa__place" role="button" tabindex="0" hidden aria-label="' + esc( T.placeBox ) + '"><i></i><span>' + esc( T.placeBox ) + '</span></div></div>' +
+					'<button type="button" class="button-link omc-vsa__placebtn">' + esc( T.placeBtn ) + '</button><p class="omc-vsa__placehint" hidden>' + esc( T.placeHint ) + '</p>' +
 					'<p class="omc-vsa__chh"></p><div class="omc-vsa__chips"></div>' +
 				'</div>' +
 				'<div class="omc-vsa__side">' +
@@ -446,6 +453,55 @@
 		var pub = card.querySelector( '.omc-vsa__pub' );
 		video.addEventListener( 'timeupdate', function () {
 			clockEl.textContent = clock( video.currentTime );
+		} );
+
+		/* Where its pieces pop up: a box to drag over the player, placed the way the page places the window. */
+		var box = card.querySelector( '.omc-vsa__place' );
+		var boxBtn = card.querySelector( '.omc-vsa__placebtn' );
+		function paintPlace() {
+			box.style.setProperty( '--x', places[ v.slug ].x );
+			box.style.setProperty( '--y', places[ v.slug ].y );
+		}
+		function setPlace( x, y ) {
+			var keep = function ( n ) {
+				return Math.round( Math.max( 0, Math.min( 1, n ) ) * 1000 ) / 1000;
+			};
+			places[ v.slug ] = { x: keep( x ), y: keep( y ) };
+			paintPlace();
+			changed();
+		}
+		paintPlace();
+		boxBtn.addEventListener( 'click', function () {
+			box.hidden = ! box.hidden;
+			boxBtn.textContent = box.hidden ? T.placeBtn : T.placeDone;
+			card.querySelector( '.omc-vsa__placehint' ).hidden = box.hidden;
+		} );
+		box.addEventListener( 'pointerdown', function ( e ) {
+			e.preventDefault();
+			box.focus();
+			box.setPointerCapture( e.pointerId );
+			var stage = box.parentNode;
+			var from = { px: e.clientX, py: e.clientY, x: places[ v.slug ].x, y: places[ v.slug ].y };
+			var roomW = Math.max( 1, stage.clientWidth - box.offsetWidth - 12 );
+			var roomH = Math.max( 1, stage.clientHeight - box.offsetHeight - 40 );
+			var move = function ( ev ) {
+				setPlace( from.x + ( ev.clientX - from.px ) / roomW, from.y + ( ev.clientY - from.py ) / roomH );
+			};
+			var up = function () {
+				box.removeEventListener( 'pointermove', move );
+				box.removeEventListener( 'pointerup', up );
+				box.removeEventListener( 'pointercancel', up );
+			};
+			box.addEventListener( 'pointermove', move );
+			box.addEventListener( 'pointerup', up );
+			box.addEventListener( 'pointercancel', up );
+		} );
+		box.addEventListener( 'keydown', function ( e ) {
+			var step = { ArrowLeft: [ -0.03, 0 ], ArrowRight: [ 0.03, 0 ], ArrowUp: [ 0, -0.03 ], ArrowDown: [ 0, 0.03 ] }[ e.key ];
+			if ( step ) {
+				e.preventDefault();
+				setPlace( places[ v.slug ].x + step[ 0 ], places[ v.slug ].y + step[ 1 ] );
+			}
 		} );
 
 		/* The head: title as the words have it, published or draft, and the way to switch. */
@@ -557,7 +613,7 @@
 				li.innerHTML =
 					'<label class="omc-vsa__time"><span class="screen-reader-text">' + esc( T.time ) + '</span><input type="text" inputmode="numeric" value="' + esc( clock( row.at ) ) + '" aria-label="' + esc( T.time ) + '"></label>' +
 					'<button type="button" class="omc-vsa__ib" data-a="now" title="' + esc( T.now ) + '" aria-label="' + esc( T.now ) + '">⟲</button>' +
-					'<label class="omc-vsa__for" title="' + esc( T.showFor ) + '"><input type="number" min="3" max="60" step="1" value="' + esc( row.for || T.forDefault ) + '" aria-label="' + esc( T.showFor ) + '"><span>s</span></label>' +
+					'<label class="omc-vsa__for" title="' + esc( T.showFor ) + '"><input type="number" min="3" max="' + esc( T.forLongest ) + '" step="1" value="' + esc( row.for || T.forDefault ) + '" aria-label="' + esc( T.showFor ) + '"><span>s</span></label>' +
 					'<button type="button" class="omc-vsa__pick">' +
 						( p ? ( p.thumb ? '<img src="' + esc( p.thumb ) + '" alt="">' : '' ) + '<span>' + esc( p.name ) + '<small>' + esc( p.price || '' ) + '</small></span>' : '<span class="omc-vsa__choose">' + esc( row.product ? '#' + row.product : T.choose ) + '</span>' ) +
 					'</button>' +
@@ -566,7 +622,7 @@
 				var input = li.querySelector( '.omc-vsa__time input' );
 				var len = li.querySelector( '.omc-vsa__for input' );
 				len.addEventListener( 'change', function () {
-					row.for = Math.max( 3, Math.min( 60, parseInt( len.value, 10 ) || T.forDefault ) );
+					row.for = Math.max( 3, Math.min( T.forLongest, parseInt( len.value, 10 ) || T.forDefault ) );
 					len.value = row.for;
 					changed();
 				} );
@@ -872,7 +928,7 @@
 	}
 
 	function dirty() {
-		return JSON.stringify( state ) !== savedMoments || Object.keys( changedWords() ).length > 0;
+		return JSON.stringify( state ) !== savedMoments || JSON.stringify( places ) !== savedPlaces || Object.keys( changedWords() ).length > 0;
 	}
 
 	function changed( text, tone ) {
@@ -889,7 +945,7 @@
 		busy = true;
 		goEl.textContent = T.saving;
 		changed( T.saving, 'busy' );
-		api( D.rest, { videos: payload(), content: changedWords() } ).then( function ( j ) {
+		api( D.rest, { videos: payload(), content: changedWords(), places: places } ).then( function ( j ) {
 			Object.keys( j.videos || {} ).forEach( function ( slug ) {
 				state[ slug ] = j.videos[ slug ].map( function ( m ) {
 					return { at: m.at, product: m.product, for: m.for };
@@ -900,6 +956,7 @@
 				savedWords[ slug ] = JSON.stringify( words[ slug ] );
 			} );
 			savedMoments = JSON.stringify( state );
+			savedPlaces = JSON.stringify( places );
 			busy = false;
 			goEl.textContent = T.save;
 			cards.forEach( function ( c ) {

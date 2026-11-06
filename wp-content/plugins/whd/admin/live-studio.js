@@ -3094,7 +3094,7 @@
 
 	/* ─ which piece was in the video when ─ */
 
-	function pieceInVideo() {
+	function pieceOnScreen() {
 		if ( stage.cover || stage.hideGraphics ) {
 			return 0;
 		}
@@ -3104,7 +3104,7 @@
 
 	function recStill( r ) {
 		try {
-			r.poster = canvas.toDataURL( 'image/jpeg', 0.85 );
+			r.poster = stage.cleanCanvas().toDataURL( 'image/jpeg', 0.85 );
 			r.posterSent = false;
 		} catch ( e ) {}
 	}
@@ -3136,7 +3136,7 @@
 	 */
 	function recWatch( r, ending ) {
 		var t = recSeconds( r );
-		var now = ending || r.paused ? 0 : pieceInVideo();
+		var now = ending || r.paused ? 0 : pieceOnScreen();
 		var changed = false;
 		if ( r.open && r.open.product !== now ) {
 			r.open.for = t - r.open.at;
@@ -3301,7 +3301,7 @@
 	}
 
 	function beginRecording( type, id ) {
-		var tracks = [ stage.captureTrack().clone() ];
+		var tracks = [ stage.startClean() ]; // the picture on air, without the product card
 		if ( mixer ) {
 			tracks.push( mixer.track.clone() );
 		}
@@ -3338,6 +3338,7 @@
 			tracks.forEach( function ( t ) {
 				t.stop();
 			} );
+			stage.stopClean();
 			r.stopped = true;
 			renderRecord();
 			// A wait for a weak connection is over: nothing is left to protect but the last slices.

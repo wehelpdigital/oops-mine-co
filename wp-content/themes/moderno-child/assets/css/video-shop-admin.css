@@ -75,6 +75,17 @@
 .omc-vsa__grid { display: grid; grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); gap: 24px; }
 .omc-vsa__player { position: sticky; top: 46px; align-self: start; } /* stays in view beside a long words form */
 .omc-vsa__player video { display: block; width: 100%; max-height: 520px; background: #111; border-radius: 6px; }
+.omc-vsa__stage { position: relative; }
+/* The pop-up's place, worked out as the page works it out: 0 to 1 of the room it leaves, above the player's controls. */
+.omc-vsa__place { position: absolute; z-index: 2; top: calc(6px + (100% - 40px) * var(--y, 0)); left: calc(6px + (100% - 12px) * var(--x, 0)); translate: calc(var(--x, 0) * -100%) calc(var(--y, 0) * -100%); display: flex; align-items: center; gap: 8px; box-sizing: border-box; width: 64%; aspect-ratio: 370 / 136; padding: 6px 8px; background: rgba(255, 255, 255, .9); border: 2px dashed #9c6f63; border-radius: 4px; color: #3a2b26; font-size: 11px; line-height: 1.25; cursor: grab; touch-action: none; user-select: none; }
+.omc-vsa__place[hidden] { display: none; }
+.omc-vsa__place:active { cursor: grabbing; }
+.omc-vsa__place:focus-visible { outline: 2px solid #3858e9; outline-offset: 2px; }
+.omc-vsa__place i { flex: 0 0 auto; align-self: stretch; aspect-ratio: 3 / 4; background: #e9dfd7; }
+.omc-vsa__stage.is-tall .omc-vsa__place { width: 88%; }
+.omc-vsa__placebtn { margin-top: 8px !important; font-size: 12px !important; }
+.omc-vsa__placehint { margin: 4px 0 0; font-size: 12px; line-height: 1.45; color: #8a7d76; }
+.omc-vsa__placehint[hidden] { display: none; }
 .omc-vsa__chh { margin: 12px 0 6px; font-size: 12px; color: #6f5348; }
 .omc-vsa__chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .omc-vsa__chip { padding: 5px 9px; border: 1px solid #e3ddd7; border-radius: 999px; background: #f7f2ed; font-size: 12px; color: #3a2b26; cursor: pointer; }

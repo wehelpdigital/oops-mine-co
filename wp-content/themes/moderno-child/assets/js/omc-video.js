@@ -86,6 +86,11 @@
 			pop.className = 'omc-vpop';
 			pop.setAttribute('role', 'group');
 			pop.hidden = true;
+			if (shop) {
+				// Where the shop dragged it (Page Editor → Shoppable videos); the stylesheet does the rest.
+				pop.style.setProperty('--omc-pop-x', shop.getAttribute('data-pop-x') || 0);
+				pop.style.setProperty('--omc-pop-y', shop.getAttribute('data-pop-y') || 0);
+			}
 			frame.appendChild(pop);
 			pop.addEventListener('pointerenter', function () { held = true; });
 			pop.addEventListener('pointerleave', function () { held = false; sync(); });

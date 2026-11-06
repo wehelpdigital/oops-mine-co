@@ -11,7 +11,8 @@
  * On the video page each moment does two things (assets/js/omc-video.js follows the video's time):
  * at its time the piece slides in as a window over the video — photo, name, price, size and Add to
  * bag — and stays for that moment's seconds (8 unless set) or until the next piece; and it has a
- * card in the list, "Shop this look at 1:23".
+ * card in the list, "Shop this look at 1:23". Where the window sits is dragged on the same screen, one
+ * place per video (option `omc_video_shop_place`, as fractions of the room it leaves in the frame).
  *
  * @package moderno-child
  */
@@ -22,11 +23,31 @@ const OMC_VIDEO_SHOP_OPTION = 'omc_video_shop';
 const OMC_VIDEO_SHOP_PAGE   = 'omc-video-shop';
 const OMC_VIDEO_SHOP_FOR    = 8;   // seconds the small window stays over the video, unless set per moment
 const OMC_VIDEO_SHOP_MAX    = 300; // moments a video can hold: a long live recording shows pieces more than once
+const OMC_VIDEO_SHOP_LONGEST = 3600; // seconds: a recording's window stays as long as the piece was being shown, and the host may talk for a while
+const OMC_VIDEO_SHOP_PLACE  = 'omc_video_shop_place';
 
-/** How long a moment's window stays: 3 to 60 seconds. */
+/** How long a moment's window stays, in seconds. */
 function omc_video_moment_for( $value ) {
 	$value = (int) $value;
-	return $value ? max( 3, min( 60, $value ) ) : OMC_VIDEO_SHOP_FOR;
+	return $value ? max( 3, min( OMC_VIDEO_SHOP_LONGEST, $value ) ) : OMC_VIDEO_SHOP_FOR;
+}
+
+/** Where a video's window sits: [ x, y ], each 0 to 1 of the room it leaves in the frame. Top left unless dragged. */
+function omc_video_pop_place( $slug ) {
+	$all   = (array) get_option( OMC_VIDEO_SHOP_PLACE, [] );
+	$place = (array) ( $all[ sanitize_key( (string) $slug ) ] ?? [] );
+	return [ 'x' => (float) ( $place['x'] ?? 0 ), 'y' => (float) ( $place['y'] ?? 0 ) ];
+}
+
+/** A new video starts clean: moments and places go by slug, and a deleted page's are still there under its old one. */
+function omc_video_shop_forget( $slug ) {
+	foreach ( [ OMC_VIDEO_SHOP_OPTION, OMC_VIDEO_SHOP_PLACE ] as $option ) {
+		$all = (array) get_option( $option, [] );
+		if ( isset( $all[ $slug ] ) ) {
+			unset( $all[ $slug ] );
+			update_option( $option, $all, false );
+		}
+	}
 }
 
 /** Moments in their stored shape: real pieces, inside the video when its length is known, in time order. */
@@ -76,7 +97,8 @@ function omc_video_shop( array $v ) {
 		return;
 	}
 	?>
-	<section class="omc-vshop" data-omc-vshop data-label-now="<?php esc_attr_e( 'On screen now', 'moderno-child' ); ?>" aria-labelledby="omc-vshop-title">
+	<?php $place = omc_video_pop_place( $v['slug'] ); ?>
+	<section class="omc-vshop" data-omc-vshop data-label-now="<?php esc_attr_e( 'On screen now', 'moderno-child' ); ?>" data-pop-x="<?php echo esc_attr( $place['x'] ); ?>" data-pop-y="<?php echo esc_attr( $place['y'] ); ?>" aria-labelledby="omc-vshop-title">
 		<div class="omc-vshop__head">
 			<p class="omc-eyebrow" id="omc-vshop-title"><?php esc_html_e( 'Shop this video', 'moderno-child' ); ?></p>
 		</div>
@@ -164,6 +186,8 @@ add_action( 'admin_enqueue_scripts', static function () {
 			'title'    => html_entity_decode( (string) $v['title'], ENT_QUOTES, 'UTF-8' ),
 			'status'   => $status,
 			'added'    => 'dashboard' === get_post_meta( $pid, OMC_VIDEO_SOURCE, true ),
+			'tall'     => 'landscape' !== $v['orientation'],
+			'place'    => omc_video_pop_place( $v['slug'] ),
 			'src'      => omc_video_src( $v ),
 			'poster'   => omc_video_poster( $v, 'medium_large' ),
 			'duration' => (int) $v['duration'],
@@ -200,6 +224,11 @@ add_action( 'admin_enqueue_scripts', static function () {
 			'time'     => __( 'Time (m:ss)', 'moderno-child' ),
 			'showFor'  => __( 'Shown over the video for this many seconds', 'moderno-child' ),
 			'forDefault' => OMC_VIDEO_SHOP_FOR,
+			'forLongest' => OMC_VIDEO_SHOP_LONGEST,
+			'placeBtn'   => __( 'Move the pop-up', 'moderno-child' ),
+			'placeDone'  => __( 'Done moving it', 'moderno-child' ),
+			'placeHint'  => __( 'Drag the box to where a piece should pop up on this video, then Save. Scrub the video first to see what it would cover.', 'moderno-child' ),
+			'placeBox'   => __( 'A piece pops up here', 'moderno-child' ),
 			'empty'    => __( 'No pieces in this video yet.', 'moderno-child' ),
 			'chapters' => __( 'Chapters — click one to add a piece at its start:', 'moderno-child' ),
 			'chaptersPlay' => __( 'Chapters — click one to play from it:', 'moderno-child' ),
@@ -316,6 +345,22 @@ add_action( 'rest_api_init', static function () {
 				}
 			}
 			update_option( OMC_VIDEO_SHOP_OPTION, $all, false );
+			// Where each video's window sits, stored only where it was moved.
+			$places = (array) get_option( OMC_VIDEO_SHOP_PLACE, [] );
+			foreach ( (array) $r->get_param( 'places' ) as $slug => $given ) {
+				$slug = sanitize_key( (string) $slug );
+				if ( ! isset( $known[ $slug ] ) || ! is_array( $given ) ) {
+					continue;
+				}
+				$x = round( max( 0, min( 1, (float) ( $given['x'] ?? 0 ) ) ), 3 );
+				$y = round( max( 0, min( 1, (float) ( $given['y'] ?? 0 ) ) ), 3 );
+				if ( $x || $y ) {
+					$places[ $slug ] = [ 'x' => $x, 'y' => $y ];
+				} else {
+					unset( $places[ $slug ] );
+				}
+			}
+			update_option( OMC_VIDEO_SHOP_PLACE, $places, false );
 			$out = [];
 			foreach ( array_keys( $known ) as $slug ) {
 				$out[ $slug ] = omc_video_moments( $slug );

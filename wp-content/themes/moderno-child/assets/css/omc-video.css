@@ -259,8 +259,10 @@
 /* the small window over the player, at each moment's time */
 .omc-vpop {
 	position: absolute;
-	top: 12px;
-	left: 12px;
+	/* Where the shop dragged it: 0 to 1 of the room it leaves in the frame, so it stays inside at any size, above the player's controls. */
+	top: calc(12px + (100% - 68px) * var(--omc-pop-y, 0));
+	left: calc(12px + (100% - 24px) * var(--omc-pop-x, 0));
+	translate: calc(var(--omc-pop-x, 0) * -100%) calc(var(--omc-pop-y, 0) * -100%);
 	z-index: 3;
 	display: grid;
 	grid-template-columns: 84px minmax(0, 1fr) auto;
@@ -299,6 +301,19 @@
 	.omc-vpop { grid-template-columns: 70px minmax(0, 1fr) auto; gap: 0 12px; padding: 10px 32px 10px 10px; }
 	.omc-vpop__name { font-size: 18px; }
 	.omc-vpop__bag { width: 44px; height: 44px; }
+}
+/* A wide video on a phone is short: the full window would hide half of it, and a recording's stays up as long as the piece was being shown. */
+.omc-video__frame--landscape { container-type: inline-size; }
+@container (max-width: 479px) {
+	.omc-video__frame--landscape .omc-vpop { grid-template-columns: 40px minmax(0, 1fr) auto; gap: 0 8px; width: min(250px, calc(100% - 24px)); padding: 6px 24px 6px 6px; }
+	.omc-video__frame--landscape .omc-vpop.is-open { width: calc(100% - 24px); }
+	.omc-video__frame--landscape .omc-vpop__k { display: none; }
+	.omc-video__frame--landscape .omc-vpop__name { -webkit-line-clamp: 1; font-size: 14px; }
+	.omc-video__frame--landscape .omc-vpop__price { font-size: 12px; }
+	.omc-video__frame--landscape .omc-vpop__bag { width: 32px; height: 32px; }
+	.omc-video__frame--landscape .omc-vpop__bag svg { width: 16px; height: 16px; }
+	.omc-video__frame--landscape .omc-vpop__x { top: 1px; right: 1px; width: 22px; height: 22px; font-size: 16px; }
+	.omc-video__frame--landscape .omc-vpop__more { margin: 8px -18px 0 0; }
 }
 .omc-vpop .omc-pick__note { flex-basis: 100%; }
 @media (prefers-reduced-motion: reduce) { .omc-vpop { transition: opacity .2s; transform: none; } }

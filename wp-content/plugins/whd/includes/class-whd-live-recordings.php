@@ -15,8 +15,9 @@
  * walks the whole file, which on a fragmented recording of an hour or two is long enough for this host
  * to kill the request, and the point here is that stop is immediate.
  *
- * The studio also says which piece was on screen when ("marks", as they happen, so a closed tab loses
- * little) and sends a still for a cover. A finished recording hands those to the filter
+ * The picture recorded leaves out the product card (Stage.startClean), since the video page sells the
+ * piece itself. So the studio also says which piece was on screen when ("marks", as they happen, so a
+ * closed tab loses little) and sends a still for a cover. A finished recording hands those to the filter
  * `whd_live_recording_saved`, which is how the theme gets its Shoppable video.
  *
  * @package whd

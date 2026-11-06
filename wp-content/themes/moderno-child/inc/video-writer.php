@@ -217,6 +217,8 @@ function omc_video_create( array $args ) {
 		$slug = $base . '-' . $i;
 	}
 
+	omc_video_shop_forget( $slug );
+
 	$status  = 'draft' === ( $args['status'] ?? '' ) ? 'draft' : 'publish';
 	$page_id = wp_insert_post( [
 		'post_type'    => 'page',
@@ -266,6 +268,7 @@ function omc_video_create( array $args ) {
 /**
  * A recording from the live studio (WHD → Live Stream), ready on the Shoppable videos screen: a video
  * page with each piece shown while it recorded, at the moment it came on and for as long as it stayed.
+ * The recording leaves the product card out of its picture, so the window here is the only one.
  *
  * It starts as a draft. A recording can hold false starts and a test run, and publishing puts it on the
  * public Past live streams page, so that stays a decision. The page is named after the stream's title
@@ -290,11 +293,12 @@ function omc_video_from_recording( $saved, array $recording ) {
 		throw new RuntimeException( $made->get_error_message() ); // the plugin logs it, and the recording stands
 	}
 
-	// Set even when empty: moments go by slug, and a deleted page's are still there under this one.
-	$moments              = omc_video_moments_clean( $recording['marks'], (int) $recording['seconds'] );
-	$all                  = (array) get_option( OMC_VIDEO_SHOP_OPTION, [] );
-	$all[ $made['slug'] ] = $moments;
-	update_option( OMC_VIDEO_SHOP_OPTION, array_filter( $all ), false );
+	$moments = omc_video_moments_clean( $recording['marks'], (int) $recording['seconds'] );
+	if ( $moments ) {
+		$all                  = (array) get_option( OMC_VIDEO_SHOP_OPTION, [] );
+		$all[ $made['slug'] ] = $moments;
+		update_option( OMC_VIDEO_SHOP_OPTION, $all, false );
+	}
 	$pieces = count( array_unique( wp_list_pluck( $moments, 'product' ) ) );
 
 	$saved['shop'] = [

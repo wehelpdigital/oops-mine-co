@@ -385,7 +385,7 @@ $whd_tabs = [
 
 				<span class="whdls-bar__gap"></span>
 				<label class="whdls-switch"><input type="checkbox" id="whdls-hide"><span></span><?php esc_html_e( 'Hide graphics', 'whd' ); ?></label>
-				<button type="button" class="whdls-record" id="whdls-record" aria-pressed="false" title="<?php esc_attr_e( 'Record the stream into your media library', 'whd' ); ?>"><i></i><span id="whdls-record-label"><?php esc_html_e( 'Record', 'whd' ); ?></span></button>
+				<button type="button" class="whdls-record" id="whdls-record" aria-pressed="false" title="<?php esc_attr_e( 'Record the stream for Shoppable videos. The product card stays out of the recording: the video page shows the piece instead.', 'whd' ); ?>"><i></i><span id="whdls-record-label"><?php esc_html_e( 'Record', 'whd' ); ?></span></button>
 				<button type="button" class="whdls-record whdls-record--pause" id="whdls-record-pause" hidden><span id="whdls-record-pause-label"><?php esc_html_e( 'Pause', 'whd' ); ?></span></button>
 			</div>
 		</main>
