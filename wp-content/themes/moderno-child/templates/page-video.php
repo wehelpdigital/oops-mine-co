@@ -40,6 +40,7 @@ $omc_hub = get_page_by_path( 'videos' );
 
 			<div class="omc-video__media">
 				<?php omc_video_player( $omc_v ); ?>
+				<?php omc_video_play_data( $omc_v ); // cuts and interactive things, if it has been edited: inc/video-editor.php ?>
 			</div>
 
 			<div class="omc-video__intro">

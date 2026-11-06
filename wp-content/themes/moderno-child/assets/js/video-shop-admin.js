@@ -139,7 +139,7 @@
 	 * Stills at even steps through a video — one every five seconds or so, 3 to 10 — taken from a
 	 * player of its own, so the one on screen is not moved. Resolves [ { at, data } ].
 	 */
-	function stills( src ) {
+	function stills( src, cuts ) {
 		return new Promise( function ( resolve, reject ) {
 			var vid = document.createElement( 'video' );
 			var times = [];
@@ -197,7 +197,14 @@
 				}
 				var n = Math.max( 3, Math.min( 10, Math.round( d / 5 ) ) );
 				for ( var k = 0; k < n; k++ ) {
-					times.push( d * ( k + 0.5 ) / n );
+					// Never from a part cut out in the video editor: the words should be about what plays.
+					var at = d * ( k + 0.5 ) / n;
+					( cuts || [] ).forEach( function ( c ) {
+						if ( at >= c[ 0 ] && at < c[ 1 ] ) {
+							at = Math.min( c[ 1 ], d - 0.5 );
+						}
+					} );
+					times.push( at );
 				}
 				next();
 			}, { once: true } );
@@ -409,7 +416,7 @@
 		card.innerHTML =
 			'<header class="omc-vsa__vhead">' +
 				'<div class="omc-vsa__vtitle"><h2 class="omc-vsa__h"></h2><span class="omc-vsa__pill"></span></div>' +
-				'<div class="omc-vsa__vacts">' + ( D.canAdd ? '<button type="button" class="button omc-vsa__pub"></button>' : '' ) + '<a class="omc-vsa__view" target="_blank" rel="noopener"></a></div>' +
+				'<div class="omc-vsa__vacts"><a class="button omc-vsa__editlink" href="' + esc( v.edit ) + '">' + esc( T.editVideo ) + '</a>' + ( D.canAdd ? '<button type="button" class="button omc-vsa__pub"></button>' : '' ) + '<a class="omc-vsa__view" target="_blank" rel="noopener"></a></div>' +
 			'</header>' +
 			'<div class="omc-vsa__grid">' +
 				'<div class="omc-vsa__player"><div class="omc-vsa__stage' + ( v.tall ? ' is-tall' : '' ) + '"><video controls playsinline preload="metadata"' + ( v.poster ? ' poster="' + esc( v.poster ) + '"' : '' ) + ' src="' + esc( v.src ) + '"></video>' +
@@ -859,7 +866,7 @@
 				warnEl.hidden = true;
 				card.classList.add( 'is-writing' );
 				say( T.aiStills, 'busy' );
-				stills( v.src ).then( function ( frames ) {
+				stills( v.src, v.cuts ).then( function ( frames ) {
 					say( T.aiSending, 'busy' );
 					return api( D.write, {
 						page: v.page,

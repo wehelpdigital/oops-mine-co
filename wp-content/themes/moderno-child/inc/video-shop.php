@@ -85,7 +85,7 @@ function omc_video_shop_moments( array $v ) {
 	if ( ! isset( $cache[ $v['slug'] ] ) ) {
 		$moments              = omc_video_moments( $v['slug'] );
 		$pieces               = omc_pieces_use( wp_list_pluck( $moments, 'product' ) );
-		$cache[ $v['slug'] ] = [ array_values( array_filter( $moments, static fn( $m ) => isset( $pieces[ $m['product'] ] ) ) ), $pieces ];
+		$cache[ $v['slug'] ] = [ array_values( array_filter( $moments, static fn( $m ) => isset( $pieces[ $m['product'] ] ) && omc_video_moment_kept( $m ) ) ), $pieces ];
 	}
 	return $cache[ $v['slug'] ];
 }
@@ -108,13 +108,13 @@ function omc_video_shop( array $v ) {
 				<li class="omc-vshop__item" data-at="<?php echo (int) $m['at']; ?>" data-for="<?php echo (int) $m['for']; ?>" data-piece="<?php echo (int) $m['product']; ?>">
 					<button type="button" class="omc-vshop__seek js-omc-moment" data-at="<?php echo (int) $m['at']; ?>">
 						<img src="<?php echo esc_url( $piece['image'] ); ?>" alt="" loading="lazy" decoding="async">
-						<span class="omc-vshop__time"><?php echo esc_html( omc_video_clock( $m['at'] ) ); ?></span>
+						<span class="omc-vshop__time"><?php echo esc_html( omc_video_clock_shown( $m['at'] ) ); ?></span>
 					</button>
 					<div class="omc-vshop__body">
 						<span class="omc-vshop__at">
 							<?php
 							/* translators: %s: a moment in the video, e.g. 1:23 */
-							echo esc_html( sprintf( __( 'Shop this look at %s', 'moderno-child' ), omc_video_clock( $m['at'] ) ) );
+							echo esc_html( sprintf( __( 'Shop this look at %s', 'moderno-child' ), omc_video_clock_shown( $m['at'] ) ) );
 							?>
 						</span>
 						<a class="omc-vshop__name" href="<?php echo esc_url( $piece['url'] ); ?>"><?php echo esc_html( $piece['name'] ); ?></a>
@@ -151,7 +151,7 @@ function omc_video_shop_screen() {
 		<header class="omc-vsa__head">
 			<p class="omc-vsa__eyebrow"><?php esc_html_e( 'Site', 'moderno-child' ); ?></p>
 			<h1 class="omc-vsa__title"><?php esc_html_e( 'Shoppable videos', 'moderno-child' ); ?></h1>
-			<p class="omc-vsa__lead"><?php esc_html_e( 'Every style video and its page. “Add a video” makes a new video page from a video in the media library. Under “Pieces in the video”, pause where the look is, then “Add a piece here” and choose it: on the page the piece pops up as a window over the video at that time, with its size and Add to bag. Under “Page words” are the words beside the video — write them yourself, or have AI write them from what is in the video and what you tell it. A recording from the live studio lands here by itself as a draft, with each piece you showed already at its moment.', 'moderno-child' ); ?></p>
+			<p class="omc-vsa__lead"><?php esc_html_e( 'Every style video and its page. “Add a video” makes a new video page from a video in the media library. Under “Pieces in the video”, pause where the look is, then “Add a piece here” and choose it: on the page the piece pops up as a window over the video at that time, with its size and Add to bag. Under “Page words” are the words beside the video — write them yourself, or have AI write them from what is in the video and what you tell it. A recording from the live studio lands here by itself as a draft, with each piece you showed already at its moment. “Edit video” opens its timeline: cut parts out, add words, polls and more.', 'moderno-child' ); ?></p>
 		</header>
 		<hr class="wp-header-end">
 		<noscript><div class="notice notice-error"><p><?php esc_html_e( 'This screen needs JavaScript.', 'moderno-child' ); ?></p></div></noscript>
@@ -187,6 +187,8 @@ add_action( 'admin_enqueue_scripts', static function () {
 			'status'   => $status,
 			'added'    => 'dashboard' === get_post_meta( $pid, OMC_VIDEO_SOURCE, true ),
 			'tall'     => 'landscape' !== $v['orientation'],
+			'edit'     => esc_url_raw( admin_url( 'admin.php?page=' . OMC_VIDEO_EDIT_PAGE . '&video=' . $v['slug'] ) ),
+			'cuts'     => omc_video_edit( $pid )['cuts'],
 			'place'    => omc_video_pop_place( $v['slug'] ),
 			'src'      => omc_video_src( $v ),
 			'poster'   => omc_video_poster( $v, 'medium_large' ),
@@ -225,6 +227,7 @@ add_action( 'admin_enqueue_scripts', static function () {
 			'showFor'  => __( 'Shown over the video for this many seconds', 'moderno-child' ),
 			'forDefault' => OMC_VIDEO_SHOP_FOR,
 			'forLongest' => OMC_VIDEO_SHOP_LONGEST,
+			'editVideo'  => __( 'Edit video', 'moderno-child' ),
 			'placeBtn'   => __( 'Move the pop-up', 'moderno-child' ),
 			'placeDone'  => __( 'Done moving it', 'moderno-child' ),
 			'placeHint'  => __( 'Drag the box to where a piece should pop up on this video, then Save. Scrub the video first to see what it would cover.', 'moderno-child' ),

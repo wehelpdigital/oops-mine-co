@@ -57,7 +57,7 @@
 	   it — pointer over it, a size being chosen — it stays; × closes it until that moment comes round
 	   again. Nothing shows before the video has been started. */
 	var frame = video.closest('.omc-video__frame');
-	var pop = null, popAt = -1, held = false, started = false, closed = {};
+	var pop = null, popAt = -1, held = false, pinned = false, started = false, closed = {};
 	var num = function (el, attr, fallback) { var n = parseInt(el.getAttribute(attr), 10); return isNaN(n) ? fallback : n; };
 
 	function windowIndex(t) {
@@ -77,8 +77,9 @@
 		setTimeout(function () { if (popAt === -1) { pop.hidden = true; } }, 320);
 	}
 
-	function showPop(i) {
-		var piece = window.OMCShop && window.OMCShop.piece(moments[i].getAttribute('data-piece'));
+	/* i: which moment; or a dot tapped on the clothes (omc-video-play.js) brings its own piece and stays until closed. */
+	function showPop(i, tapped) {
+		var piece = tapped ? tapped.piece : window.OMCShop && window.OMCShop.piece(moments[i].getAttribute('data-piece'));
 		if (!piece || !frame) { return; }
 		var esc = function (s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; };
 		if (!pop) {
@@ -98,7 +99,7 @@
 			pop.addEventListener('focusout', function () { setTimeout(function () { held = pop.contains(document.activeElement); sync(); }, 0); });
 		}
 		var T = window.OMCShop.i18n || {};
-		var label = (shop && shop.getAttribute('data-label-now')) || '';
+		var label = (shop && shop.getAttribute('data-label-now')) || (tapped && tapped.label) || '';
 		var bag = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>';
 		pop.setAttribute('aria-label', label + ': ' + piece.name);
 		pop.classList.remove('is-open');
@@ -127,14 +128,20 @@
 			go.setAttribute('aria-expanded', more.hidden ? 'false' : 'true');
 			if (!more.hidden) { held = true; var first = more.querySelector('select, .omc-pick__add'); if (first) { first.focus(); } }
 		});
-		pop.querySelector('.omc-vpop__x').addEventListener('click', function () { closed[i] = true; held = false; hidePop(); });
+		pop.querySelector('.omc-vpop__x').addEventListener('click', function () {
+			if (!tapped) { closed[i] = true; }
+			held = false;
+			pinned = false;
+			hidePop();
+			if (tapped && tapped.onClose) { tapped.onClose(); }
+		});
 		popAt = i;
 		pop.hidden = false;
 		requestAnimationFrame(function () { requestAnimationFrame(function () { pop.classList.add('is-in'); }); });
 	}
 
 	function sync() {
-		if (!started || !window.OMCShop) { return; }
+		if (!started || !window.OMCShop || pinned) { return; }
 		var i = windowIndex(video.currentTime);
 		if (i !== -1 && closed[i]) { i = -1; }
 		if (i === popAt || (held && popAt !== -1)) { return; }
@@ -163,6 +170,20 @@
 			follow();
 		}
 	}
+
+	window.OMCVideoWindow = {
+		open: function (id, opts) {
+			var piece = window.OMCShop && window.OMCShop.piece(id);
+			if (!piece) { return; }
+			pinned = true;
+			showPop(-2, { piece: piece, label: opts.label, onClose: opts.onClose });
+			if (!pop) { return; }
+			pop.style.setProperty('--omc-pop-x', opts.x);
+			pop.style.setProperty('--omc-pop-y', opts.y);
+			// Somebody who tapped the dot wants it: the size straight away, if there is one to choose.
+			if ('variable' === piece.type && piece.stock && !piece.choose) { pop.querySelector('.omc-vpop__bag').click(); }
+		}
+	};
 
 	/* /page/#t=23 jumps straight to that moment — the links Google surfaces as key moments. */
 	function fromHash() {

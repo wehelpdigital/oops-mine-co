@@ -86,7 +86,10 @@ function omc_video_iso_duration( $seconds ) {
 /** Seconds → 0:35, for the on-page chapter list. */
 function omc_video_clock( $seconds ) {
 	$seconds = (int) round( (float) $seconds );
-	return intdiv( $seconds, 60 ) . ':' . str_pad( (string) ( $seconds % 60 ), 2, '0', STR_PAD_LEFT );
+	$pad     = static fn( $n ) => str_pad( (string) $n, 2, '0', STR_PAD_LEFT );
+	return $seconds >= 3600
+		? intdiv( $seconds, 3600 ) . ':' . $pad( intdiv( $seconds, 60 ) % 60 ) . ':' . $pad( $seconds % 60 ) // a live recording can run for hours
+		: intdiv( $seconds, 60 ) . ':' . $pad( $seconds % 60 );
 }
 
 /** Every published video page (with $all, drafts too — the admin screen), newest first: [ post_id => data ]. */
@@ -308,10 +311,13 @@ function omc_video_chapters( array $v ) {
 	}
 	echo '<div class="omc-video__chapters"><p class="omc-eyebrow">' . esc_html__( 'In this video', 'moderno-child' ) . '</p><ol class="omc-video__chapter-list">';
 	foreach ( $marks as $c ) {
+		if ( ! omc_video_moment_kept( [ 'at' => $c['at'], 'for' => 0.1 ] ) ) {
+			continue; // cut out in the video editor
+		}
 		printf(
 			'<li><button type="button" class="omc-video__chapter js-omc-video-seek" data-at="%1$d"><span class="omc-video__time">%2$s</span><span class="omc-video__label">%3$s</span></button></li>',
 			(int) $c['at'],
-			esc_html( omc_video_clock( $c['at'] ) ),
+			esc_html( omc_video_clock_shown( $c['at'] ) ),
 			esc_html( $c['label'] )
 		);
 	}
