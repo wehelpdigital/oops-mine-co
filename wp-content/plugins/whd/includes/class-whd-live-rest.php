@@ -318,6 +318,7 @@ final class WHD_Live_Rest {
 			return $id;
 		}
 		WHD_Live::set_pieces( $id, (array) $r->get_param( 'pieces' ) );
+		WHD_Live::write_state( $id ); // the piece on screen may have a new code, and viewers' comment box says it
 		return [ 'pieces' => WHD_Live::pieces( $id ) ];
 	}
 
