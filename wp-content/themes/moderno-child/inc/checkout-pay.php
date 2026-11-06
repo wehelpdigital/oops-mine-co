@@ -26,10 +26,10 @@ function omc_checkout_pay_on() {
  * One card row, the owner's call. Stripe and WooPayments each brought one, so a shopper chose between two names for the
  * same thing and card money landed in two accounts. Stripe's stays, and is called Card.
  *
- * WooPayments is only left out of this list, not made unavailable, so nothing else about the plugin changes: its wallet
- * buttons and the orders it has taken go on as before, and its own script copes with having no row
- * (WC_Payments_Checkout::maybe_load_checkout_scripts()). Only while Stripe can take the card, or a shop whose Stripe
- * dropped out would have no card row at all.
+ * WooPayments is only left out of this list, not made unavailable, so the plugin and the orders it has taken go on as
+ * before, and its own script copes with having no row (WC_Payments_Checkout::maybe_load_checkout_scripts()). Only while
+ * Stripe can take the card, or a shop whose Stripe dropped out would have no card row at all. Its wallet buttons are the
+ * same decision, made in the plugin (WHD_Pay_Buttons::woopayments()).
  */
 function omc_checkout_pay_left_out( $gateway_id ) {
 	return 'woocommerce_payments' === $gateway_id && isset( WC()->payment_gateways()->get_available_payment_gateways()['stripe'] );

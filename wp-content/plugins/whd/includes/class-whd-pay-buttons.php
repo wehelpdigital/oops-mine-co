@@ -51,17 +51,36 @@ final class WHD_Pay_Buttons {
 		return $settings;
 	}
 
-	/** WooPayments lists its methods by place: what the product page had moves to the cart. */
+	/**
+	 * WooPayments lists its methods by place: what the product page had moves to the cart.
+	 *
+	 * Its Apple Pay and Google Pay stay off the cart and the checkout while Stripe is on, the owner's call. Both plugins
+	 * draw those buttons, so a shopper saw Google Pay twice, and Stripe is where the card money goes. With nothing left on
+	 * its list for a page, WooPayments prints no button and loads no script there.
+	 */
 	public static function woopayments( $settings ) {
 		if ( is_admin() || ! is_array( $settings ) ) {
 			return $settings;
 		}
-		$product = (array) ( $settings['express_checkout_product_methods'] ?? [] );
-		$cart    = (array) ( $settings['express_checkout_cart_methods'] ?? [] );
+		$product  = (array) ( $settings['express_checkout_product_methods'] ?? [] );
+		$cart     = (array) ( $settings['express_checkout_cart_methods'] ?? [] );
+		$checkout = (array) ( $settings['express_checkout_checkout_methods'] ?? [] );
+		$cart     = array_unique( array_merge( $cart, $product ) );
 
-		$settings['express_checkout_product_methods'] = [];
-		$settings['express_checkout_cart_methods']    = array_values( array_unique( array_merge( $cart, $product ) ) );
+		if ( self::stripe_on() ) {
+			$cart     = array_diff( $cart, [ 'payment_request' ] );
+			$checkout = array_diff( $checkout, [ 'payment_request' ] );
+		}
+
+		$settings['express_checkout_product_methods']  = [];
+		$settings['express_checkout_cart_methods']     = array_values( $cart );
+		$settings['express_checkout_checkout_methods'] = array_values( $checkout );
 		return $settings;
+	}
+
+	private static function stripe_on(): bool {
+		$stripe = get_option( 'woocommerce_stripe_settings' );
+		return is_array( $stripe ) && 'yes' === ( $stripe['enabled'] ?? '' );
 	}
 
 	/**
