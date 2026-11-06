@@ -106,7 +106,6 @@ function omc_checkout_pay_wallets_open() {
 	?>
 	<div class="omc-pay-wallets" id="omc-pay-wallets">
 		<button type="button" class="omc-pay__row omc-pay-wallets__row" aria-expanded="false" aria-controls="omc-pay-wallets-box">
-			<span class="omc-pay__dot" aria-hidden="true"></span>
 			<span class="omc-pay__text">
 				<span class="omc-pay__name"><?php esc_html_e( 'Apple Pay or Google Pay', 'moderno-child' ); ?></span>
 			</span>
