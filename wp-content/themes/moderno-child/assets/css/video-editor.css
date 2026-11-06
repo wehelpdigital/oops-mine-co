@@ -74,7 +74,7 @@
 .omc-ve__frame .omc-vo { pointer-events: auto; cursor: move; opacity: 1; }
 .omc-ve__frame .omc-vo * { pointer-events: none; }
 .omc-ve__frame .omc-vo.is-selected { outline: 2px dashed #fff; outline-offset: 3px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .35); }
-.omc-ve__pop { cursor: move; opacity: 1; transform: none; }
+.omc-ve__pop { cursor: move; }
 .omc-ve__pop * { pointer-events: none; }
 .omc-ve__pop.is-selected { outline: 2px dashed #fff; outline-offset: 3px; }
 .omc-ve__pop .omc-vpop__bag { display: block; }

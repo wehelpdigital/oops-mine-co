@@ -274,13 +274,93 @@
 	box-shadow: 0 18px 40px -16px rgba(42, 31, 27, .6);
 	-webkit-backdrop-filter: blur(6px);
 	backdrop-filter: blur(6px);
+	/* It arrives from the side of the frame it sits on, and leaves the same way. */
+	--omc-pop-dx: calc((var(--omc-pop-x, 0) - .5) * 130px);
+	--omc-pop-dy: calc((var(--omc-pop-y, 0) - .5) * 70px);
+	--omc-pop-turn: calc((var(--omc-pop-x, 0) - .5) * 7deg);
 	opacity: 0;
-	transform: translateY(-10px) scale(.97);
-	transform-origin: top left;
-	transition: opacity .3s var(--omc-ease), transform .35s var(--omc-ease);
+	transform: translate(var(--omc-pop-dx), var(--omc-pop-dy)) scale(.92);
+	transform-origin: calc(var(--omc-pop-x, 0) * 100%) calc(var(--omc-pop-y, 0) * 100%);
+	transition: opacity .24s var(--omc-ease), transform .3s var(--omc-ease);
 }
 .omc-vpop[hidden] { display: none; }
-.omc-vpop.is-in { opacity: 1; transform: none; }
+.omc-vpop.is-in { opacity: 1; transform: none; animation: omc-vpop-in .74s linear both; }
+
+/* The entrance, about a second and a half from first to last: the card springs in, rings open out and sparks fly
+   from behind it, the photo wipes open, the words follow one by one, a shine crosses it, and the bag button pops. */
+@keyframes omc-vpop-in {
+	0% { opacity: 0; transform: translate(var(--omc-pop-dx), var(--omc-pop-dy)) scale(.8) rotate(var(--omc-pop-turn)); }
+	38% { opacity: 1; transform: translate(calc(var(--omc-pop-dx) * -.09), calc(var(--omc-pop-dy) * -.09)) scale(1.05) rotate(calc(var(--omc-pop-turn) * -.28)); box-shadow: 0 0 0 4px rgba(233, 211, 202, .95), 0 0 46px 10px rgba(242, 201, 143, .85); }
+	62% { transform: translate(calc(var(--omc-pop-dx) * .03), calc(var(--omc-pop-dy) * .03)) scale(.985) rotate(calc(var(--omc-pop-turn) * .08)); }
+	82% { transform: scale(1.008); }
+	100% { opacity: 1; transform: none; box-shadow: 0 18px 40px -16px rgba(42, 31, 27, .6); }
+}
+.omc-vpop__ring { position: absolute; inset: 0; border: 3px solid var(--omc-rose); box-shadow: 0 0 16px rgba(233, 211, 202, .9); opacity: 0; pointer-events: none; }
+.omc-vpop__ring--2 { border-color: #fff; }
+.omc-vpop.is-in .omc-vpop__ring { animation: omc-vpop-ring .95s var(--omc-ease) .14s both; }
+.omc-vpop.is-in .omc-vpop__ring--2 { animation-delay: .32s; }
+@keyframes omc-vpop-ring {
+	0% { opacity: .95; transform: scale(.97); }
+	100% { opacity: 0; transform: scale(1.14, 1.5); }
+}
+.omc-vpop__shine { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; }
+.omc-vpop__shine::before { content: ""; position: absolute; top: -30%; bottom: -30%; left: 0; width: 34%; background: linear-gradient(105deg, rgba(233, 211, 202, 0), rgba(255, 244, 236, .95) 50%, rgba(233, 211, 202, 0)); transform: translateX(-170%) skewX(-16deg); }
+.omc-vpop.is-in .omc-vpop__shine::before { animation: omc-vpop-shine .9s cubic-bezier(.4, 0, .25, 1) .52s both; }
+@keyframes omc-vpop-shine { to { transform: translateX(400%) skewX(-16deg); } }
+.omc-vpop__burst { position: absolute; top: 50%; left: 50%; z-index: 1; width: 0; height: 0; pointer-events: none; }
+.omc-vpop__burst i { --a: 0deg; --r: 150px; --c: #d9a892; position: absolute; top: -5px; left: -5px; width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 10px var(--c); opacity: 0; }
+.omc-vpop__burst i:nth-child(even) { --c: #f5cd8c; top: -11px; left: -11px; width: 22px; height: 22px; border-radius: 0; box-shadow: none; clip-path: polygon(50% 0, 58% 42%, 100% 50%, 58% 58%, 50% 100%, 42% 58%, 0 50%, 42% 42%); }
+.omc-vpop__burst i:nth-child(3n) { --c: #fff; }
+.omc-vpop__burst i:nth-child(1) { --a: 8deg; --r: 118px; }
+.omc-vpop__burst i:nth-child(2) { --a: 38deg; --r: 150px; }
+.omc-vpop__burst i:nth-child(3) { --a: 68deg; --r: 196px; }
+.omc-vpop__burst i:nth-child(4) { --a: 96deg; --r: 232px; }
+.omc-vpop__burst i:nth-child(5) { --a: 128deg; --r: 176px; }
+.omc-vpop__burst i:nth-child(6) { --a: 158deg; --r: 128px; }
+.omc-vpop__burst i:nth-child(7) { --a: 190deg; --r: 116px; }
+.omc-vpop__burst i:nth-child(8) { --a: 220deg; --r: 158px; }
+.omc-vpop__burst i:nth-child(9) { --a: 250deg; --r: 214px; }
+.omc-vpop__burst i:nth-child(10) { --a: 278deg; --r: 240px; }
+.omc-vpop__burst i:nth-child(11) { --a: 308deg; --r: 170px; }
+.omc-vpop__burst i:nth-child(12) { --a: 338deg; --r: 132px; }
+.omc-vpop.is-in .omc-vpop__burst i { animation: omc-vpop-spark .9s cubic-bezier(.12, .7, .3, 1) .16s both; }
+.omc-vpop.is-in .omc-vpop__burst i:nth-child(odd) { animation-delay: .22s; }
+@keyframes omc-vpop-spark {
+	0% { opacity: 0; transform: rotate(var(--a)) translateY(-30px) scale(.5); }
+	12% { opacity: 1; transform: rotate(var(--a)) translateY(calc(var(--r) * -.42)) scale(1.15) rotate(40deg); }
+	70% { opacity: .95; }
+	100% { opacity: 0; transform: rotate(var(--a)) translateY(calc(var(--r) * -1)) scale(.55) rotate(170deg); }
+}
+.omc-vpop.is-in .omc-vpop__media { animation: omc-vpop-wipe .6s var(--omc-ease) .12s both; }
+@keyframes omc-vpop-wipe {
+	from { clip-path: inset(0 100% 0 0); }
+	to { clip-path: inset(0 0 0 0); }
+}
+.omc-vpop.is-in .omc-vpop__media img { animation: omc-vpop-photo 12s cubic-bezier(.16, .9, .3, 1) .12s both; } /* settles fast, then keeps drifting closer while it is up */
+@keyframes omc-vpop-photo {
+	0% { transform: scale(1.34); }
+	8% { transform: scale(1.03); }
+	100% { transform: scale(1.1); }
+}
+.omc-vpop.is-in .omc-vpop__k, .omc-vpop.is-in .omc-vpop__name, .omc-vpop.is-in .omc-vpop__price { animation: omc-vpop-rise .5s var(--omc-ease) .24s both; }
+.omc-vpop.is-in .omc-vpop__name { animation-delay: .32s; }
+.omc-vpop.is-in .omc-vpop__price { animation-delay: .42s; }
+@keyframes omc-vpop-rise {
+	from { opacity: 0; transform: translateY(14px); }
+	to { opacity: 1; transform: none; }
+}
+.omc-vpop.is-in .omc-vpop__bag { animation: omc-vpop-bag .58s cubic-bezier(.3, 1.7, .55, 1) .5s both; }
+@keyframes omc-vpop-bag {
+	from { opacity: 0; transform: scale(.2) rotate(-40deg); }
+	to { opacity: 1; transform: none; }
+}
+.omc-vpop__bag { position: relative; }
+.omc-vpop.is-in .omc-vpop__bag::after { content: ""; position: absolute; inset: 0; border-radius: 50%; animation: omc-vpop-call 1.5s ease-out 1.1s 3 both; pointer-events: none; } /* three calls, and then it leaves them alone */
+@keyframes omc-vpop-call {
+	from { box-shadow: 0 0 0 0 rgba(156, 111, 99, .6); }
+	to { box-shadow: 0 0 0 15px rgba(156, 111, 99, 0); }
+}
+.omc-vpop.is-in .omc-vpop__x { animation: omc-vpop-rise .4s var(--omc-ease) .6s both; }
 .omc-vpop__x { position: absolute; top: 4px; right: 4px; width: 30px; height: 30px; padding: 0; border: 0; background: none; color: var(--omc-muted); font-size: 22px; line-height: 1; cursor: pointer; }
 .omc-vpop__x:hover { color: var(--omc-ink); }
 .omc-vpop__media { display: block; aspect-ratio: 3 / 4; overflow: hidden; background: var(--omc-sand); }
@@ -314,6 +394,11 @@
 	.omc-video__frame--landscape .omc-vpop__bag svg { width: 16px; height: 16px; }
 	.omc-video__frame--landscape .omc-vpop__x { top: 1px; right: 1px; width: 22px; height: 22px; font-size: 16px; }
 	.omc-video__frame--landscape .omc-vpop__more { margin: 8px -18px 0 0; }
+	.omc-video__frame--landscape .omc-vpop__burst { scale: .62; }
 }
 .omc-vpop .omc-pick__note { flex-basis: 100%; }
-@media (prefers-reduced-motion: reduce) { .omc-vpop { transition: opacity .2s; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+	.omc-vpop { transition: opacity .2s; transform: none; }
+	.omc-vpop.is-in, .omc-vpop.is-in *, .omc-vpop.is-in *::before, .omc-vpop.is-in *::after { animation: none !important; }
+	.omc-vpop__ring, .omc-vpop__shine, .omc-vpop__burst { display: none; }
+}

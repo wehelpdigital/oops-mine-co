@@ -330,7 +330,10 @@
 		var p = piece( m.product );
 		var node = document.createElement( 'div' );
 		node.className = 'omc-vpop is-in omc-ve__pop';
-		node.innerHTML = '<span class="omc-vpop__media">' + ( p && p.thumb ? '<img src="' + esc( p.thumb ) + '" alt="">' : '' ) + '</span>' +
+		node.innerHTML = '<span class="omc-vpop__ring" aria-hidden="true"></span><span class="omc-vpop__ring omc-vpop__ring--2" aria-hidden="true"></span>' +
+			'<span class="omc-vpop__shine" aria-hidden="true"></span>' +
+			'<span class="omc-vpop__burst" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>' +
+			'<span class="omc-vpop__media">' + ( p && p.thumb ? '<img src="' + esc( p.thumb ) + '" alt="">' : '' ) + '</span>' +
 			'<div class="omc-vpop__body"><p class="omc-vpop__k">' + esc( T.sample ) + '</p><span class="omc-vpop__name">' + esc( p ? p.name : T.noPiece ) + '</span><span class="omc-vpop__price">' + esc( p ? p.price : '' ) + '</span></div>' +
 			'<span class="omc-vpop__bag"></span>';
 		node.style.setProperty( '--omc-pop-x', doc.place.x );

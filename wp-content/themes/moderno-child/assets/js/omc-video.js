@@ -102,9 +102,12 @@
 		var label = (shop && shop.getAttribute('data-label-now')) || (tapped && tapped.label) || '';
 		var bag = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>';
 		pop.setAttribute('aria-label', label + ': ' + piece.name);
-		pop.classList.remove('is-open');
+		pop.classList.remove('is-open', 'is-in'); // so that a piece straight after another makes its own entrance
 		// Small by default: the piece and one button. A size is asked for only when the button is pressed.
-		pop.innerHTML = '<a class="omc-vpop__media" href="' + esc(piece.url) + '" tabindex="-1" aria-hidden="true"><img src="' + esc(piece.image) + '" alt=""></a>' +
+		pop.innerHTML = '<span class="omc-vpop__ring" aria-hidden="true"></span><span class="omc-vpop__ring omc-vpop__ring--2" aria-hidden="true"></span>' +
+				'<span class="omc-vpop__shine" aria-hidden="true"></span>' +
+				'<span class="omc-vpop__burst" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>' +
+			'<a class="omc-vpop__media" href="' + esc(piece.url) + '" tabindex="-1" aria-hidden="true"><img src="' + esc(piece.image) + '" alt=""></a>' +
 			'<div class="omc-vpop__body"><p class="omc-vpop__k">' + esc(label) + '</p>' +
 			'<a class="omc-vpop__name" href="' + esc(piece.url) + '">' + esc(piece.name) + '</a>' +
 			'<span class="omc-vpop__price">' + esc(piece.price) + '</span></div>' +
@@ -137,6 +140,7 @@
 		});
 		popAt = i;
 		pop.hidden = false;
+		void pop.offsetWidth;
 		requestAnimationFrame(function () { requestAnimationFrame(function () { pop.classList.add('is-in'); }); });
 	}
 
