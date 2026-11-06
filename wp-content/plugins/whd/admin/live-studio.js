@@ -173,6 +173,8 @@
 			if ( action.href ) {
 				btn = el( 'a', 'whdls-banner__do', action.label );
 				btn.href = action.href;
+				btn.target = '_blank'; // the studio may well be on air
+				btn.rel = 'noopener';
 			} else {
 				btn = el( 'button', 'whdls-banner__do', action.label );
 				btn.type = 'button';
@@ -1133,6 +1135,9 @@
 			var rect = layer ? stage.rect( layer.id ) : null;
 			if ( 'ended' !== S.stage ) {
 				api( 'POST', D.id + '/showing', { product: layer ? layer.productId : 0, rect: rect } ).catch( function () {} );
+			}
+			if ( rec && ! rec.stopped ) {
+				recWatch( rec ); // the moment exactly, rather than at the next look
 			}
 		}, 80 );
 	}
@@ -3027,6 +3032,8 @@
 	 */
 	var REC_SLICE_MS = 4000;
 	var REC_GIVE_UP = 8;
+	var REC_MARK_MIN = 3; // seconds a piece has to stay up: a tap that was changed straight away is not a moment
+	var REC_MARK_JOIN = 10; // the same piece back within this is the same moment
 	var rec = null;
 
 	function pickRecorderType() {
@@ -3070,11 +3077,100 @@
 	}
 
 	function announceSaved( saved ) {
-		banner( 'rec-' + saved.id, fmt( T.recordSaved, saved.title ), 'info', { label: T.recordOpen, href: saved.edit } );
+		// With Shoppable videos there (the theme), that is where it is ready; the library is only where the file lives.
+		var text = saved.shop ? saved.shop.text : fmt( T.recordSaved, saved.title );
+		var label = saved.shop ? saved.shop.label : T.recordOpen;
+		var href = saved.shop ? saved.shop.url : saved.edit;
+		banner( 'rec-' + saved.id, text, 'info', { label: label, href: href } );
 		var line = $( 'wrap-rec' );
 		if ( $( 'wrap' ).open ) {
 			line.hidden = false;
-			line.textContent = fmt( T.recordSaved, saved.title );
+			line.textContent = text + ' ';
+			var link = el( 'a', '', label );
+			link.href = href;
+			line.appendChild( link );
+		}
+	}
+
+	/* ─ which piece was in the video when ─ */
+
+	function pieceInVideo() {
+		if ( stage.cover || stage.hideGraphics ) {
+			return 0;
+		}
+		var layer = productLayer() || galleryLayer();
+		return layer ? layer.productId : 0;
+	}
+
+	function recStill( r ) {
+		try {
+			r.poster = canvas.toDataURL( 'image/jpeg', 0.85 );
+			r.posterSent = false;
+		} catch ( e ) {}
+	}
+
+	function sendMarks( r ) {
+		clearTimeout( r.marksTimer );
+		r.marksTimer = null;
+		if ( ! r.id || r.finishing ) {
+			return;
+		}
+		var body = { marks: r.marks };
+		// A still is a couple of hundred kilobytes: on a struggling connection it waits, as the slices do.
+		var poster = r.poster && ! r.posterSent && ! ( S.onAir && ( 'bad' === S.net || 'warning' === S.net ) ) ? r.poster : '';
+		if ( poster ) {
+			body.poster = poster;
+		}
+		api( 'POST', D.id + '/recording/' + r.id + '/marks', body ).then( function () {
+			if ( poster && poster === r.poster ) {
+				r.posterSent = true;
+			}
+		} ).catch( function () {} );
+	}
+
+	/*
+	 * Called about once a second while recording, and at each pause, resume and stop. It goes by what
+	 * is in the picture rather than by each way a piece can come and go, and by the recording's own
+	 * clock, which leaves paused time out, so a moment lines up with the video that comes of it. Nothing
+	 * shown during a pause is in the video, so nothing shown during a pause counts.
+	 */
+	function recWatch( r, ending ) {
+		var t = recSeconds( r );
+		var now = ending || r.paused ? 0 : pieceInVideo();
+		var changed = false;
+		if ( r.open && r.open.product !== now ) {
+			r.open.for = t - r.open.at;
+			if ( r.open.for < REC_MARK_MIN ) {
+				r.marks.splice( r.marks.indexOf( r.open ), 1 );
+			}
+			r.open = null;
+			changed = true;
+		}
+		if ( now && ! r.open ) {
+			var last = r.marks[ r.marks.length - 1 ];
+			if ( last && last.product === now && t - last.at - last.for <= REC_MARK_JOIN ) {
+				r.open = last;
+			} else {
+				r.open = { at: t, product: now, for: 0 };
+				r.marks.push( r.open );
+			}
+			changed = true;
+		}
+		// The cover: the first look at a piece on screen, once its entrance is over, or failing that a look at the room.
+		if ( ! r.paused && ! ending && ! stage.cover && ! r.stillOfPiece ) {
+			if ( r.open && t - r.open.at >= REC_MARK_MIN ) {
+				r.stillOfPiece = true;
+				recStill( r );
+				changed = true;
+			} else if ( ! r.poster && t >= 15 ) {
+				recStill( r );
+				changed = true;
+			}
+		}
+		if ( changed && ! r.marksTimer && ! ending ) {
+			r.marksTimer = setTimeout( function () {
+				sendMarks( r );
+			}, 1500 );
 		}
 	}
 
@@ -3112,7 +3208,8 @@
 			return;
 		}
 		r.finishing = true;
-		api( 'POST', D.id + '/recording/' + r.id + '/finish', { seconds: recSeconds( r ) } ).then( function ( saved ) {
+		clearTimeout( r.marksTimer );
+		api( 'POST', D.id + '/recording/' + r.id + '/finish', { seconds: recSeconds( r ), marks: r.marks, poster: r.posterSent ? '' : r.poster } ).then( function ( saved ) {
 			clearBanner( 'rec-retry' );
 			announceSaved( saved );
 			recDone( r );
@@ -3223,7 +3320,13 @@
 			paused: false,
 			finishing: false,
 			ran: 0,
-			mark: Date.now()
+			mark: Date.now(),
+			marks: [],
+			open: null,
+			marksTimer: null,
+			poster: '',
+			posterSent: false,
+			stillOfPiece: false
 		};
 		recorder.ondataavailable = function ( e ) {
 			if ( e.data && e.data.size ) {
@@ -3241,12 +3344,17 @@
 			pump( r );
 		};
 		recorder.start( REC_SLICE_MS );
+		recWatch( r ); // a piece already up is in the video from its first frame
 		renderRecord();
 	}
 
 	function stopRecording() {
 		if ( ! rec || rec.stopped || 'inactive' === rec.recorder.state ) {
 			return;
+		}
+		recWatch( rec, true );
+		if ( ! rec.poster ) {
+			recStill( rec ); // a short one, or one under the cover all along: still something to show for it
 		}
 		if ( rec.mark ) {
 			rec.ran += Date.now() - rec.mark;
@@ -3293,6 +3401,7 @@
 			rec.ran += Date.now() - rec.mark;
 			rec.mark = 0;
 		}
+		recWatch( rec );
 		renderRecord();
 	} );
 
@@ -3874,6 +3983,7 @@
 			updateOut();
 			if ( rec && ! rec.stopped ) {
 				renderRecord();
+				recWatch( rec );
 			}
 		}
 		if ( S.onAir && 0 === S.ticks % 75 ) {

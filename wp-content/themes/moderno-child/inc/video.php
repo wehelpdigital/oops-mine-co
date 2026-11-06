@@ -281,10 +281,11 @@ function omc_video_player( array $v, $autoplay_muted = false ) {
 	}
 	$poster = omc_video_poster( $v, 'large' );
 	$ratio  = ( ! empty( $v['width'] ) && ! empty( $v['height'] ) ) ? ( (int) $v['width'] . ' / ' . (int) $v['height'] ) : ( 'square' === $v['orientation'] ? '1 / 1' : '9 / 16' );
+	$type   = wp_check_filetype( strtok( $src, '?' ) )['type'] ?: 'video/mp4'; // a browser that cannot record MP4 records WebM
 	printf(
 		'<div class="omc-video__frame omc-video__frame--%1$s" style="--omc-video-ratio:%2$s">
 			<video class="omc-video__player js-omc-video" %3$s%4$s playsinline preload="none" controls%5$s aria-label="%6$s">
-				<source src="%7$s" type="video/mp4">
+				<source src="%7$s" type="%8$s">
 			</video>
 		</div>',
 		esc_attr( $v['orientation'] ),
@@ -293,7 +294,8 @@ function omc_video_player( array $v, $autoplay_muted = false ) {
 		( ! empty( $v['width'] ) ? 'width="' . (int) $v['width'] . '" height="' . (int) $v['height'] . '"' : '' ),
 		$autoplay_muted ? ' muted loop' : '',
 		esc_attr( $v['alt'] ?: $v['title'] ),
-		esc_url( $src )
+		esc_url( $src ),
+		esc_attr( $type )
 	);
 }
 

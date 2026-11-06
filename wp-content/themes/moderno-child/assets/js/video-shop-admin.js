@@ -922,12 +922,12 @@
 		}
 	} );
 
-	/* #words-<slug> (where "Add a video" lands): that video, open on its words. */
-	var m = /^#words-([a-z0-9_-]+)$/.exec( window.location.hash || '' );
+	/* #words-<slug> (where "Add a video" lands) and #pieces-<slug> (where the live studio links): that video, open on that tab. */
+	var m = /^#(words|pieces)-([a-z0-9_-]+)$/.exec( window.location.hash || '' );
 	if ( m ) {
 		cards.forEach( function ( c ) {
-			if ( c.id === 'omc-v-' + m[ 1 ] ) {
-				c.show( 'words' );
+			if ( c.id === 'omc-v-' + m[ 2 ] ) {
+				c.show( m[ 1 ] );
 				setTimeout( function () {
 					c.scrollIntoView( { block: 'start' } );
 				}, 60 );

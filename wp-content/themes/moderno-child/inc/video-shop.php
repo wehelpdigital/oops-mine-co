@@ -21,11 +21,27 @@ defined( 'ABSPATH' ) || exit;
 const OMC_VIDEO_SHOP_OPTION = 'omc_video_shop';
 const OMC_VIDEO_SHOP_PAGE   = 'omc-video-shop';
 const OMC_VIDEO_SHOP_FOR    = 8;   // seconds the small window stays over the video, unless set per moment
+const OMC_VIDEO_SHOP_MAX    = 300; // moments a video can hold: a long live recording shows pieces more than once
 
 /** How long a moment's window stays: 3 to 60 seconds. */
 function omc_video_moment_for( $value ) {
 	$value = (int) $value;
 	return $value ? max( 3, min( 60, $value ) ) : OMC_VIDEO_SHOP_FOR;
+}
+
+/** Moments in their stored shape: real pieces, inside the video when its length is known, in time order. */
+function omc_video_moments_clean( $moments, $duration = 0 ) {
+	$clean = [];
+	foreach ( array_slice( (array) $moments, 0, OMC_VIDEO_SHOP_MAX ) as $m ) {
+		$product = absint( $m['product'] ?? 0 );
+		if ( ! $product || 'product' !== get_post_type( $product ) ) {
+			continue;
+		}
+		$at      = max( 0, (int) ( $m['at'] ?? 0 ) );
+		$clean[] = [ 'at' => $duration ? min( $at, (int) $duration ) : $at, 'product' => $product, 'for' => omc_video_moment_for( $m['for'] ?? 0 ) ];
+	}
+	usort( $clean, static fn( $a, $b ) => $a['at'] <=> $b['at'] );
+	return $clean;
 }
 
 /** The moments of one video, in time order: [ [ at, product, for ] ]. */
@@ -113,7 +129,7 @@ function omc_video_shop_screen() {
 		<header class="omc-vsa__head">
 			<p class="omc-vsa__eyebrow"><?php esc_html_e( 'Site', 'moderno-child' ); ?></p>
 			<h1 class="omc-vsa__title"><?php esc_html_e( 'Shoppable videos', 'moderno-child' ); ?></h1>
-			<p class="omc-vsa__lead"><?php esc_html_e( 'Every style video and its page. “Add a video” makes a new video page from a video in the media library. Under “Pieces in the video”, pause where the look is, then “Add a piece here” and choose it: on the page the piece pops up as a window over the video at that time, with its size and Add to bag. Under “Page words” are the words beside the video — write them yourself, or have AI write them from what is in the video and what you tell it.', 'moderno-child' ); ?></p>
+			<p class="omc-vsa__lead"><?php esc_html_e( 'Every style video and its page. “Add a video” makes a new video page from a video in the media library. Under “Pieces in the video”, pause where the look is, then “Add a piece here” and choose it: on the page the piece pops up as a window over the video at that time, with its size and Add to bag. Under “Page words” are the words beside the video — write them yourself, or have AI write them from what is in the video and what you tell it. A recording from the live studio lands here by itself as a draft, with each piece you showed already at its moment.', 'moderno-child' ); ?></p>
 		</header>
 		<hr class="wp-header-end">
 		<noscript><div class="notice notice-error"><p><?php esc_html_e( 'This screen needs JavaScript.', 'moderno-child' ); ?></p></div></noscript>
@@ -292,16 +308,7 @@ add_action( 'rest_api_init', static function () {
 				if ( ! isset( $known[ $slug ] ) ) {
 					continue;
 				}
-				$clean = [];
-				foreach ( array_slice( (array) $moments, 0, 40 ) as $m ) {
-					$product = absint( $m['product'] ?? 0 );
-					if ( ! $product || 'product' !== get_post_type( $product ) ) {
-						continue;
-					}
-					$at      = max( 0, (int) ( $m['at'] ?? 0 ) );
-					$clean[] = [ 'at' => $known[ $slug ] ? min( $at, $known[ $slug ] ) : $at, 'product' => $product, 'for' => omc_video_moment_for( $m['for'] ?? 0 ) ];
-				}
-				usort( $clean, static fn( $a, $b ) => $a['at'] <=> $b['at'] );
+				$clean = omc_video_moments_clean( $moments, $known[ $slug ] );
 				if ( $clean ) {
 					$all[ $slug ] = $clean;
 				} else {

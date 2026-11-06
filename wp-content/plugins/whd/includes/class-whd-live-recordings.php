@@ -15,6 +15,10 @@
  * walks the whole file, which on a fragmented recording of an hour or two is long enough for this host
  * to kill the request, and the point here is that stop is immediate.
  *
+ * The studio also says which piece was on screen when ("marks", as they happen, so a closed tab loses
+ * little) and sends a still for a cover. A finished recording hands those to the filter
+ * `whd_live_recording_saved`, which is how the theme gets its Shoppable video.
+ *
  * @package whd
  */
 
@@ -27,6 +31,15 @@ final class WHD_Live_Recordings {
 
 	/** On the attachment: which stream it came from. */
 	const META = '_whd_live_recording';
+
+	/** On the stream: what the open recording has had on screen so far, [ rec, marks[ at, product, for ] ]. */
+	const MARKS = '_whd_live_rec_marks';
+
+	/** More than any stream's worth of pieces. It only stops a request being something else. */
+	const MAX_MARKS = 300;
+
+	/** The still for the cover. They are a couple of hundred kilobytes. */
+	const MAX_POSTER = 4 * MB_IN_BYTES;
 
 	const DIR = 'whd-live/rec';
 
@@ -54,6 +67,7 @@ final class WHD_Live_Recordings {
 		$route( '', 'start' );
 		$route( '/recover', 'recover' );
 		$route( '/' . $rec . '/slice', 'slice' );
+		$route( '/' . $rec . '/marks', 'marks' );
 		$route( '/' . $rec . '/finish', 'finish' );
 	}
 
@@ -70,6 +84,10 @@ final class WHD_Live_Recordings {
 
 	private static function part( string $rec ): string {
 		return self::dir() . $rec . '.part';
+	}
+
+	private static function poster( string $rec ): string {
+		return self::dir() . $rec . '.jpg';
 	}
 
 	/** The folder, closed to the web: a part file is nobody's to download. */
@@ -91,10 +109,38 @@ final class WHD_Live_Recordings {
 	}
 
 	private static function clear_old_parts() {
-		foreach ( (array) glob( self::dir() . '*.part' ) as $file ) {
+		foreach ( (array) glob( self::dir() . '*.{part,jpg}', GLOB_BRACE ) as $file ) {
 			if ( $file && filemtime( $file ) < time() - self::KEEP_DAYS * DAY_IN_SECONDS ) {
 				wp_delete_file( $file );
 			}
+		}
+	}
+
+	/** What the studio says was on screen, as whole numbers. @return array[] [ at, product, for ] */
+	private static function clean_marks( $marks ): array {
+		$out = [];
+		foreach ( array_slice( (array) $marks, 0, self::MAX_MARKS ) as $mark ) {
+			$product = is_array( $mark ) ? absint( $mark['product'] ?? 0 ) : 0;
+			if ( $product ) {
+				$out[] = [ 'at' => absint( $mark['at'] ?? 0 ), 'product' => $product, 'for' => absint( $mark['for'] ?? 0 ) ];
+			}
+		}
+		return $out;
+	}
+
+	/** Note what the studio has sent, kept apart from the open state because slices are writing that. */
+	private static function keep_marks( $id, string $rec, WP_REST_Request $r ) {
+		if ( is_array( $r['marks'] ) ) {
+			update_post_meta( (int) $id, self::MARKS, [ 'rec' => $rec, 'marks' => self::clean_marks( $r['marks'] ) ] );
+		}
+		$still = $r['poster'];
+		if ( ! is_string( $still ) || 0 !== strpos( $still, 'data:image/jpeg;base64,' ) ) {
+			return;
+		}
+		$bytes = base64_decode( substr( $still, 23 ), true );
+		$info  = $bytes && strlen( $bytes ) <= self::MAX_POSTER ? @getimagesizefromstring( $bytes ) : false; // phpcs:ignore WordPress.PHP.NoSilencedErrors -- a broken file is refused here
+		if ( $info && 'image/jpeg' === $info['mime'] ) {
+			@file_put_contents( self::poster( $rec ), $bytes ); // phpcs:ignore WordPress.PHP.NoSilencedErrors, WordPress.WP.AlternativeFunctions
 		}
 	}
 
@@ -163,6 +209,12 @@ final class WHD_Live_Recordings {
 		if ( ! $size || $size > self::MAX_SLICE ) {
 			return new WP_Error( 'whd_live_rec_size', __( 'That slice of the recording is the wrong size.', 'whd' ), [ 'status' => 413 ] );
 		}
+		if ( 'mp4' === ( $open['ext'] ?? '' ) && empty( $open['room'] ) ) {
+			$settled      = false;
+			$body         = WHD_Live_MP4::make_room( $body, $settled ); // for the index that lets a player open it at once
+			$size         = strlen( $body );
+			$open['room'] = $settled;
+		}
 
 		$file = self::part( (string) $open['rec'] );
 		// phpcs:ignore WordPress.PHP.NoSilencedErrors, WordPress.WP.AlternativeFunctions
@@ -186,6 +238,20 @@ final class WHD_Live_Recordings {
 		return [ 'next' => (int) $open['seq'], 'bytes' => (int) $open['bytes'] ];
 	}
 
+	/** Which piece has been on screen when, and a still for the cover, whenever those change. */
+	public static function marks( WP_REST_Request $r ) {
+		$id = self::stream_id( $r );
+		if ( is_wp_error( $id ) ) {
+			return $id;
+		}
+		$open = self::open_state( $id );
+		if ( ( $open['rec'] ?? '' ) !== (string) $r['rec'] ) {
+			return new WP_Error( 'whd_live_rec_gone', __( 'That recording is no longer open.', 'whd' ), [ 'status' => 404 ] );
+		}
+		self::keep_marks( $id, (string) $open['rec'], $r );
+		return [ 'ok' => true ];
+	}
+
 	public static function finish( WP_REST_Request $r ) {
 		$id = self::stream_id( $r );
 		if ( is_wp_error( $id ) ) {
@@ -195,6 +261,7 @@ final class WHD_Live_Recordings {
 		if ( ( $open['rec'] ?? '' ) !== (string) $r['rec'] ) {
 			return new WP_Error( 'whd_live_rec_gone', __( 'That recording is no longer open.', 'whd' ), [ 'status' => 404 ] );
 		}
+		self::keep_marks( $id, (string) $open['rec'], $r );
 		if ( $r['seconds'] ) {
 			$open['seconds'] = absint( $r['seconds'] );
 			update_post_meta( $id, self::OPEN, $open );
@@ -230,6 +297,9 @@ final class WHD_Live_Recordings {
 		if ( ! filesize( $part ) ) {
 			wp_delete_file( $part );
 			return null;
+		}
+		if ( 'mp4' === ( $open['ext'] ?? '' ) ) {
+			WHD_Live_MP4::index( $part );
 		}
 
 		$up = wp_upload_dir(); // this one makes the year/month folder
@@ -282,7 +352,7 @@ final class WHD_Live_Recordings {
 			'height'           => (int) $open['height'],
 		] );
 
-		return [
+		$saved = [
 			'id'      => (int) $attachment,
 			'title'   => $title,
 			'url'     => (string) wp_get_attachment_url( $attachment ),
@@ -290,6 +360,46 @@ final class WHD_Live_Recordings {
 			'seconds' => $seconds,
 			'bytes'   => (int) filesize( $dest ),
 		];
+		return self::hand_over( $id, $open, $saved, $stream_title );
+	}
+
+	/**
+	 * The recording is safe in the library; now whatever else wants it. A failure here must not read as
+	 * the recording having failed, or the studio would send the whole file to the host's computer.
+	 */
+	private static function hand_over( $id, array $open, array $saved, string $stream_title ): array {
+		$rec   = (string) $open['rec'];
+		$kept  = get_post_meta( (int) $id, self::MARKS, true );
+		$marks = is_array( $kept ) && $rec === ( $kept['rec'] ?? '' ) ? (array) $kept['marks'] : [];
+		$still = self::poster( $rec );
+		foreach ( $marks as $i => $mark ) {
+			// Still up when the tab closed: it stayed until the end of what arrived.
+			$marks[ $i ]['for'] = $mark['for'] ?: max( 0, (int) $saved['seconds'] - $mark['at'] );
+		}
+		try {
+			/**
+			 * A live recording has just reached the media library.
+			 *
+			 * @param array $saved     What the studio is told. A `shop` entry ( text, label, url ) becomes its message.
+			 * @param array $recording attachment, stream, title (the stream's), seconds, width, height,
+			 *                         marks [ at, product, for ] (seconds into the video), poster (a JPEG's path, or '').
+			 */
+			$saved = apply_filters( 'whd_live_recording_saved', $saved, [
+				'attachment' => (int) $saved['id'],
+				'stream'     => (int) $id,
+				'title'      => $stream_title,
+				'seconds'    => (int) $saved['seconds'],
+				'width'      => (int) $open['width'],
+				'height'     => (int) $open['height'],
+				'marks'      => $marks,
+				'poster'     => file_exists( $still ) ? $still : '',
+			] );
+		} catch ( \Throwable $e ) {
+			WHD_Integrations::log( 'live', 0, 'Recording: saved, but not made into a video page. ' . $e->getMessage() );
+		}
+		delete_post_meta( (int) $id, self::MARKS );
+		wp_delete_file( $still );
+		return $saved;
 	}
 
 	private static function clock( int $seconds ): string {
@@ -316,8 +426,9 @@ final class WHD_Live_Recordings {
 	/** A stream being deleted. Finished recordings are in the library and stay; an open part file goes. */
 	public static function forget( $id ) {
 		$open = self::open_state( $id );
-		if ( ! empty( $open['rec'] ) && file_exists( self::part( (string) $open['rec'] ) ) ) {
+		if ( ! empty( $open['rec'] ) ) {
 			wp_delete_file( self::part( (string) $open['rec'] ) );
+			wp_delete_file( self::poster( (string) $open['rec'] ) );
 		}
 	}
 }

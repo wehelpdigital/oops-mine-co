@@ -9,6 +9,8 @@
  *   - "Add a video": a video from the media library becomes a video page — the page-video.php
  *     template, `_omc_video` with the file, its size and length, and a poster taken from the video
  *     itself in the browser. Published at once, or kept as a draft. `_omc_video_source = dashboard`.
+ *   - A recording from the live studio becomes the same thing by itself, as a draft, with the pieces
+ *     shown while it recorded already in place (omc_video_from_recording).
  *   - The page's words — title, search title and snippet, intro, alt text, chapters, sections and
  *     questions — are saved in `_omc_video_copy` and laid over `_omc_video` by the `omc_video_data`
  *     filter, never written into it: .ftp-sync/import-videos.php rewrites `_omc_video` for the
@@ -23,8 +25,9 @@
 
 defined( 'ABSPATH' ) || exit;
 
-const OMC_VIDEO_COPY   = '_omc_video_copy';
-const OMC_VIDEO_SOURCE = '_omc_video_source';
+const OMC_VIDEO_COPY          = '_omc_video_copy';
+const OMC_VIDEO_SOURCE        = '_omc_video_source';
+const OMC_VIDEO_RECORDING_MIN = 3; // seconds: anything shorter from the live studio is a slip of the finger
 
 /** The words a video page carries that can be edited here. */
 function omc_video_copy_keys() {
@@ -259,6 +262,55 @@ function omc_video_create( array $args ) {
 	update_post_meta( $page_id, OMC_VIDEO_SOURCE, 'dashboard' );
 	return [ 'page' => (int) $page_id, 'slug' => $slug ];
 }
+
+/**
+ * A recording from the live studio (WHD → Live Stream), ready on the Shoppable videos screen: a video
+ * page with each piece shown while it recorded, at the moment it came on and for as long as it stayed.
+ *
+ * It starts as a draft. A recording can hold false starts and a test run, and publishing puts it on the
+ * public Past live streams page, so that stays a decision. The page is named after the stream's title
+ * and never its address: a stream's link is private.
+ */
+function omc_video_from_recording( $saved, array $recording ) {
+	if ( (int) $recording['seconds'] < OMC_VIDEO_RECORDING_MIN ) {
+		return $saved; // Record and Stop pressed by mistake: the file is in the library, and no more is needed
+	}
+	$still = (string) ( $recording['poster'] ?? '' );
+	$bytes = '' !== $still ? file_get_contents( $still ) : ''; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- a file on this server
+	$made  = omc_video_create( [
+		'attachment' => $recording['attachment'],
+		'title'      => $recording['title'],
+		'width'      => $recording['width'],
+		'height'     => $recording['height'],
+		'duration'   => $recording['seconds'],
+		'status'     => 'draft',
+		'poster'     => $bytes ? 'data:image/jpeg;base64,' . base64_encode( $bytes ) : '', // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
+	] );
+	if ( is_wp_error( $made ) ) {
+		throw new RuntimeException( $made->get_error_message() ); // the plugin logs it, and the recording stands
+	}
+
+	// Set even when empty: moments go by slug, and a deleted page's are still there under this one.
+	$moments              = omc_video_moments_clean( $recording['marks'], (int) $recording['seconds'] );
+	$all                  = (array) get_option( OMC_VIDEO_SHOP_OPTION, [] );
+	$all[ $made['slug'] ] = $moments;
+	update_option( OMC_VIDEO_SHOP_OPTION, array_filter( $all ), false );
+	$pieces = count( array_unique( wp_list_pluck( $moments, 'product' ) ) );
+
+	$saved['shop'] = [
+		'page'   => $made['page'],
+		'slug'   => $made['slug'],
+		'pieces' => $pieces,
+		'text'   => $pieces
+			/* translators: %d: number of pieces */
+			? sprintf( _n( 'Ready in Shoppable videos as a draft, with %d piece at the moment you showed it.', 'Ready in Shoppable videos as a draft, with %d pieces at the moments you showed them.', $pieces, 'moderno-child' ), $pieces )
+			: __( 'Ready in Shoppable videos as a draft. No piece was on screen while it recorded, so add them there.', 'moderno-child' ),
+		'label'  => __( 'Open it', 'moderno-child' ),
+		'url'    => admin_url( 'admin.php?page=' . OMC_VIDEO_SHOP_PAGE . '#pieces-' . $made['slug'] ),
+	];
+	return $saved;
+}
+add_filter( 'whd_live_recording_saved', 'omc_video_from_recording', 10, 2 );
 
 /* ─────────────────────────── writing it with AI ─────────────────────────── */
 
