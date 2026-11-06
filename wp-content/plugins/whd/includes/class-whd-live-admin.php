@@ -169,7 +169,7 @@ final class WHD_Live_Admin {
 	private static function sound_library(): array {
 		$file = WHD_DIR . 'assets/live-sounds/sounds.json';
 		$data = file_exists( $file ) ? json_decode( (string) file_get_contents( $file ), true ) : null; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- the plugin's own file
-		$out  = [ 'music' => [], 'fx' => [] ];
+		$out  = [ 'music' => [], 'fx' => [], 'reveal' => [] ];
 		foreach ( array_keys( $out ) as $kind ) {
 			foreach ( (array) ( $data[ $kind ] ?? [] ) as $item ) {
 				$item['url'] = WHD_URL . 'assets/live-sounds/' . $item['file'];
@@ -178,6 +178,11 @@ final class WHD_Live_Admin {
 			}
 		}
 		return $out;
+	}
+
+	/** The sounds of a piece arriving: [ key, label, url ]. The video pages offer the same ones. */
+	public static function reveal_sounds(): array {
+		return self::sound_library()['reveal'];
 	}
 
 	/** The ready-made moving stickers, listed in stickers.json. */
@@ -353,6 +358,7 @@ final class WHD_Live_Admin {
 			'recordSaving' => __( 'Saving %d%', 'whd' ),
 			'recordSaved'  => __( 'In your media library: %s', 'whd' ),
 			'recordOpen'   => __( 'Open it', 'whd' ),
+			'revealOff'    => __( 'No sound', 'whd' ),
 			'recordRetry'  => __( 'The recording is not reaching the server. Still recording, and still trying.', 'whd' ),
 			'recordLocal'  => __( 'The recording could not reach the media library, so it has been saved to this computer instead.', 'whd' ),
 			'recordFailed' => __( 'This browser can’t record the stream.', 'whd' ),

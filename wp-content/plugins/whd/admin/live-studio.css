@@ -117,6 +117,9 @@ body.whdls-page #wpbody-content { padding-bottom: 0 !important; }
 .whdls-banner--error { background: #6b2622; color: #ffd9d5; }
 .whdls-banner--info { background: var(--panel-3); color: var(--soft); }
 .whdls-banner__do { flex: none; padding: 3px 12px; border-radius: 12px; background: rgba(255, 255, 255, .16); font-weight: 700; font-size: 12px; }
+.whdls-subhead { margin: 18px 0 8px; font: 700 12px/1.2 var(--sans, inherit); letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+.whdls-reveal { display: flex; gap: 8px; margin-bottom: 8px; }
+.whdls-reveal select { flex: 1 1 auto; min-width: 0; }
 .whdls-banner__do:hover { background: rgba(255, 255, 255, .26); }
 .whdls-banner__x { flex: none; font-size: 18px; line-height: 1; opacity: .7; }
 

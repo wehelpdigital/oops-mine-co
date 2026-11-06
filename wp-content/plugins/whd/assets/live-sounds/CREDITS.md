@@ -93,3 +93,9 @@ Longer tracks were cut to 170 seconds with a short fade.
 - winter: Snow Drift, HoliznaCC0: https://freemusicarchive.org/music/holiznacc0/winter-lofi/snow-drift/
 - winter: Fire Place, HoliznaCC0: https://freemusicarchive.org/music/holiznacc0/winter-lofi/fire-place/
 - winter: Snow Globe, Ondrosik: https://freemusicarchive.org/music/Ondrosik/enchanted-valley/snow-globe/
+
+## The sound of a piece arriving (reveal/)
+
+Shimmering chime, Whoosh and chime, Harp sweep, Shop door bell and Pop and sparkle were made for this shop in code,
+with no outside recording in them: `.ftp-sync/tools/make-reveal-sounds.py`. Sparkle and Camera flashes are the
+start of `fx/sparkle.mp3` and `fx/camera-flash.mp3` above, shortened and levelled.

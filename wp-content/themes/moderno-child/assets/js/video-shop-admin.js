@@ -28,6 +28,8 @@
 	var known = D.products || {};
 	var state = {}; // slug → moments
 	var words = {}; // slug → page words
+	var sound = { key: String( ( D.sound || {} ).key || '' ), level: parseFloat( ( D.sound || {} ).level ) || 0 };
+	var savedSound = JSON.stringify( sound );
 	var places = {}; // slug → where its window sits, 0 to 1 of the room it leaves
 	var savedMoments = '';
 	var savedPlaces = '';
@@ -247,11 +249,47 @@
 	/* ─────────────────────────── the frame ─────────────────────────── */
 
 	app.innerHTML = ( D.canAdd ? '<section class="omc-vsa__new"></section>' : '' ) +
+		( ( D.sounds || [] ).length ? '<section class="omc-vsa__sound"><label class="omc-vsa__soundpick"><span>' + esc( T.soundTitle ) + '</span><select>' +
+			'<option value="">' + esc( T.soundOff ) + '</option>' + D.sounds.map( function ( item ) {
+				return '<option value="' + esc( item.key ) + '"' + ( item.key === sound.key ? ' selected' : '' ) + '>' + esc( item.label ) + '</option>';
+			} ).join( '' ) + '</select></label>' +
+			'<button type="button" class="button omc-vsa__soundtry">' + esc( T.soundTry ) + '</button>' +
+			'<label class="omc-vsa__soundlevel"><span>' + esc( T.soundLevel ) + '</span><input type="range" min="0" max="1" step="0.05" value="' + esc( sound.level ) + '"></label>' +
+			'<span class="omc-vsa__hint">' + esc( T.soundHint ) + '</span></section>' : '' ) +
 		'<div class="omc-vsa__list"></div>' +
 		'<div class="omc-vsa__save"><span class="omc-vsa__status" role="status" aria-live="polite"></span><button type="button" class="omc-vsa__go">' + esc( T.save ) + '</button></div>';
 	var listEl = app.querySelector( '.omc-vsa__list' );
 	var statusEl = app.querySelector( '.omc-vsa__status' );
 	var goEl = app.querySelector( '.omc-vsa__go' );
+
+	/* The sound of a piece popping up, the same on every video. */
+	( function ( box ) {
+		if ( ! box ) {
+			return;
+		}
+		var pick = box.querySelector( 'select' );
+		var level = box.querySelector( 'input[type=range]' );
+		var hear = function () {
+			var item = ( D.sounds || [] ).filter( function ( x ) {
+				return x.key === sound.key;
+			} )[ 0 ];
+			if ( item ) {
+				var a = new Audio( item.url );
+				a.volume = sound.level;
+				a.play().catch( function () {} );
+			}
+		};
+		pick.addEventListener( 'change', function () {
+			sound.key = pick.value;
+			hear();
+			changed();
+		} );
+		level.addEventListener( 'input', function () {
+			sound.level = parseFloat( level.value ) || 0;
+			changed();
+		} );
+		box.querySelector( '.omc-vsa__soundtry' ).addEventListener( 'click', hear );
+	}( app.querySelector( '.omc-vsa__sound' ) ) );
 
 	if ( ! ( D.videos || [] ).length ) {
 		listEl.innerHTML = '<p class="omc-vsa__none">' + esc( T.noVideos ) + '</p>';
@@ -935,7 +973,7 @@
 	}
 
 	function dirty() {
-		return JSON.stringify( state ) !== savedMoments || JSON.stringify( places ) !== savedPlaces || Object.keys( changedWords() ).length > 0;
+		return JSON.stringify( state ) !== savedMoments || JSON.stringify( places ) !== savedPlaces || JSON.stringify( sound ) !== savedSound || Object.keys( changedWords() ).length > 0;
 	}
 
 	function changed( text, tone ) {
@@ -952,7 +990,7 @@
 		busy = true;
 		goEl.textContent = T.saving;
 		changed( T.saving, 'busy' );
-		api( D.rest, { videos: payload(), content: changedWords(), places: places } ).then( function ( j ) {
+		api( D.rest, { videos: payload(), content: changedWords(), places: places, sound: sound } ).then( function ( j ) {
 			Object.keys( j.videos || {} ).forEach( function ( slug ) {
 				state[ slug ] = j.videos[ slug ].map( function ( m ) {
 					return { at: m.at, product: m.product, for: m.for };
@@ -964,6 +1002,7 @@
 			} );
 			savedMoments = JSON.stringify( state );
 			savedPlaces = JSON.stringify( places );
+			savedSound = JSON.stringify( sound );
 			busy = false;
 			goEl.textContent = T.save;
 			cards.forEach( function ( c ) {

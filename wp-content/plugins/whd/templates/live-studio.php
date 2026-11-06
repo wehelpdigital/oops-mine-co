@@ -120,6 +120,15 @@ $whd_tabs = [
 				</div>
 				<label class="whdls-switch whdls-switch--block"><input type="checkbox" id="whdls-monitor" checked><span></span><?php esc_html_e( 'Hear music and pads on this computer', 'whd' ); ?></label>
 				<p class="whdls-hint"><?php esc_html_e( 'Viewers hear them either way. Once you’re live, wear headphones if you can, so your mic doesn’t pick them up.', 'whd' ); ?></p>
+				<h3 class="whdls-subhead"><?php esc_html_e( 'When a piece comes on', 'whd' ); ?></h3>
+				<div class="whdls-reveal">
+					<select id="whdls-reveal-sound" aria-label="<?php esc_attr_e( 'The sound when a piece comes on', 'whd' ); ?>"></select>
+					<button type="button" class="whdls-mini" id="whdls-reveal-try"><?php esc_html_e( 'Preview', 'whd' ); ?></button>
+				</div>
+				<div class="whdls-mixer">
+					<div class="whdls-fader"><span><?php esc_html_e( 'Its level', 'whd' ); ?></span><input type="range" id="whdls-vol-reveal" min="0" max="1" step="0.01" value="0.7"></div>
+				</div>
+				<p class="whdls-hint"><?php esc_html_e( 'Plays on the stream when you put up a new piece, for everybody watching. Preview is for this computer only. It stays out of your recording, because the video page plays it over the pop-up.', 'whd' ); ?></p>
 
 				<h3><?php esc_html_e( 'Background music', 'whd' ); ?></h3>
 				<div class="whdls-transport">

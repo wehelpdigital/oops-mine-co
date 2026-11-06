@@ -75,6 +75,10 @@
 .omc-vsa__grid { display: grid; grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); gap: 24px; }
 .omc-vsa__player { position: sticky; top: 46px; align-self: start; } /* stays in view beside a long words form */
 .omc-vsa__player video { display: block; width: 100%; max-height: 520px; background: #111; border-radius: 6px; }
+.omc-vsa__sound { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 0 0 18px; padding: 12px 16px; background: #fff; border: 1px solid #e3ddd7; border-radius: 8px; font-size: 13px; }
+.omc-vsa__soundpick, .omc-vsa__soundlevel { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: #3a2b26; }
+.omc-vsa__soundlevel { font-weight: 400; }
+.omc-vsa__sound .omc-vsa__hint { color: #8a7d76; font-size: 12px; }
 .omc-vsa__stage { position: relative; }
 /* The pop-up's place, worked out as the page works it out: 0 to 1 of the room it leaves, above the player's controls. */
 .omc-vsa__place { position: absolute; z-index: 2; top: calc(6px + (100% - 40px) * var(--y, 0)); left: calc(6px + (100% - 12px) * var(--x, 0)); translate: calc(var(--x, 0) * -100%) calc(var(--y, 0) * -100%); display: flex; align-items: center; gap: 8px; box-sizing: border-box; width: 64%; aspect-ratio: 370 / 136; padding: 6px 8px; background: rgba(255, 255, 255, .9); border: 2px dashed #9c6f63; border-radius: 4px; color: #3a2b26; font-size: 11px; line-height: 1.25; cursor: grab; touch-action: none; user-select: none; }

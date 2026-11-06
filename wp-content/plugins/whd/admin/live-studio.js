@@ -278,7 +278,8 @@
 			volumes: mixer ? mixer.volumes : null,
 			duck: mixer ? mixer.duck : true,
 			loop: mixer ? mixer.loop : true,
-			hear: mixer ? mixer.hearing : true
+			hear: mixer ? mixer.hearing : true,
+			reveal: S.reveal
 		};
 	}
 	function saveSoon() {
@@ -1169,7 +1170,22 @@
 		}
 	}
 
+	/* The sound of a new piece: when one comes on, not when a card comes back from its photos. */
+	function revealUrl() {
+		var chosen = ( ( D.sounds || {} ).reveal || [] ).filter( function ( sound ) {
+			return sound.key === S.reveal;
+		} )[ 0 ];
+		return chosen ? chosen.url : '';
+	}
+
+	function pieceArrives() {
+		if ( mixer && revealUrl() && ! stage.cover && ! stage.hideGraphics ) {
+			mixer.playReveal( revealUrl() );
+		}
+	}
+
 	function showPiece( piece, at ) {
+		var before = pieceOnScreen();
 		if ( S.photos ) {
 			closePhotos( true ); // the card or the photos, never both: the photos already say what the card says
 		}
@@ -1200,6 +1216,9 @@
 		renderPieces();
 		select( layer.id );
 		postShowing();
+		if ( ! at && before !== piece.id ) {
+			pieceArrives();
+		}
 	}
 
 	function hidePiece() {
@@ -1352,6 +1371,7 @@
 		if ( ! images.length ) {
 			return;
 		}
+		var before = pieceOnScreen();
 		if ( S.photos ) {
 			closePhotos( true );
 		}
@@ -1386,6 +1406,9 @@
 			} );
 			ensureSpots();
 			select( null );
+			if ( before !== piece.id ) {
+				pieceArrives();
+			}
 			// This is what makes the piece public: the photos say what to comment, and a number only works once it has been on air.
 			postShowing();
 			saveSoon();
@@ -2943,7 +2966,7 @@
 			return;
 		}
 		if ( saved.volumes ) {
-			[ 'mic', 'music', 'pads' ].forEach( function ( bus ) {
+			[ 'mic', 'music', 'pads', 'reveal' ].forEach( function ( bus ) {
 				if ( undefined !== saved.volumes[ bus ] ) {
 					mixer.volumes[ bus ] = saved.volumes[ bus ];
 					$( 'vol-' + bus ).value = saved.volumes[ bus ];
@@ -2963,12 +2986,38 @@
 			$( 'monitor' ).checked = !! saved.hear;
 		}
 		mixer.setMuted( S.muted );
+		mixer._apply();
 		mixer.onMusic = renderMusic;
 		mixer.onError = function () {
 			banner( 'sound', T.soundFailed, 'error' );
 		};
 
-		[ 'mic', 'music', 'pads' ].forEach( function ( bus ) {
+		// The sound of a piece coming on: one of the ready-made ones, or none. Fetched now, so the first piece is on time.
+		var revealList = ( D.sounds || {} ).reveal || [];
+		S.reveal = undefined !== saved.reveal ? saved.reveal : ( revealList[ 0 ] ? revealList[ 0 ].key : '' );
+		var revealPick = $( 'reveal-sound' );
+		revealPick.appendChild( new Option( T.revealOff, '' ) );
+		revealList.forEach( function ( sound ) {
+			revealPick.appendChild( new Option( sound.label, sound.key ) );
+		} );
+		revealPick.value = S.reveal;
+		if ( revealUrl() ) {
+			mixer.preload( revealUrl() );
+		}
+		revealPick.addEventListener( 'change', function () {
+			S.reveal = this.value;
+			if ( revealUrl() ) {
+				mixer.tryReveal( revealUrl() );
+			}
+			saveSoon();
+		} );
+		$( 'reveal-try' ).addEventListener( 'click', function () {
+			if ( revealUrl() ) {
+				mixer.tryReveal( revealUrl() );
+			}
+		} );
+
+		[ 'mic', 'music', 'pads', 'reveal' ].forEach( function ( bus ) {
 			$( 'vol-' + bus ).addEventListener( 'input', function () {
 				mixer.setVolume( bus, +this.value );
 				saveSoon();
@@ -3303,7 +3352,7 @@
 	function beginRecording( type, id ) {
 		var tracks = [ stage.startClean() ]; // the picture on air, without the product card
 		if ( mixer ) {
-			tracks.push( mixer.track.clone() );
+			tracks.push( mixer.recordTrack.clone() ); // and the sound, without the chime when a piece comes on
 		}
 		var recorder = new MediaRecorder( new MediaStream( tracks ), { mimeType: type, videoBitsPerSecond: 2500000, audioBitsPerSecond: 128000 } );
 		var r = rec = {

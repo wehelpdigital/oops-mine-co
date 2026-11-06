@@ -77,6 +77,48 @@
 		setTimeout(function () { if (popAt === -1) { pop.hidden = true; } }, 320);
 	}
 
+	/* The sound of a piece arriving, chosen on the Shoppable videos screen. A browser only lets sound start from
+	   something the viewer did, so the audio engine is started by their first press, and the file is fetched
+	   when the video first plays. It follows the video: muted means silent, and it is scaled by the volume. */
+	var soundTag = document.getElementById('omc-video-sound');
+	var soundEngine = null, soundBuffer = null, soundFetched = false, soundLast = -9;
+
+	function soundWake() {
+		var Engine = window.AudioContext || window.webkitAudioContext;
+		if (!soundTag || !Engine) { return; }
+		if (!soundEngine) { soundEngine = new Engine(); }
+		if ('suspended' === soundEngine.state) { soundEngine.resume(); }
+	}
+
+	function soundFetch() {
+		soundWake();
+		if (!soundEngine || soundFetched) { return; }
+		soundFetched = true;
+		window.fetch(soundTag.getAttribute('data-url'))
+			.then(function (r) { return r.arrayBuffer(); })
+			.then(function (bytes) { return soundEngine.decodeAudioData(bytes); })
+			.then(function (decoded) { soundBuffer = decoded; })
+			.catch(function () { soundFetched = false; });
+	}
+
+	function soundPlay() {
+		if (!soundBuffer || video.muted || !video.volume) { return; }
+		if (soundEngine.currentTime - soundLast < 1.5) { return; } // scrubbing past several pieces is not several arrivals
+		soundLast = soundEngine.currentTime;
+		var source = soundEngine.createBufferSource();
+		var gain = soundEngine.createGain();
+		gain.gain.value = (parseFloat(soundTag.getAttribute('data-level')) || 0) * video.volume;
+		source.buffer = soundBuffer;
+		source.connect(gain);
+		gain.connect(soundEngine.destination);
+		source.start();
+	}
+
+	if (soundTag) {
+		['pointerup', 'touchend', 'keydown', 'click'].forEach(function (kind) { document.addEventListener(kind, soundWake, { passive: true }); });
+		video.addEventListener('play', soundFetch);
+	}
+
 	/* i: which moment; or a dot tapped on the clothes (omc-video-play.js) brings its own piece and stays until closed. */
 	function showPop(i, tapped) {
 		var piece = tapped ? tapped.piece : window.OMCShop && window.OMCShop.piece(moments[i].getAttribute('data-piece'));
@@ -141,6 +183,7 @@
 		popAt = i;
 		pop.hidden = false;
 		void pop.offsetWidth;
+		if (tapped || !video.paused) { soundPlay(); }
 		requestAnimationFrame(function () { requestAnimationFrame(function () { pop.classList.add('is-in'); }); });
 	}
 

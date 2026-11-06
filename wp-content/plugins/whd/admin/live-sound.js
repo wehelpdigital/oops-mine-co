@@ -9,6 +9,10 @@
  * Music and pads also play through the host's own speakers (`monitor`), because a host who presses a
  * pad and hears nothing thinks it is broken. They can turn that off. Their microphone never plays back.
  *
+ * The sound of a piece arriving goes to the stream and the speakers but not into a recording, which
+ * has a mix of its own (`recordTrack`): the recording's video page plays that sound itself, over the
+ * pop-up, and it would otherwise be heard twice.
+ *
  * A few pads are synthesised here. The rest, and the ready-made music, are public-domain recordings in
  * assets/live-sounds (see CREDITS.md there), played through the same buses.
  *
@@ -41,12 +45,26 @@
 		this.master.connect( this.limiter );
 		this.limiter.connect( this.out );
 
+		this.recordOut = ctx.createMediaStreamDestination();
+		this.recordLimiter = ctx.createDynamicsCompressor();
+		this.recordLimiter.threshold.value = -6;
+		this.recordLimiter.ratio.value = 12;
+		this.recordLimiter.attack.value = 0.003;
+		this.recordLimiter.release.value = 0.2;
+		this.master.connect( this.recordLimiter );
+		this.recordLimiter.connect( this.recordOut );
+		this.recordTrack = this.recordOut.stream.getAudioTracks()[ 0 ];
+
 		// What the host can choose to hear: music and pads, never their own microphone.
 		this.monitor = ctx.createGain();
 		this.monitor.gain.value = 1;
 		this.monitor.connect( ctx.destination );
 		this.hearing = true;
 		this.onError = null;
+
+		this.reveal = ctx.createGain();
+		this.reveal.connect( this.limiter );
+		this.reveal.connect( this.monitor );
 
 		this.buses = {};
 		this.levels = {};
@@ -68,7 +86,7 @@
 		this.buses.pads.connect( this.levels.pads.meter );
 		this.buses.screen.connect( this.levels.screen.meter );
 
-		this.volumes = { mic: 1, music: 0.35, pads: 0.8, screen: 0.8 };
+		this.volumes = { mic: 1, music: 0.35, pads: 0.8, screen: 0.8, reveal: 0.7 };
 		this.muted = false;
 		this.duck = true;
 		this._ducked = false;
@@ -127,6 +145,7 @@
 		set( this.buses.music.gain, this.volumes.music * ( this._ducked ? 0.3 : 1 ) );
 		set( this.buses.pads.gain, this.volumes.pads );
 		set( this.buses.screen.gain, this.volumes.screen );
+		set( this.reveal.gain, this.volumes.reveal );
 	};
 
 	Mixer.prototype.setVolume = function ( bus, value ) {
@@ -377,6 +396,33 @@
 				self.onError();
 			}
 		} );
+	};
+
+	/* A piece coming on: to the stream and the speakers. */
+	Mixer.prototype.playReveal = function ( url ) {
+		var self = this;
+		this.wake();
+		this._load( url ).then( function ( buffer ) {
+			var src = self.ctx.createBufferSource();
+			src.buffer = buffer;
+			src.connect( self.reveal );
+			src.start();
+		} ).catch( function () {} ); // a sound that will not load must not get in the way of showing the piece
+	};
+
+	/* Trying one out: this computer only, even on air. */
+	Mixer.prototype.tryReveal = function ( url ) {
+		var self = this;
+		this.wake();
+		this._load( url ).then( function ( buffer ) {
+			var src = self.ctx.createBufferSource();
+			var gain = self.ctx.createGain();
+			gain.gain.value = self.volumes.reveal;
+			src.buffer = buffer;
+			src.connect( gain );
+			gain.connect( self.ctx.destination );
+			src.start();
+		} ).catch( function () {} );
 	};
 
 	root.WHDMixer = { Mixer: Mixer, PADS: PADS, supported: !! AudioCtx };

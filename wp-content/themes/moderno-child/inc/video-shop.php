@@ -25,6 +25,7 @@ const OMC_VIDEO_SHOP_FOR    = 8;   // seconds the small window stays over the vi
 const OMC_VIDEO_SHOP_MAX    = 300; // moments a video can hold: a long live recording shows pieces more than once
 const OMC_VIDEO_SHOP_LONGEST = 3600; // seconds: a recording's window stays as long as the piece was being shown, and the host may talk for a while
 const OMC_VIDEO_SHOP_PLACE  = 'omc_video_shop_place';
+const OMC_VIDEO_SHOP_SOUND  = 'omc_video_shop_sound';
 
 /** How long a moment's window stays, in seconds. */
 function omc_video_moment_for( $value ) {
@@ -37,6 +38,31 @@ function omc_video_pop_place( $slug ) {
 	$all   = (array) get_option( OMC_VIDEO_SHOP_PLACE, [] );
 	$place = (array) ( $all[ sanitize_key( (string) $slug ) ] ?? [] );
 	return [ 'x' => (float) ( $place['x'] ?? 0 ), 'y' => (float) ( $place['y'] ?? 0 ) ];
+}
+
+/** The sounds there are to choose from, which the live studio offers too. Empty without the plugin. */
+function omc_video_sound_list() {
+	return class_exists( 'WHD_Live_Admin' ) ? WHD_Live_Admin::reveal_sounds() : [];
+}
+
+/** The sound of a piece popping up: the same on every video. [ key, level ]; a key of '' means none. */
+function omc_video_pop_sound() {
+	$list  = omc_video_sound_list();
+	$saved = (array) get_option( OMC_VIDEO_SHOP_SOUND, [] );
+	return [
+		'key'   => (string) ( $saved['key'] ?? ( $list[0]['key'] ?? '' ) ),
+		'level' => isset( $saved['level'] ) ? (float) $saved['level'] : 0.6,
+	];
+}
+
+/** Tells the video page what to play. Nothing to fetch until somebody presses play. */
+function omc_video_sound_tag() {
+	$sound = omc_video_pop_sound();
+	foreach ( omc_video_sound_list() as $item ) {
+		if ( $item['key'] === $sound['key'] ) {
+			printf( '<span id="omc-video-sound" data-url="%1$s" data-level="%2$s" hidden></span>', esc_url( $item['url'] ), esc_attr( $sound['level'] ) );
+		}
+	}
 }
 
 /** A new video starts clean: moments and places go by slug, and a deleted page's are still there under its old one. */
@@ -210,6 +236,8 @@ add_action( 'admin_enqueue_scripts', static function () {
 		'canAdd'   => current_user_can( 'upload_files' ) && current_user_can( 'publish_pages' ),
 		'videos'   => $videos,
 		'products' => (object) omc_piece_brief( $products ),
+		'sound'    => omc_video_pop_sound(),
+		'sounds'   => array_map( static fn( $s ) => [ 'key' => $s['key'], 'label' => $s['label'], 'url' => $s['url'] ], omc_video_sound_list() ),
 		'i18n'     => [
 			'save'     => __( 'Save', 'moderno-child' ),
 			'saving'   => __( 'Saving…', 'moderno-child' ),
@@ -228,6 +256,11 @@ add_action( 'admin_enqueue_scripts', static function () {
 			'forDefault' => OMC_VIDEO_SHOP_FOR,
 			'forLongest' => OMC_VIDEO_SHOP_LONGEST,
 			'editVideo'  => __( 'Edit video', 'moderno-child' ),
+			'soundTitle' => __( 'Sound when a piece pops up', 'moderno-child' ),
+			'soundOff'   => __( 'No sound', 'moderno-child' ),
+			'soundTry'   => __( 'Preview', 'moderno-child' ),
+			'soundLevel' => __( 'Level', 'moderno-child' ),
+			'soundHint'  => __( 'On every video. A viewer who has muted the video hears nothing.', 'moderno-child' ),
 			'placeBtn'   => __( 'Move the pop-up', 'moderno-child' ),
 			'placeDone'  => __( 'Done moving it', 'moderno-child' ),
 			'placeHint'  => __( 'Drag the box to where a piece should pop up on this video, then Save. Scrub the video first to see what it would cover.', 'moderno-child' ),
@@ -364,6 +397,12 @@ add_action( 'rest_api_init', static function () {
 				}
 			}
 			update_option( OMC_VIDEO_SHOP_PLACE, $places, false );
+			$sound = $r->get_param( 'sound' );
+			if ( is_array( $sound ) ) {
+				$keys = wp_list_pluck( omc_video_sound_list(), 'key' );
+				$key  = (string) ( $sound['key'] ?? '' );
+				update_option( OMC_VIDEO_SHOP_SOUND, [ 'key' => in_array( $key, $keys, true ) ? $key : '', 'level' => round( max( 0, min( 1, (float) ( $sound['level'] ?? 0.6 ) ) ), 2 ) ], false );
+			}
 			$out = [];
 			foreach ( array_keys( $known ) as $slug ) {
 				$out[ $slug ] = omc_video_moments( $slug );

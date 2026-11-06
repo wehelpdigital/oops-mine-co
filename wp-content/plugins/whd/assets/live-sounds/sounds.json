@@ -666,5 +666,63 @@
 				"license": "CC0 1.0"
 			}
 		]
-	}
+	},
+	"reveal": [
+		{
+			"key": "shimmer",
+			"file": "reveal/shimmer.mp3",
+			"label": "Shimmering chime",
+			"seconds": 1.7,
+			"source": "Made for this shop in code (.ftp-sync/tools/make-reveal-sounds.py)",
+			"license": "own work"
+		},
+		{
+			"key": "whoosh-chime",
+			"file": "reveal/whoosh-chime.mp3",
+			"label": "Whoosh and chime",
+			"seconds": 1.75,
+			"source": "Made for this shop in code (.ftp-sync/tools/make-reveal-sounds.py)",
+			"license": "own work"
+		},
+		{
+			"key": "harp",
+			"file": "reveal/harp.mp3",
+			"label": "Harp sweep",
+			"seconds": 1.75,
+			"source": "Made for this shop in code (.ftp-sync/tools/make-reveal-sounds.py)",
+			"license": "own work"
+		},
+		{
+			"key": "door",
+			"file": "reveal/door.mp3",
+			"label": "Shop door bell",
+			"seconds": 1.75,
+			"source": "Made for this shop in code (.ftp-sync/tools/make-reveal-sounds.py)",
+			"license": "own work"
+		},
+		{
+			"key": "pop",
+			"file": "reveal/pop.mp3",
+			"label": "Pop and sparkle",
+			"seconds": 0.95,
+			"source": "Made for this shop in code (.ftp-sync/tools/make-reveal-sounds.py)",
+			"license": "own work"
+		},
+		{
+			"key": "sparkle",
+			"file": "reveal/sparkle.mp3",
+			"label": "Sparkle",
+			"seconds": 1.7,
+			"source": "fx/sparkle.mp3, shortened",
+			"license": "CC0 1.0"
+		},
+		{
+			"key": "camera",
+			"file": "reveal/camera.mp3",
+			"label": "Camera flashes",
+			"seconds": 1.7,
+			"source": "fx/camera-flash.mp3, shortened",
+			"license": "CC0 1.0"
+		}
+	]
 }
