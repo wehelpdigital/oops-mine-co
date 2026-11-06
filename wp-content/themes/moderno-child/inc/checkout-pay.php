@@ -26,25 +26,27 @@ function omc_checkout_pay_on() {
  * What a row says and shows, by the kind of gateway. Its title stays the plugin's own, since that is
  * what the receipts and the admin call it.
  *
+ * The column is narrow and the marks say most of it, so a note is only for what they cannot: how a thing works.
+ *
  * @return array [ note, marks[] ]. A mark with a file in assets/img/marks is drawn; any other is its name, set as type.
  */
 function omc_checkout_pay_row( $gateway_id ) {
 	$cards = [ 'visa', 'mastercard', 'americanexpress' ];
 	$id    = (string) $gateway_id;
 	if ( 'ppcp-gateway' === $id || 'paypal' === $id ) {
-		$row = [ __( 'You’ll finish with PayPal', 'moderno-child' ), [ 'paypal' ] ];
+		$row = [ '', [ 'paypal' ] ];
 	} elseif ( false !== strpos( $id, 'venmo' ) ) {
-		$row = [ __( 'You’ll finish with Venmo', 'moderno-child' ), [ 'Venmo' ] ];
+		$row = [ '', [ 'venmo' ] ];
 	} elseif ( false !== strpos( $id, 'afterpay' ) ) {
-		$row = [ __( 'Pay over time with Afterpay', 'moderno-child' ), [ 'Afterpay' ] ];
+		$row = [ __( 'Pay over time', 'moderno-child' ), [ 'afterpay' ] ];
 	} elseif ( false !== strpos( $id, 'klarna' ) ) {
-		$row = [ __( 'Pay over time with Klarna', 'moderno-child' ), [ 'Klarna' ] ];
+		$row = [ __( 'Pay over time', 'moderno-child' ), [ 'klarna' ] ];
 	} elseif ( false !== strpos( $id, 'affirm' ) ) {
-		$row = [ __( 'Pay over time with Affirm', 'moderno-child' ), [ 'Affirm' ] ];
+		$row = [ __( 'Pay over time', 'moderno-child' ), [ 'Affirm' ] ];
 	} elseif ( false !== strpos( $id, 'link' ) ) {
-		$row = [ __( 'Use the details saved with Link', 'moderno-child' ), [ 'Link' ] ];
+		$row = [ __( 'Your saved details', 'moderno-child' ), [ 'Link' ] ];
 	} elseif ( in_array( $id, [ 'stripe', 'woocommerce_payments', 'ppcp-credit-card-gateway', 'ppcp-card-button-gateway' ], true ) || false !== strpos( $id, 'card' ) ) {
-		$row = [ __( 'Visa, Mastercard, Amex and more', 'moderno-child' ), $cards ];
+		$row = [ '', $cards ];
 	} else {
 		$row = [ '', [] ];
 	}
@@ -64,7 +66,7 @@ function omc_checkout_pay_marks( array $marks ) {
 	}
 	$out = '<span class="omc-pay__marks" aria-hidden="true">';
 	foreach ( $marks as $mark ) {
-		$drawn = function_exists( 'omc_brand_mark' ) ? omc_brand_mark( $mark, 13 ) : '';
+		$drawn = function_exists( 'omc_brand_mark' ) ? omc_brand_mark( $mark, 20 ) : '';
 		$out  .= '<span class="omc-pay__mark' . ( $drawn ? ' is-' . esc_attr( sanitize_key( $mark ) ) : ' is-word' ) . '">' . ( $drawn ?: esc_html( $mark ) ) . '</span>';
 	}
 	return $out . '</span>';
@@ -106,10 +108,9 @@ function omc_checkout_pay_wallets_open() {
 		<button type="button" class="omc-pay__row omc-pay-wallets__row" aria-expanded="false" aria-controls="omc-pay-wallets-box">
 			<span class="omc-pay__dot" aria-hidden="true"></span>
 			<span class="omc-pay__text">
-				<span class="omc-pay__name"><?php esc_html_e( 'Apple Pay, Google Pay and more', 'moderno-child' ); ?></span>
-				<span class="omc-pay__note"><?php esc_html_e( 'Pay with what’s saved on your device', 'moderno-child' ); ?></span>
+				<span class="omc-pay__name"><?php esc_html_e( 'Apple Pay or Google Pay', 'moderno-child' ); ?></span>
 			</span>
-			<?php echo omc_checkout_pay_marks( [ 'Apple Pay', 'googlepay' ] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from the shop's own files ?>
+			<?php echo omc_checkout_pay_marks( [ 'applepay', 'googlepay' ] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from the shop's own files ?>
 		</button>
 		<div class="omc-pay-wallets__box" id="omc-pay-wallets-box">
 	<?php

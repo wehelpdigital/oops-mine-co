@@ -1,65 +1,83 @@
-/* The checkout's payment section (inc/checkout-pay.php): every way to pay a row of one shape, nothing open until chosen. */
+/* The checkout's payment section (inc/checkout-pay.php): every way to pay one tidy row, nothing open until chosen.
+   The checkout's column is narrow, 328px on a computer and 280px on a small phone, so a row is one line, the name on
+   the left and the marks on the right. The marks wrap under the name by themselves when a name and they do not fit:
+   no screen size is assumed, because the names come from the payment plugins' own settings. */
 
-/* ─── a row ─── */
+/* ─── the theme's list and radio, out of the way ─── */
+.wc_payment_methods.c-cart__payment-methods { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.c-cart__payment-methods > li.wc_payment_method { position: relative; display: block; margin: 0; padding: 0; }
+.c-cart__payment-methods > li.wc_payment_method::before, .c-cart__payment-methods > li.wc_payment_method::after { content: none; display: none; }
+
+/* The theme makes this radio a box of its own in the flow, which left a blank line above every row. It stays in the
+   page, for the keyboard and for the plugins, which go by it; the dot in the row is what is seen. */
+.c-cart__payment-methods > li.wc_payment_method > input.input-radio {
+	position: absolute !important;
+	top: 0;
+	left: 0;
+	display: block !important;
+	width: 1px;
+	height: 1px;
+	margin: 0 !important;
+	opacity: 0;
+	pointer-events: none;
+}
+
+/* ─── one way to pay: the row and what opens under it are one box ─── */
+.c-cart__payment-methods > li.wc_payment_method, .omc-pay-ready .omc-pay-wallets.has-wallets { box-sizing: border-box; border: 1px solid var(--omc-line); background: #fff; transition: border-color .2s var(--omc-ease); }
+.c-cart__payment-methods > li.wc_payment_method:hover, .omc-pay-ready .omc-pay-wallets.has-wallets:hover { border-color: var(--omc-rose); }
+.c-cart__payment-methods > li.wc_payment_method.is-chosen, .omc-pay-ready .omc-pay-wallets.is-open { border-color: var(--omc-rose-dark); box-shadow: 0 0 0 1px var(--omc-rose-dark); } /* outside: an inset one is painted under the line above an open box, which nicks it */
+
 .omc-pay__row, label.c-cart__payment-methods-title.omc-pay__row {
 	display: flex;
 	flex: none;
 	flex-flow: row wrap;
 	align-items: center;
-	gap: 8px 12px;
+	gap: 6px 12px;
 	box-sizing: border-box;
 	width: 100%;
-	min-height: 58px;
-	margin: 0;
-	padding: 12px 14px;
-	border: 1px solid var(--omc-line);
-	background: #fff;
+	min-height: 52px;
+	margin: 0 !important;
+	padding: 10px 12px 10px 14px;
+	border: 0;
+	background: none;
 	color: var(--omc-ink);
 	font: inherit;
+	letter-spacing: 0;
 	text-align: left;
 	cursor: pointer;
-	transition: border-color .2s var(--omc-ease), background-color .2s var(--omc-ease);
 }
-.omc-pay__row:hover { border-color: var(--omc-rose); }
-.omc-pay__dot { position: relative; flex: 0 0 auto; width: 18px; height: 18px; border: 1px solid var(--omc-muted); border-radius: 50%; background: #fff; transition: border-color .2s var(--omc-ease); }
+.wc_payment_method .omc-pay__row::before, .wc_payment_method .omc-pay__row::after { content: none; display: none; }
+.c-cart__payment-methods > li.wc_payment_method > input.input-radio:focus-visible + .omc-pay__row, .omc-pay-wallets__row:focus-visible { outline: 2px solid var(--omc-rose-dark); outline-offset: 2px; }
+
+.omc-pay__dot { position: relative; flex: none; width: 18px; height: 18px; box-sizing: border-box; border: 1px solid var(--omc-muted); border-radius: 50%; background: #fff; transition: border-color .2s var(--omc-ease); }
 .omc-pay__dot::after { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: var(--omc-rose-dark); opacity: 0; transform: scale(.4); transition: opacity .2s var(--omc-ease), transform .2s var(--omc-ease); }
-.omc-pay__text { display: flex; flex: 1 1 calc(100% - 30px); flex-direction: column; gap: 1px; min-width: 0; }
-.omc-pay__name { font: 600 14px/1.3 var(--omc-sans); color: var(--omc-ink); }
-.omc-pay__note { font: 400 12.5px/1.35 var(--omc-sans); color: var(--omc-muted); }
+.is-chosen .omc-pay__dot, .is-open .omc-pay__dot, body:not(.omc-pay-ready) input:checked + .omc-pay__row .omc-pay__dot { border-color: var(--omc-rose-dark); }
+.is-chosen .omc-pay__dot::after, .is-open .omc-pay__dot::after, body:not(.omc-pay-ready) input:checked + .omc-pay__row .omc-pay__dot::after { opacity: 1; transform: none; }
+
+.omc-pay__text { display: block; flex: 1 1 auto; min-width: 0; max-width: calc(100% - 30px); } /* so a long name stays beside its dot and wraps, not onto a line of its own */
+.omc-pay__name { display: block; font: 600 14px/1.3 var(--omc-sans); color: var(--omc-ink); }
+.omc-pay__note { display: block; margin-top: 1px; font: 400 12px/1.3 var(--omc-sans); color: var(--omc-muted); }
 
 /* The marks: one tile for all of them. Quiet in the shop's own tone until that row is chosen; then their real colours. */
-.omc-pay__marks { display: flex; flex: 1 1 100%; flex-wrap: wrap; gap: 4px; padding-left: 30px; } /* under the words: the checkout's column is narrow */
-.omc-pay__mark { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-width: 44px; height: 26px; padding: 0 6px; border: 1px solid var(--omc-line); border-radius: 3px; background: var(--omc-cream); color: var(--omc-text); font: 600 10.5px/1 var(--omc-sans); letter-spacing: .01em; white-space: nowrap; transition: background-color .2s var(--omc-ease); }
-.omc-pay__mark svg { display: block; width: auto; max-width: 36px; height: 14px; filter: grayscale(1) sepia(.35) brightness(.72) contrast(.9); opacity: .8; transition: filter .2s var(--omc-ease), opacity .2s var(--omc-ease); }
-
-.omc-pay__mark.is-googlepay svg { max-width: 38px; height: 22px; } /* its artwork has a lot of air around it */
-
-/* Chosen */
-.wc_payment_method.is-chosen .omc-pay__row, .omc-pay-wallets.is-open .omc-pay__row { border-color: var(--omc-rose-dark); background: #fdfaf7; box-shadow: inset 0 0 0 1px var(--omc-rose-dark); }
-.wc_payment_method.is-chosen .omc-pay__dot, .omc-pay-wallets.is-open .omc-pay__dot { border-color: var(--omc-rose-dark); }
-.wc_payment_method.is-chosen .omc-pay__dot::after, .omc-pay-wallets.is-open .omc-pay__dot::after { opacity: 1; transform: none; }
-.wc_payment_method.is-chosen .omc-pay__mark, .omc-pay-wallets.is-open .omc-pay__mark { background: #fff; }
-.wc_payment_method.is-chosen .omc-pay__mark svg, .omc-pay-wallets.is-open .omc-pay__mark svg { filter: none; opacity: 1; }
-
-/* The list, with the theme's own radio and spacing out of the way */
-.wc_payment_methods.c-cart__payment-methods { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.c-cart__payment-methods > li.wc_payment_method { position: relative; display: block; margin: 0; padding: 0; border: 0; background: none; }
-.c-cart__payment-methods > li.wc_payment_method > label.omc-pay__row { margin: 0 !important; }
-.c-cart__payment-methods > li.wc_payment_method::before, .c-cart__payment-methods > li.wc_payment_method::after { content: none; display: none; }
-.c-cart__payment-methods > li.wc_payment_method > input.input-radio { position: absolute; top: 20px; left: 15px; width: 18px; height: 18px; margin: 0 !important; opacity: 0; cursor: pointer; }
-.c-cart__payment-methods > li.wc_payment_method > input.input-radio:focus-visible + .omc-pay__row, .omc-pay-wallets__row:focus-visible { outline: 2px solid var(--omc-rose-dark); outline-offset: 2px; }
-.wc_payment_method .omc-pay__row::before, .wc_payment_method .omc-pay__row::after { content: none; display: none; }
+.omc-pay__marks { display: flex; flex: none; gap: 3px; margin-left: auto; }
+.omc-pay__mark { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: 36px; height: 24px; overflow: hidden; border: 1px solid var(--omc-line); border-radius: 3px; background: var(--omc-cream); color: var(--omc-text); transition: background-color .2s var(--omc-ease); }
+.omc-pay__mark.is-word { width: auto; padding: 0 6px; font: 600 10px/1 var(--omc-sans); white-space: nowrap; }
+.omc-pay__mark svg { display: block; flex: none; width: 20px; height: 20px; filter: grayscale(1) sepia(.35) brightness(.72) contrast(.9); opacity: .85; transition: filter .2s var(--omc-ease), opacity .2s var(--omc-ease); }
+.is-chosen .omc-pay__mark, .is-open .omc-pay__mark { background: #fff; }
+.is-chosen .omc-pay__mark svg, .is-open .omc-pay__mark svg { filter: none; opacity: 1; }
 
 /* What opens under a row */
-.wc_payment_method .payment_box.c-cart__payment-methods-box { box-sizing: border-box; margin: 0; padding: 14px; border: 1px solid var(--omc-rose-dark); border-top: 0; background: #fff; color: var(--omc-text); font: 400 13.5px/1.5 var(--omc-sans); letter-spacing: 0; }
+.wc_payment_method .payment_box.c-cart__payment-methods-box { box-sizing: border-box; width: 100%; max-width: 100%; margin: 0; padding: 12px; border-top: 1px solid var(--omc-line); background: none; color: var(--omc-text); font: 400 13px/1.5 var(--omc-sans); letter-spacing: 0; }
 .wc_payment_method .payment_box::before { content: none; display: none; }
-.wc_payment_method .payment_box p:last-child { margin-bottom: 0; }
+.wc_payment_method .payment_box > :first-child { margin-top: 0; }
+.wc_payment_method .payment_box > :last-child { margin-bottom: 0; }
+.wc_payment_method .payment_box fieldset { margin: 0; padding: 0; border: 0; }
 
 /* ─── the wallets ─── */
 .omc-pay-head { display: none; }
 .omc-pay-wallets__row { display: none; }
 .omc-pay-wallets__box > [id$="-separator"], .omc-pay-wallets__box .wc-stripe-express-checkout-button-separator, .omc-pay-wallets__box #wcpay-express-checkout-button-separator { display: none !important; }
-.omc-pay-prompt { display: none; margin: 0 0 12px; padding: 12px 14px; border: 1px dashed var(--omc-line); color: var(--omc-muted); font: 400 13px/1.4 var(--omc-sans); text-align: center; }
+.omc-pay-prompt { display: none; box-sizing: border-box; width: 100%; margin: 30px 0 0; padding: 12px 14px; border: 1px dashed var(--omc-line); color: var(--omc-muted); font: 400 13px/1.4 var(--omc-sans); text-align: center; }
 
 /* Only with the script running: without it, this is WooCommerce's ordinary list, and it works. */
 .omc-pay-ready .omc-pay-head { display: block; margin-bottom: 12px; }
@@ -68,7 +86,12 @@
 .omc-pay-ready .omc-pay-wallets.has-wallets { margin-bottom: 8px; }
 .omc-pay-ready .omc-pay-wallets__box { height: 0; overflow: hidden; visibility: hidden; } /* not display:none: their buttons have to be able to measure themselves */
 .omc-pay-ready .omc-pay-wallets.has-wallets .omc-pay-wallets__row { display: flex; }
-.omc-pay-ready .omc-pay-wallets.is-open .omc-pay-wallets__box { height: auto; padding: 14px; overflow: visible; border: 1px solid var(--omc-rose-dark); border-top: 0; background: #fff; visibility: visible; }
+.omc-pay-ready .omc-pay-wallets.is-open .omc-pay-wallets__box { box-sizing: border-box; height: auto; padding: 12px; overflow: visible; border-top: 1px solid var(--omc-line); visibility: visible; }
+.omc-pay-wallets__box #wc-stripe-express-checkout-element { margin-top: 0 !important; }
+
+/* PayPal's button stands in for ours, at our distance from the terms. On what is inside its wrapper, which PayPal hides
+   and shows, so no gap is left behind when a card is chosen. */
+.ppc-button-wrapper > :first-child { margin-top: 30px; }
 
 /* Nothing chosen yet, or the wallets chosen: no form, no button */
 .omc-pay-none .wc_payment_method .payment_box, .omc-pay-wallet .wc_payment_method .payment_box { display: none !important; }
@@ -76,5 +99,5 @@
 .omc-pay-none .omc-pay-prompt.is-none, .omc-pay-wallet .omc-pay-prompt.is-wallet { display: block; }
 
 @media (prefers-reduced-motion: reduce) {
-	.omc-pay__row, .omc-pay__dot, .omc-pay__dot::after, .omc-pay__mark, .omc-pay__mark svg { transition: none; }
+	.c-cart__payment-methods > li.wc_payment_method, .omc-pay-wallets, .omc-pay__dot, .omc-pay__dot::after, .omc-pay__mark, .omc-pay__mark svg { transition: none; }
 }
