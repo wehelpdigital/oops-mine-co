@@ -62,8 +62,9 @@ final class WHD_Live {
 		add_filter( 'template_include', [ __CLASS__, 'template' ], 99 );
 		add_action( 'wp_enqueue_scripts', [ __CLASS__, 'assets' ], 2000 );
 		add_filter( 'woocommerce_add_to_cart_fragments', [ __CLASS__, 'bag_fragment' ] );
-		add_filter( 'wp_sitemaps_post_types', [ __CLASS__, 'no_sitemap' ] );
-		add_filter( 'wp_robots', [ __CLASS__, 'robots' ] );
+		add_filter( 'wp_robots', [ __CLASS__, 'robots' ], 99 );
+		add_filter( 'robots_txt', [ __CLASS__, 'robots_txt' ], 20 );
+		add_filter( 'request', [ __CLASS__, 'no_listing' ] );
 		add_filter( 'omc_meta_description', [ __CLASS__, 'meta_description' ] );
 		add_action( 'before_delete_post', [ __CLASS__, 'on_delete' ] );
 	}
@@ -246,7 +247,7 @@ final class WHD_Live {
 	}
 
 	/** The key that names this stream's public files; made once. */
-	private static function file_key( $id ): string {
+	public static function file_key( $id ): string {
 		$stream = self::get( $id );
 		if ( '' === (string) $stream['key'] ) {
 			$stream['key'] = wp_generate_password( 14, false );
@@ -531,25 +532,16 @@ final class WHD_Live {
 		return 0;
 	}
 
-	/** The stream on air now, or the next one coming. 0 when there is neither. */
-	public static function current( bool $upcoming = false ): int {
-		$ids  = get_posts( [ 'post_type' => self::CPT, 'post_status' => 'publish', 'posts_per_page' => 30, 'fields' => 'ids', 'orderby' => 'ID', 'order' => 'DESC' ] );
-		$next = 0;
-		$when = PHP_INT_MAX;
+	/** The stream on air now. 0 when there is none. */
+	public static function current(): int {
+		$ids = get_posts( [ 'post_type' => self::CPT, 'post_status' => 'publish', 'posts_per_page' => 30, 'fields' => 'ids', 'orderby' => 'ID', 'order' => 'DESC' ] );
 		foreach ( $ids as $id ) {
 			$stream = self::expire_if_gone( $id );
-			if ( ! self::has_site( $stream ) ) {
-				continue;
-			}
-			if ( 'live' === $stream['stage'] ) {
+			if ( self::has_site( $stream ) && 'live' === $stream['stage'] ) {
 				return (int) $id;
 			}
-			if ( $upcoming && 'scheduled' === $stream['stage'] && (int) $stream['starts_at'] && (int) $stream['starts_at'] < $when ) {
-				$when = (int) $stream['starts_at'];
-				$next = (int) $id;
-			}
 		}
-		return $next;
+		return 0;
 	}
 
 	/* ─────────────────────────── routes and template ─────────────────────────── */
@@ -566,11 +558,10 @@ final class WHD_Live {
 			self::follow_link( $go, (string) ( $wp->query_vars['whd_live_via'] ?? '' ) );
 		}
 
-		/* /live/: one address to give out, wherever the shop's next live happens to be. */
+		/* /live/ names no stream: a stream's link is private, and only the host gives it out. */
 		if ( ! empty( $wp->query_vars['whd_live_hub'] ) ) {
-			$id = self::current( true );
 			nocache_headers();
-			wp_safe_redirect( $id ? self::page_url( $id ) : (string) apply_filters( 'whd_live_hub_fallback', home_url( '/videos/' ) ), 302 );
+			wp_safe_redirect( (string) apply_filters( 'whd_live_hub_fallback', home_url( '/videos/' ) ), 302 );
 			exit;
 		}
 	}
@@ -579,9 +570,11 @@ final class WHD_Live {
 		if ( ! is_singular( self::CPT ) ) {
 			return;
 		}
+		header( 'X-Robots-Tag: noindex, nofollow, noarchive' );
 		$id     = get_queried_object_id();
 		$stream = self::expire_if_gone( $id );
-		if ( ! self::has_site( $stream ) ) {
+		// Only its own address opens it: ?p=<number> would let anybody walk the numbers to find one.
+		if ( ! self::has_site( $stream ) || ! get_query_var( 'name' ) ) {
 			global $wp_query;
 			$wp_query->set_404();
 			status_header( 404 );
@@ -656,7 +649,7 @@ final class WHD_Live {
 			'id'       => $id,
 			'format'   => $stream['format'],
 			'stateUrl' => self::state_url( $id ),
-			'comment'  => esc_url_raw( rest_url( 'whd/v1/live/' . $id . '/comment' ) ),
+			'comment'  => esc_url_raw( add_query_arg( 'k', self::file_key( $id ), rest_url( 'whd/v1/live/' . $id . '/comment' ) ) ),
 			'state'    => self::state_data( $id ),
 			'daily'    => self::DAILY_JS,
 			'addUrl'   => class_exists( 'WC_AJAX' ) ? WC_AJAX::get_endpoint( 'add_to_cart' ) : '',
@@ -676,8 +669,8 @@ final class WHD_Live {
 				'copy'       => __( 'Copy link', 'whd' ),
 				'copied'     => __( 'Copied', 'whd' ),
 				'sendFailed' => __( 'That didn’t send. Try again.', 'whd' ),
-				'needName'   => __( 'Your name and a valid email first.', 'whd' ),
 				'as'         => __( 'Commenting as %s', 'whd' ),
+				'addName'    => __( 'add your name', 'whd' ),
 				'change'     => __( 'change', 'whd' ),
 				'add'        => __( 'Add to bag', 'whd' ),
 				'adding'     => __( 'Adding…', 'whd' ),
@@ -706,18 +699,34 @@ final class WHD_Live {
 		return $fragments;
 	}
 
-	/** Nothing worth finding once it is over, and the short life of a stream does not suit a sitemap. */
-	public static function no_sitemap( $types ) {
-		unset( $types[ self::CPT ] );
-		return $types;
+	/**
+	 * A stream's page is for the people given its link, so search engines stay out at every stage and
+	 * whatever the rest of the site allows. robots.txt asks crawlers not to fetch it; the tag here and
+	 * the header in route() answer any that fetch it anyway.
+	 */
+	public static function robots( $robots ) {
+		return is_singular( self::CPT ) ? [ 'noindex' => true, 'nofollow' => true, 'noarchive' => true ] : $robots;
 	}
 
-	public static function robots( $robots ) {
-		if ( is_singular( self::CPT ) && 'ended' === self::get( get_queried_object_id() )['stage'] ) {
-			$robots['noindex'] = true;
-			$robots['follow']  = true;
+	/** The pages, the short links (a crawler following one would count as a click) and the state files. */
+	public static function robots_txt( $output ) {
+		$rules = [];
+		foreach ( [ home_url( '/live/' ), home_url( '/l/' ), self::dir()[1] ] as $url ) {
+			$rules[] = 'Disallow: ' . wp_parse_url( $url, PHP_URL_PATH );
 		}
-		return $robots;
+		$rules = implode( "\n", $rules );
+		$found = 0;
+		// In the group for everybody, which the theme also copies to the bots with a group of their own.
+		$text = preg_replace( '/^User-agent:\s*\*[ \t]*(?=\r?$)/mi', '$0' . "\n" . $rules, (string) $output, 1, $found );
+		return $found ? $text : "User-agent: *\n" . $rules . "\n\n" . $output;
+	}
+
+	/** WordPress lists any queryable type when asked (?post_type=, and its feed), which would print every private link. */
+	public static function no_listing( $vars ) {
+		if ( in_array( self::CPT, (array) ( $vars['post_type'] ?? [] ), true ) && empty( $vars['name'] ) ) {
+			return [ 'error' => '404' ];
+		}
+		return $vars;
 	}
 
 	public static function meta_description( $description ) {
@@ -793,7 +802,7 @@ final class WHD_Live {
 		if ( ! file_exists( $dir . $name ) ) {
 			self::write_state( $id );
 		}
-		return file_exists( $dir . $name ) ? $url . $name : esc_url_raw( rest_url( 'whd/v1/live/' . (int) $id . '/state' ) );
+		return file_exists( $dir . $name ) ? $url . $name : esc_url_raw( add_query_arg( 'k', self::file_key( $id ), rest_url( 'whd/v1/live/' . (int) $id . '/state' ) ) );
 	}
 
 	private static function remove_files( $id ) {
@@ -847,7 +856,9 @@ final class WHD_Live {
 				'name'          => __( 'Live streams', 'whd' ),
 				'singular_name' => __( 'Live stream', 'whd' ),
 			],
-			'public'              => true,
+			// Not public: left out of sitemaps and of everything that lists a site's public types. Its page still opens.
+			'public'              => false,
+			'publicly_queryable'  => true,
 			'exclude_from_search' => true,
 			'show_ui'             => false,
 			'show_in_nav_menus'   => false,

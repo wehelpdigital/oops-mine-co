@@ -76,6 +76,19 @@ final class WHD_Live_Rest {
 		return WHD_Live::exists( $id ) ? $id : new WP_Error( 'whd_live_none', __( 'That stream does not exist.', 'whd' ), [ 'status' => 404 ] );
 	}
 
+	/**
+	 * The two public routes. Having the link is the only way in, so they want the key its page holds
+	 * and do not answer whoever walks the numbers.
+	 */
+	private static function viewer_stream( WP_REST_Request $r ) {
+		$id = self::stream_id( $r );
+		if ( is_wp_error( $id ) ) {
+			return $id;
+		}
+		$key = $r['k'];
+		return is_string( $key ) && hash_equals( WHD_Live::file_key( $id ), $key ) ? $id : new WP_Error( 'whd_live_none', __( 'That stream does not exist.', 'whd' ), [ 'status' => 404 ] );
+	}
+
 	/** A service's refusal as a 502 with its words, so the studio can show them. */
 	private static function upstream( WP_Error $error ) {
 		return new WP_Error( $error->get_error_code(), $error->get_error_message(), [ 'status' => 502 ] );
@@ -244,7 +257,6 @@ final class WHD_Live_Rest {
 			'stats'  => WHD_Live_Comments::stats( $id ),
 			'peak'   => (int) $rt['peak'],
 			'errors' => array_filter( [ 'facebook' => (string) $pull['fb_error'], 'youtube' => (string) $pull['yt_error'] ] ),
-			'leads'  => $r['leads'] ? WHD_Live_Comments::leads( $id, 200 ) : null,
 		];
 	}
 
@@ -404,7 +416,7 @@ final class WHD_Live_Rest {
 	}
 
 	public static function comment( WP_REST_Request $r ) {
-		$id = self::stream_id( $r );
+		$id = self::viewer_stream( $r );
 		if ( is_wp_error( $id ) ) {
 			return $id;
 		}
@@ -418,12 +430,7 @@ final class WHD_Live_Rest {
 			return new WP_Error( 'whd_live_closed', __( 'Comments open when we go live.', 'whd' ), [ 'status' => 409 ] );
 		}
 
-		$name    = mb_substr( trim( sanitize_text_field( (string) $r['name'] ) ), 0, 60 );
-		$email   = strtolower( sanitize_email( (string) $r['email'] ) );
 		$message = WHD_Live_Comments::clean_text( (string) $r['message'] );
-		if ( '' === $name || ! is_email( $email ) ) {
-			return new WP_Error( 'whd_live_who', __( 'Your name and a valid email first.', 'whd' ), [ 'status' => 400 ] );
-		}
 		if ( '' === $message ) {
 			return new WP_Error( 'whd_live_empty', __( 'Type a comment first.', 'whd' ), [ 'status' => 400 ] );
 		}
@@ -431,31 +438,21 @@ final class WHD_Live_Rest {
 			return new WP_Error( 'whd_live_fast', __( 'One moment, you’re going fast.', 'whd' ), [ 'status' => 429 ] );
 		}
 
+		// Nobody is asked who they are. The browser's own id keeps one person the same guest, and blockable.
+		$typed  = mb_substr( trim( sanitize_text_field( (string) $r['name'] ) ), 0, 60 );
+		$viewer = substr( (string) preg_replace( '/[^a-zA-Z0-9-]/', '', (string) $r['viewer'] ), 0, 64 );
+		$viewer = '' !== $viewer ? $viewer : wp_generate_uuid4();
+		$name   = '' !== $typed ? $typed : WHD_Live_Comments::guest_name( $viewer );
+
 		$row = WHD_Live_Comments::ingest( $id, [
 			'source'      => 'site',
 			'external_id' => wp_generate_uuid4(),
 			'author'      => $name,
-			'author_key'  => 'site:' . md5( $email ),
-			'email'       => $email,
+			'author_key'  => 'site:' . md5( $viewer ),
 			'message'     => mb_substr( $message, 0, 300 ),
 		] );
 		if ( ! $row ) {
 			return new WP_Error( 'whd_live_save', __( 'That didn’t send. Try again.', 'whd' ), [ 'status' => 500 ] );
-		}
-
-		/*
-		 * The address is the shop's to keep in touch about this order at most. Ticking the box is
-		 * what makes it a sign-up (WHD_Subscribers: list and welcome); otherwise it reaches the email
-		 * platform as a profile with no list behind it, like every other address without a tick.
-		 */
-		$lead_event = '';
-		if ( WHD_Live_Comments::first_from( $id, $email, (int) $row['id'] ) || ! empty( $r['optin'] ) ) {
-			if ( ! empty( $r['optin'] ) && class_exists( 'WHD_Subscribers' ) ) {
-				WHD_Subscribers::add( $email, $name, 'live' );
-				$lead_event = class_exists( 'WHD_Capi' ) ? (string) WHD_Capi::lead( $email, 'live', $name ) : '';
-			} else {
-				do_action( 'whd_live_lead', $email, $name, $id, (int) $row['product_id'] );
-			}
 		}
 
 		WHD_Live::write_state( $id );
@@ -469,15 +466,25 @@ final class WHD_Live_Rest {
 
 		return [
 			'ok'      => true,
+			'as'      => $name,
 			'comment' => $row['hidden'] ? null : [ 'i' => (int) $row['id'], 'n' => WHD_Live_Comments::first_name( $name ), 'm' => (string) $row['message'] ],
 			'piece'   => $piece,
-			'reply'   => $piece ? strtr( (string) WHD_Live::settings()['site_text'], [ '{name}' => WHD_Live_Comments::first_name( $name ), '{product}' => $piece['name'] ] ) : '',
-			'lead'    => $lead_event,
+			'reply'   => $piece ? self::site_reply( $typed, $piece['name'] ) : '',
 		];
 	}
 
+	/** The greeting in the side panel. With no name to use, "Here it is, ." would read as a slip. */
+	private static function site_reply( string $typed, string $product ): string {
+		$text = strtr( (string) WHD_Live::settings()['site_text'], [ '{name}' => WHD_Live_Comments::first_name( $typed ), '{product}' => $product ] );
+		if ( '' !== $typed ) {
+			return $text;
+		}
+		$text = (string) preg_replace( [ '/[\s,]+([.!?])/u', '/\s+,/u', '/\s{2,}/u' ], [ '$1', ',', ' ' ], $text );
+		return ucfirst( ltrim( $text, ' ,.!?' ) );
+	}
+
 	public static function public_state( WP_REST_Request $r ) {
-		$id = self::stream_id( $r );
+		$id = self::viewer_stream( $r );
 		return is_wp_error( $id ) ? $id : WHD_Live::state_data( $id );
 	}
 

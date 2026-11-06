@@ -48,6 +48,10 @@
 
 	/* ─────────────────────────── who is commenting ─────────────────────────── */
 
+	/*
+	 * Nobody is asked anything: having the link is the way in. This browser keeps a random id, so one
+	 * person stays the same guest, and a name only if they choose to give one.
+	 */
 	var KEY = 'whd_live_viewer';
 	var viewer = {};
 	try {
@@ -55,41 +59,53 @@
 	} catch ( e ) {
 		viewer = {};
 	}
-
-	function knownViewer() {
-		return viewer.name && viewer.email;
+	if ( ! viewer.id ) {
+		viewer.id = window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : 'v' + Date.now().toString( 36 ) + Math.random().toString( 36 ).slice( 2 );
 	}
 
-	/* On a phone the name and email need the room: everything else in the column steps aside. */
+	function keepViewer() {
+		try {
+			window.localStorage.setItem( KEY, JSON.stringify( { id: viewer.id, name: viewer.name || '', as: viewer.as || '' } ) );
+		} catch ( e ) {}
+	}
+
+	/* On a phone the name field needs the room: everything else in the column steps aside. */
 	function showWho( on ) {
 		byId( 'who' ).hidden = ! on;
 		root.classList.toggle( 'is-asking', on );
 	}
 
+	/* Only once there is something to say: after a first comment, or a name given. */
 	function renderWho() {
 		var as = byId( 'as' );
-		if ( knownViewer() ) {
-			showWho( false );
-			as.hidden = false;
-			as.textContent = '';
-			as.appendChild( document.createTextNode( T.as.replace( '%s', viewer.name ) + ' · ' ) );
-			var change = el( 'button', 'whdl-as__change', T.change );
-			change.type = 'button';
-			change.addEventListener( 'click', function () {
-				byId( 'name' ).value = viewer.name;
-				byId( 'email' ).value = viewer.email;
-				viewer = {};
-				try {
-					window.localStorage.removeItem( KEY );
-				} catch ( e ) {}
-				renderWho();
-				showWho( true );
-				byId( 'name' ).focus();
-			} );
-			as.appendChild( change );
-		} else {
-			as.hidden = true;
+		var shown = viewer.name || viewer.as;
+		as.hidden = ! shown;
+		as.textContent = '';
+		if ( ! shown ) {
+			return;
 		}
+		as.appendChild( document.createTextNode( T.as.replace( '%s', shown ) + ' · ' ) );
+		var change = el( 'button', 'whdl-as__change', viewer.name ? T.change : T.addName );
+		change.type = 'button';
+		change.addEventListener( 'click', function () {
+			byId( 'name' ).value = viewer.name || '';
+			showWho( true );
+			byId( 'name' ).focus();
+		} );
+		as.appendChild( change );
+	}
+
+	/* The name field, if it is open. Left empty, they go back to being a guest. */
+	function takeName() {
+		if ( byId( 'who' ).hidden ) {
+			return;
+		}
+		viewer.name = byId( 'name' ).value.trim();
+		viewer.as = '';
+		keepViewer();
+		showWho( false );
+		renderWho();
+		byId( 'message' ).focus();
 	}
 
 	/* ─────────────────────────── comments ─────────────────────────── */
@@ -138,22 +154,11 @@
 
 	function send( e ) {
 		e.preventDefault();
+		takeName();
 		var input = byId( 'message' );
 		var message = input.value.trim();
 		if ( 'live' !== state.stage || ! message ) {
 			return;
-		}
-		if ( ! knownViewer() ) {
-			var name = byId( 'name' ).value.trim();
-			var email = byId( 'email' ).value.trim();
-			if ( ! name || ! /^\S+@\S+\.\S+$/.test( email ) ) {
-				showWho( true );
-				showError( byId( 'who' ).getAttribute( 'data-asked' ) ? T.needName : '' );
-				byId( 'who' ).setAttribute( 'data-asked', '1' );
-				( name ? byId( 'email' ) : byId( 'name' ) ).focus();
-				return;
-			}
-			viewer = { name: name, email: email };
 		}
 		showError( '' );
 		var button = byId( 'form' ).querySelector( '.whdl-send' );
@@ -164,10 +169,9 @@
 			credentials: 'omit', // nothing about the visitor's session belongs in this request
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify( {
-				name: viewer.name,
-				email: viewer.email,
+				viewer: viewer.id,
+				name: viewer.name || '',
 				message: message,
-				optin: byId( 'optin' ).checked ? 1 : 0,
 				website: byId( 'website' ).value
 			} )
 		} ).then( function ( r ) {
@@ -176,17 +180,11 @@
 			} );
 		} ).then( function ( res ) {
 			if ( ! res.ok ) {
-				if ( 400 === res.status && /email/i.test( res.data.message || '' ) ) {
-					viewer = {};
-					showWho( true );
-				}
 				showError( res.data.message || T.sendFailed );
 				return;
 			}
-			try {
-				window.localStorage.setItem( KEY, JSON.stringify( viewer ) );
-			} catch ( err ) {}
-			byId( 'optin' ).checked = false;
+			viewer.as = res.data.as || viewer.as;
+			keepViewer();
 			input.value = '';
 			renderWho();
 			if ( res.data.comment ) {
@@ -194,9 +192,6 @@
 			}
 			if ( res.data.piece ) {
 				openSheet( res.data.piece, res.data.reply || '', true );
-			}
-			if ( res.data.lead ) {
-				document.dispatchEvent( new CustomEvent( 'whd:subscribed', { detail: { event_id: res.data.lead, source: 'live' } } ) );
 			}
 		} ).catch( function () {
 			showError( T.sendFailed );

@@ -517,7 +517,7 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   (`_whd_live_scene`), including a cover that is on: a reload must not put a covered camera back on air.
   Stream = CPT `whd_live`, meta `_whd_live` (stage, destinations, room, secret stream URLs), page `/live/<slug>/` from
   `templates/live.php` (draws itself; styles and scripts are allow-listed in `WHD_Live::assets()`, popups off). `/live/`
-  redirects to the current or next stream, `/l/<base36 product id>[/<f|y|t|o>]` is the short link: counts a click in
+  names no stream (it goes to `/videos/`), `/l/<base36 product id>[/<f|y|t|o>]` is the short link: counts a click in
   `whd_live_clicks`, redirects with UTMs. Going live is `start` (room, platforms ready, owner token) → browser joins →
   `on-air` (RTMP copy, page opens); both repeatable, and a second `start` reuses the Facebook video and YouTube broadcast.
   Stream keys go to Daily as named `streaming_endpoints` (`whd_facebook`…), so no browser sees one and Daily's events
@@ -541,8 +541,12 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   (4 s) and YouTube (10 s, for the 10,000-a-day quota) and sends after its response, because a stream only exists while
   the studio is open. Facebook: Messenger private reply + a public line, falling back to the link as a comment reply
   (the normal case until `pages_messaging` has Advanced Access). YouTube: live chat, 200 characters, link never cut.
-  TikTok: stream key only, it has no API for comments, so the card always carries the short link. Name + email on the
-  site: the tick goes through `WHD_Subscribers` (source `live`), else `whd_live_lead` → `WHD_Contacts` as a profile.
+  TikTok: stream key only, it has no API for comments, so the card always carries the short link.
+  **Nobody is asked who they are, the owner's rule** (the link is the way in). The page keeps a random id in localStorage
+  (`whd_live_viewer`), which makes `Guest 482` (`WHD_Live_Comments::guest_name()`) the same guest all stream long and is
+  what Block blocks. After a first comment the line under the box offers "add your name", optional, first name shown.
+  With no name, `site_reply()` drops `{name}` and its comma from the greeting. No address is collected, so there is no
+  Leads tab, CSV, list sign-up or `Lead` event any more; tables made before 1.27.0 keep an unused `email` column.
   Each piece has a code (`_whd_live_pieces`: `[ id, code ]`; one code, one piece; none = its number, `piece['say']`). The
   card and the comment box say it: `card_cta` is "Comment {code} for the link", and the card follows the code as it is typed.
   "Pieces you'll show" on the form is search and select (`admin/live-form.js`; `live/products` takes `q`, `cat`, `page`,
@@ -593,8 +597,16 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   only changes if music is already playing. A plain frame in Looks ends the occasion's frame. No year in the words.
   Every stream's link is unique for good: `WHD_Live::new_slug()` puts a random end on the title's slug at creation and an
   edit never changes it, so a deleted stream's address is never reissued. It is shown from the moment of saving (list,
-  form, studio's top bar, preflight), on the waiting page with Copy, on the cover under the words, and is sent in the
-  Facebook and YouTube descriptions (`Channels::description()`).
+  form, studio's top bar, preflight), on the waiting page with Copy and on the cover under the words.
+  **The link is private and crawlers stay out at every stage, the owner's rule**, whatever `blog_public` says:
+  `Disallow` for `/live/`, `/l/` and `uploads/whd-live/` (`WHD_Live::robots_txt()`, in the `*` group, which perf.php copies
+  to its slow-bot group), `X-Robots-Tag` in `route()` and the robots tag in `robots()`. The type is `public => false`,
+  `publicly_queryable => true`: its page opens but it is in no sitemap or public-type list. `no_listing()` 404s
+  `?post_type=whd_live` and its feed (WordPress lists any queryable type when asked), `route()` 404s `?p=<id>`,
+  `/live/` no longer redirects to the stream, and `Channels::description()` leaves the link out, because those are public
+  pages that crawlers read. The two public REST routes (`comment`, `state`) want `k` = `file_key()`, which only the page
+  holds, so they do not answer whoever walks the ids. robots.txt means Google never reads the noindex: a link posted
+  on a public page could list as a bare address, and Meta's link preview may come up empty.
   **Recording** (`WHD_Live_Recordings`, routes `live/<id>/recording…`): straight to the media library. MediaRecorder's
   slices go up one at a time as they are made (2.5 Mbps, about 1.2 GB an hour; `timeslice` 4 s, though the MP4 muxer only
   cuts at a keyframe) and are appended to `uploads/whd-live/rec/<uuid>.part`, a folder closed by `.htaccess`. Numbered, so a

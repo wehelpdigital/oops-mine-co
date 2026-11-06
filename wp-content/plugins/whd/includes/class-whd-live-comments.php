@@ -54,7 +54,6 @@ final class WHD_Live_Comments {
 			external_id varchar(120) NOT NULL DEFAULT '',
 			author varchar(120) NOT NULL DEFAULT '',
 			author_key varchar(64) NOT NULL DEFAULT '',
-			email varchar(190) NOT NULL DEFAULT '',
 			message text NOT NULL,
 			product_id bigint(20) unsigned NOT NULL DEFAULT 0,
 			reply_status varchar(12) NOT NULL DEFAULT 'none',
@@ -170,7 +169,7 @@ final class WHD_Live_Comments {
 	/**
 	 * One comment, once.
 	 *
-	 * @param array $c source, external_id, author, author_key, email, message
+	 * @param array $c source, external_id, author, author_key, message
 	 * @return array|null The row as stored; null when this copy was already known.
 	 */
 	public static function ingest( $stream_id, array $c ) {
@@ -188,13 +187,12 @@ final class WHD_Live_Comments {
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
 		$done = $wpdb->query( $wpdb->prepare(
-			'INSERT IGNORE INTO ' . self::table() . ' (stream_id, source, external_id, author, author_key, email, message, product_id, reply_status, hidden, created_at) VALUES (%d, %s, %s, %s, %s, %s, %s, %d, %s, %d, %s)',
+			'INSERT IGNORE INTO ' . self::table() . ' (stream_id, source, external_id, author, author_key, message, product_id, reply_status, hidden, created_at) VALUES (%d, %s, %s, %s, %s, %s, %d, %s, %d, %s)',
 			(int) $stream_id,
 			$source,
 			mb_substr( (string) ( $c['external_id'] ?? '' ), 0, 120 ),
 			$author,
 			$key,
-			(string) ( $c['email'] ?? '' ),
 			$message,
 			0,
 			'none',
@@ -542,8 +540,18 @@ final class WHD_Live_Comments {
 	}
 
 	public static function first_name( string $author ): string {
-		$first = strtok( trim( $author ), ' ' );
+		$author = trim( $author );
+		if ( preg_match( '/^\S+ \d+$/u', $author ) ) {
+			return $author; // a guest's number is what tells one guest from another
+		}
+		$first = strtok( $author, ' ' );
 		return false === $first ? '' : $first;
+	}
+
+	/** Somebody who has not given a name. The same browser is the same guest all stream long. */
+	public static function guest_name( string $viewer ): string {
+		/* translators: %d: a three-digit number */
+		return sprintf( __( 'Guest %d', 'whd' ), 100 + hexdec( substr( md5( $viewer ), 0, 6 ) ) % 900 );
 	}
 
 	private static function row_for_studio( int $comment_id ) {
@@ -558,7 +566,6 @@ final class WHD_Live_Comments {
 			'id'      => (int) $row->id,
 			'source'  => (string) $row->source,
 			'author'  => (string) $row->author,
-			'email'   => (string) $row->email,
 			'message' => (string) $row->message,
 			'product' => (int) $row->product_id,
 			'status'  => (string) $row->reply_status,
@@ -595,7 +602,6 @@ final class WHD_Live_Comments {
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$row = $wpdb->get_row( $wpdb->prepare(
 			"SELECT COUNT(*) AS comments,
-				COUNT(DISTINCT NULLIF(email, '')) AS leads,
 				SUM(reply_status = 'sent') AS links
 			FROM {$table} WHERE stream_id = %d",
 			(int) $id
@@ -604,51 +610,8 @@ final class WHD_Live_Comments {
 		// phpcs:enable
 		return [
 			'comments' => (int) ( $row->comments ?? 0 ),
-			'leads'    => (int) ( $row->leads ?? 0 ),
 			'links'    => (int) ( $row->links ?? 0 ),
 			'clicks'   => $clicks,
 		];
-	}
-
-	/** The people who left a name and an address on the page, newest first. */
-	public static function leads( $id, int $limit = 500 ): array {
-		global $wpdb;
-		$table = self::table();
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$rows = $wpdb->get_results( $wpdb->prepare(
-			"SELECT email, MAX(author) AS author, COUNT(*) AS comments, MAX(created_at) AS last_at,
-				GROUP_CONCAT(DISTINCT NULLIF(product_id, 0)) AS products
-			FROM {$table}
-			WHERE stream_id = %d AND email <> ''
-			GROUP BY email ORDER BY last_at DESC LIMIT %d",
-			(int) $id,
-			$limit
-		), ARRAY_A );
-		// phpcs:enable
-		$out = [];
-		foreach ( (array) $rows as $row ) {
-			$names = [];
-			foreach ( array_filter( explode( ',', (string) $row['products'] ) ) as $pid ) {
-				$name = get_the_title( (int) $pid );
-				if ( $name ) {
-					$names[] = html_entity_decode( $name, ENT_QUOTES, 'UTF-8' );
-				}
-			}
-			$out[] = [
-				'email'    => (string) $row['email'],
-				'name'     => (string) $row['author'],
-				'comments' => (int) $row['comments'],
-				'pieces'   => $names,
-				'last'     => mysql2date( 'H:i', (string) $row['last_at'] ),
-			];
-		}
-		return $out;
-	}
-
-	/** Is this the first comment from this address on this stream? */
-	public static function first_from( $id, string $email, int $except ): bool {
-		global $wpdb;
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
-		return ! $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM ' . self::table() . ' WHERE stream_id = %d AND email = %s AND id <> %d LIMIT 1', (int) $id, $email, $except ) );
 	}
 }

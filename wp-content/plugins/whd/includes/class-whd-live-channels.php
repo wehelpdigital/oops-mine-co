@@ -291,14 +291,12 @@ final class WHD_Live_Channels {
 		return '' === $key ? $server : rtrim( $server, '/' ) . '/' . ltrim( $key, '/' );
 	}
 
-	/** What a platform shows under the video: the stream's words, and where to shop along. */
+	/**
+	 * What a platform shows under the video: the stream's own words. Not its link: that is private,
+	 * and these are public pages that crawlers read.
+	 */
 	private static function description( $id ): string {
-		$text = trim( (string) get_post_field( 'post_excerpt', $id ) );
-		if ( WHD_Live::has_site( WHD_Live::get( $id ) ) ) {
-			/* translators: %s: this stream's page */
-			$text = trim( $text . "\n\n" . sprintf( __( 'Shop along: %s', 'whd' ), WHD_Live::page_url( $id ) ) );
-		}
-		return $text;
+		return trim( (string) get_post_field( 'post_excerpt', $id ) );
 	}
 
 	/* ─────────────────────────── Facebook ─────────────────────────── */

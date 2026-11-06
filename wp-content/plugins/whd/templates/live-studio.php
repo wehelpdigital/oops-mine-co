@@ -348,21 +348,12 @@ $whd_tabs = [
 		<aside class="whdls-side">
 			<div class="whdls-stats" id="whdls-stats">
 				<div><b id="whdls-s-comments">0</b><span><?php esc_html_e( 'comments', 'whd' ); ?></span></div>
-				<div><b id="whdls-s-leads">0</b><span><?php esc_html_e( 'leads', 'whd' ); ?></span></div>
 				<div><b id="whdls-s-links">0</b><span><?php esc_html_e( 'links sent', 'whd' ); ?></span></div>
 				<div><b id="whdls-s-clicks">0</b><span><?php esc_html_e( 'clicks', 'whd' ); ?></span></div>
 			</div>
-			<div class="whdls-sidetabs" role="tablist">
-				<button type="button" class="is-on" data-side="comments"><?php esc_html_e( 'Comments', 'whd' ); ?></button>
-				<button type="button" data-side="leads"><?php esc_html_e( 'Leads', 'whd' ); ?></button>
-			</div>
-			<div class="whdls-sideview is-on" data-sideview="comments">
+			<div class="whdls-sideview is-on">
 				<div class="whdls-filter" id="whdls-filter"></div>
 				<ol class="whdls-feed" id="whdls-feed"></ol>
-			</div>
-			<div class="whdls-sideview" data-sideview="leads">
-				<ol class="whdls-leads" id="whdls-leads"></ol>
-				<a class="whdls-btn whdls-btn--quiet" id="whdls-leads-csv" href="#"><?php esc_html_e( 'Export CSV', 'whd' ); ?></a>
 			</div>
 		</aside>
 	</div>
@@ -401,7 +392,6 @@ $whd_tabs = [
 		<dl class="whdls-wrapstats" id="whdls-wrapstats"></dl>
 		<p class="whdls-hint" id="whdls-wrap-rec" hidden></p>
 		<div class="whdls-dialog__actions">
-			<a class="whdls-btn whdls-btn--quiet" id="whdls-wrap-csv" href="#"><?php esc_html_e( 'Leads CSV', 'whd' ); ?></a>
 			<a class="whdls-golive" href="<?php echo esc_url( WHD_Live_Admin::url() ); ?>"><?php esc_html_e( 'All streams', 'whd' ); ?></a>
 		</div>
 	</dialog>

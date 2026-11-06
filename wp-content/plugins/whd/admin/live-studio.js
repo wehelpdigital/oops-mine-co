@@ -95,7 +95,6 @@
 		comments: {},
 		after: 0,
 		filter: 'all',
-		side: 'comments',
 		dests: D.dests || {},
 		destState: {},
 		startedAt: D.startedAt || 0,
@@ -3238,14 +3237,12 @@
 		var m = Math.round( ( seconds % 3600 ) / 60 );
 		var time = h ? fmt( T.hours, h, m ) : fmt( T.minutes, m );
 		var stats = res.stats || {};
-		[ [ time, T.wrapTime ], [ res.peak || 0, T.wrapPeak ], [ stats.comments || 0, T.wrapComments ], [ stats.leads || 0, T.wrapLeads ], [ stats.links || 0, T.wrapLinks ], [ stats.clicks || 0, T.wrapClicks ] ].forEach( function ( row ) {
+		[ [ time, T.wrapTime ], [ res.peak || 0, T.wrapPeak ], [ stats.comments || 0, T.wrapComments ], [ stats.links || 0, T.wrapLinks ], [ stats.clicks || 0, T.wrapClicks ] ].forEach( function ( row ) {
 			var cell = el( 'div' );
 			cell.appendChild( el( 'dd', '', String( row[ 0 ] ) ) );
 			cell.appendChild( el( 'dt', '', row[ 1 ] ) );
 			box.appendChild( cell );
 		} );
-		$( 'wrap-csv' ).href = D.leadsCsv;
-		$( 'wrap-csv' ).hidden = ! stats.leads;
 		$( 'wrap' ).showModal();
 	}
 
@@ -3454,34 +3451,13 @@
 		} );
 	}
 
-	function renderLeads( leads ) {
-		var box = $( 'leads' );
-		box.textContent = '';
-		$( 'leads-csv' ).hidden = ! leads.length;
-		if ( ! leads.length ) {
-			box.appendChild( el( 'li', 'whdls-empty', T.noLeads ) );
-			return;
-		}
-		leads.forEach( function ( lead ) {
-			var row = el( 'li', 'whdls-lead' );
-			row.appendChild( el( 'strong', '', lead.name ) );
-			var mail = el( 'a', '', lead.email );
-			mail.href = 'mailto:' + lead.email;
-			row.appendChild( mail );
-			if ( lead.pieces.length ) {
-				row.appendChild( el( 'small', '', lead.pieces.join( ', ' ) ) );
-			}
-			box.appendChild( row );
-		} );
-	}
-
 	/* The heartbeat. On the worker's clock, so a tab in the background keeps answering comments. */
 	function poll() {
 		if ( S.polling ) {
 			return;
 		}
 		S.polling = true;
-		var path = D.id + '/feed?after=' + S.after + '&viewers=' + S.viewers + ( 'leads' === S.side ? '&leads=1' : '' );
+		var path = D.id + '/feed?after=' + S.after + '&viewers=' + S.viewers;
 		api( 'GET', path ).then( function ( res ) {
 			clearBanner( 'signedout' );
 			( res.new || [] ).forEach( function ( c ) {
@@ -3495,7 +3471,6 @@
 			}
 			var stats = res.stats || {};
 			$( 's-comments' ).textContent = stats.comments || 0;
-			$( 's-leads' ).textContent = stats.leads || 0;
 			$( 's-links' ).textContent = stats.links || 0;
 			$( 's-clicks' ).textContent = stats.clicks || 0;
 			Object.keys( res.errors || {} ).forEach( function ( key ) {
@@ -3506,9 +3481,6 @@
 					clearBanner( 'pull-' + key );
 				}
 			} );
-			if ( res.leads ) {
-				renderLeads( res.leads );
-			}
 		} ).catch( function ( err ) {
 			if ( 401 === err.status || 403 === err.status ) {
 				banner( 'signedout', T.signedOut, 'warn' );
@@ -3596,21 +3568,6 @@
 			}
 		} );
 	} );
-	document.querySelectorAll( '.whdls-sidetabs button' ).forEach( function ( btn ) {
-		btn.addEventListener( 'click', function () {
-			S.side = btn.getAttribute( 'data-side' );
-			document.querySelectorAll( '.whdls-sidetabs button' ).forEach( function ( b ) {
-				b.classList.toggle( 'is-on', b === btn );
-			} );
-			document.querySelectorAll( '.whdls-sideview' ).forEach( function ( v ) {
-				v.classList.toggle( 'is-on', v.getAttribute( 'data-sideview' ) === S.side );
-			} );
-			if ( 'leads' === S.side ) {
-				poll();
-			}
-		} );
-	} );
-
 	$( 'transition' ).addEventListener( 'click', function ( e ) {
 		var btn = e.target.closest( 'button' );
 		if ( ! btn ) {
@@ -3702,7 +3659,6 @@
 	renderLayers();
 	renderFilter();
 	wireSound();
-	$( 'leads-csv' ).href = D.leadsCsv;
 	$( 'feed' ).setAttribute( 'data-empty', T.noComments );
 
 	document.querySelectorAll( '#whdls-transition button' ).forEach( function ( b ) {

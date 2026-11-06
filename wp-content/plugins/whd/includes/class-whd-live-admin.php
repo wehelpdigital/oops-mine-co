@@ -24,7 +24,7 @@ final class WHD_Live_Admin {
 		add_action( 'load-admin_page_' . self::STUDIO, function () {
 			$GLOBALS['title'] = __( 'Live studio', 'whd' ); // hidden pages get no <title> from the menu tables
 		} );
-		foreach ( [ 'save', 'delete', 'leads', 'test', 'yt_connect', 'yt_oauth', 'yt_disconnect' ] as $action ) {
+		foreach ( [ 'save', 'delete', 'test', 'yt_connect', 'yt_oauth', 'yt_disconnect' ] as $action ) {
 			add_action( 'admin_post_whd_live_' . $action, [ __CLASS__, 'handle_' . $action ] );
 		}
 	}
@@ -158,7 +158,6 @@ final class WHD_Live_Admin {
 			'brand'     => html_entity_decode( (string) get_bloginfo( 'name' ), ENT_QUOTES, 'UTF-8' ),
 			'listUrl'   => self::url(),
 			'settingsUrl' => self::settings_url(),
-			'leadsCsv'  => wp_nonce_url( admin_url( 'admin-post.php?action=whd_live_leads&id=' . $id ), 'whd_live_leads_' . $id ),
 			'rest'      => [ 'root' => esc_url_raw( rest_url( 'whd/v1/live/' ) ), 'nonce' => wp_create_nonce( 'wp_rest' ) ],
 			'i18n'      => self::studio_words(),
 		] );
@@ -313,7 +312,6 @@ final class WHD_Live_Admin {
 			'useImage'     => __( 'Put it on stage', 'whd' ),
 			'nothingOn'    => __( 'Nothing on stage yet. Add a picture, text or a piece.', 'whd' ),
 			'noComments'   => __( 'Comments show up here as they come in.', 'whd' ),
-			'noLeads'      => __( 'Names and addresses from the page show up here.', 'whd' ),
 			'sendLink'     => __( 'Send link', 'whd' ),
 			'hideComment'  => __( 'Hide', 'whd' ),
 			'block'        => __( 'Block', 'whd' ),
@@ -384,7 +382,6 @@ final class WHD_Live_Admin {
 			'allSources'   => __( 'All', 'whd' ),
 			'wrapPeak'     => __( 'peak on site', 'whd' ),
 			'wrapComments' => __( 'comments', 'whd' ),
-			'wrapLeads'    => __( 'leads', 'whd' ),
 			'wrapLinks'    => __( 'links sent', 'whd' ),
 			'wrapClicks'   => __( 'link clicks', 'whd' ),
 			'wrapTime'     => __( 'on air', 'whd' ),
@@ -501,11 +498,7 @@ final class WHD_Live_Admin {
 		echo '<table class="form-table"><tbody>';
 		echo '<tr><th>' . esc_html__( 'Live page on this site', 'whd' ) . '</th><td>';
 		self::toggle( 'site_on', __( 'Offer this website as a place to stream to', 'whd' ) );
-		echo '<p class="description">' . esc_html( sprintf(
-			/* translators: %s: address */
-			__( 'Each stream gets its own page, and %s always leads to the current one. Anyone can comment after leaving a name and email once. A comment with a piece’s code opens it in a side panel.', 'whd' ),
-			preg_replace( '#^https?://#', '', home_url( '/live/' ) )
-		) ) . '</p></td></tr>';
+		echo '<p class="description">' . esc_html__( 'Each stream gets its own private link. It is not listed anywhere on this site, and search engines are kept out at every stage. Anyone who has the link can watch and comment, with no name or email asked for. A comment with a piece’s code opens it in a side panel.', 'whd' ) . '</p></td></tr>';
 
 		echo '<tr><th><label for="whdla-cta">' . esc_html__( 'Line on the product card', 'whd' ) . '</label></th><td>';
 		self::text_box( 'card_cta', 'whdla-cta' );
@@ -806,7 +799,7 @@ final class WHD_Live_Admin {
 
 			if ( 'scheduled' !== $stream['stage'] ) {
 				echo '<dl class="whdla-stats">';
-				foreach ( [ [ $peak, __( 'peak', 'whd' ) ], [ $stats['comments'], __( 'comments', 'whd' ) ], [ $stats['leads'], __( 'leads', 'whd' ) ], [ $stats['links'], __( 'links', 'whd' ) ], [ $stats['clicks'], __( 'clicks', 'whd' ) ] ] as $stat ) {
+				foreach ( [ [ $peak, __( 'peak', 'whd' ) ], [ $stats['comments'], __( 'comments', 'whd' ) ], [ $stats['links'], __( 'links', 'whd' ) ], [ $stats['clicks'], __( 'clicks', 'whd' ) ] ] as $stat ) {
 					echo '<div><dd>' . esc_html( number_format_i18n( $stat[0] ) ) . '</dd><dt>' . esc_html( $stat[1] ) . '</dt></div>';
 				}
 				echo '</dl>';
@@ -818,9 +811,6 @@ final class WHD_Live_Admin {
 			}
 			if ( 'scheduled' === $stream['stage'] ) {
 				echo '<a class="button" href="' . esc_url( self::url( [ 'view' => 'edit', 'id' => $id ] ) ) . '">' . esc_html__( 'Edit', 'whd' ) . '</a>';
-			}
-			if ( $stats['leads'] ) {
-				echo '<a class="button" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=whd_live_leads&id=' . $id ), 'whd_live_leads_' . $id ) ) . '">' . esc_html__( 'Leads CSV', 'whd' ) . '</a>';
 			}
 			$recordings = WHD_Live_Recordings::of_stream( $id );
 			if ( $recordings ) {
@@ -1014,22 +1004,6 @@ final class WHD_Live_Admin {
 			wp_delete_post( $id, true );
 		}
 		wp_safe_redirect( self::url() );
-		exit;
-	}
-
-	public static function handle_leads() {
-		$id = absint( $_GET['id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- checked next line
-		self::guard( 'whd_live_leads_' . $id );
-		header( 'Content-Type: text/csv; charset=utf-8' );
-		header( 'Content-Disposition: attachment; filename=live-leads-' . $id . '-' . gmdate( 'Y-m-d' ) . '.csv' );
-		$out = fopen( 'php://output', 'w' );
-		fputcsv( $out, [ 'email', 'name', 'comments', 'pieces_asked_about' ] );
-		foreach ( WHD_Live_Comments::leads( $id, 5000 ) as $lead ) {
-			// A name is typed by a stranger and this opens in a spreadsheet: no formulas.
-			$name = preg_match( '/^[=+\-@]/', $lead['name'] ) ? "'" . $lead['name'] : $lead['name'];
-			fputcsv( $out, [ $lead['email'], $name, $lead['comments'], implode( ' | ', $lead['pieces'] ) ] );
-		}
-		fclose( $out ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 		exit;
 	}
 

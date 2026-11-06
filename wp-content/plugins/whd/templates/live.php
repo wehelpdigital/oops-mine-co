@@ -97,14 +97,9 @@ $whd_cart   = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : '';
 			<h2><?php esc_html_e( 'Comments', 'whd' ); ?></h2>
 			<ol class="whdl-messages" id="whdl-messages" aria-live="polite"></ol>
 			<form class="whdl-form" id="whdl-form" novalidate>
+				<?php /* Opened only by "add your name": nobody is asked. */ ?>
 				<div class="whdl-who" id="whdl-who" hidden>
-					<p class="whdl-who__ask"><?php esc_html_e( 'Quick, so we know who’s asking:', 'whd' ); ?></p>
-					<div class="whdl-who__row">
-						<input type="text" id="whdl-name" name="name" maxlength="60" autocomplete="given-name" placeholder="<?php esc_attr_e( 'Your name', 'whd' ); ?>" aria-label="<?php esc_attr_e( 'Your name', 'whd' ); ?>">
-						<input type="email" id="whdl-email" name="email" maxlength="190" autocomplete="email" inputmode="email" placeholder="<?php esc_attr_e( 'Your email', 'whd' ); ?>" aria-label="<?php esc_attr_e( 'Your email', 'whd' ); ?>">
-					</div>
-					<label class="whdl-optin"><input type="checkbox" id="whdl-optin"> <?php esc_html_e( 'Email me new pieces and offers', 'whd' ); ?></label>
-					<p class="whdl-who__note"><?php esc_html_e( 'Your first name shows with your comment. Your email stays with us.', 'whd' ); ?></p>
+					<input type="text" id="whdl-name" name="name" maxlength="60" autocomplete="given-name" placeholder="<?php esc_attr_e( 'Your name', 'whd' ); ?>" aria-label="<?php esc_attr_e( 'Your name', 'whd' ); ?>">
 				</div>
 				<p class="whdl-as" id="whdl-as" hidden></p>
 				<p class="whdl-error" id="whdl-error" role="alert" hidden></p>
