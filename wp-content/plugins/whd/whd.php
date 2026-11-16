@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: WHD — Popups, Emails & Tracking
- * Description: Marketing toolkit for Oops, Mine Co.: exit-intent, welcome and spin-to-win popups with a drag-and-drop editor and cookie-based countdowns, drop reminders, a "just got mine" story card after checkout, a drag-and-drop email builder for every WooCommerce trigger (including abandoned-cart recovery), a newsletter list with phone capture, integrations that push subscribers to Mailchimp, Klaviyo or a webhook and send SMS through Twilio, a tracking-scripts module (GA4, Search Console, Meta Pixel and Conversions API), live selling from the browser to the site, Facebook, YouTube and TikTok (cameras, scenes, effects, music, product cards, and a link for whoever comments), size charts, product stories, and an AI copywriter that writes against your own brief, rules and keyword list.
- * Version:     1.31.0
+ * Description: Marketing toolkit for Oops, Mine Co.: exit-intent, welcome and spin-to-win popups with a drag-and-drop editor and cookie-based countdowns, drop reminders, a "just got mine" story card after checkout, a drag-and-drop email builder for every WooCommerce trigger (including abandoned-cart recovery), a newsletter list with phone capture, integrations that push subscribers to Mailchimp, Klaviyo or a webhook and send SMS through Twilio, a tracking-scripts module (GA4, Search Console, Meta Pixel and Conversions API), live selling from the browser to the site, Facebook, YouTube and TikTok (cameras, scenes, effects, music, product cards, and a link for whoever comments), size charts, product stories, an AI copywriter that writes against your own brief, rules and keyword list, product videos made from your photos by Google's Gemini Omni Flash, and a video editor (text, stickers, effects, free music) that saves new videos and GIFs to the media library.
+ * Version:     1.32.0
  * Author:      WeHelpDigital - John Tugare and Team
  * Text Domain: whd
  * Requires at least: 6.4
@@ -11,7 +11,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'WHD_VERSION', '1.31.0' );
+define( 'WHD_VERSION', '1.32.0' );
 define( 'WHD_FILE', __FILE__ );
 define( 'WHD_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WHD_URL', plugin_dir_url( __FILE__ ) );
@@ -52,6 +52,8 @@ require_once WHD_DIR . 'includes/class-whd-ai-products.php';
 require_once WHD_DIR . 'includes/class-whd-ai-studio.php';
 require_once WHD_DIR . 'includes/class-whd-ai-image-builder.php';
 require_once WHD_DIR . 'includes/class-whd-image-editor.php';
+require_once WHD_DIR . 'includes/class-whd-ai-video.php';
+require_once WHD_DIR . 'includes/class-whd-video-editor.php';
 require_once WHD_DIR . 'includes/class-whd-seo.php';
 require_once WHD_DIR . 'includes/class-whd-product-admin.php';
 require_once WHD_DIR . 'includes/class-whd-admin.php';
@@ -117,8 +119,10 @@ final class WHD_Plugin {
 			WHD_AI_Products::init();
 			WHD_AI_Studio::init();
 			WHD_AI_Image_Builder::init();
+			WHD_AI_Video::init();
 		}
 		WHD_Image_Editor::init();
+		WHD_Video_Editor::init();
 		WHD_SEO::init();
 		if ( class_exists( 'WooCommerce' ) ) {
 			WHD_Product_Admin::init();

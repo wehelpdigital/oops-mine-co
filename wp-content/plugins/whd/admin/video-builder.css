@@ -1,0 +1,429 @@
+/*
+ * Video Builder: Image Builder's screen (image-builder.css — the cards, the drop zone, the summary), with
+ * what a video needs on top: the style cards, the choices, segmented buttons, the length slider, the
+ * shape in the summary, and video tiles.
+ */
+
+.whd-vb {
+	--vb-ink: #3a2b26;
+	--vb-rose: #b98b7e;
+	--vb-rose-deep: #9c6f63;
+	--vb-sand: #f7f2ed;
+	--vb-sand-2: #efe6de;
+	--vb-line: #e2dcd7;
+}
+
+.whd-vb__styles {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+	gap: 8px;
+	margin: 4px 0 16px;
+}
+
+.whd-vb__style {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	align-items: center;
+	padding: 12px 6px 10px;
+	border: 1px solid var(--vb-line);
+	border-radius: 12px;
+	background: #fff;
+	text-align: center;
+	cursor: pointer;
+	transition: border-color .15s, background .15s, transform .15s;
+}
+
+.whd-vb__style:hover {
+	border-color: var(--vb-rose);
+	transform: translateY(-1px);
+}
+
+.whd-vb__style input {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.whd-vb__style.is-on {
+	border-color: var(--vb-rose-deep);
+	background: var(--vb-sand);
+	box-shadow: 0 0 0 2px rgba(156, 111, 99, .25);
+}
+
+.whd-vb__style:focus-within {
+	outline: 2px solid var(--vb-rose-deep);
+	outline-offset: 2px;
+}
+
+.whd-vb__style-i {
+	font-size: 24px;
+	line-height: 1;
+}
+
+.whd-vb__style-l {
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.3;
+	color: var(--vb-ink);
+}
+
+.whd-vb__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+	gap: 12px 16px;
+	margin-bottom: 12px;
+}
+
+.whd-vb__grid[hidden],
+.whd-vb__field[hidden] {
+	display: none;
+}
+
+.whd-vb__field {
+	margin-bottom: 12px;
+}
+
+.whd-vb__label {
+	display: block;
+	margin-bottom: 5px;
+	font-size: 12px;
+	font-weight: 700;
+	color: #3c434a;
+}
+
+.whd-vb__label output {
+	margin-left: 6px;
+	font-weight: 600;
+	color: var(--vb-rose-deep);
+}
+
+.whd-vb__opt {
+	font-weight: 400;
+	color: #8c8f94;
+}
+
+.whd-vb__text,
+.whd-vb__input,
+.whd-vb__select {
+	width: 100%;
+	max-width: none;
+	border-color: var(--vb-line);
+	border-radius: 9px;
+}
+
+.whd-vb__text {
+	padding: 8px 10px;
+	font-size: 14px;
+	line-height: 1.5;
+}
+
+.whd-vb__input,
+.whd-vb__select {
+	min-height: 38px;
+}
+
+.whd-vb__hint {
+	margin: 5px 0 0;
+	font-size: 12px;
+	color: #646970;
+}
+
+.whd-vb__range {
+	width: 100%;
+	accent-color: var(--vb-rose-deep);
+}
+
+.whd-vb__check {
+	display: flex;
+	align-items: flex-end;
+}
+
+.whd-vb__check label {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	font-size: 13px;
+}
+
+/* Segmented buttons: orientation, kind, versions. */
+.whd-vb__seg {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	padding: 3px;
+	border-radius: 11px;
+	background: var(--vb-sand);
+}
+
+.whd-vb__seg--wide {
+	display: flex;
+}
+
+.whd-vb__seg-b {
+	display: inline-flex;
+	flex: 1;
+	gap: 7px;
+	align-items: center;
+	justify-content: center;
+	min-height: 34px;
+	padding: 0 14px;
+	border: 0;
+	border-radius: 9px;
+	background: transparent;
+	color: #50575e;
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.whd-vb__seg-b:hover {
+	color: var(--vb-ink);
+}
+
+.whd-vb__seg-b.is-on {
+	background: #fff;
+	color: var(--vb-ink);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, .1);
+}
+
+.whd-vb__seg-b:focus-visible {
+	outline: 2px solid var(--vb-rose-deep);
+	outline-offset: 1px;
+}
+
+.whd-vb__o {
+	display: inline-block;
+	border: 1.5px solid currentColor;
+	border-radius: 2px;
+}
+
+.whd-vb__o--p {
+	width: 9px;
+	height: 15px;
+}
+
+.whd-vb__o--l {
+	width: 15px;
+	height: 9px;
+}
+
+/* The summary's shape. */
+.whd-vb__shape {
+	display: grid;
+	place-items: center;
+	height: 96px;
+	margin: 6px 0 10px;
+}
+
+.whd-vb__shape span {
+	display: grid;
+	place-items: center;
+	max-width: 100%;
+	max-height: 96px;
+	height: 96px;
+	border: 1.5px dashed var(--vb-rose);
+	border-radius: 6px;
+	background: var(--vb-sand);
+	font-size: 10px;
+	font-weight: 600;
+	color: var(--vb-rose-deep);
+}
+
+.whd-vb__model {
+	margin: 10px 0 0;
+	font-size: 11px;
+	line-height: 1.5;
+	color: #8c8f94;
+}
+
+/* The videos. */
+.whd-vb__tiles {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 16px;
+	align-items: start;
+}
+
+.whd-vb__tile {
+	overflow: hidden;
+	border: 1px solid var(--vb-line);
+	border-radius: 14px;
+	background: #fff;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+}
+
+.whd-vb__tile.is-fresh {
+	border-color: var(--vb-rose);
+	box-shadow: 0 0 0 3px rgba(185, 139, 126, .2);
+}
+
+.whd-vb__tile-media {
+	position: relative;
+	max-height: 420px;
+	overflow: hidden;
+	background: #1c1a1b;
+}
+
+.whd-vb__tile-media video,
+.whd-vb__tile-media img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.whd-vb__badge {
+	position: absolute;
+	top: 8px;
+	left: 8px;
+	padding: 2px 8px;
+	border-radius: 99px;
+	background: rgba(255, 255, 255, .92);
+	font-size: 11px;
+	font-weight: 700;
+	color: var(--vb-ink);
+}
+
+.whd-vb__tile-body {
+	padding: 10px 12px 12px;
+}
+
+.whd-vb__tile-t {
+	margin: 0 0 2px;
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1.35;
+	color: var(--vb-ink);
+}
+
+.whd-vb__tile-m {
+	margin: 0 0 8px;
+	font-size: 11px;
+	color: #646970;
+}
+
+.whd-vb__brief {
+	margin: 0 0 8px;
+	font-size: 12px;
+}
+
+.whd-vb__brief summary {
+	cursor: pointer;
+	color: var(--vb-rose-deep);
+}
+
+.whd-vb__brief pre {
+	max-height: 220px;
+	margin: 6px 0 0;
+	padding: 8px;
+	overflow: auto;
+	border-radius: 8px;
+	background: var(--vb-sand);
+	font-size: 11px;
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+/* Edit on a row of its own, the small actions sharing the row under it — never a ragged wrap. */
+.whd-vb__tile-acts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.whd-vb__tile-acts .button {
+	display: inline-flex;
+	flex: 1 1 0;
+	gap: 4px;
+	align-items: center;
+	justify-content: center;
+	min-width: 0;
+	min-height: 32px;
+	padding: 0 6px;
+	border-color: var(--vb-line);
+	border-radius: 8px;
+	background: #fff;
+	color: var(--vb-ink);
+}
+
+.whd-vb__tile-acts .button:hover,
+.whd-vb__tile-acts .button:focus {
+	border-color: var(--vb-rose);
+	background: var(--vb-sand);
+	color: var(--vb-ink);
+}
+
+.whd-vb__tile-acts [data-a="edit"] {
+	flex-basis: 100%;
+	border-color: var(--vb-ink);
+	background: var(--vb-ink);
+	color: #fff;
+}
+
+.whd-vb__tile-acts [data-a="edit"]:hover,
+.whd-vb__tile-acts [data-a="edit"]:focus {
+	border-color: var(--vb-rose-deep);
+	background: var(--vb-rose-deep);
+	color: #fff;
+}
+
+.whd-vb__tile-acts .button:focus-visible {
+	outline: 2px solid var(--vb-rose-deep);
+	outline-offset: 1px;
+	box-shadow: none;
+}
+
+.whd-vb__tile-acts .button svg {
+	vertical-align: middle;
+}
+
+.whd-vb__del {
+	color: #b32d2e !important;
+}
+
+.whd-vb__note {
+	margin: 6px 0 0;
+	padding: 8px 12px;
+	border-left: 3px solid var(--vb-rose);
+	background: var(--vb-sand);
+	font-size: 13px;
+}
+
+.whd-vb__edit {
+	margin-top: 28px;
+}
+
+/* The brief, shown for checking before filming. */
+.whd-vb__review {
+	width: min(760px, 94vw);
+	padding: 22px 24px;
+	border: 0;
+	border-radius: 14px;
+	box-shadow: 0 30px 80px rgba(0, 0, 0, .35);
+}
+
+.whd-vb__review::backdrop {
+	background: rgba(28, 20, 18, .55);
+}
+
+.whd-vb__review h2 {
+	margin: 0 0 6px;
+}
+
+.whd-vb__review textarea {
+	width: 100%;
+	font-family: Menlo, Consolas, monospace;
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+.whd-vb__review-btns {
+	text-align: right;
+}
+
+.whd-vb__stop {
+	margin: 14px 0 0;
+	text-align: center;
+}

@@ -273,6 +273,10 @@ final class WHD_AI_Admin {
 		echo '<textarea class="large-text" rows="3" id="whd-ai-image-brief" name="' . esc_attr( self::field( 'image_brief' ) ) . '" placeholder="' . esc_attr( WHD_AI_Images::look() ) . '">' . esc_textarea( (string) ( $o['image_brief'] ?? '' ) ) . '</textarea>';
 		echo '<p class="description">' . esc_html__( 'One or two lines describing the light, the colours and the kind of room your product pictures are shot in. Every drawn picture is told to match it. Leave blank for the description shown here.', 'whd' ) . '</p></td></tr>';
 
+		if ( class_exists( 'WHD_AI_Video' ) ) {
+			self::video_rows( $o );
+		}
+
 		echo '<tr><th><label for="whd-ai-tokens">' . esc_html__( 'Longest reply', 'whd' ) . '</label></th><td>';
 		echo '<input type="number" class="small-text" id="whd-ai-tokens" min="200" max="8000" step="100" name="' . esc_attr( self::field( 'max_tokens' ) ) . '" value="' . esc_attr( $o['max_tokens'] ) . '"> ' . esc_html__( 'tokens', 'whd' );
 		echo '<p class="description">' . esc_html__( 'Roughly three quarters of a word each. 1,600 is enough for a full product story.', 'whd' ) . '</p></td></tr>';
@@ -369,6 +373,62 @@ final class WHD_AI_Admin {
 	 * $provider empty means the row is not tied to a model provider and is always shown.
 	 */
 	/** Rows that only make sense for some reCAPTCHA kinds start out of sight for the others. */
+	/**
+	 * The Video Builder's settings: Google's Gemini Omni Flash, through the Google key above. Selects only,
+	 * so carry_over() can keep them on the other tabs without a checkbox losing its value.
+	 */
+	private static function video_rows( array $o ) {
+		echo '<tr><th colspan="2"><h3 class="whd-h3" id="whd-ai-videos">' . esc_html__( 'Videos (Video Builder)', 'whd' ) . '</h3>'
+			. '<p class="description" style="font-weight:400">' . esc_html__( 'Product videos are made by Google’s Gemini Omni Flash with the Google key above (paid tier only). These are the starting values; each video can change them on the Video Builder screen.', 'whd' ) . '</p></th></tr>';
+
+		echo '<tr><th><label for="whd-ai-video-model">' . esc_html__( 'Model for videos', 'whd' ) . '</label></th><td>';
+		echo '<select id="whd-ai-video-model" name="' . esc_attr( self::field( 'video_model' ) ) . '">';
+		foreach ( WHD_AI_Video::models() as $id => $label ) {
+			printf( '<option value="%s"%s>%s</option>', esc_attr( $id ), selected( $id, WHD_AI_Video::model(), false ), esc_html( $label ) );
+		}
+		echo '</select></td></tr>';
+
+		echo '<tr><th><label for="whd-ai-video-resolution">' . esc_html__( 'Quality', 'whd' ) . '</label></th><td>';
+		echo '<select id="whd-ai-video-resolution" name="' . esc_attr( self::field( 'video_resolution' ) ) . '">';
+		foreach ( WHD_AI_Video::resolutions() as $id => $r ) {
+			printf(
+				'<option value="%s"%s>%s</option>',
+				esc_attr( $id ),
+				selected( $id, WHD_AI_Video::resolution(), false ),
+				esc_html( sprintf( /* translators: 1: the label, 2: dollars per second */ __( '%1$s — about $%2$s a second', 'whd' ), $r['label'], number_format( $r['rate'], 3 ) ) )
+			);
+		}
+		echo '</select><p class="description">' . esc_html__( 'Google’s published prices on the paid tier: a 10-second 720p video is about $0.70. The Video Builder shows the estimate before anything is made.', 'whd' ) . '</p></td></tr>';
+
+		echo '<tr><th><label for="whd-ai-video-seconds">' . esc_html__( 'Length', 'whd' ) . '</label></th><td>';
+		echo '<select id="whd-ai-video-seconds" name="' . esc_attr( self::field( 'video_seconds' ) ) . '">';
+		foreach ( [ 4, 6, 8, 10, 12, 15, 20, 30 ] as $s ) {
+			printf( '<option value="%d"%s>%s</option>', (int) $s, selected( $s, WHD_AI_Video::default_seconds(), false ), esc_html( sprintf( /* translators: %d: seconds */ _n( '%d second', '%d seconds', $s, 'whd' ), $s ) ) );
+		}
+		echo '</select><p class="description">' . esc_html__( 'Up to 15 seconds is made in one go; longer videos (up to 30) are made in parts that continue each other.', 'whd' ) . '</p></td></tr>';
+
+		echo '<tr><th><label for="whd-ai-video-sound">' . esc_html__( 'Sound', 'whd' ) . '</label></th><td>';
+		echo '<select id="whd-ai-video-sound" name="' . esc_attr( self::field( 'video_sound' ) ) . '">';
+		foreach ( WHD_AI_Video::options()['sounds'] as $id => $s ) {
+			printf( '<option value="%s"%s>%s</option>', esc_attr( $id ), selected( $id, (string) ( $o['video_sound'] ?? 'music_upbeat' ), false ), esc_html( $s['label'] ) );
+		}
+		echo '</select></td></tr>';
+
+		echo '<tr><th><label for="whd-ai-video-brief">' . esc_html__( 'How your videos look', 'whd' ) . '</label></th><td>';
+		echo '<textarea class="large-text" rows="3" id="whd-ai-video-brief" name="' . esc_attr( self::field( 'video_brief' ) ) . '" placeholder="' . esc_attr( WHD_AI_Video::house_look() ) . '">' . esc_textarea( (string) ( $o['video_brief'] ?? '' ) ) . '</textarea>';
+		echo '<p class="description">' . esc_html__( 'The look every video is told to have. Leave blank for the description shown here.', 'whd' ) . '</p></td></tr>';
+
+		echo '<tr><th><label for="whd-ai-video-background">' . esc_html__( 'Waiting for Google', 'whd' ) . '</label></th><td>';
+		echo '<select id="whd-ai-video-background" name="' . esc_attr( self::field( 'video_background' ) ) . '">';
+		foreach ( [
+			'auto' => __( 'Google’s background mode where it is offered (recommended)', 'whd' ),
+			'off'  => __( 'Always wait on this server instead', 'whd' ),
+		] as $id => $label ) {
+			printf( '<option value="%s"%s>%s</option>', esc_attr( $id ), selected( $id, (string) ( $o['video_background'] ?? 'auto' ), false ), esc_html( $label ) );
+		}
+		echo '</select><p class="description">' . esc_html__( 'A video takes a minute or more. In background mode Google makes it while the screen checks every few seconds; if Google declines that for the model, this server waits for it instead, after the page has had its answer. Saving this setting asks Google afresh.', 'whd' ) . '</p></td></tr>';
+	}
+
 	private static function captcha_hidden( $kinds ) {
 		return in_array( WHD_AI::recaptcha_version(), explode( ' ', $kinds ), true ) ? '' : ' hidden';
 	}

@@ -58,6 +58,13 @@ final class WHD_AI {
 			// 1K, 2K or 4K. 1K is what the model gives unasked, and is plenty for a product card.
 			'image_size'      => '1K',
 			'image_brief'     => '',
+			// Videos: Google's Gemini Omni Flash, through the same key (WHD_AI_Video).
+			'video_model'      => '',
+			'video_resolution' => '720p',
+			'video_seconds'    => 8,
+			'video_sound'      => 'music_upbeat',
+			'video_brief'      => '',
+			'video_background' => 'auto',
 			'max_tokens'      => 1600,
 			'temperature'     => 0.7,
 			'brief'           => '',
@@ -417,6 +424,9 @@ final class WHD_AI {
 		$image_size          = strtoupper( sanitize_text_field( $input['image_size'] ?? '' ) );
 		$out['image_size']   = in_array( $image_size, [ '1K', '2K', '4K' ], true ) ? $image_size : '1K';
 		$out['image_brief']  = sanitize_textarea_field( $input['image_brief'] ?? '' );
+		if ( class_exists( 'WHD_AI_Video' ) ) {
+			$out = WHD_AI_Video::sanitize_settings( $input, $out );
+		}
 
 		$version                  = sanitize_key( $input['recaptcha_version'] ?? 'v2' );
 		$out['recaptcha_version'] = isset( self::recaptcha_versions()[ $version ] ) ? $version : 'v2';

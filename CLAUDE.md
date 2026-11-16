@@ -323,9 +323,10 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   an open, empty level that offers the value (skipping `whdv-locked` rows, so the colour still comes first, and swatches
   marked unavailable), once — a shopper who clears it is left alone. Client-side on purpose, so a cached page never
   carries one visitor’s size to another.
-- **AI Writer** is one top-level menu with six screens: AI Posts (`whd-ai-posts`, also the parent slug), AI Pages
+- **AI Writer** is one top-level menu with eight screens: AI Posts (`whd-ai-posts`, also the parent slug), AI Pages
   (`whd-ai-pages`), **Product Builder** (`whd-ai-product-builder`) and **Bulk products** (`whd-ai-products`, both
-  `WHD_AI_Products`), **Image Builder** (all three WooCommerce only) and **Image Editor**. Admin assets key off
+  `WHD_AI_Products`), **Image Builder** (all three WooCommerce only), **Image Editor**, **Video Builder**
+  (WooCommerce only) and **Video Editor**. Admin assets key off
   `$_GET['page']`, never the hook name — the hook carries where an item sits in the menu, so matching on it breaks the
   moment a screen moves under a parent.
 - Bulk products: **one card per piece, each one the product screen’s Write with AI panel** — photographs, the eight
@@ -465,6 +466,64 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   lives **under Image Builder's results**: `WHD_Image_Editor::enqueue( [], true )` loads it lazily there and
   `admin/image-builder-edit.js` opens a tile's pencil, or "Edit these images", in it through
   `WHDImageEditorScreen.open( ids )` (`image-editor-screen.js`) instead of a new tab.
+- **Video Builder** (`WHD_AI_Video`, `includes/class-whd-ai-video.php`, `admin/video-builder.js` + `.css` on top of
+  image-builder.css; AI Writer → Video Builder, page `whd-ai-video-builder`, `upload_files` + `edit_posts`; settings in
+  WHD → AI content → Settings → "Videos": model, quality, default length, sound, a house look for every brief, background
+  mode). Product photos (up to 6, upload / library / drop) + a style card (13), who/camera/where/mood/pace/sound,
+  the shop's own idea, words on screen and details; orientation + format (reel 9:16, feed, square, landscape, banner),
+  purpose, quality with its $/s, 3–30 s, Video / GIF / Boomerang / Seamless loop, 1–3 versions, and "let me check the
+  brief" (an editable dialog before anything is spent). The chain: the studio's own `look` and `inspect` (zoomed crops
+  from the originals — the same steps as Write with AI, run with post 0 as background jobs, cached per photo set), then
+  `prompt()` writes the brief from `WHD_AI_Studio::spec()` (the inspected counts win), `WHD_AI_Images::people()` /
+  `age_rule()`, the choices and timecoded beats. **Veo is gone from the Gemini API (shut down 2026-10-22); videos are
+  made by Gemini Omni Flash (`gemini-omni-1.2-flash`) through the Interactions API**: `POST v1beta/interactions` with
+  `Api-Revision: 2026-05-20`, the key only in `x-goog-api-key`, image parts (≤6) + the brief, `response_format`
+  `{type: video, aspect_ratio 9:16|16:9, resolution 360p|720p|1080p|4k, duration 'Ns', delivery uri}`, poll
+  `GET interactions/{id}`, cancel `POST …/cancel`; output in `steps[model_output].content[video]` as `data` (base64) or
+  a Files API `uri` (`GET files/{id}` until ACTIVE, then `:download?alt=media`). One turn is 3–15 s; longer videos
+  chain extensions with `previous_interaction_id` (`turns()`: 16 → 6+10, 22 → 12+10, 30 → 10+10+10; the JS mirrors
+  it). Paid tier only, about $0.023/s at 360p, $0.07 720p, $0.104 1080p, $0.209 4K; Tier 1 is 8 a minute, 40 a day.
+  **Whether Omni takes `background: true` was never confirmed** (no real call has been made — they cost money): the
+  run asks with it and, when Google refuses (400/404/501 naming "background"), remembers that in `whd_vb_background`
+  = `no` and does the waiting itself in `WHD_Plugin::after_response()` (`run_locally()`); "auto" in the settings forgets
+  it. Status checks are throttled (`POLL_GAP` 8 s, claimed so two tabs do not both fetch). Replies are streamed to a
+  temp file and read by `read_reply()`, which swaps any string over 64 KB for its file offsets and decodes the base64
+  in pieces, so a video never sits in PHP memory. Every video is saved the moment it exists (`store()`: attachment
+  with `_whd_vb`, `_whd_vb_prompt`, `_whd_vb_choices`, `_whd_vb_interaction`, `_whd_vb_kind` raw|gif|boomerang|edit);
+  the browser then draws its cover (route `ai/video/cover`, `WHD_Video_Editor::poster()`; the host has no ffmpeg),
+  makes the GIF or boomerang from it (video-engine.js) and saves that too, and opens the result in the Video Editor
+  under the results (parts of a long video go in one after another when Google returned them separately). Stop works
+  at every stage, also before a run has an id. Tiles (the last 12, `recent()`, covers excluded by mime): edit,
+  download, library, make GIF, make boomerang, delete (own videos only; its cover goes too).
+- **Video Editor** (`WHD_Video_Editor`, `includes/class-whd-video-editor.php`, `admin/video-presets.js` (data),
+  `video-engine.js` (`window.WHDVideo`: project model, `Renderer`, `Player`, export), `video-editor.js`
+  (`window.WHDVideoEditor.open( el, { clips, size, made, exportAs, onSaved } )`), `video-editor-screen.js` (boot),
+  `video-editor.css`; AI Writer → Video Editor, page `whd-video-editor`, `upload_files`; `?ids=1,2` opens clips, and the
+  media library has "Edit in Video Editor" on videos and GIFs). Standalone, and embedded under the Video Builder's
+  results (`enqueue( [], true )`). Clips (library or a computer upload) on a timeline with trim, split, speed, reverse,
+  fit (cover / contain / blurred fill), zoom and motion, transitions, 15 filters; text in 11 styles with 15 entrances,
+  11 exits and 11 loops (20 presets, `{price}`); stickers (the live studio's `assets/live-stickers/`, 64 emoji, the
+  logo) with the same motion; 20 effects (confetti, sparkle, hearts, snow, glitch, shake, flash, vignette…); music and
+  sound effects from the bundled CC0 library (`assets/live-sounds/sounds.json`: music, occasions, effects, reveal), the
+  shop's own audio, or **Openverse search** (`api.openverse.org/v1/audio/`, `license=cc0,pdm` only — its `category`
+  filter returns nothing, so `length` stands in: shortest for effects, short/medium for music; anonymous limit 20 a
+  minute, 200 a day; results cached 12 h; "Add" re-reads the record server side, re-checks the licence, downloads with
+  `wp_safe_remote_get` and imports it as an attachment with `_whd_sound` (source, licence, creator, link) — a second
+  add returns the same attachment, `_whd_sound_id`). Drag / size / rotate on the preview, undo (80), keyboard, a
+  draft kept in localStorage (`whd-ve-draft`). The preview and the export are the **same `Renderer`**, and every
+  animation is a function of time (seeded randomness), so what is seen is what is saved. Export: **Mediabunny 1.66.0**
+  (MPL-2.0, vendored unmodified as `admin/vendor/mediabunny.min.js` — `.mjs` is served with the wrong type by some
+  hosts — loaded with `import()`) encodes H.264/AAC MP4 (WebM fallback) frame by frame through WebCodecs, audio mixed in
+  an `OfflineAudioContext`; GIF through **gifenc 1.0.3** (MIT, `admin/vendor/gifenc.esm.js`). Saving uploads in 3 MB
+  pieces (`video-editor/upload/start|chunk|finish`, parts in `uploads/whd-video-parts/` behind `.htaccess`, type sniffed
+  from the bytes, 512 MB cap) into a **new** attachment that keeps the edit (`_whd_video_design`, `_whd_video_source`)
+  plus a cover; reopening it restores the edit (a boomerang opens as its forward/back clips of the raw video).
+  **WebCodecs exists only in a secure context**: fine on live (https), but at `http://oopsmine.test` saving says so —
+  tests launch Chrome with `--unsafely-treat-insecure-origin-as-secure=http://oopsmine.test`. Testing (session
+  scratchpad): a mu-plugin answers `generativelanguage.googleapis.com` (`pre_http_request`; a 6 s portrait clip as
+  Omni's video, an option to refuse background mode) and blocks every other host except Openverse when a test asks;
+  `vtest-php.php` (server: reader, turns, runs, extensions, fallback, cancel), `vtest-editor.mjs` and
+  `vtest-builder.mjs` (real Chrome). Deleting the temporary admin deletes everything it made.
 - **Who appears in drawn pictures** is one list, `WHD_AI_Images::people()` (filter `whd_ai_image_people`): young
   women with a stated age (23–30) and background — Korean, Thai, Japanese, Chinese, Filipina, alternating with
   white — plus `age_rule()` (22–32) in every brief. Product sets offset the list by product id; journal, page and
