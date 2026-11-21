@@ -227,8 +227,13 @@ Content is data, not markup, and is not in the database until the publish script
   policy/sizeguide → page-policy. `mobile-terms.json` is the SMS program's terms (Klaviyo's template and toll-free
   verification list: operator Oops Mine Co. LLC, message types, recurring/automated/autodialer, not a condition of
   purchase, "Message frequency varies. Message and data rates may apply.", STOP/HELP, carriers not liable, privacy
-  link); `privacy-policy.json` has the SMS sharing sentences Klaviyo asks for ("Text messages and your mobile number").
-  When Klaviyo issues the sending number, add it to the STOP/HELP lines.
+  link); `privacy-policy.json` has "Text messages and your mobile number", written to Klaviyo's in-app "Requirements
+  for privacy policy" panel (Settings → Text message, the set-up step "Add your privacy policy" before the toll-free
+  number goes for verification): what is collected for texts and how it is used, plus its suggested sentence word for
+  word — "We will not share your mobile information or opt-in consent with third parties or affiliates for marketing
+  or promotional purposes. All other categories, such as text messaging originator opt-in data and consent, will not
+  be shared with third parties." (also on the Mobile Terms page). Never add wording that lets SMS consent go to
+  vendors: it contradicts that line. When Klaviyo issues the sending number, add it to the STOP/HELP lines.
 - `videos/<slug>.json` — the same idea for the video pages, imported by `.ftp-sync/import-videos.php`.
 
 `publish-site.php` writes each document to `_omc_landing` (JSON) plus `_omc_meta_description` / `_omc_seo_title`, and
