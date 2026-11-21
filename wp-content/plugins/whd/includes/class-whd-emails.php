@@ -40,6 +40,10 @@ final class WHD_Emails {
 			'stylist_edit'              => [ 'label' => __( 'Stylist — the edit someone was picked', 'whd' ), 'group' => 'automation', 'template' => '' ],
 			'wheel_prize'               => [ 'label' => __( 'Spin to win — the prize code', 'whd' ), 'group' => 'automation', 'template' => '' ],
 			'drop_open'                 => [ 'label' => __( 'Drop reminder — it is open', 'whd' ), 'group' => 'automation', 'template' => '' ],
+			// Sent by Klaviyo, not by this site: WHD_Live_Reminders renders them and schedules each as a campaign.
+			'live_heads_up'             => [ 'label' => __( 'Live reminder — heads-up', 'whd' ), 'group' => 'live', 'template' => '' ],
+			'live_last_call'            => [ 'label' => __( 'Live reminder — last call', 'whd' ), 'group' => 'live', 'template' => '' ],
+			'live_now'                  => [ 'label' => __( 'Live reminder — we’re live', 'whd' ), 'group' => 'live', 'template' => '' ],
 			'new_order'                 => [ 'label' => __( 'New order (to admin)', 'whd' ), 'group' => 'admin', 'template' => 'emails/admin-new-order.php' ],
 			'cancelled_order'           => [ 'label' => __( 'Cancelled order (to admin)', 'whd' ), 'group' => 'admin', 'template' => 'emails/admin-cancelled-order.php' ],
 			'failed_order'              => [ 'label' => __( 'Failed order (to admin)', 'whd' ), 'group' => 'admin', 'template' => 'emails/admin-failed-order.php' ],
@@ -294,6 +298,9 @@ final class WHD_Emails {
 			'back_in_stock'             => [ '{product_name} is back — the size you wanted', [ $brand, $heading( 'It came back, {first_name}.' ), $text( 'You asked to hear when <strong>{product_name}</strong> returned in <strong>{variation}</strong>. It has, and these go out in small runs — so this is worth opening now rather than later.' ), $button( 'Take another look', '{product_url}' ), $text( 'If you have already found something else, <a href="{cancel_url}">let us know</a> and we will stop watching this one for you.' ), $signoff ] ],
 			'wheel_prize'               => [ 'It landed on {prize_label} — your code is inside', [ $brand, $heading( 'It landed on {prize_label}, {first_name}.' ), $text( 'Here is the code the wheel stopped on. It is yours: use it at checkout. We only ever send it here, never on the screen, so nobody else can copy it.' ), $b( 'coupon', [ 'code' => '{prize_code}', 'note' => '{prize_label} — use at checkout', 'color' => '#b98b7e' ] ), $button( 'Start shopping', '{shop_url}' ), $signoff ] ],
 			'drop_open'                 => [ 'It’s open: {drop_title}', [ $brand, $heading( 'It’s open, {first_name}.' ), $text( 'You asked us to tell you the moment <strong>{drop_title}</strong> went live. It just has — and the runs are small, so this one is worth opening now rather than later.' ), $b( 'image', [ 'url' => '{drop_image}', 'alt' => '{drop_title}', 'width' => 100, 'align' => 'center', 'link' => '{drop_url}' ] ), $button( 'Shop the drop', '{drop_url}' ), $signoff ] ],
+			'live_heads_up'             => [ 'We go live {live_starts_in}, {first_name}', [ $brand, $heading( 'We go live {live_starts_in}.' ), $text( 'Join us on <strong>{live_when}</strong> for <strong>{live_title}</strong>. We show the new pieces one by one, answer your questions as they come in, and you can claim what you love while we are on.' ), $button( 'Where to watch', '{live_url}' ), $note( 'Small runs, so the first look is the best one.' ), $signoff ] ],
+			'live_last_call'            => [ 'Starting {live_starts_in}: {live_title}', [ $brand, $heading( 'Grab a seat, {first_name}.' ), $text( 'We go live at <strong>{live_time}</strong> — {live_starts_in}. Come a few minutes early and you will see every piece from the start.' ), $button( 'Join the live', '{live_url}' ), $signoff ] ],
+			'live_now'                  => [ 'We’re live now: {live_title}', [ $brand, $heading( 'We’re live, {first_name}.' ), $text( 'We have just started <strong>{live_title}</strong>. Come on in, say hello in the comments, and ask about anything you see.' ), $button( 'Watch now', '{live_url}' ), $signoff ] ],
 			'welcome_subscriber'        => [ 'Your code is inside', [ $brand, $heading( 'Found with intention. Claimed on instinct.' ), $text( 'Thanks for joining the list, {first_name}. Here is the code we promised — expect new arrivals, quiet restocks and the occasional note, never noise.' ), $b( 'coupon', [ 'code' => '{welcome_coupon}', 'note' => '{welcome_discount} off your first order', 'color' => '#b98b7e' ] ), $button( 'Shop new arrivals', '{shop_url}' ), $signoff ] ],
 			'new_order'                 => [ '[{site_name}] New order #{order_number} from {customer_name}', [ $brand, $heading( 'New order #{order_number}' ), $text( '{customer_name} ({email}) placed an order on {order_date}. Status: {order_status}.' ), $items, $summary, $button( 'Open in WooCommerce', '{admin_order_url}' ) ] ],
 			'cancelled_order'           => [ '[{site_name}] Order #{order_number} cancelled', [ $brand, $heading( 'Order #{order_number} was cancelled' ), $text( 'Order from {customer_name} ({email}) has been cancelled.' ), $items, $summary ] ],
@@ -584,6 +591,9 @@ final class WHD_Emails {
 				'drop_url'   => (string) ( $drop['url'] ?? ( function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/' ) ) ),
 				'drop_image' => (string) ( $drop['image'] ?? '' ),
 			];
+		}
+		if ( 'live' === ( self::triggers()[ $id ]['group'] ?? '' ) && class_exists( 'WHD_Live_Reminders' ) ) {
+			$args['data'] = WHD_Live_Reminders::preview_tags( $id );
 		}
 		if ( self::TRIGGER_STOCK === $id ) {
 			$sample = self::sample_cart()['items'][0] ?? [];

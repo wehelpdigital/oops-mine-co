@@ -257,7 +257,10 @@
 						   that might have failed. The source says which form it was. */
 						var src = form.querySelector('[name="source"]');
 						document.dispatchEvent(new CustomEvent('omc:subscribed', {
-							detail: { source: src ? src.value : '', event_id: res.data.event_id || '' } /* event_id: the server's copy of the Lead, so the pixel's is the same event */
+							/* event_id: the server's copy of the Lead, so the pixel's is the same event.
+							   form + data: the form that succeeded and its whole answer, so a plugin can add
+							   a next step under it (WHD's "text me too" reads data.whd_sms). */
+							detail: { source: src ? src.value : '', event_id: res.data.event_id || '', form: form, data: res.data }
 						}));
 					} else {
 						note.textContent = (res && res.data && res.data.message) || 'Something went wrong. Please try again.';

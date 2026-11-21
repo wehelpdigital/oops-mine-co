@@ -127,6 +127,11 @@ final class WHD_Admin {
 	public static function highlight_menu( $parent_file ) {
 		global $submenu_file;
 		if ( isset( $_GET['page'] ) && 'whd-editor' === $_GET['page'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			if ( self::is_live_design( sanitize_key( wp_unslash( $_GET['type'] ?? '' ) ), sanitize_key( wp_unslash( $_GET['id'] ?? '' ) ) ) ) {
+				$submenu_file = WHD_Live_Reminders::PAGE;
+				return WHD_Live_Reminders::PAGE;
+			}
 			$submenu_file = ( isset( $_GET['type'] ) && 'email' === $_GET['type'] ) ? 'whd-emails' : 'whd-popups'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			return 'whd';
 		}
@@ -190,11 +195,11 @@ final class WHD_Admin {
 			'rest'      => [ 'root' => esc_url_raw( rest_url( 'whd/v1/' ) ), 'nonce' => wp_create_nonce( 'wp_rest' ) ],
 			'backUrl'   => 'product' === $type
 				? get_edit_post_link( (int) $id, 'raw' )
-				: admin_url( 'admin.php?page=' . ( 'email' === $type ? 'whd-emails' : 'whd-popups' ) ),
+				: admin_url( 'admin.php?page=' . ( self::is_live_design( $type, $id ) ? WHD_Live_Reminders::PAGE : ( 'email' === $type ? 'whd-emails' : 'whd-popups' ) ) ),
 			'siteUrl'   => home_url( '/' ),
 			'previewUrl'=> 'popup' === $type ? add_query_arg( 'whd_preview', $id, home_url( '/' ) ) : '',
 			'userEmail' => wp_get_current_user()->user_email,
-			'settingsFields' => self::settings_fields( $type ),
+			'settingsFields' => self::settings_fields( $type, (string) $id ),
 			'i18n'      => [
 				'save' => __( 'Save', 'whd' ), 'saved' => __( 'Saved', 'whd' ), 'saving' => __( 'Saving…', 'whd' ), 'unsaved' => __( 'Unsaved changes', 'whd' ),
 				'blocks' => __( 'Blocks', 'whd' ), 'dragHint' => __( 'Drag blocks into the canvas, or click to add.', 'whd' ), 'tags' => __( 'Merge tags', 'whd' ), 'tagHint' => __( 'Click a tag to copy it. Paste it into any text, link or subject.', 'whd' ),
@@ -206,7 +211,12 @@ final class WHD_Admin {
 	}
 
 	/** Document-level settings shown in the editor's Settings tab. */
-	private static function settings_fields( $type ) {
+	/** A live reminder's email: sent by Klaviyo, switched on and off in Live reminders, not here. */
+	private static function is_live_design( $type, $id ) {
+		return 'email' === $type && 'live' === ( WHD_Emails::triggers()[ (string) $id ]['group'] ?? '' );
+	}
+
+	private static function settings_fields( $type, $id = '' ) {
 		if ( 'popup' === $type ) {
 			return [
 				'enabled'     => [ 'type' => 'toggle', 'label' => __( 'Enabled (show on the site)', 'whd' ) ],
@@ -222,7 +232,7 @@ final class WHD_Admin {
 				'image'       => [ 'type' => 'image', 'label' => __( 'Side image (desktop, optional)', 'whd' ) ],
 			];
 		}
-		return [
+		$fields = [
 			'enabled'   => [ 'type' => 'toggle', 'label' => __( 'Use this design (replaces the default email)', 'whd' ) ],
 			'subject'   => [ 'type' => 'text', 'label' => __( 'Subject', 'whd' ), 'help' => __( 'Merge tags allowed, e.g. {first_name}, {order_number}', 'whd' ) ],
 			'preheader' => [ 'type' => 'text', 'label' => __( 'Preview text (preheader)', 'whd' ) ],
@@ -232,6 +242,11 @@ final class WHD_Admin {
 			'card'      => [ 'type' => 'color', 'label' => __( 'Card background', 'whd' ) ],
 			'footer'    => [ 'type' => 'textarea', 'label' => __( 'Footer text', 'whd' ) ],
 		];
+		if ( self::is_live_design( $type, $id ) ) {
+			unset( $fields['enabled'] );
+			$fields['subject']['help'] = __( 'Klaviyo fills in {first_name} for each subscriber. {live_title}, {live_when}, {live_time}, {live_starts_in} and {live_url} come from Live reminders. Klaviyo adds its unsubscribe link and your address under the footer.', 'whd' );
+		}
+		return $fields;
 	}
 
 	/* ─────────────────────────── pages ─────────────────────────── */
@@ -296,7 +311,7 @@ final class WHD_Admin {
 		if ( ! class_exists( 'WooCommerce' ) ) {
 			echo '<div class="notice notice-warning"><p>' . esc_html__( 'WooCommerce is not active — order emails cannot be sent until it is.', 'whd' ) . '</p></div>';
 		}
-		$groups = [ 'customer' => __( 'Customer emails', 'whd' ), 'automation' => __( 'Automations', 'whd' ), 'admin' => __( 'Store-owner notifications', 'whd' ) ];
+		$groups = [ 'customer' => __( 'Customer emails', 'whd' ), 'automation' => __( 'Automations', 'whd' ), 'live' => __( 'Live reminders — sent through Klaviyo (set up in Live reminders)', 'whd' ), 'admin' => __( 'Store-owner notifications', 'whd' ) ];
 		$all    = WHD_Emails::all();
 		foreach ( $groups as $g => $label ) {
 			echo '<h2 class="whd-h2">' . esc_html( $label ) . '</h2><table class="widefat striped whd-table"><thead><tr><th>' . esc_html__( 'Trigger', 'whd' ) . '</th><th>' . esc_html__( 'Subject', 'whd' ) . '</th><th>' . esc_html__( 'Status', 'whd' ) . '</th><th></th></tr></thead><tbody>';
@@ -304,9 +319,10 @@ final class WHD_Admin {
 				if ( $t['group'] !== $g ) {
 					continue;
 				}
-				$d  = $all[ $id ];
-				$on = ! empty( $d['settings']['enabled'] );
-				echo '<tr><td><strong>' . esc_html( $t['label'] ) . '</strong></td><td class="whd-muted">' . esc_html( $d['settings']['subject'] ) . '</td><td><span class="whd-badge ' . ( $on ? 'is-on' : '' ) . '">' . ( $on ? esc_html__( 'Custom design', 'whd' ) : esc_html__( 'Default', 'whd' ) ) . '</span></td><td style="text-align:right"><a class="button" href="' . esc_url( self::editor_url( 'email', $id ) ) . '">' . esc_html__( 'Edit', 'whd' ) . '</a></td></tr>';
+				$d     = $all[ $id ];
+				$on    = 'live' === $g ? ! empty( WHD_Live_Reminders::get()['enabled'] ) : ! empty( $d['settings']['enabled'] );
+				$badge = 'live' === $g ? ( $on ? __( 'Reminders on', 'whd' ) : __( 'Reminders off', 'whd' ) ) : ( $on ? __( 'Custom design', 'whd' ) : __( 'Default', 'whd' ) );
+				echo '<tr><td><strong>' . esc_html( $t['label'] ) . '</strong></td><td class="whd-muted">' . esc_html( $d['settings']['subject'] ) . '</td><td><span class="whd-badge ' . ( $on ? 'is-on' : '' ) . '">' . esc_html( $badge ) . '</span></td><td style="text-align:right"><a class="button" href="' . esc_url( self::editor_url( 'email', $id ) ) . '">' . esc_html__( 'Edit', 'whd' ) . '</a></td></tr>';
 			}
 			echo '</tbody></table>';
 		}

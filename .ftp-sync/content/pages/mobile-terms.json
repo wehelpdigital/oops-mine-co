@@ -1,0 +1,115 @@
+{
+  "slug": "mobile-terms",
+  "type": "policy",
+  "status": "publish",
+  "title": "Mobile Terms: Text Messages from Oops Mine Co.",
+  "seo_title": "Mobile Terms | Oops Mine Co.",
+  "meta_description": "The terms for text messages from Oops Mine Co.: what we send, how often, what it costs, and how to stop them with STOP or get help with HELP.",
+  "primary_keyword": "",
+  "keywords": [],
+  "hero": {
+    "eyebrow": "Text messages",
+    "intro": "If you gave us your mobile number and ticked the box to say yes to texts, these are the terms of our text message program: what we send, how often, what it costs you, and how to stop it in one word.",
+    "cta_text": "Ask us anything",
+    "cta_url": "/contacts/"
+  },
+  "sections": [
+    {
+      "heading": "Mobile Message Service Terms",
+      "paragraphs": [
+        "Last updated: November 21, 2026",
+        "The Oops Mine Co. text message program (the “Service”) is run by Oops Mine Co. LLC of Houston, Texas. By joining it, you accept these Mobile Terms. They sit alongside our <a href=\"/terms-and-conditions/\">terms and conditions</a> and our <a href=\"/privacy-policy/\">privacy policy</a>. We may change or end the Service, and update these terms, at any time; using the Service after a change means you accept the new terms."
+      ]
+    },
+    {
+      "heading": "What you agree to receive",
+      "paragraphs": [
+        "By saying yes to texts from Oops Mine Co. LLC, you agree to receive recurring automated text messages from us at the mobile number you gave, even if that number is registered on a state or federal Do Not Call list. Text messages may be sent using an automatic telephone dialing system or other technology."
+      ],
+      "bullets": [
+        "<strong>Marketing messages:</strong> reminders about our live streams (a heads-up before we go live, a last call, a note when we start), new arrivals and offers.",
+        "<strong>Service messages:</strong> the confirmation when you join, and the replies to HELP and STOP."
+      ]
+    },
+    {
+      "heading": "Saying yes is optional",
+      "paragraphs": [
+        "Your consent to receive texts is not a condition of any purchase with Oops Mine Co. LLC. Joining the Service is completely voluntary: you can shop, check out and join our email list without ever giving us a phone number."
+      ]
+    },
+    {
+      "heading": "How often, and what it costs",
+      "paragraphs": [
+        "Message frequency varies. Message and data rates may apply. We do not charge you anything for our texts, but you are responsible for any fees your wireless provider charges for sending or receiving them, so check your mobile plan if you are not sure what it includes."
+      ]
+    },
+    {
+      "heading": "How to stop the texts, and how to get help",
+      "paragraphs": [
+        "To stop the texts, reply <strong>STOP</strong> to any message from us. You will receive one text confirming that you have opted out, and then nothing more from this program. If you have joined other text programs of ours, opt out of each of them separately.",
+        "For help, reply <strong>HELP</strong> to any message from us, or email <a href=\"mailto:hello@oopsmineco.com\">hello@oopsmineco.com</a> and a person will answer."
+      ]
+    },
+    {
+      "heading": "If our number changes",
+      "paragraphs": [
+        "We may change the number our texts come from. When we do, we will tell you by text. Replies sent to a number we no longer use may not reach us, so if you want to stop the texts after a change, reply STOP to a message from the new number."
+      ]
+    },
+    {
+      "heading": "Carriers and delivery",
+      "paragraphs": [
+        "The wireless carriers supported by the Service are not liable for delayed or undelivered messages. You agree to give us a valid mobile number that you own or are allowed to use, and to sign up again if you change it, since texts go to the number we have on file."
+      ]
+    },
+    {
+      "heading": "What we are responsible for",
+      "paragraphs": [
+        "To the extent the law allows, we are not liable for any text that is delayed, not delivered or delivered to the wrong number, for errors in a message, or for anything you or anybody else does because of a message from the Service."
+      ]
+    },
+    {
+      "heading": "Your privacy",
+      "paragraphs": [
+        "To see how we collect and use your personal information, read our <a href=\"/privacy-policy/\">privacy policy</a>. In short: we do not sell your phone number, and we never share your mobile number or your text message opt-in with third parties or affiliates for their own marketing. The companies that deliver our texts receive your number only so the messages can be sent."
+      ]
+    },
+    {
+      "heading": "Reach a person",
+      "paragraphs": [
+        "Write to <a href=\"mailto:hello@oopsmineco.com\">hello@oopsmineco.com</a> or use our <a href=\"/contacts/\">contact form</a>. A person reads every note."
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "q": "How do I stop the text messages?",
+      "a": "Reply STOP to any text from us. You will get one message confirming it, and the texts end. Reply HELP instead if you need a hand, or email hello@oopsmineco.com."
+    },
+    {
+      "q": "Do your texts cost anything?",
+      "a": "We charge nothing for them. Message and data rates from your wireless provider may apply, depending on your plan."
+    },
+    {
+      "q": "How often will you text me?",
+      "a": "Message frequency varies. Most of what we send are reminders when we are about to go live, plus the occasional note about new arrivals or an offer."
+    },
+    {
+      "q": "Do I have to sign up for texts to shop?",
+      "a": "No. Saying yes to texts is not a condition of any purchase. You can shop, check out and join the email list without giving us a phone number."
+    }
+  ],
+  "cta": {
+    "heading": "Questions about our texts?",
+    "text": "Email hello@oopsmineco.com or use the contact form, and a person will answer. Then head back to the racks and find something yours.",
+    "button_text": "Contact us",
+    "button_url": "/contacts/",
+    "capture_email": false
+  },
+  "related_slugs": [
+    "privacy-policy",
+    "terms-and-conditions",
+    "contacts"
+  ],
+  "author_notes": "Not legal advice: have an attorney review this before the SMS program starts. Built from Klaviyo's mobile terms template (help.klaviyo.com/hc/en-us/articles/360049177511) and its toll-free verification requirements: program name and operator, message types, recurring/automated/autodialer wording, not a condition of purchase, \"Message frequency varies. Message and data rates may apply.\", STOP/HELP with the support email, carriers not liable, privacy link and the no-sharing sentence. To confirm: (1) once Klaviyo gives the shop its sending number (toll-free), add it to the STOP/HELP lines (\"reply STOP to (xxx) xxx-xxxx\") — the template names it; (2) cart-reminder texts are deliberately not listed, because the shop does not send them through Klaviyo; if WHD's Twilio cart texts are ever switched on, add \"cart reminders\" to the marketing messages and explain the cart cookie in the privacy policy; (3) the legal name matches Klaviyo's account (Oops Mine CO. LLC) and the terms page (Oops Mine Co. LLC, Houston, Texas). The page must stay public: Klaviyo and the carriers open it during verification, so it cannot sit behind the store's coming-soon screen (only shop pages and the terms page are gated)."
+}

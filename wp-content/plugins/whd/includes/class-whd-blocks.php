@@ -255,6 +255,12 @@ final class WHD_Blocks {
 			'drop_title'       => __( 'Drop reminder: the drop’s name', 'whd' ),
 			'drop_url'         => __( 'Drop reminder: where the drop is', 'whd' ),
 			'drop_image'       => __( 'Drop reminder: the drop’s photo (use in an image block)', 'whd' ),
+			'live_title'       => __( 'Live reminder: the live’s name', 'whd' ),
+			'live_when'        => __( 'Live reminder: day, date and time', 'whd' ),
+			'live_date'        => __( 'Live reminder: the day and date', 'whd' ),
+			'live_time'        => __( 'Live reminder: the time (shop time)', 'whd' ),
+			'live_url'         => __( 'Live reminder: where to watch', 'whd' ),
+			'live_starts_in'   => __( 'Live reminder: “tomorrow”, “in an hour”, “now”…', 'whd' ),
 			'year'             => __( 'Current year', 'whd' ),
 		];
 	}
@@ -383,6 +389,8 @@ final class WHD_Blocks {
 		$pre     = esc_html( self::merge( $s['preheader'], $ctx ) );
 		$footer  = wp_kses_post( self::merge( $s['footer'], $ctx ) );
 		$unsub   = ! empty( $ctx['data']['unsubscribe_url'] ) ? '<br><a href="' . esc_url( $ctx['data']['unsubscribe_url'] ) . '" style="color:#9c6f63;text-decoration:underline">' . esc_html__( 'Unsubscribe', 'whd' ) . '</a>' : '';
+		// Set in code only, never from a design: e.g. the address line Klaviyo fills in (WHD_Live_Reminders).
+		$unsub  .= isset( $ctx['footer_html'] ) ? (string) $ctx['footer_html'] : '';
 
 		return '<!DOCTYPE html><html lang="' . esc_attr( get_bloginfo( 'language' ) ) . '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="x-apple-disable-message-reformatting"><title>' . $title . '</title></head>'
 			. '<body style="margin:0;padding:0;background:' . esc_attr( $s['bg'] ) . ';-webkit-text-size-adjust:100%">'

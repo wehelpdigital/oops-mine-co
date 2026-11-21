@@ -1004,6 +1004,7 @@ final class WHD_Live_Admin {
 			'starts_at'    => $starts,
 		] );
 		WHD_Live::set_pieces( $id, is_array( $pieces ) ? $pieces : [] );
+		do_action( 'whd_live_stream_saved', $id ); // Live reminders follow a stream's new date
 
 		wp_safe_redirect( 'studio' === $then ? self::studio_url( $id ) : self::url() );
 		exit;
@@ -1018,6 +1019,7 @@ final class WHD_Live_Admin {
 				WHD_Live_Channels::daily( 'DELETE', '/rooms/' . rawurlencode( (string) $room['name'] ) );
 			}
 			wp_delete_post( $id, true );
+			do_action( 'whd_live_stream_deleted', $id );
 		}
 		wp_safe_redirect( self::url() );
 		exit;

@@ -17,7 +17,7 @@
     {
       "heading": "The short version",
       "paragraphs": [
-        "Last updated: September 24, 2026",
+        "Last updated: November 21, 2026",
         "We are a small online boutique, so we need a few details to send you a package and answer your notes: your name, your address, your email and the order itself. We ask for what an order needs, then we look twice at anything beyond that and leave it out. We do not sell your personal information, and we do not hand your email address or phone number to anyone who wants to market their own products to you. If you would rather hear less from us, every marketing email we send ends with a one-click unsubscribe link."
       ],
       "bullets": [
@@ -78,8 +78,15 @@
     {
       "heading": "Emails, texts and how to stop them",
       "paragraphs": [
-        "Order emails are part of the sale, so they keep coming while an order is open. Marketing is different: it goes only to people who asked for it. Every marketing email and every cart reminder ends with an unsubscribe link that looks like <em>oopsmineco.com/?whd_unsub=…</em> — one click and that address is off the list, no login and no form. The unsubscribe is recorded so a later sign-up does not quietly put you back.",
-        "Text messages work the same way. We only text a number when you gave it to us and ticked the consent box. Reply <strong>STOP</strong> to any message to end them and <strong>HELP</strong> if you need a hand. Your carrier's message and data rates may apply; we charge nothing for a text. Prefer to write to us instead? <a href=\"mailto:hello@oopsmineco.com\">hello@oopsmineco.com</a> reaches a person, and we will take you off by hand."
+        "Order emails are part of the sale, so they keep coming while an order is open. Marketing is different: it goes only to people who asked for it. Every marketing email and every cart reminder ends with an unsubscribe link — one click and that address is off the list, no login and no form. The unsubscribe is recorded so a later sign-up does not quietly put you back.",
+        "Text messages work the same way. We only text a number when you gave it to us and ticked the consent box. The texts are recurring and automated — reminders when we are about to go live, new arrivals and offers — and how often we send them varies. Reply <strong>STOP</strong> to any message to end them and <strong>HELP</strong> if you need a hand. Your carrier's message and data rates may apply; we charge nothing for a text. The full terms are on our <a href=\"/mobile-terms/\">Mobile Terms</a> page. Prefer to write to us instead? <a href=\"mailto:hello@oopsmineco.com\">hello@oopsmineco.com</a> reaches a person, and we will take you off by hand."
+      ]
+    },
+    {
+      "heading": "Text messages and your mobile number",
+      "paragraphs": [
+        "When you join our text messages we keep your mobile number and a record that you said yes, and the company that sends our texts notes when and where you did, so we can show that you agreed. We will not share your opt-in to an SMS campaign with any third party for purposes unrelated to providing you with the services of that campaign. We may share your personal data, including your SMS opt-in or consent status, with third parties that help us provide our messaging services, including platform providers, phone companies and any other vendors who assist us in the delivery of text messages.",
+        "Mobile information and text message consent are never shared with third parties or affiliates for their marketing or promotional purposes, and we do not sell them. The terms of the program itself — what we send, how often, and how to stop — are on our <a href=\"/mobile-terms/\">Mobile Terms</a> page."
       ]
     },
     {
@@ -145,11 +152,11 @@
     },
     {
       "q": "How do I get off the email list?",
-      "a": "Scroll to the bottom of any marketing email or cart reminder and click the unsubscribe link, the one that looks like oopsmineco.com/?whd_unsub=… . One click does it, with no login and no form to fill in. Order emails keep coming while an order is open, because those are part of the sale. Stuck? Write to hello@oopsmineco.com and we will remove you by hand."
+      "a": "Scroll to the bottom of any marketing email or cart reminder and click the unsubscribe link. One click does it, with no login and no form to fill in. Order emails keep coming while an order is open, because those are part of the sale. Stuck? Write to hello@oopsmineco.com and we will remove you by hand."
     },
     {
       "q": "How do I stop the text messages?",
-      "a": "Reply STOP to any text from us and the messages end. Reply HELP if you need a hand instead. We only text numbers given to us with the consent box ticked, so you should never get one out of the blue. Your carrier may charge message and data rates; we charge nothing for a text."
+      "a": "Reply STOP to any text from us and the messages end. Reply HELP if you need a hand instead. We only text numbers given to us with the consent box ticked, so you should never get one out of the blue. Your carrier may charge message and data rates; we charge nothing for a text. The full program terms are on our Mobile Terms page."
     },
     {
       "q": "Can I get a copy of my data, or have it deleted?",
@@ -169,8 +176,9 @@
   },
   "related_slugs": [
     "terms-and-conditions",
+    "mobile-terms",
     "contacts",
     "faq"
   ],
-  "author_notes": "Not legal advice: the owner should have an attorney review this text before it goes live, especially the state-rights section and the retention wording. Facts to confirm: (1) name the payment processors actually in use (PayPal, Stripe, Apple Pay/Google Pay via the gateway) if you want them listed by name; (2) confirm the SMS program is live and that the consent box wording at sign-up matches the STOP/HELP language here; (3) the Pinterest tag is only described as \"when switched on\" because WHD has no built-in Pinterest field — it would be pasted into WHD → Scripts → custom head snippet, so remove that mention if the owner never adds it; (4) fixed retention periods (for example 7 years for order records) can replace the \"as long as tax rules require\" wording once counsel names them; (5) update the \"Last updated\" line each time the text changes — the policy template lifts it out of the first section and prints it under the title. Everything described matches the code as built: WooCommerce order/account data, the whd_subscribers table (email, name, phone, sms_consent, source), the whd_carts snapshot table with the ?whd_unsub= opt-out, GA4 + Meta Pixel in WHD → Scripts, and the Mailchimp/Klaviyo/Twilio integrations. No cron job deletes old cart rows today; if the \"we clear old ones\" line should stay literal, add a purge to WHD."
+  "author_notes": "Not legal advice: the owner should have an attorney review this text before it goes live, especially the state-rights section and the retention wording. Facts to confirm: (1) name the payment processors actually in use (PayPal, Stripe, Apple Pay/Google Pay via the gateway) if you want them listed by name; (2) confirm the SMS program is live and that the consent box wording at sign-up matches the STOP/HELP language here; (3) the Pinterest tag is only described as \"when switched on\" because WHD has no built-in Pinterest field — it would be pasted into WHD → Scripts → custom head snippet, so remove that mention if the owner never adds it; (4) fixed retention periods (for example 7 years for order records) can replace the \"as long as tax rules require\" wording once counsel names them; (5) update the \"Last updated\" line each time the text changes — the policy template lifts it out of the first section and prints it under the title. Everything described matches the code as built: WooCommerce order/account data, the whd_subscribers table (email, name, phone, sms_consent, source), the whd_carts snapshot table with the ?whd_unsub= opt-out, GA4 + Meta Pixel in WHD → Scripts, and the Mailchimp/Klaviyo/Twilio integrations. No cron job deletes old cart rows today; if the \"we clear old ones\" line should stay literal, add a purge to WHD. November 2026: added \"Text messages and your mobile number\" with the sentences Klaviyo's SMS privacy guidance asks for (no sharing of SMS opt-in data except with the companies that deliver the texts; never for anyone else's marketing), links to the new Mobile Terms page, and dropped the ?whd_unsub= address from the unsubscribe wording because live-stream reminders now go out through Klaviyo, whose emails carry Klaviyo's own unsubscribe link."
 }

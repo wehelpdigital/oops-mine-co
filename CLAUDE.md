@@ -94,7 +94,8 @@ Chromium harness for that lives in the session scratchpad, not in the repo.
 - `footer.php` overrides the parent's footer on every page. The parent renders an Elementor "footer page" there, which
   needs Elementor's frontend CSS (not loaded on the OMC templates) and carried the demo's fake contact details. The
   child footer is plain markup: brand, Shop/Help link columns from `omc_footer_links()` (filter `omc_footer_links`;
-  only existing categories/published pages are linked), newsletter form (hidden on the front page, which already ends
+  only existing categories/published pages are linked; the Legal row is privacy policy, terms, **mobile terms** — the
+  text-message program's terms, which Klaviyo needs public and linked — and refund policy), newsletter form (hidden on the front page, which already ends
   with the newsletter band — filter `omc_footer_newsletter`), copyright. It keeps the parent's `</main>`,
   `.c-footer` classes and `wp_footer()`.
 - The parent prints its combined CSS as handle `ideapark-core` at `wp_enqueue_scripts` priority 999; the child enqueues
@@ -140,7 +141,9 @@ Chromium harness for that lives in the session scratchpad, not in the repo.
   cross-fades, the typewriter heading, and the newsletter forms (`omc_newsletter_form( $args )` — AJAX `omc_subscribe`
   with a `source` field, which fires `omc_newsletter_subscribed( $email, $source )` for the plugin; the WHD subscriber
   table records that source). In that handler read the URL with `getAttribute('action')`: the hidden
-  `<input name="action">` shadows `form.action`. Motion features respect `prefers-reduced-motion` and pause off-screen.
+  `<input name="action">` shadows `form.action`. A sign-up that worked fires `omc:subscribed` with `{ source, event_id,
+  form, data }` — the form and its whole answer, so a plugin can add a next step under it (WHD's "text me too" reads
+  `data.whd_sms`). Motion features respect `prefers-reduced-motion` and pause off-screen.
 - Design tokens are CSS custom properties at the top of `assets/css/omc.css` (rose-gold `--omc-rose`, cream/sand,
   Cormorant Garamond display + Manrope body).
 - `assets/css/omc-pages.css` (enqueued after omc.css) restyles the **theme's own screens** — shop/category grids,
@@ -218,7 +221,11 @@ Content is data, not markup, and is not in the database until the publish script
 - `pages/<slug>.json` — one document per page: `title`, `seo_title`, `meta_description`, `keywords`, `hero`,
   `sections[]` (heading, paragraphs, bullets, optional `table` and `faqs`), `faqs[]`, `cta`, `related_slugs`,
   `author_notes`. `type` picks the template: landing → page-landing, faq → page-faq, contact → page-contact,
-  policy/sizeguide → page-policy.
+  policy/sizeguide → page-policy. `mobile-terms.json` is the SMS program's terms (Klaviyo's template and toll-free
+  verification list: operator Oops Mine Co. LLC, message types, recurring/automated/autodialer, not a condition of
+  purchase, "Message frequency varies. Message and data rates may apply.", STOP/HELP, carriers not liable, privacy
+  link); `privacy-policy.json` has the SMS sharing sentences Klaviyo asks for ("Text messages and your mobile number").
+  When Klaviyo issues the sending number, add it to the STOP/HELP lines.
 - `videos/<slug>.json` — the same idea for the video pages, imported by `.ftp-sync/import-videos.php`.
 
 `publish-site.php` writes each document to `_omc_landing` (JSON) plus `_omc_meta_description` / `_omc_seo_title`, and
@@ -550,6 +557,51 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
 - **Drop reminders** (`WHD_Reminders`, table `{prefix}whd_reminders`, one row per address): sign-ups with source `drop`
   wait for the theme's `whd_drop`; at the drop's time (single cron event + the 15-min `whd_reminders_cron` sweep) each
   gets the `drop_open` design, skipping `whd_unsubscribed`. A later sign-up puts a sent row back to waiting.
+- **Live reminders** (`WHD_Live_Reminders`, `includes/class-whd-live-reminders.php`, `admin/live-reminders.js` + `.css`;
+  its own top-level menu **Live reminders**, page `whd-live-reminders`, placed right under WHD by reading WHD's own menu
+  key — WordPress nudges colliding positions and sorts them with natural string order, so a guessed number lands
+  elsewhere): the shop's **Klaviyo** subscribers hear about the next live by email and text. Settings in option
+  `whd_live_reminders`: on/off, the live (a date typed here, or a WHD Live Stream with a date — its page is the link),
+  name, where to watch, repeat weekly (keeps the next two lives scheduled; the hourly `whd_live_reminders_tick` rolls the
+  date on), three reminders (heads-up / last call / we're live: timing from "as it starts" to a week before, email
+  and/or text, the text written here with tags), Klaviyo lists/segments for emails, texts and leaving out, sender
+  (defaults from the Klaviyo account's default sender, `GET accounts`, cached a day in `whd_live_reminders_account`),
+  SMS org prefix + "Reply STOP" line, and the site's "text me too" step. **Every reminder is a Klaviyo campaign
+  scheduled at its time** (revision `2026-10-15`, campaign → audience → message → variation; shapes taken from Klaviyo's
+  OpenAPI spec, `github.com/klaviyo/openapi`, because its docs pages contradict each other): `POST campaigns` (definition,
+  audiences with a `temporary_id`, messages → variations → details) → for email `POST templates` (CODE) +
+  `POST campaign-message-assign-template` (a non-reusable copy, so the template is deleted straight after) →
+  `POST campaign-message-schedule` (`static`, `send_time` UTC). Taking one back: `PATCH campaign-message-schedule/{id}`
+  `revert` (schedule id, then message id) and `DELETE campaigns/{id}`. Klaviyo itself applies consent (emails to those
+  who can receive email marketing, texts only to SMS-consented profiles), the unsubscribe link and opt-out line, and
+  sends on its own clock — nothing waits on WP-Cron at send time. What is scheduled is `whd_live_reminders_state`,
+  keyed "live time|reminder|channel" with a signature of everything in it; `sync()` takes back what changed or is no
+  longer wanted and makes what is missing, so saving once carries a new date, an edited design or text, a different
+  audience, or "off" to Klaviyo. Nothing within 10 minutes of sending is touched; a sync spends at most 20 s and leaves
+  the rest to a cron event; a half-made campaign is deleted (`undo()`); one Klaviyo will not give back is `stuck` and
+  says so. The emails are WHD designs `live_heads_up` / `live_last_call` / `live_now` (group `live` in
+  `WHD_Emails::triggers()`; the editor drops the "Use this design" switch and Back goes to Live reminders), rendered
+  with the live's tags (`{live_title}`, `{live_when}`, `{live_date}`, `{live_time}`, `{live_url}`, `{live_starts_in}`)
+  and placeholders swapped afterwards for Klaviyo's `{{ first_name|default:'there' }}`, `{% unsubscribe_link %}` and
+  `{{ organization.name }} · {{ organization.full_address }}` (via `$ctx['footer_html']` in `WHD_Blocks::render`).
+  "Send me a test via Klaviyo" = a reusable test template + `template-preview-send-jobs` to the signed-in admin.
+  The date is shared with the home page's live card: saving writes theme mod `omc_live_datetime` (and `omc_live_url`
+  for a link elsewhere — never a WHD stream's private page), and a date set in the Customizer or Page Editor is read
+  back (`update_option_theme_mods_*`) and re-synced. **"Text me too"**: after an email sign-up with source `fb_live`
+  (home card, reminder dialog) the theme's answer carries `whd_sms` (an HMAC token for that address, 30 min, filter
+  `omc_subscribe_response`); `assets/live-sms.js` puts the step from a `<template>` under that form — phone, Klaviyo's
+  disclosure above the box (autodialer, not a condition of purchase, rates, frequency, HELP/STOP, Mobile Terms and
+  Privacy Policy links), an unticked "Yes, text me". `whd_live_sms` (nonce, token, 5 tries per IP per 15 min) adds the
+  number with SMS consent to the subscriber row as source `fb_live_sms` (not a code source, so no second welcome
+  email), and the integration hands it to Klaviyo as an SMS subscription. Offered only while reminders are on, a
+  reminder goes by text and texts have an audience. Klaviyo will only text once its SMS setup is done (toll-free
+  number verified: public site, privacy policy and `/mobile-terms/`). The API key needs campaigns and templates read +
+  write, lists and segments read (accounts read for the sender default). **Not yet run against the real Klaviyo
+  API**: tests use a stand-in that checks the spec's required fields (session scratchpad `zz-whd-klaviyo-stub.php`,
+  `lrtest-php.php`, `lrtest-browser.mjs`); a shape check against Klaviyo with an empty throwaway list
+  (`klaviyo-validate.php`) was not allowed to run. The older integration code (`WHD_Integrations::KLAVIYO_REV`) still
+  names `2024-10-15`, which is past Klaviyo's two-year support; Klaviyo answers a retired revision as the next oldest
+  supported one.
 - **"Just got mine" card** (`WHD_Share_Card`, `assets/share-card.js`): on the order-received page, a 1080×1920 card of
   the bought piece drawn in the browser with the Image Editor's Fabric.js — from a design chosen in WHD → Settings →
   "Order share card" (its base photo swapped for the piece, `{product}` / `{first_name}` filled; template "Just got

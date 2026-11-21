@@ -1088,6 +1088,7 @@ function omc_footer_links() {
 		'legal' => $pages( [
 			'privacy-policy'       => __( 'Privacy policy', 'moderno-child' ),
 			'terms-and-conditions' => __( 'Terms & conditions', 'moderno-child' ),
+			'mobile-terms'         => __( 'Mobile terms', 'moderno-child' ), // the text-message program's terms: Klaviyo needs them public and linked
 			'refund_returns'       => __( 'Refund policy', 'moderno-child' ),
 		] ),
 	] );
