@@ -1776,7 +1776,7 @@ function omc_discount_tab() {
 				</h2>
 				<span class="omc-modal__rule" aria-hidden="true"></span>
 				<p class="omc-modal__text">
-					<?php esc_html_e( 'One email when a new rack goes up, one before we go live, and the code below to use whenever you are ready. Nothing else.', 'moderno-child' ); ?>
+					<?php esc_html_e( 'Emails when a new rack goes up and before we go live, plus the code to use whenever you are ready.', 'moderno-child' ); ?>
 				</p>
 				<?php
 				omc_newsletter_form( [
@@ -1803,7 +1803,7 @@ function omc_discount_tab() {
 						<a class="omc-btn omc-btn--solid" href="<?php echo esc_url( omc_shop_url() ); ?>"><?php esc_html_e( 'Start shopping', 'moderno-child' ); ?></a>
 					</div>
 				<?php endif; ?>
-				<p class="omc-modal__small"><?php esc_html_e( 'Unsubscribe from any email, any time.', 'moderno-child' ); ?></p>
+				<?php // "Unsubscribe from any email, any time." lived here; the form's own line now says it, with the privacy link. ?>
 			</div>
 		</div>
 	</div>
@@ -1811,6 +1811,20 @@ function omc_discount_tab() {
 }
 // Priority 5: footer scripts print at 20, and omc.js binds the newsletter form by querying the DOM.
 add_action( 'wp_footer', 'omc_discount_tab', 5 );
+
+/**
+ * The line under every sign-up form: signing up means marketing emails, each one with a way out, as the
+ * privacy policy says. WHD owns the wording (WHD → Integrations, one place for the popups and the theme);
+ * this is the same sentence for a site without it.
+ */
+function omc_signup_legal() {
+	if ( class_exists( 'WHD_Integrations' ) && method_exists( 'WHD_Integrations', 'email_consent_html' ) ) {
+		return WHD_Integrations::email_consent_html();
+	}
+	$text    = sprintf( /* translators: %s: store name */ esc_html__( 'By signing up, you agree to receive marketing emails from %s, such as new arrivals, offers and live-stream reminders. You can unsubscribe at any time with the link in every email.', 'moderno-child' ), esc_html( trim( wp_strip_all_tags( get_bloginfo( 'name' ) ) ) ) );
+	$privacy = get_privacy_policy_url();
+	return $privacy ? $text . ' <a href="' . esc_url( $privacy ) . '" target="_blank" rel="noopener">' . esc_html__( 'Privacy Policy', 'moderno-child' ) . '</a>' : $text;
+}
 
 /** Newsletter form (progressively enhanced by assets/js/omc.js). */
 function omc_newsletter_form( $args = [] ) {
@@ -1830,6 +1844,7 @@ function omc_newsletter_form( $args = [] ) {
 		 */
 		'name'        => false,
 		'name_label'  => __( 'First name', 'moderno-child' ),
+		'legal'       => true, // what signing up means, with the privacy policy link (omc_signup_legal())
 	] );
 	$field_id = 'omc-newsletter-email' . ( $count > 1 ? '-' . $count : '' ); // several forms can share a page (footer, live card, band)
 	?>
@@ -1845,6 +1860,9 @@ function omc_newsletter_form( $args = [] ) {
 		<input class="omc-newsletter__input" id="<?php echo esc_attr( $field_id ); ?>" type="email" name="email" placeholder="<?php echo esc_attr( $a['placeholder'] ); ?>" required autocomplete="email">
 		<button class="omc-btn omc-btn--solid" type="submit"><?php echo esc_html( $a['button'] ); ?></button>
 		<p class="omc-newsletter__note" role="status" aria-live="polite"></p>
+		<?php if ( $a['legal'] ) : ?>
+			<p class="omc-newsletter__legal"><?php echo wp_kses( omc_signup_legal(), [ 'a' => [ 'href' => [], 'target' => [], 'rel' => [] ] ] ); ?></p>
+		<?php endif; ?>
 	</form>
 	<?php
 }

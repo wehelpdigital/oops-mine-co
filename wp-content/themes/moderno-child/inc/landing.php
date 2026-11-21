@@ -928,6 +928,9 @@ function omc_contact_form( $args = [] ) {
 			<button class="omc-btn omc-btn--solid" type="submit"><?php echo esc_html( $a['button'] ); ?></button>
 			<span class="omc-form__note" role="status" aria-live="polite"></span>
 		</p>
+		<?php if ( class_exists( 'WHD_Integrations' ) && WHD_Integrations::list_everyone() ) : // WHD → Integrations → "Who joins the list": everyone ?>
+			<p class="omc-newsletter__legal omc-form__legal"><?php echo wp_kses( omc_signup_legal(), [ 'a' => [ 'href' => [], 'target' => [], 'rel' => [] ] ] ); ?></p>
+		<?php endif; ?>
 	</form>
 	<?php
 }

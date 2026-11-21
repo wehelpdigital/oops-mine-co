@@ -825,6 +825,18 @@
 .omc-newsletter__form--named .omc-btn { flex: 1 1 100%; }
 .omc-newsletter__note { flex-basis: 100%; margin: 6px 0 0; min-height: 1.4em; font: 500 13px/1.4 var(--omc-sans); color: var(--omc-rose-dark); }
 .omc-newsletter__note.is-error { color: #8a4a3d; }
+/* What signing up means (omc_signup_legal): under every sign-up form, quiet but always there. */
+.omc-newsletter__form .omc-newsletter__legal,
+.omc-newsletter__legal { flex-basis: 100%; max-width: 560px; margin: 4px auto 0; font: 400 11.5px/1.5 var(--omc-sans); color: inherit; opacity: .72; text-align: center; }
+.omc-newsletter__form .omc-newsletter__legal a,
+.omc-newsletter__legal a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.omc-footer__newsletter .omc-newsletter__form .omc-newsletter__legal,
+.omc-live__form .omc-newsletter__legal,
+.omc-modal .omc-newsletter__legal,
+.omc-form__legal { margin-left: 0; text-align: left; }
+.omc-newsletter__form .omc-newsletter__legal a { font: inherit; }
+.omc-newsletter__note:empty:has(+ .omc-newsletter__legal) { min-height: 0; margin: 0; } /* no empty status line between the button and the words */
+.omc-newsletter__form.is-done .omc-newsletter__legal { display: none; }
 
 /* ─── About page ─── */
 .omc-about__hero {

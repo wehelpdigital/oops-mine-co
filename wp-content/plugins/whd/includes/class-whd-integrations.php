@@ -50,6 +50,7 @@ final class WHD_Integrations {
 			'twilio_token'           => '',
 			'twilio_from'            => '',
 			'sms_consent_text'       => '',
+			'email_consent_text'     => '',
 		];
 	}
 
@@ -120,6 +121,7 @@ final class WHD_Integrations {
 		$out['twilio_sid']             = preg_replace( '/[^A-Za-z0-9]/', '', (string) ( $input['twilio_sid'] ?? '' ) );
 		$out['twilio_from']            = sanitize_text_field( $input['twilio_from'] ?? '' );
 		$out['sms_consent_text']       = sanitize_textarea_field( $input['sms_consent_text'] ?? '' );
+		$out['email_consent_text']     = sanitize_textarea_field( $input['email_consent_text'] ?? '' );
 
 		return $out;
 	}
@@ -137,12 +139,97 @@ final class WHD_Integrations {
 		return (string) apply_filters( 'whd_sms_consent_text', '' !== $text ? $text : self::default_consent_text() );
 	}
 
+	/**
+	 * The words beside the SMS tick box: Klaviyo's disclosure (who, what kind of texts, autodialer, not a
+	 * condition of purchase, rates, frequency, HELP/STOP). consent_html() adds the Mobile Terms and Privacy
+	 * Policy links. The old default promised "up to 6 messages a month", which the Mobile Terms page does not.
+	 */
 	public static function default_consent_text() {
 		return sprintf(
-			/* translators: %s: store name. */
-			__( 'Yes, text me first looks and offers from %s. Up to 6 messages a month, message and data rates may apply. Reply STOP to stop, HELP for help. Saying yes is not a condition of any purchase.', 'whd' ),
-			rtrim( wp_strip_all_tags( get_bloginfo( 'name' ) ), ' .' )
+			/* translators: %s: company name. */
+			__( 'Yes, text me. I agree to receive recurring automated marketing text messages (such as live-stream reminders, new arrivals and offers) from %s at the number provided, including messages sent by autodialer. Consent is not a condition of purchase. Msg & data rates may apply. Msg frequency varies. Reply HELP for help or STOP to cancel.', 'whd' ),
+			self::sms_company()
 		);
+	}
+
+	/** Who the texts are from: Live reminders' company name, else Klaviyo's organisation name (as last read), else the shop's. */
+	public static function sms_company(): string {
+		$lr   = get_option( 'whd_live_reminders', [] );
+		$acct = get_option( 'whd_live_reminders_account', [] );
+		if ( is_array( $lr ) && '' !== trim( (string) ( $lr['company'] ?? '' ) ) ) {
+			return trim( (string) $lr['company'] );
+		}
+		if ( is_array( $acct ) && '' !== trim( (string) ( $acct['org'] ?? '' ) ) ) {
+			return trim( (string) $acct['org'] );
+		}
+		return trim( wp_strip_all_tags( get_bloginfo( 'name' ) ) );
+	}
+
+	/**
+	 * The SMS consent as HTML, with the links Klaviyo and the carriers want next to every phone field.
+	 * A design saved with the old default ("Up to 6 messages a month") gets today's wording instead.
+	 */
+	public static function consent_html( string $text = '' ): string {
+		$text = trim( $text );
+		if ( '' === $text || false !== strpos( $text, 'Up to 6 messages a month' ) ) {
+			$text = self::consent_text();
+		}
+		$html = wp_kses( $text, [ 'a' => [ 'href' => [], 'target' => [], 'rel' => [] ], 'strong' => [], 'em' => [], 'b' => [], 'br' => [] ] );
+		$links = [];
+		if ( false === stripos( $html, 'mobile terms' ) && '' !== self::terms_url() ) {
+			$links[] = '<a href="' . esc_url( self::terms_url() ) . '" target="_blank" rel="noopener">' . esc_html__( 'Mobile Terms', 'whd' ) . '</a>';
+		}
+		if ( false === stripos( $html, 'privacy' ) && '' !== self::privacy_url() ) {
+			$links[] = '<a href="' . esc_url( self::privacy_url() ) . '" target="_blank" rel="noopener">' . esc_html__( 'Privacy Policy', 'whd' ) . '</a>';
+		}
+		if ( $links ) {
+			/* translators: %s: links to the Mobile Terms and/or the Privacy Policy */
+			$html .= ' ' . sprintf( esc_html__( 'See our %s.', 'whd' ), implode( ' ' . esc_html__( 'and', 'whd' ) . ' ', $links ) );
+		}
+		return $html;
+	}
+
+	/**
+	 * The line under every email sign-up form, in step with the privacy policy: signing up means
+	 * marketing emails, and every one of them can be stopped. Editable in WHD → Integrations.
+	 */
+	public static function email_consent_text(): string {
+		$text = trim( (string) self::get()['email_consent_text'] );
+		return (string) apply_filters( 'whd_email_consent_text', '' !== $text ? $text : self::default_email_consent_text() );
+	}
+
+	public static function default_email_consent_text(): string {
+		return sprintf(
+			/* translators: %s: store name. */
+			__( 'By signing up, you agree to receive marketing emails from %s, such as new arrivals, offers and live-stream reminders. You can unsubscribe at any time with the link in every email.', 'whd' ),
+			trim( wp_strip_all_tags( get_bloginfo( 'name' ) ) )
+		);
+	}
+
+	/** The email line as HTML, ending with a link to the privacy policy. */
+	public static function email_consent_html(): string {
+		$html = esc_html( self::email_consent_text() );
+		if ( false === stripos( $html, 'privacy' ) && '' !== self::privacy_url() ) {
+			/* translators: %s: link to the Privacy Policy */
+			$html .= ' ' . sprintf( esc_html__( 'See our %s.', 'whd' ), '<a href="' . esc_url( self::privacy_url() ) . '" target="_blank" rel="noopener">' . esc_html__( 'Privacy Policy', 'whd' ) . '</a>' );
+		}
+		return $html;
+	}
+
+	/** The published privacy policy, or ''. */
+	public static function privacy_url(): string {
+		$url = (string) get_privacy_policy_url();
+		if ( '' === $url ) {
+			$page = get_page_by_path( 'privacy-policy' );
+			$url  = $page && 'publish' === $page->post_status ? (string) get_permalink( $page ) : '';
+		}
+		return $url;
+	}
+
+	/** The published Mobile Terms page (the text-message program's terms), or ''. */
+	public static function terms_url(): string {
+		$page = get_page_by_path( 'mobile-terms' );
+		return $page && 'publish' === $page->post_status ? (string) get_permalink( $page ) : '';
 	}
 
 	/* ─────────────────────────── status ─────────────────────────── */
@@ -1019,6 +1106,7 @@ final class WHD_Integrations {
 		echo '</tbody></table>';
 
 		echo '<table class="form-table whd-table-settings"><tbody>';
+		echo '<tr><th><label for="email_consent_text">' . esc_html__( 'Line under every email sign-up', 'whd' ) . '</label></th><td><textarea class="large-text whd-consent" rows="2" id="email_consent_text" name="' . esc_attr( self::field( 'email_consent_text' ) ) . '" placeholder="' . esc_attr( self::default_email_consent_text() ) . '">' . esc_textarea( $o['email_consent_text'] ) . '</textarea><p class="description">' . esc_html__( 'Shown under every form that adds an email address to your list — the popups, the spin-to-win wheel, the newsletter forms, the live and drop cards, the stylist and the video sign-ups — with a link to your privacy policy. Leave blank for the wording shown in the box.', 'whd' ) . '</p></td></tr>';
 		echo '<tr><th><label for="sms_consent_text">' . esc_html__( 'SMS consent text', 'whd' ) . '</label></th><td><textarea class="large-text whd-consent" rows="3" id="sms_consent_text" name="' . esc_attr( self::field( 'sms_consent_text' ) ) . '" placeholder="' . esc_attr( self::default_consent_text() ) . '">' . esc_textarea( $o['sms_consent_text'] ) . '</textarea><p class="description">' . esc_html__( 'Shown beside every phone field on the site, next to the tick box. Leave blank to use the default wording shown in the box.', 'whd' ) . '</p></td></tr>';
 		echo '</tbody></table>';
 	}

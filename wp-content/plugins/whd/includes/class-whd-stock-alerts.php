@@ -287,7 +287,11 @@ final class WHD_Stock_Alerts {
 				<button type="submit" class="whd-stock__submit"><?php esc_html_e( 'Notify me', 'whd' ); ?></button>
 			</form>
 			<p class="whd-stock__note" role="status"></p>
-			<p class="whd-stock__small"><?php esc_html_e( 'One email about this piece only. Nothing else, and no list.', 'whd' ); ?></p>
+			<?php if ( WHD_Integrations::list_everyone() ) : // everyone the shop learns about joins the list, so say what that means ?>
+				<p class="whd-stock__small"><?php echo wp_kses( WHD_Integrations::email_consent_html(), [ 'a' => [ 'href' => [], 'target' => [], 'rel' => [] ] ] ); ?></p>
+			<?php else : ?>
+				<p class="whd-stock__small"><?php esc_html_e( 'One email about this piece only. Nothing else, and no list.', 'whd' ); ?></p>
+			<?php endif; ?>
 		</div>
 		<?php
 	}

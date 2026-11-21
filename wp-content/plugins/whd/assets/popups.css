@@ -105,6 +105,9 @@ body.whd-popup-open { overflow: hidden; }
 .whd-form .whd-form__status { margin: 8px 0 0; font-size: 12px; line-height: 1.5; color: #8a7d76; min-height: 1em; }
 .whd-form__status.is-error { color: #9c6f63; }
 .whd-form__status:empty { margin: 0; min-height: 0; }
+/* What signing up means (WHD_Blocks::legal): small, quiet, never hidden. */
+.whd-form .whd-form__legal { margin: 10px 0 0; font-size: 11px; line-height: 1.5; color: #8a7d76; text-align: inherit; }
+.whd-form__legal a { color: #9c6f63; text-decoration: underline; }
 .whd-form__done {
 	margin: 6px 0 0;
 	padding: 16px 18px;

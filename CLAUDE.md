@@ -310,6 +310,17 @@ scripts, or they get rewritten to `C:/Program Files/Git/shop/`.
   on the site's domain, else WooCommerce's (`hello@oopsmineco.com`), and keeps the typed address as Reply-To. The
   sender used to default to the admin's Gmail address: mail claiming gmail.com sent from the host fails DMARC and
   Gmail rejects it outright, so the welcome email (the only place the sign-up code lives) never arrived.
+- **Every sign-up form says what signing up means**, in step with the privacy policy: "By signing up, you agree to
+  receive marketing emails from {shop}, such as new arrivals, offers and live-stream reminders. You can unsubscribe at
+  any time with the link in every email. See our Privacy Policy." One wording, `WHD_Integrations::email_consent_html()`
+  (editable in WHD → Integrations, "Line under every email sign-up"; filter `whd_email_consent_text`), printed by code,
+  not by each design, so no popup can leave it out: `WHD_Blocks::legal()` under every popup form and the spin-to-win
+  wheel, `omc_signup_legal()` in every `omc_newsletter_form()` (footer, home band, live card and dialog, discount modal,
+  drop card, landing and video pages; arg `legal` false turns it off), the stylist's form (`WHD_STYLIST.i18n.legal`)
+  and the video sign-up overlay (`omc_video_play_strings()['legal']`). The contact form and back-in-stock form show it
+  only while "Who joins the list" is everyone (otherwise back-in-stock keeps "no list"). The SMS tick box uses
+  `WHD_Integrations::consent_html()`: Klaviyo's disclosure plus Mobile Terms and Privacy Policy links; a design saved
+  with the old default ("Up to 6 messages a month") is shown today's wording.
 - **The sign-up code is never shown on screen.** Every modal that offers a discount — the welcome popup, the exit
   popup, the theme's discount modal and the Facebook Live card — asks for a first name and an email and says to look
   in the inbox. `WHD_Subscribers::send_welcome()` sends it, and re-sends on a repeat sign-up whose source is in

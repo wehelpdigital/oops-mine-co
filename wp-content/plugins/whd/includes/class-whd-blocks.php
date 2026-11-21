@@ -182,6 +182,14 @@ final class WHD_Blocks {
 		return apply_filters( 'whd_block_types', $types, $mode );
 	}
 
+	/**
+	 * What signing up means, under every capture form: in every design, never left to each one, so no
+	 * popup can take an address without saying so (WHD_Integrations::email_consent_html()).
+	 */
+	public static function legal(): string {
+		return class_exists( 'WHD_Integrations' ) ? '<p class="whd-form__legal">' . WHD_Integrations::email_consent_html() . '</p>' : '';
+	}
+
 	/** Consent line for the SMS checkbox — from the integrations module when it is there. */
 	public static function default_consent_text() {
 		if ( class_exists( 'WHD_Integrations' ) && method_exists( 'WHD_Integrations', 'consent_text' ) ) {
@@ -466,7 +474,7 @@ final class WHD_Blocks {
 				$fields .= '<input class="whd-form__input" type="email" name="email" required autocomplete="email" placeholder="' . esc_attr( $p['email_placeholder'] ) . '" aria-label="' . esc_attr( $p['email_placeholder'] ) . '">';
 				if ( ! empty( $p['show_phone'] ) ) {
 					$fields .= '<input class="whd-form__input" type="tel" name="phone" autocomplete="tel" placeholder="' . esc_attr( $p['phone_placeholder'] ) . '" aria-label="' . esc_attr( $p['phone_placeholder'] ) . '">'
-						. '<label class="whd-form__consent"><input type="checkbox" name="sms_consent" value="1"><span>' . wp_kses_post( self::merge( $p['consent_text'], $ctx ) ) . '</span></label>';
+						. '<label class="whd-form__consent"><input type="checkbox" name="sms_consent" value="1"><span>' . ( class_exists( 'WHD_Integrations' ) ? WHD_Integrations::consent_html( self::merge( $p['consent_text'], $ctx ) ) : wp_kses_post( self::merge( $p['consent_text'], $ctx ) ) ) . '</span></label>';
 				}
 				$inner = '<form class="whd-b whd-b-form whd-form" method="post" action="' . esc_url( admin_url( 'admin-ajax.php' ) ) . '" data-source="' . esc_attr( $source ) . '" data-success="' . esc_attr( $success ) . '"'
 					. ' data-invalid="' . esc_attr__( 'Please enter a valid email address.', 'whd' ) . '"'
@@ -478,6 +486,7 @@ final class WHD_Blocks {
 					. $fields
 					. '<button type="submit" class="whd-form__btn" style="background:' . esc_attr( $p['bg'] ) . ';color:' . esc_attr( $p['color'] ) . ';border-radius:' . (int) $p['radius'] . 'px">' . esc_html( self::merge( $p['button_text'], $ctx ) ) . '</button>'
 					. '<p class="whd-form__status" role="status" aria-live="polite"></p>'
+					. self::legal()
 					. '</form>';
 				break;
 

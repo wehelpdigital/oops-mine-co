@@ -62,6 +62,8 @@
 .omc-vo__send { flex: 0 0 auto; min-height: 40px; padding: 0 14px; border: 0; background: var(--omc-ink); color: var(--omc-cream); font: 600 11px/1.2 var(--omc-sans); letter-spacing: .12em; text-transform: uppercase; cursor: pointer; }
 .omc-vo__note { margin: 6px 0 0; color: var(--omc-text); font: 400 13px/1.35 var(--omc-sans); }
 .omc-vo__note:empty { display: none; }
+.omc-vo__legal { margin: 8px 0 0; color: var(--omc-text); font: 400 11px/1.45 var(--omc-sans); opacity: .75; }
+.omc-vo__legal a { color: inherit; text-decoration: underline; }
 
 @container (max-width: 479px) {
 	.omc-vo--card { padding: 10px 12px; }

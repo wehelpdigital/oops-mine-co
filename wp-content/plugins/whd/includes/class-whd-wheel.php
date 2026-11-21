@@ -251,6 +251,7 @@ final class WHD_Wheel {
 			. '<button type="submit" class="whd-form__btn" style="background:' . esc_attr( $p['bg'] ) . ';color:' . esc_attr( $p['color'] ) . ';border-radius:' . (int) $p['radius'] . 'px">' . esc_html( WHD_Blocks::merge( $p['button_text'], $ctx ) ) . '</button>'
 			. '<p class="whd-form__status" role="status" aria-live="polite"></p>'
 			. ( '' !== trim( (string) $p['note'] ) ? '<p class="whd-wheel__note">' . esc_html( $p['note'] ) . '</p>' : '' )
+			. WHD_Blocks::legal()
 			. '</form></div>';
 	}
 

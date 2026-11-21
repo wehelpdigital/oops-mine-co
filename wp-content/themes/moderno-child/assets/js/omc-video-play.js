@@ -144,6 +144,11 @@
 		var note = el('p', 'omc-vo__note');
 		note.setAttribute('role', 'status');
 		root.appendChild(note);
+		if (env.strings.legal) { /* what signing up means; built and escaped on the server */
+			var legal = el('p', 'omc-vo__legal');
+			legal.innerHTML = env.strings.legal;
+			root.appendChild(legal);
+		}
 		form.addEventListener('submit', function (e) {
 			e.preventDefault();
 			if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(input.value)) {

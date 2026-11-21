@@ -246,6 +246,7 @@ function omc_video_play_strings() {
 		'email'    => __( 'Your email address', 'moderno-child' ),
 		'badEmail' => __( 'Please enter a valid email address.', 'moderno-child' ),
 		'oops'     => __( 'Something went wrong. Please try again.', 'moderno-child' ),
+		'legal'    => function_exists( 'omc_signup_legal' ) ? omc_signup_legal() : '', // HTML, escaped on the server
 	];
 }
 

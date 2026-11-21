@@ -570,7 +570,10 @@ final class WHD_Live_Reminders {
 	public static function account( bool $fresh = false ): array {
 		$saved = get_option( self::ACCOUNT, [] );
 		$saved = is_array( $saved ) ? $saved : [];
-		if ( ( ! $fresh && ! empty( $saved['at'] ) && (int) $saved['at'] > time() - DAY_IN_SECONDS ) || ! self::connected() ) {
+		$recent = ! empty( $saved['at'] ) && (int) $saved['at'] > time() - DAY_IN_SECONDS;
+		// Asked only from the admin, cron or the CLI: a visitor's page never waits on Klaviyo.
+		$may_ask = is_admin() || wp_doing_cron() || ( defined( 'WP_CLI' ) && WP_CLI ) || 'cli' === PHP_SAPI;
+		if ( ( ! $fresh && ( $recent || ! $may_ask ) ) || ! self::connected() ) {
 			return $saved;
 		}
 		[ , $data, $err ] = self::api( 'GET', 'accounts' );
@@ -1014,17 +1017,11 @@ final class WHD_Live_Reminders {
 
 	/** The published Mobile Terms page, or ''. */
 	public static function terms_url(): string {
-		$page = get_page_by_path( 'mobile-terms' );
-		return $page && 'publish' === $page->post_status ? (string) get_permalink( $page ) : '';
+		return WHD_Integrations::terms_url();
 	}
 
 	public static function privacy_url(): string {
-		$url = (string) get_privacy_policy_url();
-		if ( '' === $url ) {
-			$page = get_page_by_path( 'privacy-policy' );
-			$url  = $page && 'publish' === $page->post_status ? (string) get_permalink( $page ) : '';
-		}
-		return $url;
+		return WHD_Integrations::privacy_url();
 	}
 
 	/** Who the texts are from: typed here, else the organisation name in Klaviyo, else the shop's name. */

@@ -201,7 +201,7 @@
 					'<button type="button" class="whd-sty__back" data-sty-back>&larr; ' + esc( T.back || 'Back' ) + '</button>' +
 					'<button type="submit" class="whd-sty__next">' + esc( T.send || 'Show me my edit' ) + '</button>' +
 				'</div>' +
-				'<p class="whd-sty__small">We add you to the list so we can send the edit. One email when something lands, and you can leave any time.</p>' +
+				'<p class="whd-sty__small">' + ( T.legal || 'We add you to the list so we can send the edit, and you can leave any time.' ) + '</p>' +
 				'<p class="whd-sty__note" role="status"></p>' +
 			'</form>';
 

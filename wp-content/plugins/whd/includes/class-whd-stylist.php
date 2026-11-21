@@ -825,6 +825,7 @@ final class WHD_Stylist {
 				'pickOne'  => __( 'Choose at least one to carry on.', 'whd' ),
 				'step'     => __( 'Step %1$d of %2$d', 'whd' ),
 				'send'     => __( 'Show me my edit', 'whd' ),
+				'legal'    => WHD_Integrations::email_consent_html(), // HTML, built and escaped on the server
 				'tick'     => __( 'Tick the box to show you are human.', 'whd' ),
 				'captchaOff' => __( 'The robot check did not load. Reload the page and try again.', 'whd' ),
 				'captchaNote' => __( 'Protected by reCAPTCHA — the Google privacy policy and terms apply.', 'whd' ),
