@@ -73,7 +73,10 @@ The same tool is registered as the `ftp-sync` MCP server in `.mcp.json` (tools `
 5. `OMC_DB=live php .ftp-sync/import-videos.php` after a `sync`, if the video pages or their media changed
 
 Steps 3 and 5 write to the production database. The agent harness blocks them, so the site owner runs them; a
-`--dry-run` first shows exactly which rows would change.
+`--dry-run` first shows exactly which rows would change. **The owner uses PowerShell**, which has no `VAR=value cmd`
+prefix (`OMC_DB=live : The term … is not recognized`), so give them the `--live` flag every `.ftp-sync` script
+accepts, with the full PHP path: `C:\xampp\php\php.exe .ftp-sync\publish-site.php --live --dry-run`, then without
+`--dry-run`. Avoid `$env:OMC_DB="live"`: it stays set for the rest of that window, and a later "local" run hits live.
 
 ### Verifying changes
 
