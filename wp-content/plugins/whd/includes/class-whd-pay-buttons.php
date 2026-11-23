@@ -1,6 +1,7 @@
 <?php
 /**
- * Where the fast-pay buttons appear: on the cart page, not on a product page or in the slide-out cart. The owner's call.
+ * Where the fast-pay buttons appear: Stripe's and WooPayments' wallets on the cart page and at checkout, PayPal's only in
+ * its own row at checkout; none on a product page or in the slide-out cart. The owner's calls.
  *
  * Three plugins draw them, none of which is in this repository (they are installed on live only):
  * Stripe (Apple Pay, Google Pay, Link), WooPayments and PayPal (PayPal, Venmo, Pay Later). Each has a
@@ -86,10 +87,13 @@ final class WHD_Pay_Buttons {
 	/**
 	 * PayPal keeps one filter over its lists of places for buttons, Pay Later and messages.
 	 *
-	 * Never the slide-out cart ("mini-cart"), the owner's call, even if PayPal's own settings ask for it.
-	 * Its Venmo button is drawn in the same place, so that goes too.
+	 * Only the checkout, where its buttons sit inside its own payment row, the owner's calls: never the product page,
+	 * never the slide-out cart ("mini-cart", where its Venmo button is drawn too), and — since 2026-11-23 — not under
+	 * "Proceed to checkout" on the cart page ("cart", and "cart-block" for a block cart), even if PayPal's own settings
+	 * ask for any of them. Its Pay Later messages leave those places with the buttons.
 	 */
 	public static function paypal( $places ) {
-		return array_values( array_diff( self::places( $places ), [ 'mini-cart' ] ) );
+		$places = is_array( $places ) ? $places : [];
+		return array_values( array_diff( $places, [ 'product', 'cart', 'cart-block', 'mini-cart' ] ) );
 	}
 }
